@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*/share/html/*": "HTML (Mason)",
+			"*.in": "perl",
+			"random": "c",
+			"esp_vfs.h": "c",
+			"rpm_lut.h": "c"
+		},
+		"workbench.colorTheme": "Nord",
+	}
+}
