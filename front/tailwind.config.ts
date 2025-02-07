@@ -1,5 +1,3 @@
-import forms from "@tailwindcss/forms";
-import typography from "@tailwindcss/typography";
 import { fontFamily } from "tailwindcss/defaultTheme";
 import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
@@ -92,7 +90,7 @@ const config: Config = {
       		},
 		},
 	},
-	plugins: [tailwindcssAnimate, typography, forms],
+	plugins: [tailwindcssAnimate],
 };
 
 export default config;
