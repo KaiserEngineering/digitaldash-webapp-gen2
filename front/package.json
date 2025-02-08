@@ -45,6 +45,7 @@
 		"vitest": "^3.0.5"
 	},
 	"dependencies": {
+		"@types/node": "^22.13.1",
 		"lucide-svelte": "^0.474.0"
 	}
 }
