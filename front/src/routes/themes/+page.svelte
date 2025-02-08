@@ -18,8 +18,8 @@
 
 	let customerImages: any = $state(data?.customerImages || []);
 
-	function handleDelete(index: number) {
-		// Do something
+	function handleDelete(key: string) {
+		// Handle delete logic here
 	}
 
 	function formatFileSize(bytes: number): string {
@@ -38,36 +38,32 @@
 	<FileUploaderExplorer bind:images={customerImages} />
 </div>
 
-{#snippet figure(images: {
-	[x: string]: any;
-	dog?: string;
-	galaxy?: string;
-	dark?: string;
-	light?: string;
-})}
+{#snippet figure(images: { [key: string]: any }, editable = true)}
 	{#if images}
-		<Table>
+		<Table class="w-full table-fixed border border-gray-300">
 			<TableHeader>
 				<TableRow>
-					<TableHead>Name</TableHead>
-					<TableHead>Size</TableHead>
-					<TableHead>Type</TableHead>
-					<TableHead>Last Modified</TableHead>
-					<TableHead>Actions</TableHead>
+					<TableHead class="w-1/4 border p-2">Name</TableHead>
+					<TableHead class="w-1/5 border p-2">Size</TableHead>
+					<TableHead class="w-1/5 border p-2">Type</TableHead>
+					<TableHead class="w-1/4 border p-2">Last Modified</TableHead>
+					<TableHead class="w-1/6 border p-2 text-center">Actions</TableHead>
 				</TableRow>
 			</TableHeader>
 			<TableBody>
 				{#each Object.keys(images) as key}
 					{@const image = images[key]}
 					<TableRow>
-						<TableCell>{key}</TableCell>
-						<TableCell>{formatFileSize(image.size)}</TableCell>
-						<TableCell>{image.type}</TableCell>
-						<TableCell>{formatDate(image.lastModified)}</TableCell>
-						<TableCell>
-							<Button variant="destructive" size="icon" onclick={() => handleDelete(key)}>
-								<Trash2 class="h-4 w-4" />
-							</Button>
+						<TableCell class="border p-2">{key}</TableCell>
+						<TableCell class="border p-2">{formatFileSize(image.size)}</TableCell>
+						<TableCell class="border p-2">{image.type}</TableCell>
+						<TableCell class="border p-2">{formatDate(image.lastModified)}</TableCell>
+						<TableCell class="border p-2 text-center">
+							{#if editable}
+								<Button variant="destructive" size="icon" onclick={() => handleDelete(key)}>
+									<Trash2 class="h-4 w-4" />
+								</Button>
+							{/if}
 						</TableCell>
 					</TableRow>
 				{/each}
@@ -82,4 +78,4 @@
 {@render figure(customerImages)}
 
 <h2 class="mt-4 text-xl font-semibold">Factory Images</h2>
-{@render figure(data?.factoryImages)}
+{@render figure(data?.factoryImages, false)}
