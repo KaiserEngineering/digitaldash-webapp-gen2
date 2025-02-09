@@ -8,38 +8,25 @@
 	let successMessage = $state('');
 	let errorMessage = $state('');
 
-	// Converts a file to Base64 for JSON compatibility
-	function fileToBase64(file: File): Promise<string> {
-		return new Promise((resolve, reject) => {
-			const reader = new FileReader();
-			reader.readAsDataURL(file); // Converts file to Base64 Data URL
-			reader.onload = () => resolve(reader.result as string);
-			reader.onerror = (error) => reject(error);
-		});
-	}
-
 	async function handleUpload() {
 		successMessage = '';
 		errorMessage = '';
 
 		for (const file of files) {
 			try {
-				const base64Content = await fileToBase64(file);
+				const formData = new FormData();
+				formData.append('file', file); // Append the file directly
 
-				const payload = {
-					name: file.name,
-					size: file.size,
-					type: file.type,
-					lastModified: file.lastModified,
-					content: base64Content // Base64 encoded file content
-				};
+				// Optionally, add additional metadata if needed:
+				formData.append('name', file.name);
+				formData.append('size', file.size.toString());
+				formData.append('type', file.type);
+				formData.append('lastModified', file.lastModified.toString());
 
 				const response = await fetch(`${apiUrl}/rest`, {
 					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify(payload)
+					body: formData
+					// Note: Do not set the 'Content-Type' header manually. The browser sets it with the correct multipart boundary.
 				});
 
 				if (!response.ok) {
