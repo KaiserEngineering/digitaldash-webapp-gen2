@@ -8,6 +8,8 @@
 #include "esp_ota_ops.h"
 #include "esp_http_server.h"
 
+#include "themes.h"
+
 static const char *TAG = "WebServer";
 
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + 128)
@@ -32,7 +34,6 @@ esp_err_t update_post_handler(httpd_req_t *req)
     int remaining = req->content_len;
 
     const esp_partition_t *ota_partition = esp_ota_get_next_update_partition(NULL);
-    ESP_ERROR_CHECK(esp_ota_begin(ota_partition, OTA_SIZE_UNKNOWN, &ota_handle));
     if (!ota_partition)
     {
         send_error_response(req, "500 Internal Server Error", "Failed to get OTA partition", "OTA partition retrieval failed");
@@ -82,10 +83,10 @@ esp_err_t update_post_handler(httpd_req_t *req)
 }
 
 extern const uint8_t index_html_gz_start[] asm("_binary_index_html_gz_start");
-extern const uint8_t index_html_gz_end[] asm("_binary_index_html_gz_end");
+extern const uint8_t index_html_gz_end[]   asm("_binary_index_html_gz_end");
 
 extern const uint8_t favicon_start[] asm("_binary_favicon_png_start");
-extern const uint8_t favicon_end[] asm("_binary_favicon_png_end");
+extern const uint8_t favicon_end[]   asm("_binary_favicon_png_end");
 
 esp_err_t favicon_hanlder(httpd_req_t *req)
 {
@@ -96,9 +97,6 @@ esp_err_t favicon_hanlder(httpd_req_t *req)
 
 esp_err_t index_html_handler(httpd_req_t *req)
 {
-    extern const uint8_t index_html_gz_start[] asm("_binary_index_html_gz_start");
-    extern const uint8_t index_html_gz_end[] asm("_binary_index_html_gz_end");
-
     const size_t file_size = index_html_gz_end - index_html_gz_start;
 
     httpd_resp_set_type(req, "text/html");
@@ -122,11 +120,9 @@ static esp_err_t update_button_handler(httpd_req_t *req)
     char id[50];
     int val;
 
-    // Use sscanf to extract the values
-    // Expected payload {"id":"<cmd>","value":<val>}
+    // Expected payload: {"id":"<cmd>","value":<val>}
     int items = sscanf(buf, "{\"id\":\"%49[^\"]\", \"value\":%d}", id, &val);
 
-    // Check if the extraction was successful
     if (items != 2)
     {
         send_error_response(req, "400 Bad Request", "Invalid JSON format", "JSON parsing error");
@@ -166,11 +162,9 @@ static esp_err_t update_slider_handler(httpd_req_t *req)
     char id[50];
     int val;
 
-    // Use sscanf to extract the values
-    // Expected payload {"id":"<cmd>","value":<val>}
+    // Expected payload: {"id":"<cmd>","value":<val>}
     int items = sscanf(buf, "{\"id\":\"%49[^\"]\", \"value\":%d}", id, &val);
 
-    // Check if the extraction was successful
     if (items != 2)
     {
         send_error_response(req, "400 Bad Request", "Invalid JSON format", "JSON parsing error");
@@ -179,11 +173,10 @@ static esp_err_t update_slider_handler(httpd_req_t *req)
     ESP_LOGI(TAG, "id: \"%s\" value: %d", id, val);
 
     if (strcmp(id, "RPM1000") == 0) {
-        // Do something
+        // Do something for RPM1000
     } else if (strcmp(id, "RPM2000") == 0) {
-        // Do something
-    } else
-    {
+        // Do something for RPM2000
+    } else {
         send_error_response(req, "400 Bad Request", "Unknown command ID", "Invalid command ID in slider update");
         return ESP_FAIL;
     }
@@ -211,26 +204,27 @@ esp_err_t start_webserver(void)
 
     ESP_LOGI(TAG, "Starting HTTP Server");
 
-    // Start the server
+    /* Start the server */
     esp_err_t ret = httpd_start(&server, &config);
     if (ret != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to start HTTP server: %s", esp_err_to_name(ret));
-        return ret; // Return the error code
+        return ret;
     }
 
-    // Register URI handlers
+    /* Register URI handlers */
     httpd_uri_t index_html = {
         .uri = "/",
         .method = HTTP_GET,
         .handler = index_html_handler,
-        .user_ctx = NULL};
+        .user_ctx = NULL
+    };
 
     ret = httpd_register_uri_handler(server, &index_html);
     if (ret != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to register index_html handler: %s", esp_err_to_name(ret));
-        httpd_stop(server); // Clean up the server
+        httpd_stop(server);
         return ret;
     }
 
@@ -238,7 +232,8 @@ esp_err_t start_webserver(void)
         .uri = "/update_button",
         .method = HTTP_POST,
         .handler = update_button_handler,
-        .user_ctx = NULL};
+        .user_ctx = NULL
+    };
 
     ret = httpd_register_uri_handler(server, &uri_update_button);
     if (ret != ESP_OK)
@@ -252,7 +247,8 @@ esp_err_t start_webserver(void)
         .uri = "/update_slider",
         .method = HTTP_POST,
         .handler = update_slider_handler,
-        .user_ctx = NULL};
+        .user_ctx = NULL
+    };
 
     ret = httpd_register_uri_handler(server, &uri_update_slider);
     if (ret != ESP_OK)
@@ -266,7 +262,8 @@ esp_err_t start_webserver(void)
         .uri = "/get_values",
         .method = HTTP_GET,
         .handler = get_values_handler,
-        .user_ctx = NULL};
+        .user_ctx = NULL
+    };
 
     ret = httpd_register_uri_handler(server, &uri_get_values);
     if (ret != ESP_OK)
@@ -280,7 +277,8 @@ esp_err_t start_webserver(void)
         .uri = "/update",
         .method = HTTP_POST,
         .handler = update_post_handler,
-        .user_ctx = NULL};
+        .user_ctx = NULL
+    };
 
     ret = httpd_register_uri_handler(server, &update_post);
     if (ret != ESP_OK)
@@ -291,6 +289,15 @@ esp_err_t start_webserver(void)
     }
 
     httpd_register_uri_handler(server, &(httpd_uri_t){.uri = "/favicon.png", .method = HTTP_GET, .handler = favicon_hanlder});
+
+    /* ===== Register new Theme endpoints ===== */
+    ret = register_themes(server);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to register themes routes");
+        httpd_stop(server);
+        return ret;
+    }
+    /* ===== End of Theme endpoints registration ===== */
 
     ESP_LOGI(TAG, "HTTP Server started successfully");
     return ESP_OK;
