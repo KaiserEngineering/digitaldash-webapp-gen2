@@ -2,6 +2,7 @@
 	import '../app.css';
 	import { Button } from '$lib/components/ui/button';
 	import { page } from '$app/stores';
+	import Footer from '@/components/Footer.svelte';
 
 	let { children } = $props();
 </script>
@@ -48,9 +49,5 @@
 		{@render children()}
 	</main>
 
-	<footer class="bg-background mt-auto shadow-md">
-		<div class="container mx-auto px-4 py-4 text-center">
-			<p>&copy; 2025 My App. All rights reserved.</p>
-		</div>
-	</footer>
+	<Footer />
 </div>

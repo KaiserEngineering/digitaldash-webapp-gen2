@@ -765,10 +765,10 @@ binary-extensions@^2.0.0:
   resolved "https://registry.yarnpkg.com/binary-extensions/-/binary-extensions-2.3.0.tgz#f6e14a97858d327252200242d4ccfe522c445522"
   integrity sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==
 
-bits-ui@^1.0.0-next.87:
-  version "1.0.0-next.87"
-  resolved "https://registry.yarnpkg.com/bits-ui/-/bits-ui-1.0.0-next.87.tgz#dd9d19a32c20cc042dc673707cc028b7fd967ffe"
-  integrity sha512-3NCcz/7Fwp9zEqA4sCz6oGWrL3haDkIe15EwY6GnoInbFPtH0x3ftJ00dP45BqQ/RukYHcoW1pzRlUerdcIvxA==
+bits-ui@^1.0.0-next.90:
+  version "1.0.0-next.90"
+  resolved "https://registry.yarnpkg.com/bits-ui/-/bits-ui-1.0.0-next.90.tgz#0af89446b5e5ab079955ee087c976f8356c17c2d"
+  integrity sha512-BT+SzWzYuHwL8Q7L7/TsOiZElvsWUq10W3SDQwt3k6ofkaIVsrvaaqn6iKS5uHPZs7ztzJgqp+KdtsG2+xbWJw==
   dependencies:
     "@floating-ui/core" "^1.6.4"
     "@floating-ui/dom" "^1.6.7"
@@ -776,6 +776,7 @@ bits-ui@^1.0.0-next.87:
     esm-env "^1.1.2"
     runed "^0.23.2"
     svelte-toolbelt "^0.7.1"
+    tabbable "^6.2.0"
 
 brace-expansion@^1.1.7:
   version "1.1.11"
@@ -2109,6 +2110,11 @@ svelte@^5.19.6:
     locate-character "^3.0.0"
     magic-string "^0.30.11"
     zimmerframe "^1.1.2"
+
+tabbable@^6.2.0:
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/tabbable/-/tabbable-6.2.0.tgz#732fb62bc0175cfcec257330be187dcfba1f3b97"
+  integrity sha512-Cat63mxsVJlzYvN51JmVXIgNoUokrIaT2zLclCXjRd8boZ0004U4KCs/sToJ75C6sdlByWxpYnb5Boif1VSFew==
 
 tailwind-merge@2.5.4:
   version "2.5.4"

@@ -73,7 +73,7 @@
 </script>
 
 <div class="space-y-4">
-	<Input type="file" multiple onchange={handleFileChange} />
+	<Input class="cursor-pointer" type="file" multiple onchange={handleFileChange} />
 	<Button onclick={handleUpload} disabled={files.length === 0}>Upload</Button>
 
 	{#if successMessage}
