@@ -2060,6 +2060,13 @@ supports-preserve-symlinks-flag@^1.0.0:
   resolved "https://registry.yarnpkg.com/supports-preserve-symlinks-flag/-/supports-preserve-symlinks-flag-1.0.0.tgz#6eda4bd344a3c94aea376d4cc31bc77311039e09"
   integrity sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==
 
+svelte-5-french-toast@^2.0.4:
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/svelte-5-french-toast/-/svelte-5-french-toast-2.0.4.tgz#e10ee76d4e15c94f3e40100c171e11c9436e4873"
+  integrity sha512-VlhevMh6TME/uEMv9SBnsXiluS92e4HzsbRC0a72daOpYULfAquJMV2++fGBi1YFjVouyw9sPWSgGD/S1DTcjw==
+  dependencies:
+    svelte-writable-derived "^3.1.1"
+
 svelte-check@^4.1.4:
   version "4.1.4"
   resolved "https://registry.yarnpkg.com/svelte-check/-/svelte-check-4.1.4.tgz#59ec6f08d23647ec508ff01584ef6d191c77c9e1"
@@ -2090,6 +2097,11 @@ svelte-toolbelt@^0.7.1:
     clsx "^2.1.1"
     runed "^0.23.2"
     style-to-object "^1.0.8"
+
+svelte-writable-derived@^3.1.1:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/svelte-writable-derived/-/svelte-writable-derived-3.1.1.tgz#03222b32f8a66ea503e95b3cce8b94bec0810044"
+  integrity sha512-w4LR6/bYZEuCs7SGr+M54oipk/UQKtiMadyOhW0PTwAtJ/Ai12QS77sLngEcfBx2q4H8ZBQucc9ktSA5sUGZWw==
 
 svelte@^5.19.6:
   version "5.19.6"

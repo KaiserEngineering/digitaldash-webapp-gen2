@@ -30,7 +30,6 @@ const config = {
 			'$schemas/*': './src/schemas/*'
 		},
 		prerender: {
-			entries: ['/'],
 			handleHttpError: ({ message }) => {
 				// otherwise fail the build
 				throw new Error(message);

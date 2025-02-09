@@ -56,7 +56,7 @@
 					<TableCell class="border p-2">{formatDate(image.lastModified)}</TableCell>
 					<TableCell class="border p-2 text-center">
 						{#if editable}
-							<Button variant="destructive" size="icon" on:click={() => handleDelete(key)}>
+							<Button variant="destructive" size="icon" onclick={() => handleDelete(key)}>
 								<Trash2 class="h-4 w-4" />
 							</Button>
 						{/if}

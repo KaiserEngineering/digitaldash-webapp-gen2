@@ -46,6 +46,7 @@
 	},
 	"dependencies": {
 		"@types/node": "^22.13.1",
-		"lucide-svelte": "^0.474.0"
+		"lucide-svelte": "^0.474.0",
+		"svelte-5-french-toast": "^2.0.4"
 	}
 }
