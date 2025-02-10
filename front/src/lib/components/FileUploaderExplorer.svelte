@@ -3,7 +3,7 @@
 	import { Button } from '@/components/ui/button';
 	import { apiUrl } from '$lib/config';
 
-	let { images = $bindable() } = $props();
+	let { images = $bindable(), uploadURL } = $props();
 	let files: File[] = $state([]);
 	let successMessage = $state('');
 	let errorMessage = $state('');
@@ -23,7 +23,7 @@
 				formData.append('type', file.type);
 				formData.append('lastModified', file.lastModified.toString());
 
-				const response = await fetch(`${apiUrl}/rest`, {
+				const response = await fetch(`${apiUrl}/${uploadURL}`, {
 					method: 'POST',
 					body: formData
 					// Note: Do not set the 'Content-Type' header manually. The browser sets it with the correct multipart boundary.

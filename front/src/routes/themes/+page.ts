@@ -5,12 +5,25 @@ import type { PageLoad } from './$types';
 export const load: PageLoad = () => {
 	return {
 		factoryImages: {
-			galaxy: 'Galaxy',
-			dark: 'Dark',
-			light: 'Light'
+			'Bar (Aura)': {
+				name: 'Bar (Aura)',
+				size: 0,
+				type: 'image/jpeg',
+				lastModified: Date.now()
+			},
+			'Stock': {
+				name: 'Stock',
+				size: 0,
+				type: 'image/jpeg',
+				lastModified: Date.now()
+			},
+			'Stock RS': {
+				name: 'Stock RS',
+				size: 0,
+				type: 'image/jpeg',
+				lastModified: Date.now()
+			},
 		},
-		customerImages: {
-			dog: 'Dog'
-		}
+		customerImages: {}
 	};
 };

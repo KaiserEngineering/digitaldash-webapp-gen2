@@ -16,7 +16,7 @@
 
 <!-- File uploader area -->
 <div class="mx-auto w-1/2">
-	<FileUploaderExplorer bind:images={customerImages} />
+	<FileUploaderExplorer bind:images={customerImages} uploadURL="themes" />
 </div>
 
 <!-- Render Customer Images -->
@@ -27,4 +27,4 @@
 <h2 class="mt-4 text-xl font-semibold">Factory Images</h2>
 <!-- Assuming factoryImages is provided via the page data;
      here we render them in non-editable mode -->
-<ImagesTable images={data?.factoryImages || {}} editable={false} />
+<ImagesTable images={data?.factoryImages} editable={false} />
