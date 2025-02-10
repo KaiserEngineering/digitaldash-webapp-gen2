@@ -40,25 +40,40 @@ esp_err_t theme_get_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-/* Dummy handler for POST /theme that prints the base64 PNG string */
 esp_err_t theme_post_handler(httpd_req_t *req)
 {
     int total_len = req->content_len;
-    char *buf = malloc(total_len + 1);
-    if (!buf) {
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Memory allocation failed in theme_post_handler");
+    if(total_len <= 0){
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "No data received");
         return ESP_FAIL;
     }
-    
-    int received = httpd_req_recv(req, buf, total_len);
-    if (received <= 0) {
-        free(buf);
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "HTTP request receive error in theme_post_handler");
-        return ESP_FAIL;
-    }
-    buf[received] = '\0';
 
-    ESP_LOGI(TAG, "Theme POST received base64 PNG: %s", buf);
+    // Allocate a buffer to hold the binary data.
+    char *buf = malloc(total_len);
+    if (!buf) {
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR,
+                              "Memory allocation failed in theme_post_handler");
+        return ESP_FAIL;
+    }
+
+    int received = 0;
+    while (received < total_len) {
+        int ret = httpd_req_recv(req, buf + received, total_len - received);
+        if (ret <= 0) {
+            free(buf);
+            httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR,
+                                  "HTTP request receive error in theme_post_handler");
+            return ESP_FAIL;
+        }
+        received += ret;
+    }
+
+    ESP_LOGI(TAG, "Theme POST received binary blob, size: %d bytes", total_len);
+    ESP_LOG_BUFFER_HEX(TAG, buf, total_len);
+
+    // Here, you can process the binary data. For example, if it represents a PNG image,
+    // you might save it to flash or parse it further.
+
     free(buf);
 
     httpd_resp_set_type(req, "application/json");

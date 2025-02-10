@@ -16,7 +16,7 @@
 
 <!-- File uploader area -->
 <div class="mx-auto w-1/2">
-	<FileUploaderExplorer bind:images={customerImages} uploadURL="themes" />
+	<FileUploaderExplorer bind:images={customerImages} uploadURL="theme" />
 </div>
 
 <!-- Render Customer Images -->

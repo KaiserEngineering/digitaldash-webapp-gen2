@@ -2,11 +2,47 @@
 	import { Input } from '@/components/ui/input';
 	import { Button } from '@/components/ui/button';
 	import { apiUrl } from '$lib/config';
+	import toast from 'svelte-5-french-toast';
 
 	let { images = $bindable(), uploadURL } = $props();
 	let files: File[] = $state([]);
 	let successMessage = $state('');
 	let errorMessage = $state('');
+
+	/**
+	 * Validate that an image file has the expected dimensions.
+	 * @param file The image file.
+	 * @param expectedWidth Expected width in pixels.
+	 * @param expectedHeight Expected height in pixels.
+	 * @returns A Promise that resolves if dimensions are correct or rejects with an error.
+	 */
+	function validateImageDimensions(
+		file: File,
+		expectedWidth: number,
+		expectedHeight: number
+	): Promise<void> {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onload = (event) => {
+				const image = new Image();
+				image.onload = () => {
+					if (image.width === expectedWidth && image.height === expectedHeight) {
+						resolve();
+					} else {
+						reject(
+							new Error(
+								`Image dimensions must be ${expectedWidth}x${expectedHeight}. Found: ${image.width}x${image.height}`
+							)
+						);
+					}
+				};
+				image.onerror = () => reject(new Error('Invalid image file.'));
+				image.src = event.target?.result as string;
+			};
+			reader.onerror = () => reject(new Error('Failed to read the image file.'));
+			reader.readAsDataURL(file);
+		});
+	}
 
 	async function handleUpload() {
 		successMessage = '';
@@ -14,6 +50,9 @@
 
 		for (const file of files) {
 			try {
+				// Validate dimensions (e.g., 800x200)
+				await validateImageDimensions(file, 800, 200);
+
 				const formData = new FormData();
 				formData.append('file', file); // Append the file directly
 
@@ -26,7 +65,7 @@
 				const response = await fetch(`${apiUrl}/${uploadURL}`, {
 					method: 'POST',
 					body: formData
-					// Note: Do not set the 'Content-Type' header manually. The browser sets it with the correct multipart boundary.
+					// Do not manually set the 'Content-Type' header when using FormData.
 				});
 
 				if (!response.ok) {
@@ -38,13 +77,15 @@
 				// Update the images object with the new file data
 				images[file.name] = {
 					...file,
-					id: result.id || undefined, // Assuming API may return an ID
-					url: result.url || undefined // Assuming API may return a URL
+					id: result.id || undefined,
+					url: result.url || undefined
 				};
 
 				successMessage = `Uploaded ${file.name} successfully!`;
+				toast.success(successMessage);
 			} catch (error) {
 				errorMessage = (error as Error).message;
+				toast.error(errorMessage);
 			}
 		}
 
@@ -62,12 +103,4 @@
 <div class="space-y-4">
 	<Input class="cursor-pointer" type="file" multiple onchange={handleFileChange} />
 	<Button onclick={handleUpload} disabled={files.length === 0}>Upload</Button>
-
-	{#if successMessage}
-		<p class="text-green-500">{successMessage}</p>
-	{/if}
-
-	{#if errorMessage}
-		<p class="text-red-500">{errorMessage}</p>
-	{/if}
 </div>

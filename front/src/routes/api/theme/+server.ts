@@ -15,15 +15,27 @@ export async function POST(event: RequestEvent) {
 	try {
 		const formData = await event.request.formData();
 		const name = formData.get('name');
-		// The file is available as a Blob
 		const fileBlob = formData.get('file');
-		// You can also get other fields as needed
 
-		console.log('Received file upload via FormData:');
-		console.log('Name:', name);
-		console.log('File:', fileBlob);
-		// For the dummy endpoint, you might not process the fileBlob at all
+		// Validate that we got a file blob.
+		if (!(fileBlob instanceof Blob)) {
+			throw new Error('No valid file provided.');
+		}
 
+		// Convert the blob to an ArrayBuffer, then to a Uint8Array.
+		const arrayBuffer = await fileBlob.arrayBuffer();
+		const bytes = new Uint8Array(arrayBuffer);
+
+		// Log the size and raw bytes in hexadecimal format.
+		console.log(`Received file upload via FormData:`);
+		console.log(`Name: ${name}`);
+		console.log(`File size: ${bytes.length} bytes`);
+		const hexDump = Array.from(bytes)
+			.map((b) => b.toString(16).padStart(2, '0'))
+			.join(' ');
+		console.log(`Hex Dump: ${hexDump}`);
+
+		// Return a dummy JSON response.
 		return json({
 			message: 'File uploaded successfully (dummy response)',
 			id: 'dummy123',
