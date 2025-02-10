@@ -9,7 +9,6 @@ components/index.html.gz
 *.pyc
 
 # ESP-IDF configuration
-sdkconfig
 sdkconfig.old
 
 # gtags
