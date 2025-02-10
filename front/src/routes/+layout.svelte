@@ -13,7 +13,7 @@
 
 		<Header />
 
-		<main class="container mx-auto flex-grow px-4 py-8">
+		<main class="container mx-auto flex-grow px-4 py-8 w-2/3">
 			{@render children()}
 		</main>
 	</div>
