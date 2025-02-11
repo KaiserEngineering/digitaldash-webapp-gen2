@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Switch } from '$lib/components/ui/switch';
-	import { Zap } from 'lucide-svelte';
-	// (If you are using the Zap icon, remember to import it, e.g., import { Zap } from 'lucide-svelte';)
 
 	// Define types
 	type GaugeTheme = {
@@ -157,9 +155,6 @@
 				<h2 class="text-2xl font-bold" style:color={view.textColor}>{view.name}</h2>
 				<div class="flex flex-col items-end">
 					<Switch checked={view.enabled} onCheckedChange={() => toggleView(view.id)} />
-					<a href="/dynamic" title="Dynamic Mode" class="mt-2">
-						<Zap size="24" color={view.enabled ? 'green' : 'yellow'} />
-					</a>
 				</div>
 			</div>
 
