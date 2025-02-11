@@ -145,11 +145,11 @@
 	});
 </script>
 
-<div class="min-h-screen space-y-6 p-4">
+<div class="space-y-2 p-2">
 	{#each views as view}
 		<!-- Dynamically set the background image -->
 		<div
-			class="rounded-3xl bg-cover p-6 shadow-lg"
+			class="rounded-3xl bg-cover p-2 shadow-lg"
 			style:background-image={`url('/backgrounds/${view.background}')`}
 		>
 			<!-- Header: view name, toggle, and Zap (placed under the toggle) -->
@@ -164,10 +164,10 @@
 			</div>
 
 			<!-- Gauges arranged horizontally -->
-			<div class="flex justify-center space-x-4">
+			<div class="flex justify-center space-x-2">
 				{#each view.gauges as gauge}
 					<div class="flex flex-col items-center">
-						<div class="relative h-32 w-32">
+						<div class="relative h-24 w-24">
 							<img
 								src={`/themes/${gauge.theme.face}/face.png`}
 								alt="Gauge Face"

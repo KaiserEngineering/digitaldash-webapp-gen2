@@ -14,6 +14,8 @@
 	let customerImages: { [key: string]: any } = $state(data?.customerImages || {});
 </script>
 
+<h1 class="text-2xl font-semibold">Theme Images</h1>
+
 <!-- File uploader area -->
 <div class="mx-auto w-1/2">
 	<FileUploaderExplorer bind:images={customerImages} uploadURL="theme" />

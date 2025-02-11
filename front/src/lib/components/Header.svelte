@@ -16,52 +16,51 @@
 	];
 </script>
 
-<div class="container mx-auto space-y-8 px-4 py-8">
+<!-- Reduced outer padding and vertical spacing -->
+<div class="container mx-auto space-y-4 px-2 py-4">
 	<Card class="border-0 shadow-lg">
-		<CardHeader class="pb-6">
-			<!-- Header Top Row: Always shows the hamburger toggle on mobile and full content on desktop -->
-			<div class="flex items-center justify-between gap-4">
-				<!-- Desktop header: Always visible on sm and up -->
-				<div class="hidden text-center sm:block sm:text-left">
+		<CardHeader>
+			<!-- Header Top Row -->
+			<div class="flex items-center justify-between">
+				<!-- Minimal Mobile Header: always visible on mobile -->
+				<div class="sm:hidden">
+					<a href="/"><CardTitle class="text-base font-bold">Digital Dash</CardTitle></a>
+				</div>
+				<!-- Desktop Header -->
+				<div class="hidden sm:block">
 					<CardTitle
 						class="bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-3xl font-bold text-transparent sm:text-4xl"
 					>
 						KaiserEngineering Digital Dash
 					</CardTitle>
-					<CardDescription class="text-muted-foreground/80 mt-2 text-base sm:text-lg">
+					<CardDescription class="text-muted-foreground/80 mt-1 text-sm">
 						Manage your Digital Dash settings and preferences
 					</CardDescription>
 				</div>
-				<!-- Mobile hamburger toggle (visible on small screens) -->
+				<!-- Mobile Hamburger Toggle -->
 				<button
 					class="p-2 focus:outline-none sm:hidden"
 					onclick={() => (isMobileMenuOpen = !isMobileMenuOpen)}
 				>
 					{#if isMobileMenuOpen}
-						<X class="h-6 w-6" />
+						<X class="h-5 w-5" />
 					{:else}
-						<Menu class="h-6 w-6" />
+						<Menu class="h-5 w-5" />
 					{/if}
 				</button>
 			</div>
-
-			<!-- Mobile header content: Visible only when hamburger menu is open -->
-			<div class="block sm:hidden">
-				<div transition:slide class="mt-4 text-center">
-					<CardTitle
-						class="bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-2xl font-bold text-transparent"
-					>
-						KaiserEngineering Digital Dash
-					</CardTitle>
-					<CardDescription class="text-muted-foreground/80 mt-2 text-sm">
-						Manage your Digital Dash settings and preferences
+			<!-- Expanded Mobile Header: only visible when the menu is open -->
+			{#if isMobileMenuOpen}
+				<div transition:slide class="mt-2 text-center">
+					<CardDescription class="text-muted-foreground/80 text-sm">
+						Manage your settings and preferences
 					</CardDescription>
 				</div>
-			</div>
+			{/if}
 		</CardHeader>
 
-		<CardContent class="space-y-6">
-			<!-- Desktop Navigation: Always visible on medium and up -->
+		<CardContent class="space-y-4">
+			<!-- Desktop Navigation: always visible on medium and up -->
 			<div class="hidden sm:block">
 				<Tabs class="w-full">
 					<TabsList
@@ -71,10 +70,10 @@
 							{@const TabIcon = tab.icon}
 							<a
 								href={'/' + tab.value}
-								class="flex items-center gap-2 rounded-md px-4 py-3 transition-all duration-200 hover:bg-white/50 dark:hover:bg-gray-700/50"
+								class="flex items-center gap-2 rounded-md px-2 py-1 transition-all duration-200 hover:bg-white/50 dark:hover:bg-gray-700/50"
 							>
-								<TabIcon class="h-5 w-5" />
-								<span class="hidden sm:inline">{tab.label}</span>
+								<TabIcon class="h-4 w-4" />
+								<span class="hidden text-sm sm:inline">{tab.label}</span>
 							</a>
 						{/each}
 					</TabsList>
@@ -85,16 +84,15 @@
 				<div transition:slide class="w-full sm:hidden">
 					<div class="rounded-lg bg-gray-100 p-1 dark:bg-gray-800/50">
 						<Tabs class="w-full">
-							<!-- Use a horizontal flex layout by default (no flex-col) -->
 							<TabsList class="scrollbar-hide mb-2 mt-2 flex gap-1">
 								{#each tabs as tab}
 									{@const TabIcon = tab.icon}
 									<a
 										href={'/' + tab.value}
-										class="flex items-center justify-center rounded-md px-4 py-3 transition-all duration-200 hover:bg-white/50 dark:hover:bg-gray-700/50"
+										class="flex items-center justify-center rounded-md px-2 py-1 transition-all duration-200 hover:bg-white/50 dark:hover:bg-gray-700/50"
 										onclick={() => (isMobileMenuOpen = false)}
 									>
-										<TabIcon class="h-5 w-5" />
+										<TabIcon class="h-4 w-4" />
 									</a>
 								{/each}
 							</TabsList>
