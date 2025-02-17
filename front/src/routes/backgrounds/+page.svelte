@@ -24,7 +24,7 @@
 
 <!-- Render Customer Images -->
 <h2 class="mt-4 text-xl font-semibold">Customer Images</h2>
-<ImagesTable images={customerImages} deleteCallback={deleteBackground}/>
+<ImagesTable images={customerImages} deleteCallback={deleteBackground} />
 
 <!-- Render Factory Images -->
 <h2 class="mt-4 text-xl font-semibold">Factory Images</h2>

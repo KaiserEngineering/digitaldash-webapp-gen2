@@ -37,9 +37,7 @@
 
 	// Schema for a single dynamic condition
 	export const dynamicConditionSchema = z.object({
-		pid: z
-			.number({ invalid_type_error: 'Select a valid PID' })
-			.min(1, 'PID is required'),
+		pid: z.number({ invalid_type_error: 'Select a valid PID' }).min(1, 'PID is required'),
 		units: z.nativeEnum(PidUnits),
 		compare: z.nativeEnum(DynamicCompare),
 		thresh: z.number()
@@ -56,7 +54,7 @@
 	export const formSchema = z.object({
 		views: z.array(viewSchema)
 	});
-  
+
 	export type FormSchema = typeof formSchema;
 </script>
 
@@ -105,7 +103,7 @@
 
 	// Initialize superForm with the data and schema
 	const form = superForm(data, {
-        dataType: 'json',
+		dataType: 'json',
 		validators: zodClient(formSchema),
 		onUpdated: ({ form: f }) => {
 			if (f.valid) {
@@ -136,9 +134,9 @@
 <!-- Markup: Loop over views and their conditions -->
 <form method="POST" action="/?/dynamic-conditions" class="w-2/3 space-y-6" use:enhance={enhance}>
 	{#each $formData.views as view, viewIndex}
-		<div class="space-y-4 border p-4 rounded-lg">
+		<div class="space-y-4 rounded-lg border p-4">
 			<h2 class="text-xl font-bold">{view.name} Conditions</h2>
-      
+
 			{#each view.conditions as condition, i}
 				<div class="space-y-2 rounded-lg border p-4">
 					<!-- PID Field -->
@@ -152,7 +150,9 @@
 							>
 								<Select.Trigger>
 									{#if $formData.views[viewIndex].conditions[i].pid}
-										{availablePids.find(pid => pid.id === $formData.views[viewIndex].conditions[i].pid)?.name ?? 'Select PID'}
+										{availablePids.find(
+											(pid) => pid.id === $formData.views[viewIndex].conditions[i].pid
+										)?.name ?? 'Select PID'}
 									{:else}
 										Select PID
 									{/if}
@@ -166,7 +166,7 @@
 						</Form.Control>
 						<Form.FieldErrors />
 					</Form.Field>
-  
+
 					<!-- Unit Field -->
 					<Form.Field {form} name={`views.${viewIndex}.conditions.${i}.units`}>
 						<Form.Control>
@@ -178,7 +178,9 @@
 							>
 								<Select.Trigger>
 									{#if $formData.views[viewIndex].conditions[i].units}
-										{unitOptions.find(u => u.value === $formData.views[viewIndex].conditions[i].units)?.label ?? 'Select Unit'}
+										{unitOptions.find(
+											(u) => u.value === $formData.views[viewIndex].conditions[i].units
+										)?.label ?? 'Select Unit'}
 									{:else}
 										Select Unit
 									{/if}
@@ -192,7 +194,7 @@
 						</Form.Control>
 						<Form.FieldErrors />
 					</Form.Field>
-  
+
 					<!-- Operator Field -->
 					<Form.Field {form} name={`views.${viewIndex}.conditions.${i}.compare`}>
 						<Form.Control>
@@ -203,9 +205,10 @@
 								name={`views.${viewIndex}.conditions.${i}.compare`}
 							>
 								<Select.Trigger>
-									{#if $formData.views[viewIndex].conditions[i].compare !== undefined &&
-										$formData.views[viewIndex].conditions[i].compare !== null}
-										{compareOperators.find(op => op.value === $formData.views[viewIndex].conditions[i].compare)?.label ?? 'Select Operator'}
+									{#if $formData.views[viewIndex].conditions[i].compare !== undefined && $formData.views[viewIndex].conditions[i].compare !== null}
+										{compareOperators.find(
+											(op) => op.value === $formData.views[viewIndex].conditions[i].compare
+										)?.label ?? 'Select Operator'}
 									{:else}
 										Select Operator
 									{/if}
@@ -219,30 +222,33 @@
 						</Form.Control>
 						<Form.FieldErrors />
 					</Form.Field>
-  
+
 					<!-- Threshold Field -->
 					<Form.Field {form} name={`views.${viewIndex}.conditions.${i}.thresh`}>
 						<Form.Control>
 							<Form.Label>Threshold</Form.Label>
-							<Input type="number" bind:value={$formData.views[viewIndex].conditions[i].thresh} class="w-24" />
+							<Input
+								type="number"
+								bind:value={$formData.views[viewIndex].conditions[i].thresh}
+								class="w-24"
+							/>
 						</Form.Control>
 						<Form.FieldErrors />
 					</Form.Field>
-  
+
 					<!-- Remove Condition Button -->
 					<Button variant="destructive" size="icon" onclick={() => removeCondition(viewIndex, i)}>
 						×
 					</Button>
 				</div>
 			{/each}
-  
+
 			<!-- Button to add a new condition for this view -->
 			<Button type="button" variant="outline" onclick={() => addCondition(viewIndex)}>
 				Add Condition
 			</Button>
 		</div>
 	{/each}
-  
-	<Form.Button>Submit</Form.Button>
 
+	<Form.Button>Submit</Form.Button>
 </form>

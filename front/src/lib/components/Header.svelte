@@ -33,7 +33,7 @@
 					>
 						KaiserEngineering Digital Dash
 					</CardTitle>
-					<CardDescription class="text-muted-foreground/80 mt-1 text-sm">
+					<CardDescription class="mt-1 text-sm text-muted-foreground/80">
 						Manage your Digital Dash settings and preferences
 					</CardDescription>
 				</div>
@@ -52,7 +52,7 @@
 			<!-- Expanded Mobile Header: only visible when the menu is open -->
 			{#if isMobileMenuOpen}
 				<div transition:slide class="mt-2 text-center">
-					<CardDescription class="text-muted-foreground/80 text-sm">
+					<CardDescription class="text-sm text-muted-foreground/80">
 						Manage your settings and preferences
 					</CardDescription>
 				</div>

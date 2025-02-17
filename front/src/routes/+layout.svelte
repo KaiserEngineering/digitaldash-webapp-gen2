@@ -13,7 +13,7 @@
 
 		<Header />
 
-		<main class="container mx-auto flex-grow px-4 py-8 md:w-2/3 sm:w-full">
+		<main class="container mx-auto flex-grow px-4 py-8 sm:w-full md:w-2/3">
 			{@render children()}
 		</main>
 	</div>
@@ -29,6 +29,6 @@
 		scrollbar-width: none;
 	}
 	:global(.tabs .active) {
-		@apply text-primary bg-white shadow-lg dark:bg-gray-800;
+		@apply bg-white text-primary shadow-lg dark:bg-gray-800;
 	}
 </style>

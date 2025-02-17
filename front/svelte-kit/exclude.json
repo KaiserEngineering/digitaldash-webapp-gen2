@@ -1,6 +1,3 @@
 {
-	"exclude": [
-		"static/dummy-themes/**",
-        "static/dummy-backgrouds/**"
-	]
+	"exclude": ["static/dummy-themes/**", "static/dummy-backgrouds/**"]
 }

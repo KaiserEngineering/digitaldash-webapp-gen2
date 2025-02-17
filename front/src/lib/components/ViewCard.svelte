@@ -2,7 +2,6 @@
 	import { onMount } from 'svelte';
 	import Spinner from './Spinner.svelte';
 	import { ImageHandler } from '$lib/imageHandler.svelte';
-	import type { PageProps } from './$types';
 
 	// Define the types for gauges and views
 	type Gauge = {
@@ -23,7 +22,7 @@
 		textColor?: string;
 	};
 
-	let { view }: PageProps = $props();
+	let { view }: { view: View } = $props();
 
 	const imageHandler = new ImageHandler();
 	let loading = $state(true);
@@ -82,42 +81,42 @@
 </script>
 
 {#if loading}
-  <div class="flex h-32 items-center justify-center">
-    <Spinner />
-  </div>
+	<div class="flex h-32 items-center justify-center">
+		<Spinner />
+	</div>
 {:else}
-  <div
-    class="view-card rounded-3xl bg-cover p-2 shadow-lg"
-    style:background-image={`url('${backgroundUrl}')`}
-  >
-    <div class="mb-6 flex items-center justify-between">
-      <h2 class="text-2xl font-bold" style:color={view.textColor}>{view.name}</h2>
-      <!-- Additional controls -->
-    </div>
-    <!-- Gauges arranged horizontally -->
-    <div class="flex justify-center space-x-2">
-      {#each view.gauges as gauge}
-        <div class="flex flex-col items-center">
-          <div class="relative h-24 w-24">
-            <img
-              src={`/themes/${gauge.theme.face}/face.png`}
-              alt="Gauge Face"
-              class="h-full w-full"
-            />
-            <img
-              src={`/themes/${gauge.theme.face}/needle.png`}
-              alt="Gauge Needle"
-              class="absolute inset-0"
-            />
-          </div>
-          <span class="mt-2 rounded-full bg-purple-600 px-4 py-1 text-sm text-white">
-            {gauge.label}
-          </span>
-          <span class="text-xs text-white">
-            {gauge.pid}{gauge.unit ? ` (${gauge.unit})` : ''}
-          </span>
-        </div>
-      {/each}
-    </div>
-  </div>
+	<div
+		class="view-card rounded-3xl bg-cover p-2 shadow-lg"
+		style:background-image={`url('${backgroundUrl}')`}
+	>
+		<div class="mb-6 flex items-center justify-between">
+			<h2 class="text-2xl font-bold" style:color={view.textColor}>{view.name}</h2>
+			<!-- Additional controls -->
+		</div>
+		<!-- Gauges arranged horizontally -->
+		<div class="flex justify-center space-x-2">
+			{#each view.gauges as gauge}
+				<div class="flex flex-col items-center">
+					<div class="relative h-24 w-24">
+						<img
+							src={`/themes/${gauge.theme.face}/face.png`}
+							alt="Gauge Face"
+							class="h-full w-full"
+						/>
+						<img
+							src={`/themes/${gauge.theme.face}/needle.png`}
+							alt="Gauge Needle"
+							class="absolute inset-0"
+						/>
+					</div>
+					<span class="mt-2 rounded-full bg-purple-600 px-4 py-1 text-sm text-white">
+						{gauge.label}
+					</span>
+					<span class="text-xs text-white">
+						{gauge.pid}{gauge.unit ? ` (${gauge.unit})` : ''}
+					</span>
+				</div>
+			{/each}
+		</div>
+	</div>
 {/if}

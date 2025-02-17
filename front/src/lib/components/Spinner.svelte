@@ -1,3 +1,5 @@
+<div class="spinner"></div>
+
 <style>
 	.spinner {
 		border: 4px solid rgba(0, 0, 0, 0.1);
@@ -8,8 +10,8 @@
 		animation: spin 1s linear infinite;
 	}
 	@keyframes spin {
-		to { transform: rotate(360deg); }
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>
-
-<div class="spinner"></div>

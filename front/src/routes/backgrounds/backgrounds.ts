@@ -18,9 +18,12 @@ export async function uploadBackground(file: File): Promise<void> {
 }
 
 export async function deleteBackground(filename: string): Promise<void> {
-	const response = await fetch(`${apiUrl}/api/backgrounds?filename=${encodeURIComponent(filename)}`, {
-		method: 'DELETE'
-	});
+	const response = await fetch(
+		`${apiUrl}/api/backgrounds?filename=${encodeURIComponent(filename)}`,
+		{
+			method: 'DELETE'
+		}
+	);
 	if (!response.ok) {
 		throw new Error(`Delete failed: ${response.statusText}`);
 	}
