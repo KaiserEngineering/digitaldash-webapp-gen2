@@ -1,28 +1,27 @@
-// src/routes/upload/+server.ts
 export const prerender = false;
 
 import { json, type RequestEvent } from '@sveltejs/kit';
-
 import fs from 'fs';
 import path from 'path';
 
-const IMAGE_DIR = 'static/dummy-themes'; // Path to dummy images
+const BACKGROUND_DIR = 'static/dummy-backgrounds'; // Path to dummy background images
 
 export async function GET() {
 	const files = fs
-		.readdirSync(IMAGE_DIR)
+		.readdirSync(BACKGROUND_DIR)
 		.filter((file) => file.endsWith('.png.gz')) // Only get .png.gz files
-		.map((file) => {
-			const filePath = path.join(IMAGE_DIR, file);
+		.reduce((acc, file) => {
+			const filePath = path.join(BACKGROUND_DIR, file);
 			const stats = fs.statSync(filePath);
 
-			return {
-				name: file,
+			acc[file] = {
 				size: stats.size,
 				lastModified: stats.mtime.getTime(), // Timestamp in milliseconds
 				type: 'image/png'
 			};
-		});
+
+			return acc;
+		}, {} as Record<string, any>); // Ensure it's an object
 
 	return json(files);
 }
@@ -43,7 +42,7 @@ export async function POST(event: RequestEvent) {
 		const bytes = new Uint8Array(arrayBuffer);
 
 		// Log the size and raw bytes in hexadecimal format.
-		console.log(`Received file upload via FormData:`);
+		console.log(`Received background file upload:`);
 		console.log(`Name: ${name}`);
 		console.log(`File size: ${bytes.length} bytes`);
 		const hexDump = Array.from(bytes)
@@ -53,12 +52,12 @@ export async function POST(event: RequestEvent) {
 
 		// Return a dummy JSON response.
 		return json({
-			message: 'File uploaded successfully (dummy response)',
-			id: 'dummy123',
-			url: `https://example.com/uploads/dummy123-${name}`
+			message: 'Background uploaded successfully (dummy response)',
+			id: 'dummy-bg-123',
+			url: `https://example.com/uploads/dummy-bg-123-${name}`
 		});
 	} catch (error) {
-		console.error('Error processing file upload:', error);
-		return json({ error: 'Error processing file upload' }, { status: 400 });
+		console.error('Error processing background upload:', error);
+		return json({ error: 'Error processing background upload' }, { status: 400 });
 	}
 }

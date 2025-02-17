@@ -1,29 +1,19 @@
 export const prerender = false;
 
 import type { PageLoad } from './$types';
+import { apiUrl } from '$lib/config';
 
-export const load: PageLoad = () => {
+export const load: PageLoad = async ({ fetch }) => {
+	// Fetch factory images from a static JSON file
+	const factoryRes = await fetch('/factory-themes.json');
+	const factoryImages = await factoryRes.json();
+
+	// Fetch user-uploaded images from the ESP32 API
+	const customerRes = await fetch(`${apiUrl}/theme`);
+	const customerImages = customerRes.ok ? await customerRes.json() : {};
+
 	return {
-		factoryImages: {
-			'Bar (Aura)': {
-				name: 'Bar (Aura)',
-				size: 0,
-				type: 'image/jpeg',
-				lastModified: Date.now()
-			},
-			'Stock': {
-				name: 'Stock',
-				size: 0,
-				type: 'image/jpeg',
-				lastModified: Date.now()
-			},
-			'Stock RS': {
-				name: 'Stock RS',
-				size: 0,
-				type: 'image/jpeg',
-				lastModified: Date.now()
-			},
-		},
-		customerImages: {}
+		factoryImages,
+		customerImages
 	};
 };

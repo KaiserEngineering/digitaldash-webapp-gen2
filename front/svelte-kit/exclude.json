@@ -1,0 +1,6 @@
+{
+	"exclude": [
+		"static/dummy-themes/**",
+        "static/dummy-backgrouds/**"
+	]
+}

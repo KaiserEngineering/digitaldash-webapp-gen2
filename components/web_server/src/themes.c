@@ -28,65 +28,107 @@
 #include "THEMES.h"
 #include "esp_log.h"
 #include "esp_http_server.h"
+#include "sys/dirent.h"
 #include <stdlib.h>
 
 static const char *TAG = "ThemeRoutes";
 
-/* Dummy handler for GET /theme */
+#define MAX_RESPONSE_SIZE 1024 // Adjust as needed
+
 esp_err_t theme_get_handler(httpd_req_t *req)
 {
+    char response[MAX_RESPONSE_SIZE];
+    int len = snprintf(response, sizeof(response), "{\"images\":[");
+
+    const char *theme_dir = "/spiffs/data/themes";
+    DIR *dir = opendir(theme_dir);
+    if (!dir)
+    {
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to open SPIFFS theme directory");
+        return ESP_FAIL;
+    }
+
+    struct dirent *entry;
+    int first = 1;
+
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (entry->d_type == DT_DIR) // Check if it's a directory
+        {
+            char subdir_path[512];
+            snprintf(subdir_path, sizeof(subdir_path), "%s/%s", theme_dir, entry->d_name);
+
+            DIR *subdir = opendir(subdir_path);
+            if (!subdir)
+            {
+                ESP_LOGW("SPIFFS", "Skipping inaccessible directory: %s", subdir_path);
+                continue;
+            }
+
+            struct dirent *sub_entry;
+            while ((sub_entry = readdir(subdir)) != NULL)
+            {
+                if (strstr(sub_entry->d_name, ".png.gz"))
+                { // Filter only .png.gz files
+                    if (!first)
+                    {
+                        len += snprintf(response + len, sizeof(response) - len, ",");
+                    }
+                    len += snprintf(response + len, sizeof(response) - len, "\"%s/%s\"", entry->d_name, sub_entry->d_name);
+                    first = 0;
+                }
+            }
+            closedir(subdir);
+        }
+    }
+    closedir(dir);
+
+    snprintf(response + len, sizeof(response) - len, "]}");
+
     httpd_resp_set_type(req, "application/json");
-    httpd_resp_sendstr(req, "{\"theme\": \"default\", \"message\": \"GET theme endpoint dummy response\"}");
+    httpd_resp_send(req, response, strlen(response));
     return ESP_OK;
 }
 
 esp_err_t theme_post_handler(httpd_req_t *req)
 {
-    int total_len = req->content_len;
-    if(total_len <= 0){
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "No data received");
+    char filepath[64] = "/spiffs/";
+    httpd_req_recv(req, filepath + 8, sizeof(filepath) - 8); // Get filename from request
+
+    FILE *file = fopen(filepath, "wb");
+    if (!file)
+    {
+        httpd_resp_send_500(req);
         return ESP_FAIL;
     }
 
-    // Allocate a buffer to hold the binary data.
-    char *buf = malloc(total_len);
-    if (!buf) {
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR,
-                              "Memory allocation failed in theme_post_handler");
-        return ESP_FAIL;
+    char buffer[512];
+    int bytes;
+    while ((bytes = httpd_req_recv(req, buffer, sizeof(buffer))) > 0)
+    {
+        fwrite(buffer, 1, bytes, file);
     }
-
-    int received = 0;
-    while (received < total_len) {
-        int ret = httpd_req_recv(req, buf + received, total_len - received);
-        if (ret <= 0) {
-            free(buf);
-            httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR,
-                                  "HTTP request receive error in theme_post_handler");
-            return ESP_FAIL;
-        }
-        received += ret;
-    }
-
-    ESP_LOGI(TAG, "Theme POST received binary blob, size: %d bytes", total_len);
-    ESP_LOG_BUFFER_HEX(TAG, buf, total_len);
-
-    // Here, you can process the binary data. For example, if it represents a PNG image,
-    // you might save it to flash or parse it further.
-
-    free(buf);
-
-    httpd_resp_set_type(req, "application/json");
-    httpd_resp_sendstr(req, "{\"status\": \"Theme POST received\"}");
+    fclose(file);
+    httpd_resp_sendstr(req, "File uploaded successfully");
     return ESP_OK;
 }
 
 /* Dummy handler for DELETE /theme */
 esp_err_t theme_delete_handler(httpd_req_t *req)
 {
-    httpd_resp_set_type(req, "application/json");
-    httpd_resp_sendstr(req, "{\"status\": \"Theme deleted\"}");
-    return ESP_OK;
+    char filepath[64];
+    snprintf(filepath, sizeof(filepath), "/spiffs/%s", req->uri + strlen("/themes/"));
+
+    if (remove(filepath) == 0)
+    {
+        httpd_resp_sendstr(req, "File deleted successfully");
+        return ESP_OK;
+    }
+    else
+    {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
 }
 
 /* Helper function to register theme routes */
@@ -96,39 +138,39 @@ esp_err_t register_themes(httpd_handle_t server)
 
     // Register GET /theme
     httpd_uri_t theme_get_uri = {
-        .uri       = "/theme",
-        .method    = HTTP_GET,
-        .handler   = theme_get_handler,
-        .user_ctx  = NULL
-    };
+        .uri = "/theme",
+        .method = HTTP_GET,
+        .handler = theme_get_handler,
+        .user_ctx = NULL};
     ret = httpd_register_uri_handler(server, &theme_get_uri);
-    if (ret != ESP_OK) {
+    if (ret != ESP_OK)
+    {
         ESP_LOGE(TAG, "Failed to register theme GET handler: %s", esp_err_to_name(ret));
         return ret;
     }
 
     // Register POST /theme
     httpd_uri_t theme_post_uri = {
-        .uri       = "/theme",
-        .method    = HTTP_POST,
-        .handler   = theme_post_handler,
-        .user_ctx  = NULL
-    };
+        .uri = "/theme",
+        .method = HTTP_POST,
+        .handler = theme_post_handler,
+        .user_ctx = NULL};
     ret = httpd_register_uri_handler(server, &theme_post_uri);
-    if (ret != ESP_OK) {
+    if (ret != ESP_OK)
+    {
         ESP_LOGE(TAG, "Failed to register theme POST handler: %s", esp_err_to_name(ret));
         return ret;
     }
 
     // Register DELETE /theme
     httpd_uri_t theme_delete_uri = {
-        .uri       = "/theme",
-        .method    = HTTP_DELETE,
-        .handler   = theme_delete_handler,
-        .user_ctx  = NULL
-    };
+        .uri = "/theme",
+        .method = HTTP_DELETE,
+        .handler = theme_delete_handler,
+        .user_ctx = NULL};
     ret = httpd_register_uri_handler(server, &theme_delete_uri);
-    if (ret != ESP_OK) {
+    if (ret != ESP_OK)
+    {
         ESP_LOGE(TAG, "Failed to register theme DELETE handler: %s", esp_err_to_name(ret));
         return ret;
     }

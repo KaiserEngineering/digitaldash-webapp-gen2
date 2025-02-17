@@ -2,12 +2,14 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "BACKGROUNDS.h"
 #include "esp_vfs.h"
 #include "esp_log.h"
 #include "esp_http_server.h"
 #include "esp_err.h"
 #include "web_server.h"
 #include "themes.h"
+#include "backgrounds.h"
 #include "ota_handler.h"
 
 static const char *TAG = "WebServer";
@@ -167,9 +169,17 @@ esp_err_t start_webserver()
     httpd_register_uri_handler(server, &(httpd_uri_t){.uri = "/", .method = HTTP_GET, .handler = index_html_handler, .user_ctx = NULL, .is_websocket = false});
     httpd_register_uri_handler(server, &(httpd_uri_t){.uri = "/favicon.png", .method = HTTP_GET, .handler = favicon_handler, .user_ctx = NULL, .is_websocket = false});
 
-    if (register_themes(server) != ESP_OK)
+    // if (register_themes(server) != ESP_OK)
+    // {
+    //     ESP_LOGE(TAG, "Failed to register themes");
+    //     httpd_stop(server);
+    //     free(rest_context);
+    //     return ESP_FAIL;
+    // }
+
+    if (register_backgrounds(server) != ESP_OK)
     {
-        ESP_LOGE(TAG, "Failed to register themes");
+        ESP_LOGE(TAG, "Failed to register backgrounds");
         httpd_stop(server);
         free(rest_context);
         return ESP_FAIL;
