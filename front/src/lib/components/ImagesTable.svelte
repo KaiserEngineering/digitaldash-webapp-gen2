@@ -11,17 +11,7 @@
 	import { Trash2 } from 'lucide-svelte';
 	import { Button } from '@/components/ui/button';
 
-	// Accept an object where keys map to file info.
-	// (Alternatively, if your data is an array, you can adjust accordingly.)
-	export let images: { [key: string]: { size: number; type: string; lastModified: number } } = {};
-	// Whether the table should allow editing (e.g. show the delete button)
-	export let editable: boolean = true;
-
-	/** Delete handler – you might want to emit an event instead of handling deletion here */
-	function handleDelete(key: string) {
-		// Handle delete logic here (or dispatch an event)
-		console.log('Delete image with key:', key);
-	}
+	let { images, editable = true, deleteCallback = () => {} } = $props();
 
 	function formatFileSize(bytes: number): string {
 		if (bytes < 1024) return bytes + ' B';
@@ -58,7 +48,7 @@
 					<TableCell class="border p-2">{formatDate(image.lastModified)}</TableCell>
 					<TableCell class="border p-2 text-center">
 						{#if editable}
-							<Button variant="destructive" size="icon" onclick={() => handleDelete(key)}>
+							<Button variant="destructive" size="icon" onclick={() => deleteCallback(key)}>
 								<Trash2 class="h-4 w-4" />
 							</Button>
 						{/if}

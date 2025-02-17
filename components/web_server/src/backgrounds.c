@@ -76,44 +76,86 @@ esp_err_t background_get_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-esp_err_t background_post_handler(httpd_req_t *req)
+esp_err_t background_upload_handler(httpd_req_t *req)
 {
-    char filepath[64] = "/spiffs/data/backgrounds/";
-    httpd_req_recv(req, filepath + 22,
-                   sizeof(filepath) - 22); // Append filename to path
+    char filename[64];
+    char query[128];
 
+    // Expect URL like: /api/backgrounds?filename=dog.png
+    if (httpd_req_get_url_query_str(req, query, sizeof(query)) == ESP_OK)
+    {
+        if (httpd_query_key_value(query, "filename", filename, sizeof(filename)) != ESP_OK)
+        {
+            httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing filename parameter");
+            return ESP_FAIL;
+        }
+    }
+    else
+    {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing query parameters");
+        return ESP_FAIL;
+    }
+
+    // Build the file path for SPIFFS
+    char filepath[128];
+    snprintf(filepath, sizeof(filepath), "/spiffs/data/backgrounds/%s", filename);
+    ESP_LOGI(TAG, "Uploading file to: %s", filepath);
+
+    // Open the file for writing (binary mode)
     FILE *file = fopen(filepath, "wb");
     if (!file)
     {
-        httpd_resp_send_500(req);
+        ESP_LOGE(TAG, "Failed to open file for writing");
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to open file");
         return ESP_FAIL;
     }
 
     char buffer[512];
-    int bytes;
-    while ((bytes = httpd_req_recv(req, buffer, sizeof(buffer))) > 0)
+    int received = 0;
+    while ((received = httpd_req_recv(req, buffer, sizeof(buffer))) > 0)
     {
-        fwrite(buffer, 1, bytes, file);
+        fwrite(buffer, 1, received, file);
     }
     fclose(file);
-    httpd_resp_sendstr(req, "Background image uploaded successfully");
+
+    httpd_resp_sendstr(req, "File uploaded successfully");
     return ESP_OK;
 }
 
 esp_err_t background_delete_handler(httpd_req_t *req)
 {
-    char filepath[64];
-    snprintf(filepath, sizeof(filepath), "/spiffs/data/backgrounds/%s",
-             req->uri + strlen("/backgrounds/"));
+    char filename[64];
+    char query[128];
+
+    // Expect URL like: /api/backgrounds?filename=dog.png
+    if (httpd_req_get_url_query_str(req, query, sizeof(query)) == ESP_OK)
+    {
+        if (httpd_query_key_value(query, "filename", filename, sizeof(filename)) != ESP_OK)
+        {
+            httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing filename parameter");
+            return ESP_FAIL;
+        }
+    }
+    else
+    {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing query parameters");
+        return ESP_FAIL;
+    }
+
+    // Build the file path
+    char filepath[128];
+    snprintf(filepath, sizeof(filepath), "/spiffs/data/backgrounds/%s", filename);
+    ESP_LOGI(TAG, "Deleting file: %s", filepath);
 
     if (remove(filepath) == 0)
     {
-        httpd_resp_sendstr(req, "Background image deleted successfully");
+        httpd_resp_sendstr(req, "File deleted successfully");
         return ESP_OK;
     }
     else
     {
-        httpd_resp_send_500(req);
+        ESP_LOGE(TAG, "Failed to delete file: %s", filepath);
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to delete file");
         return ESP_FAIL;
     }
 }
