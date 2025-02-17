@@ -52,8 +52,6 @@ export const load: PageLoad = async ({ fetch }) => {
 	// Convert results array to an object
 	factoryImages = Object.fromEntries(results.filter(([_, value]) => value !== null));
 
-	console.log(factoryImages);
-
 	return {
 		factoryImages,
 		customerImages
