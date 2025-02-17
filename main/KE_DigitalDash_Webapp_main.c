@@ -17,6 +17,7 @@
 
 #include "esp_vfs_semihost.h"
 #include "esp_vfs_fat.h"
+#include "esp_spiffs.h"
 #include "nvs_flash.h"
 #include "esp_netif.h"
 #include "esp_event.h"
@@ -33,9 +34,11 @@
 
 #include "web_server.h"
 #include "wifi_ap.h"
+#include "spiffs_init.h"
 #include "esp_wifi.h"
 #include <esp_flash_partitions.h>
-#include "esp_ota_ops.h"
+#include "esp_ota_ops.h" 
+#include "spiffs_init.h"
 
 static const char *TAG = "Main";
 
@@ -49,6 +52,13 @@ void init_webapp_ap(void)
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
+
+    // Initialize SPIFFS
+    init_spiffs();
+
+    ESP_LOGI(TAG, "Listing files in SPIFFS:");
+    list_spiffs_files();
+    ESP_LOGI(TAG, "Listing files in SPIFFS done");
 
     // Initialize Wi-Fi Access Point
     wifi_init_softap();
