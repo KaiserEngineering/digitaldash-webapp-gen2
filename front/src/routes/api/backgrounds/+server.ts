@@ -60,6 +60,7 @@ export async function GET() {
 export const POST: RequestHandler = async ({ request }) => {
 	const data = await request.formData();
 	const file = data.get('file') as File;
+	console.log(data)
 	if (!file) {
 		return new Response(JSON.stringify({ error: 'No file uploaded' }), { status: 400 });
 	}

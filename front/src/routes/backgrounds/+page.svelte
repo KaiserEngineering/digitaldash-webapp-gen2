@@ -4,7 +4,7 @@
 	import FileUploaderExplorer from '@/components/FileUploaderExplorer.svelte';
 	import ImagesTable from '@/components/ImagesTable.svelte';
 	import type { PageProps } from './$types';
-	import { uploadBackground, deleteBackground } from './backgrounds';
+	import { uploadBackground, deleteBackground } from './backgrounds.svelte';
 
 	// For SvelteKit, you may receive data from your load function.
 	// (Depending on your SvelteKit version you might use the $page store.)
@@ -19,7 +19,7 @@
 
 <!-- File uploader area -->
 <div class="mx-auto w-1/2">
-	<FileUploaderExplorer uploadCallback={uploadBackground} />
+	<FileUploaderExplorer images={customerImages} uploadCallback={uploadBackground} />
 </div>
 
 <!-- Render Customer Images -->

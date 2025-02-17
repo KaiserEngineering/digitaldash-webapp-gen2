@@ -2,7 +2,7 @@
 	import { Input } from '@/components/ui/input';
 	import { Button } from '@/components/ui/button';
 
-	let { uploadCallback } = $props();
+	let { uploadCallback, images } = $props();
 	let files: File[] = $state([]);
 
 	function handleFileChange(event: Event) {
@@ -15,5 +15,5 @@
 
 <div class="space-y-4">
 	<Input class="cursor-pointer" type="file" multiple onchange={handleFileChange} />
-	<Button onclick={uploadCallback} disabled={files.length === 0}>Upload</Button>
+	<Button onclick={() => uploadCallback(files, images)} disabled={files.length === 0}>Upload</Button>
 </div>
