@@ -30,6 +30,7 @@
 #include "esp_log.h"
 #include "sys/dirent.h"
 #include <stdlib.h>
+#include <time.h>
 
 static const char *TAG = "BackgroundRoutes";
 
@@ -38,7 +39,7 @@ static const char *TAG = "BackgroundRoutes";
 esp_err_t background_get_handler(httpd_req_t *req)
 {
     char response[MAX_RESPONSE_SIZE];
-    int len = snprintf(response, sizeof(response), "{\"images\":[");
+    int len = snprintf(response, sizeof(response), "{");
 
     const char *background_dir = "/spiffs/data/backgrounds";
     DIR *dir = opendir(background_dir);
@@ -60,14 +61,15 @@ esp_err_t background_get_handler(httpd_req_t *req)
             {
                 len += snprintf(response + len, sizeof(response) - len, ",");
             }
-            len += snprintf(response + len, sizeof(response) - len, "\"%s\"",
-                            entry->d_name);
+            len += snprintf(response + len, sizeof(response) - len,
+                            "\"%s\": {\"url\": \"/backgrounds/%s\", \"size\": 0, \"type\": \"image/png\", \"lastModified\": %lld}",
+                            entry->d_name, entry->d_name, (long long)time(NULL));
             first = 0;
         }
     }
     closedir(dir);
 
-    snprintf(response + len, sizeof(response) - len, "]}");
+    snprintf(response + len, sizeof(response) - len, "}");
 
     httpd_resp_set_type(req, "application/json");
     httpd_resp_send(req, response, strlen(response));
@@ -122,7 +124,7 @@ esp_err_t register_backgrounds(httpd_handle_t server)
     esp_err_t ret;
 
     // Register GET /backgrounds
-    httpd_uri_t background_get_uri = {.uri = "/backgrounds",
+    httpd_uri_t background_get_uri = {.uri = "/api/backgrounds",
                                       .method = HTTP_GET,
                                       .handler = background_get_handler,
                                       .user_ctx = NULL};
@@ -135,7 +137,7 @@ esp_err_t register_backgrounds(httpd_handle_t server)
     }
 
     // Register POST /backgrounds
-    httpd_uri_t background_post_uri = {.uri = "/backgrounds",
+    httpd_uri_t background_post_uri = {.uri = "/api/backgrounds",
                                        .method = HTTP_POST,
                                        .handler = background_post_handler,
                                        .user_ctx = NULL};
@@ -148,7 +150,7 @@ esp_err_t register_backgrounds(httpd_handle_t server)
     }
 
     // Register DELETE /backgrounds
-    httpd_uri_t background_delete_uri = {.uri = "/backgrounds",
+    httpd_uri_t background_delete_uri = {.uri = "/api/backgrounds",
                                          .method = HTTP_DELETE,
                                          .handler = background_delete_handler,
                                          .user_ctx = NULL};

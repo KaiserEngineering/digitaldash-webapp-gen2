@@ -43,7 +43,9 @@
 				<TableHead class="w-1/5 border p-2">Size</TableHead>
 				<TableHead class="w-1/5 border p-2">Type</TableHead>
 				<TableHead class="w-1/4 border p-2">Last Modified</TableHead>
-				<TableHead class="w-1/6 border p-2 text-center">Actions</TableHead>
+				{#if editable}
+					<TableHead class="w-1/6 border p-2 text-center">Actions</TableHead>
+				{/if}
 			</TableRow>
 		</TableHeader>
 		<TableBody>

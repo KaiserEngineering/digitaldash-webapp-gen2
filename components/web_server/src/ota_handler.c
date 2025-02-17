@@ -86,7 +86,7 @@ esp_err_t update_post_handler(httpd_req_t *req)
 esp_err_t register_ota_routes(httpd_handle_t server)
 {
     httpd_uri_t update_post = {
-        .uri = "/update",
+        .uri = "/api/update",
         .method = HTTP_POST,
         .handler = update_post_handler,
         .user_ctx = NULL};
