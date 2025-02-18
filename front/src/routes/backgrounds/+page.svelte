@@ -18,7 +18,7 @@
 <h1 class="text-2xl font-semibold">Background Images</h1>
 
 <!-- File uploader area -->
-<div class="mx-auto w-1/2">
+<div class="mx-auto w-full lg:w-1/2">
 	<FileUploaderExplorer images={customerImages} uploadCallback={uploadBackground} />
 </div>
 
