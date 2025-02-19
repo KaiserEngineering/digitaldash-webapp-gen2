@@ -49,7 +49,7 @@
 						<TableCell class="p-2 align-middle">{formatDate(image.lastModified)}</TableCell>
 						{#if editable}
 							<TableCell class="p-2 text-center align-middle">
-								<Button variant="destructive" size="icon" on:click={() => deleteCallback(key)}>
+								<Button variant="destructive" size="icon" onclick={() => deleteCallback(key)}>
 									<Trash2 class="h-4 w-4" />
 								</Button>
 							</TableCell>

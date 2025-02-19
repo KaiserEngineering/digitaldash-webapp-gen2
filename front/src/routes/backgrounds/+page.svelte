@@ -7,24 +7,31 @@
 	import { uploadBackground, deleteBackground } from './backgrounds.svelte';
 
 	// For SvelteKit, you may receive data from your load function.
-	// (Depending on your SvelteKit version you might use the $page store.)
 	let { data }: PageProps = $props();
 
 	// Initialize a reactive object for customer images.
-	// (If your load function returns an array, consider converting it into an object keyed by filename.)
 	let customerImages: { [key: string]: any } = $state(data?.customerImages || {});
+	// Create a wrapper function to ensure reactivity
+	async function handleUpload(file: File): Promise<void> {
+		await uploadBackground(file, customerImages);
+		// Force reactivity by creating a new object
+		customerImages = { ...customerImages };
+	}
 </script>
 
 <h1 class="text-2xl font-semibold">Background Images</h1>
 
 <!-- File uploader area -->
 <div class="mx-auto w-full lg:w-1/2">
-	<FileUploaderExplorer images={customerImages} uploadCallback={uploadBackground} />
+	<FileUploaderExplorer uploadCallback={handleUpload} />
 </div>
 
 <!-- Render Customer Images -->
 <h2 class="mt-4 text-xl font-semibold">Customer Images</h2>
-<ImagesTable images={customerImages} deleteCallback={deleteBackground} />
+<ImagesTable
+	images={customerImages}
+	deleteCallback={(filename: string) => deleteBackground(filename, customerImages)}
+/>
 
 <!-- Render Factory Images -->
 <h2 class="mt-4 text-xl font-semibold">Factory Images</h2>

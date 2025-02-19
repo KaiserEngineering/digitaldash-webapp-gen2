@@ -2,52 +2,83 @@
 import { apiUrl } from '$lib/config'; // adjust as needed (or leave empty if same origin)
 import { toast } from 'svelte-5-french-toast';
 
+interface UploadResponse {
+	success: boolean;
+	message?: string;
+	filename?: string;
+}
+
 export async function uploadBackground(
-	files: File | File[],
-	images: { [key: string]: File }
-): Promise<Response> {
+	files: File,
+	images: { [key: string]: any } = {}
+): Promise<UploadResponse> {
 	const formData = new FormData();
 
-	files = $state.snapshot(files);
-
-	// If multiple files are provided, upload them all
-	if (Array.isArray(files)) {
-		for (const file of files) {
-			formData.append('file', file);
-			formData.append('filename', file.name);
-		}
-	}
+	formData.append('file', files);
+	formData.append('filename', files.name);
 
 	const response = await fetch(`${apiUrl}/backgrounds`, {
 		method: 'POST',
 		body: formData
 	});
+
 	if (!response.ok) {
 		toast.error('Upload failed');
 		throw new Error(`Upload failed: ${response.statusText}`);
 	}
-	toast.success('Upload successful');
 
-	if (Array.isArray(files)) {
-		for (const file of files) {
-			images[file.name] = file;
-		}
+	const result: UploadResponse = await response.json();
+
+	if (result.filename) {
+		// Get the corresponding file object
+		const fileToUpload = Array.isArray(files)
+			? files.find((f) => f.name === result.filename) || files[0]
+			: files;
+
+		// Update the images object with the server response and file metadata
+		images[result.filename] = {
+			filename: result.filename,
+			url: `${apiUrl}/backgrounds/${result.filename}`,
+			size: fileToUpload.size,
+			lastModified: fileToUpload.lastModified,
+			type: fileToUpload.type
+		};
+
+		toast.success('Upload successful');
 	} else {
-		images[files.name] = files;
+		toast.error(result.message || 'Upload failed');
 	}
 
-	return response;
+	return result;
 }
 
-export async function deleteBackground(filename: string): Promise<void> {
-	const response = await fetch(
-		`${apiUrl}/api/backgrounds?filename=${encodeURIComponent(filename)}`,
-		{
-			method: 'DELETE'
-		}
-	);
-	if (!response.ok) {
-		throw new Error(`Delete failed: ${response.statusText}`);
+export async function deleteBackground(
+	filename: string,
+	images: { [key: string]: any } = {}
+): Promise<void> {
+	if (!filename) {
+		toast.error('No filename provided');
+		throw new Error('Filename is required');
 	}
-	console.log(await response.text());
+
+	try {
+		const response = await fetch(`${apiUrl}/backgrounds?filename=${encodeURIComponent(filename)}`, {
+			method: 'DELETE'
+		});
+
+		if (!response.ok) {
+			toast.error('Failed to delete image');
+			throw new Error(`Delete failed: ${response.statusText}`);
+		}
+
+		// Remove the image from the local state if images object is provided
+		if (images && filename in images) {
+			delete images[filename];
+		}
+
+		toast.success('Image deleted successfully');
+	} catch (error) {
+		toast.error('Failed to delete image');
+		throw error;
+	}
 }
