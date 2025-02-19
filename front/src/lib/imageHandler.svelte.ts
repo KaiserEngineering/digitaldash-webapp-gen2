@@ -1,5 +1,5 @@
 // src/lib/imageHandler.ts
-import { factoryImageNames, embeddedPrefix, apiUrl } from '$lib/config';
+import { factoryImages, embeddedPrefix, apiUrl } from '$lib/config';
 
 export interface ImageData {
 	name: string;
@@ -22,7 +22,7 @@ export class ImageHandler {
 	 * - User images are served via an API endpoint.
 	 */
 	determineEndpoint(name: string): string {
-		if (factoryImageNames.includes(name)) {
+		if (Object.keys(factoryImages).includes(name)) {
 			if (embeddedPrefix) {
 				return `/${embeddedPrefix}/background/`;
 			} else {

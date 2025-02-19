@@ -64,20 +64,25 @@ static bool is_image_file(const char *filename, const char **mime_type)
 esp_err_t list_backgrounds(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "GET request received: %s", req->uri);
-
     ESP_LOGI(TAG, "Listing all backgrounds");
 
-    char response[MAX_RESPONSE_SIZE];
-    int len = snprintf(response, sizeof(response), "{");
-
-    const char *background_dir = "/spiffs/data/backgrounds";
+    const char *background_dir = "/spiffs";  // SPIFFS has no directories, so files must be named accordingly
     DIR *dir = opendir(background_dir);
     if (!dir)
     {
-        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR,
-                                   "Failed to open SPIFFS background directory");
+        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to open SPIFFS directory");
     }
 
+    // 🔹 Use dynamically allocated buffer to handle large responses
+    size_t buffer_size = 1024; // Start with 1KB and expand if needed
+    char *response = malloc(buffer_size);
+    if (!response)
+    {
+        closedir(dir);
+        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Out of memory");
+    }
+
+    size_t len = snprintf(response, buffer_size, "{");
     struct dirent *entry;
     int first = 1;
     struct stat st;
@@ -86,35 +91,46 @@ esp_err_t list_backgrounds(httpd_req_t *req)
     while ((entry = readdir(dir)) != NULL)
     {
         const char *mime_type;
-        if (is_image_file(entry->d_name, &mime_type)) // ✅ Ensure it's a valid image
+        if (is_image_file(entry->d_name, &mime_type))  // ✅ Ensure it's a valid image
         {
-            int path_len = snprintf(filepath, sizeof(filepath), "%s/%s", background_dir, entry->d_name);
-            if (path_len >= sizeof(filepath))
-            {
-                ESP_LOGE(TAG, "Path too long");
-                continue;
-            }
-
+            snprintf(filepath, sizeof(filepath), "%s/%s", background_dir, entry->d_name);
             if (stat(filepath, &st) == 0)
             {
-                if (!first)
+                // 🔹 Expand response buffer if needed
+                size_t needed_space = 256; // Approximate size for this JSON entry
+                if (len + needed_space >= buffer_size)
                 {
-                    len += snprintf(response + len, sizeof(response) - len, ",");
+                    buffer_size *= 2;  // Double buffer size
+                    char *new_response = realloc(response, buffer_size);
+                    if (!new_response)
+                    {
+                        free(response);
+                        closedir(dir);
+                        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Out of memory");
+                    }
+                    response = new_response;
                 }
-                len += snprintf(response + len, sizeof(response) - len,
-                                "\"%s\": {\"url\": \"/api/backgrounds/%s\", \"size\": %lld, \"type\": \"%s\", \"lastModified\": %lld}",
+
+                // 🔹 Add comma if this is not the first entry
+                len += snprintf(response + len, buffer_size - len, "%s\"%s\": {\"url\": \"/api/backgrounds/%s\", \"size\": %lld, \"type\": \"%s\", \"lastModified\": %lld}",
+                                first ? "" : ",",
                                 entry->d_name, entry->d_name, (long long)st.st_size, mime_type, (long long)st.st_mtime);
                 first = 0;
             }
         }
     }
+
     closedir(dir);
-    snprintf(response + len, sizeof(response) - len, "}");
 
+    // 🔹 Ensure JSON is properly closed
+    len += snprintf(response + len, buffer_size - len, "}");
+
+    // 🔹 Send JSON response
     httpd_resp_set_type(req, "application/json");
-    return httpd_resp_send(req, response, strlen(response));
+    esp_err_t ret = httpd_resp_send(req, response, len);
+    free(response);  // ✅ Free memory after sending
 
-    return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid backgrounds (list) request");
+    return ret;
 }
 
 esp_err_t get_background(httpd_req_t *req)

@@ -1,5 +1,5 @@
 // src/routes/api/backgrounds/[name]/+server.ts
-import { embeddedPrefix, factoryImageNames } from '@/config';
+import { embeddedPrefix, factoryImages } from '@/config';
 import type { RequestEvent } from '@sveltejs/kit';
 
 export interface ImageInfo {
@@ -26,7 +26,7 @@ export async function GET({
 
 	// If we see ${embeddedPrefix}/backgrounds/ in the URL, it's a factory image
 	// and we load from /static/backgrounds, if not we load from /dummy-backgrounds
-	let prefix = factoryImageNames.includes(name)? '/backgrounds/' : '/dummy-backgrounds/';
+	let prefix = Object.keys(factoryImages).includes(name)? '/backgrounds/' : '/dummy-backgrounds/';
 
 	// Fetch the file from the dummy-backgrounds folder
 	const res = await fetch(`${prefix}${encodeURIComponent(name)}`);
