@@ -1,6 +1,6 @@
 export const prerender = false;
 
-import { apiUrl, embeddedPrefix, factoryImageNames } from '$lib/config';
+import { apiUrl, factoryImageNames } from '$lib/config';
 import { ImageHandler } from '@/imageHandler.svelte';
 import type { PageLoad } from './$types';
 

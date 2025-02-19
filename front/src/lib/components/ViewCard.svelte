@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import Spinner from './Spinner.svelte';
 	import { ImageHandler } from '$lib/imageHandler.svelte';
+	import { Gauge as GaugeIcon } from 'lucide-svelte';
 
 	// Define the types for gauges and views
 	type Gauge = {
@@ -78,6 +79,8 @@
 			loading = false;
 		}
 	});
+
+	const themesReady = false;
 </script>
 
 {#if loading}
@@ -98,16 +101,20 @@
 			{#each view.gauges as gauge}
 				<div class="flex flex-col items-center">
 					<div class="relative h-24 w-24">
-						<img
-							src={`/themes/${gauge.theme.face}/face.png`}
-							alt="Gauge Face"
-							class="h-full w-full"
-						/>
-						<img
-							src={`/themes/${gauge.theme.face}/needle.png`}
-							alt="Gauge Needle"
-							class="absolute inset-0"
-						/>
+						{#if themesReady}
+							<img
+								src={`/themes/${gauge.theme.face}/face.png`}
+								alt="Gauge Face"
+								class="h-full w-full"
+							/>
+							<img
+								src={`/themes/${gauge.theme.face}/needle.png`}
+								alt="Gauge Needle"
+								class="absolute inset-0"
+							/>
+						{:else}
+							<GaugeIcon size="62" />
+						{/if}
 					</div>
 					<span class="mt-2 rounded-full bg-purple-600 px-4 py-1 text-sm text-white">
 						{gauge.label}

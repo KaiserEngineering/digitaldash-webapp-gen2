@@ -1,4 +1,5 @@
 // src/routes/api/backgrounds/[name]/+server.ts
+import { embeddedPrefix, factoryImageNames } from '@/config';
 import type { RequestEvent } from '@sveltejs/kit';
 
 export interface ImageInfo {
@@ -10,17 +11,25 @@ export interface ImageInfo {
 
 export async function GET({
 	params,
-	fetch
+	fetch,
+	url
 }: {
 	params: { name: string };
 	fetch: RequestEvent['fetch'];
+	url: URL;
 }): Promise<Response> {
 	const { name } = params;
+
 	if (!name) {
 		return new Response('Missing image name', { status: 400 });
 	}
+
+	// If we see ${embeddedPrefix}/backgrounds/ in the URL, it's a factory image
+	// and we load from /static/backgrounds, if not we load from /dummy-backgrounds
+	let prefix = factoryImageNames.includes(name)? '/backgrounds/' : '/dummy-backgrounds/';
+
 	// Fetch the file from the dummy-backgrounds folder
-	const res = await fetch(`/dummy-backgrounds/${encodeURIComponent(name)}`);
+	const res = await fetch(`${prefix}${encodeURIComponent(name)}`);
 	if (!res.ok) {
 		return new Response('Image not found', { status: 404 });
 	}

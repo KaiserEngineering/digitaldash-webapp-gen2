@@ -1,5 +1,5 @@
 // src/lib/imageHandler.ts
-import {factoryImageNames, embeddedPrefix, apiUrl} from '$lib/config';
+import { factoryImageNames, embeddedPrefix, apiUrl } from '$lib/config';
 
 export interface ImageData {
 	name: string;
@@ -9,8 +9,6 @@ export interface ImageData {
 	lastModified: number;
 	contentType: string;
 }
-
-const FACTORY_BACKGROUNDS = ['flare.png.gz', 'galaxy.png.gz'];
 
 // Simple in-memory cache for images.
 const imageCache = new Map<string, ImageData>();
@@ -25,9 +23,13 @@ export class ImageHandler {
 	 */
 	determineEndpoint(name: string): string {
 		if (factoryImageNames.includes(name)) {
-			return `${embeddedPrefix}/backgrounds/`;
+			if (embeddedPrefix) {
+				return `/${embeddedPrefix}/backgrounds/`;
+			} else {
+				return `/backgrounds/`;
+			}
 		} else {
-			return `${apiUrl}/backgrounds/`;
+			return `/backgrounds/`;
 		}
 	}
 
@@ -41,7 +43,7 @@ export class ImageHandler {
 		}
 
 		const endpoint = this.determineEndpoint(name);
-		const url = endpoint + encodeURIComponent(name);
+		const url = apiUrl + endpoint + encodeURIComponent(name);
 
 		// Fetch the image.
 		const res = await fetch(url);

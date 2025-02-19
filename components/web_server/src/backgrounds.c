@@ -175,6 +175,9 @@ esp_err_t get_background(httpd_req_t *req)
                 ESP_LOGE(TAG, "File sending failed: %s", esp_err_to_name(ret));
                 break;
             }
+
+            // Yield control to the OS
+            vTaskDelay(1 / portTICK_PERIOD_MS);
         }
 
         free(chunk);
@@ -197,14 +200,22 @@ esp_err_t background_get_handler(httpd_req_t *req)
 {
     const char *prefix = "/api/backgrounds/";
 
+    // Check if the request URI starts with the prefix and has a filename after it
+    if (strncmp(req->uri, prefix, strlen(prefix)) == 0 && strlen(req->uri) > strlen(prefix))
+    {
+        // Handle serving a specific image
+        return get_background(req);
+    }
+
+    // Check if the request URI matches the prefix exactly
     if (strcmp(req->uri, prefix) == 0)
     {
         // Handle listing backgrounds
         return list_backgrounds(req);
     }
 
-    // Handle serving a specific image
-    return get_background(req);
+    // If neither condition is met, return a bad request error
+    return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid background request");
 }
 
 esp_err_t background_upload_handler(httpd_req_t *req)
@@ -357,7 +368,7 @@ esp_err_t register_backgrounds(httpd_handle_t server)
     httpd_uri_t background_get_uri = {
         .uri = "/api/backgrounds/*",
         .method = HTTP_GET,
-        .handler = list_backgrounds,
+        .handler = background_get_handler,
         .user_ctx = NULL};
     ret = httpd_register_uri_handler(server, &background_get_uri);
     if (ret != ESP_OK)

@@ -41,12 +41,15 @@ static const EmbeddedFile embedded_files[] = {
     {"/", index_html_gz_start, index_html_gz_end, "text/html"},
     {"/index.html.gz", index_html_gz_start, index_html_gz_end, "text/html"},
     {"/favicon.png", favicon_start, favicon_end, "image/png"},
-    {"/backgrounds/flare.png.gz", flare_png_start, flare_png_end, "image/png"},
-    {"/backgrounds/galaxy.png.gz", galaxy_png_start, galaxy_png_end, "image/png"},
+    {"/api/embedded/backgrounds/flare.png.gz", flare_png_start, flare_png_end, "image/png"},
+    {"/api/embedded/backgrounds/galaxy.png.gz", galaxy_png_start, galaxy_png_end, "image/png"},
 };
 
 #define EMBEDDED_FILE_COUNT (sizeof(embedded_files) / sizeof(EmbeddedFile))
 #define HTTPD_TASK_STACK_SIZE (8192)
+
+// ✅ Serve embedded files
+// ...existing code...
 
 // ✅ Serve embedded files
 esp_err_t embedded_file_handler(httpd_req_t *req)
@@ -147,6 +150,12 @@ esp_err_t web_request_handler(httpd_req_t *req)
     // 1️ API Requests → Let another handler process them
     if (strncmp(req->uri, "/api/", 5) == 0)
     {
+        // 2️⃣ Serve Embedded Files → If Found
+        if (strncmp(req->uri, "/api/embedded/", 14) == 0 && embedded_file_handler(req) == ESP_OK)
+        {
+            return ESP_OK;
+        }
+
         ESP_LOGE(TAG, "API request not handled: %s", req->uri);
         return httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "API endpoint not found");
     }
