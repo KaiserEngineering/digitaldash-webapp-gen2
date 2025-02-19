@@ -119,9 +119,8 @@ esp_err_t list_backgrounds(httpd_req_t *req)
 
 esp_err_t get_background(httpd_req_t *req)
 {
-    const char *prefix = "/api/backgrounds/";
+    const char *prefix = "/api/background/";
 
-    // 🔹 Case 2: Serve a single background file (`GET /api/backgrounds/someImage.png`)
     if (strncmp(req->uri, prefix, strlen(prefix)) == 0)
     {
         const char *background_name = req->uri + strlen(prefix); // Extract filename
@@ -134,8 +133,14 @@ esp_err_t get_background(httpd_req_t *req)
             return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid background type");
         }
 
+        // SPIFFS Fix: Store as `/spiffs/background_filename`
         char filepath[MAX_PATH_SIZE];
-        snprintf(filepath, sizeof(filepath), "/spiffs/data/backgrounds/%s", background_name);
+        snprintf(filepath, sizeof(filepath), "/spiffs/data/background_%s", background_name);
+
+        if (strstr(filepath, ".gz") != NULL)
+        {
+            httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
+        }
 
         FILE *file = fopen(filepath, "rb");
         if (!file)
@@ -156,8 +161,9 @@ esp_err_t get_background(httpd_req_t *req)
             httpd_resp_set_hdr(req, "Content-Length", content_length);
         }
 
-        // ✅ Stream the file in chunks
-        char *chunk = malloc(512);
+        // ✅ Use larger chunks for better performance (e.g., 4096 bytes)
+        const size_t chunk_size = 4096;
+        char *chunk = malloc(chunk_size);
         if (!chunk)
         {
             fclose(file);
@@ -166,24 +172,27 @@ esp_err_t get_background(httpd_req_t *req)
 
         size_t read_bytes;
         esp_err_t ret = ESP_OK;
-        while ((read_bytes = fread(chunk, 1, 512, file)) > 0)
+        while ((read_bytes = fread(chunk, 1, chunk_size, file)) > 0)
         {
+            ESP_LOGI(TAG, "Read %zu bytes from file", read_bytes);
             ret = httpd_resp_send_chunk(req, chunk, read_bytes);
             if (ret != ESP_OK)
             {
-                fclose(file);
                 ESP_LOGE(TAG, "File sending failed: %s", esp_err_to_name(ret));
                 break;
             }
 
-            // Yield control to the OS
-            vTaskDelay(1 / portTICK_PERIOD_MS);
+            // Yield to the OS **only if** we're sending a large amount of data
+            if (read_bytes >= 2048)
+            {
+                vTaskDelay(1 / portTICK_PERIOD_MS);
+            }
         }
 
         free(chunk);
         fclose(file);
 
-        // End response
+        // End response if everything was sent successfully
         if (ret == ESP_OK)
         {
             ret = httpd_resp_send_chunk(req, NULL, 0);
@@ -269,7 +278,7 @@ esp_err_t background_upload_handler(httpd_req_t *req)
 
     // Build the file path for SPIFFS
     char filepath[128];
-    snprintf(filepath, sizeof(filepath), "/spiffs/data/backgrounds/%s", filename);
+    snprintf(filepath, sizeof(filepath), "/spiffs/data/background/%s", filename);
     ESP_LOGI(TAG, "Uploading file to: %s", filepath);
 
     // Open the file for writing
@@ -344,7 +353,7 @@ esp_err_t register_backgrounds(httpd_handle_t server)
 
     // ✅ Register GET handler for specific file requests
     httpd_uri_t background_get_uri = {
-        .uri = "/api/backgrounds",
+        .uri = "/api/background/*",
         .method = HTTP_GET,
         .handler = get_background,
         .user_ctx = NULL};
@@ -358,7 +367,7 @@ esp_err_t register_backgrounds(httpd_handle_t server)
 
     // ✅ Register GET handler for list
     httpd_uri_t backgrounds_get_uri = {
-        .uri = "/api/backgrounds/*",
+        .uri = "/api/backgrounds",
         .method = HTTP_GET,
         .handler = list_backgrounds,
         .user_ctx = NULL};

@@ -24,12 +24,12 @@ export class ImageHandler {
 	determineEndpoint(name: string): string {
 		if (factoryImageNames.includes(name)) {
 			if (embeddedPrefix) {
-				return `/${embeddedPrefix}/backgrounds/`;
+				return `/${embeddedPrefix}/background/`;
 			} else {
-				return `/backgrounds/`;
+				return `/background/`;
 			}
 		} else {
-			return `/backgrounds/`;
+			return `/background/`;
 		}
 	}
 

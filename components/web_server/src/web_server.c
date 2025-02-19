@@ -41,8 +41,8 @@ static const EmbeddedFile embedded_files[] = {
     {"/", index_html_gz_start, index_html_gz_end, "text/html"},
     {"/index.html.gz", index_html_gz_start, index_html_gz_end, "text/html"},
     {"/favicon.png", favicon_start, favicon_end, "image/png"},
-    {"/api/embedded/backgrounds/flare.png.gz", flare_png_start, flare_png_end, "image/png"},
-    {"/api/embedded/backgrounds/galaxy.png.gz", galaxy_png_start, galaxy_png_end, "image/png"},
+    {"/api/embedded/background/flare.png.gz", flare_png_start, flare_png_end, "image/png"},
+    {"/api/embedded/background/galaxy.png.gz", galaxy_png_start, galaxy_png_end, "image/png"},
 };
 
 #define EMBEDDED_FILE_COUNT (sizeof(embedded_files) / sizeof(EmbeddedFile))
@@ -60,13 +60,40 @@ esp_err_t embedded_file_handler(httpd_req_t *req)
 
             httpd_resp_set_hdr(req, "Cache-Control", "public, max-age=31536000, immutable");
             httpd_resp_set_type(req, embedded_files[i].mime_type);
-            if (CHECK_FILE_EXTENSION(req->uri, ".gz"))
+
+            if (strstr(req->uri, ".gz") != NULL)
             {
                 httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
             }
 
-            return httpd_resp_send(req, (const char *)embedded_files[i].start,
-                                   embedded_files[i].end - embedded_files[i].start);
+            size_t file_size = embedded_files[i].end - embedded_files[i].start;
+            ESP_LOGI(TAG, "File size: %d bytes", file_size);
+
+            // ✅ Stream file in chunks to prevent memory overflow
+            const size_t chunk_size = 512;
+            size_t bytes_remaining = file_size;
+            const uint8_t *file_ptr = embedded_files[i].start;
+
+            while (bytes_remaining > 0)
+            {
+                size_t bytes_to_send = (bytes_remaining > chunk_size) ? chunk_size : bytes_remaining;
+                
+                esp_err_t ret = httpd_resp_send_chunk(req, (const char *)file_ptr, bytes_to_send);
+                if (ret != ESP_OK)
+                {
+                    ESP_LOGE(TAG, "File sending failed: %s", esp_err_to_name(ret));
+                    return ret;
+                }
+
+                file_ptr += bytes_to_send;
+                bytes_remaining -= bytes_to_send;
+
+                // Yield to OS
+                vTaskDelay(1 / portTICK_PERIOD_MS);
+            }
+
+            // ✅ End response
+            return httpd_resp_send_chunk(req, NULL, 0);
         }
     }
 
