@@ -48,10 +48,6 @@ static const EmbeddedFile embedded_files[] = {
 #define EMBEDDED_FILE_COUNT (sizeof(embedded_files) / sizeof(EmbeddedFile))
 #define HTTPD_TASK_STACK_SIZE (8192)
 
-// ✅ Serve embedded files
-// ...existing code...
-
-// ✅ Serve embedded files
 esp_err_t embedded_file_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "Checking for embedded file: %s", req->uri);
@@ -77,7 +73,6 @@ esp_err_t embedded_file_handler(httpd_req_t *req)
     return ESP_ERR_NOT_FOUND;
 }
 
-// ✅ Set content type based on file extension
 static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepath)
 {
     const char *type = "text/plain";
@@ -108,7 +103,6 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepa
     return ESP_OK;
 }
 
-// ✅ Serve SPIFFS files
 static esp_err_t spiffs_file_handler(httpd_req_t *req)
 {
     char filepath[FILE_PATH_MAX];
@@ -142,25 +136,11 @@ static esp_err_t spiffs_file_handler(httpd_req_t *req)
     return ESP_ERR_NOT_FOUND;
 }
 
-// ✅ Unified Request Handler
 esp_err_t web_request_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "Handling request: %s", req->uri);
 
-    // 1️ API Requests → Let another handler process them
-    if (strncmp(req->uri, "/api/", 5) == 0)
-    {
-        // 2️⃣ Serve Embedded Files → If Found
-        if (strncmp(req->uri, "/api/embedded/", 14) == 0 && embedded_file_handler(req) == ESP_OK)
-        {
-            return ESP_OK;
-        }
-
-        ESP_LOGE(TAG, "API request not handled: %s", req->uri);
-        return httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "API endpoint not found");
-    }
-
-    // 2 Redirect `/` to `/index.html.gz`
+    // Redirect `/` to `/index.html.gz`
     if (strcmp(req->uri, "/") == 0)
     {
         ESP_LOGI(TAG, "Root request received, serving /index.html.gz");
@@ -170,27 +150,14 @@ esp_err_t web_request_handler(httpd_req_t *req)
         return httpd_resp_send(req, (const char *)index_html_gz_start, index_html_gz_end - index_html_gz_start);
     }
 
-    // 3 Serve Embedded Files → If Found
-    if (strncmp(req->uri, "/embedded/", 10) == 0 && embedded_file_handler(req) == ESP_OK)
-    {
-        return ESP_OK;
-    }
-
-    // 34 Serve SPIFFS Files → If Found
-    if (spiffs_file_handler(req) == ESP_OK)
-    {
-        return ESP_OK;
-    }
-
-    // 5 Default: Serve `index.html.gz` as a fallback
-    ESP_LOGW(TAG, "File not found: %s. Serving index.html.gz as fallback", req->uri);
+    // Default: Serve `index.html.gz`
+    ESP_LOGW(TAG, "Serving index.html.gz for req: %s", req->uri);
 
     httpd_resp_set_type(req, "text/html");
     httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
     return httpd_resp_send(req, (const char *)index_html_gz_start, index_html_gz_end - index_html_gz_start);
 }
 
-// ✅ Start Webserver
 esp_err_t start_webserver()
 {
     httpd_handle_t server = NULL;
@@ -206,7 +173,6 @@ esp_err_t start_webserver()
         return ESP_FAIL;
     }
 
-    // ✅ Now register background APIs
     if (register_backgrounds(server) != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to register backgrounds");
@@ -214,7 +180,18 @@ esp_err_t start_webserver()
         return ESP_FAIL;
     }
 
-    // ✅ First, register the main web request handler
+    httpd_register_uri_handler(server, &(httpd_uri_t){
+                                           .uri = "/api/embedded/*",
+                                           .method = HTTP_GET,
+                                           .handler = embedded_file_handler,
+                                           .user_ctx = NULL});
+
+    httpd_register_uri_handler(server, &(httpd_uri_t){
+                                           .uri = "/api/*",
+                                           .method = HTTP_GET,
+                                           .handler = spiffs_file_handler,
+                                           .user_ctx = NULL});
+
     httpd_register_uri_handler(server, &(httpd_uri_t){
                                            .uri = "/*",
                                            .method = HTTP_GET,

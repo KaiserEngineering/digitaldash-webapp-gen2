@@ -114,7 +114,7 @@ esp_err_t list_backgrounds(httpd_req_t *req)
     httpd_resp_set_type(req, "application/json");
     return httpd_resp_send(req, response, strlen(response));
 
-    return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid background request");
+    return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid backgrounds (list) request");
 }
 
 esp_err_t get_background(httpd_req_t *req)
@@ -193,28 +193,6 @@ esp_err_t get_background(httpd_req_t *req)
         return ret;
     }
 
-    return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid background request");
-}
-
-esp_err_t background_get_handler(httpd_req_t *req)
-{
-    const char *prefix = "/api/backgrounds/";
-
-    // Check if the request URI starts with the prefix and has a filename after it
-    if (strncmp(req->uri, prefix, strlen(prefix)) == 0 && strlen(req->uri) > strlen(prefix))
-    {
-        // Handle serving a specific image
-        return get_background(req);
-    }
-
-    // Check if the request URI matches the prefix exactly
-    if (strcmp(req->uri, prefix) == 0)
-    {
-        // Handle listing backgrounds
-        return list_backgrounds(req);
-    }
-
-    // If neither condition is met, return a bad request error
     return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid background request");
 }
 
@@ -364,13 +342,27 @@ esp_err_t register_backgrounds(httpd_handle_t server)
 {
     esp_err_t ret;
 
-    // ✅ Register GET handler for both list & specific file requests
+    // ✅ Register GET handler for specific file requests
     httpd_uri_t background_get_uri = {
-        .uri = "/api/backgrounds/*",
+        .uri = "/api/backgrounds",
         .method = HTTP_GET,
-        .handler = background_get_handler,
+        .handler = get_background,
         .user_ctx = NULL};
     ret = httpd_register_uri_handler(server, &background_get_uri);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to register background GET handler: %s",
+                 esp_err_to_name(ret));
+        return ret;
+    }
+
+    // ✅ Register GET handler for list
+    httpd_uri_t backgrounds_get_uri = {
+        .uri = "/api/backgrounds/*",
+        .method = HTTP_GET,
+        .handler = list_backgrounds,
+        .user_ctx = NULL};
+    ret = httpd_register_uri_handler(server, &backgrounds_get_uri);
     if (ret != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to register background GET handler: %s",
