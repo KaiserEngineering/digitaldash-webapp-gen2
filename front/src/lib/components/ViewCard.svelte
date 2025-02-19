@@ -3,12 +3,19 @@
 	import Spinner from './Spinner.svelte';
 	import { ImageHandler } from '$lib/imageHandler.svelte';
 	import { Gauge as GaugeIcon } from 'lucide-svelte';
+	import { apiUrl } from '@/config';
+
+	// Define the Theme type
+	type Theme = {
+		face: string;
+		needle: string;
+	};
 
 	// Define the types for gauges and views
 	type Gauge = {
 		id: string;
 		label: string;
-		theme: { face: string };
+		theme: string;
 		pid: string;
 		enabled: boolean;
 		unit?: string;
@@ -65,13 +72,35 @@
 		});
 	}
 
+	let theme: Record<string, Theme> = $state({});
 	onMount(async () => {
 		try {
 			// Load the image via the ImageHandler (this handles caching and endpoint selection)
 			const imageData = await imageHandler.loadImage(view.background);
 			backgroundUrl = imageData.url;
+
 			// Compute ideal text color based on the loaded image
 			view.textColor = await computeIdealTextColor(imageData.url);
+
+			// Set to store already fetched themes
+			const fetchedThemes = new Set<string>();
+
+			for (const gauge of view.gauges) {
+				if (!theme[gauge.theme] && !fetchedThemes.has(gauge.theme)) {
+					fetchedThemes.add(gauge.theme);
+
+					// Fetch both face and needle images in parallel
+					const [faceRes, needleRes] = await Promise.all([
+						fetch(`${apiUrl}/embedded/themes_${gauge.theme}_face.png.gz`),
+						fetch(`${apiUrl}/embedded/themes_${gauge.theme}_needle.png.gz`)
+					]);
+
+					theme[gauge.theme] = {
+						face: faceRes.url,
+						needle: needleRes.url
+					};
+				}
+			}
 		} catch (error) {
 			console.error('Error loading background image:', error);
 			view.textColor = 'black';
@@ -79,8 +108,6 @@
 			loading = false;
 		}
 	});
-
-	const themesReady = false;
 </script>
 
 {#if loading}
@@ -94,27 +121,13 @@
 	>
 		<div class="mb-6 flex items-center justify-between">
 			<h2 class="text-2xl font-bold" style:color={view.textColor}>{view.name}</h2>
-			<!-- Additional controls -->
 		</div>
-		<!-- Gauges arranged horizontally -->
+
 		<div class="flex justify-center space-x-2">
 			{#each view.gauges as gauge}
 				<div class="flex flex-col items-center">
 					<div class="relative h-24 w-24">
-						{#if themesReady}
-							<img
-								src={`/themes/${gauge.theme.face}/face.png`}
-								alt="Gauge Face"
-								class="h-full w-full"
-							/>
-							<img
-								src={`/themes/${gauge.theme.face}/needle.png`}
-								alt="Gauge Needle"
-								class="absolute inset-0"
-							/>
-						{:else}
-							<GaugeIcon size="62" />
-						{/if}
+						<GaugeIcon size="62" />
 					</div>
 					<span class="mt-2 rounded-full bg-purple-600 px-4 py-1 text-sm text-white">
 						{gauge.label}

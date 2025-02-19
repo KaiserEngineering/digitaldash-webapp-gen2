@@ -12,7 +12,7 @@
 				{
 					id: '1',
 					label: 'Oil Temp',
-					theme: { face: 'Stock' },
+					theme: 'Stock',
 					pid: 'OIL_TEMP',
 					enabled: true,
 					unit: '°C'
@@ -20,14 +20,14 @@
 				{
 					id: '2',
 					label: 'RPM',
-					theme: { face: 'StockRS' },
+					theme: 'StockRS',
 					pid: 'RPM',
 					enabled: true
 				},
 				{
 					id: '3',
 					label: 'Boost',
-					theme: { face: 'Bar' },
+					theme: 'Bar',
 					pid: 'BOOST',
 					enabled: true,
 					unit: 'psi'
@@ -43,7 +43,7 @@
 				{
 					id: '1',
 					label: 'Oil Temp',
-					theme: { face: 'Stock' },
+					theme: 'Stock',
 					pid: 'OIL_TEMP',
 					enabled: true,
 					unit: '°C'

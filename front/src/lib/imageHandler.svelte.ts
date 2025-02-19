@@ -1,10 +1,9 @@
 // src/lib/imageHandler.ts
-import { factoryImages, embeddedPrefix, apiUrl } from '$lib/config';
+import { factoryImages, apiUrl } from '$lib/config';
 
 export interface ImageData {
 	name: string;
 	url: string;
-	type: 'factory' | 'user';
 	size: number;
 	lastModified: number;
 	contentType: string;
@@ -23,11 +22,7 @@ export class ImageHandler {
 	 */
 	determineEndpoint(name: string): string {
 		if (Object.keys(factoryImages).includes(name)) {
-			if (embeddedPrefix) {
-				return `/${embeddedPrefix}/background/`;
-			} else {
-				return `/background/`;
-			}
+			return `/embedded/background/`;
 		} else {
 			return `/background/`;
 		}
@@ -60,13 +55,9 @@ export class ImageHandler {
 		const lastModifiedHeader = res.headers.get('last-modified');
 		const lastModified = lastModifiedHeader ? new Date(lastModifiedHeader).getTime() : Date.now();
 
-		// If the endpoint is the static folder, mark it as a factory image.
-		const type: 'factory' | 'user' = endpoint === '/dummy-backgrounds/' ? 'factory' : 'user';
-
 		const imageData: ImageData = {
 			name,
 			url: objectUrl,
-			type,
 			size,
 			lastModified,
 			contentType: res.headers.get('content-type') || 'unknown'

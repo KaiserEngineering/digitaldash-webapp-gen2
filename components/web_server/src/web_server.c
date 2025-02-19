@@ -67,7 +67,7 @@ esp_err_t embedded_file_handler(httpd_req_t *req)
             }
 
             size_t file_size = embedded_files[i].end - embedded_files[i].start;
-            ESP_LOGI(TAG, "File size: %d bytes", file_size);
+            ESP_LOGI(TAG, "File size: %zu bytes", file_size);
 
             // ✅ Stream file in chunks to prevent memory overflow
             const size_t chunk_size = 512;

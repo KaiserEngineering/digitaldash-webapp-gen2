@@ -1,6 +1,6 @@
 // src/routes/api/backgrounds/[name]/+server.ts
-import { embeddedPrefix, factoryImages } from '@/config';
 import type { RequestEvent } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 
 export interface ImageInfo {
 	size: number;
@@ -11,27 +11,25 @@ export interface ImageInfo {
 
 export async function GET({
 	params,
-	fetch,
-	url
+	fetch
 }: {
 	params: { name: string };
 	fetch: RequestEvent['fetch'];
-	url: URL;
 }): Promise<Response> {
 	const { name } = params;
 
 	if (!name) {
-		return new Response('Missing image name', { status: 400 });
+		throw error(400, 'Missing image name');
 	}
 
-	// If we see ${embeddedPrefix}/backgrounds/ in the URL, it's a factory image
-	// and we load from /static/backgrounds, if not we load from /dummy-backgrounds
-	let prefix = Object.keys(factoryImages).includes(name)? '/backgrounds/' : '/dummy-backgrounds/';
+	// Load customer images from /static/dummy-backgrounds/
+	const prefix = '/dummy-backgrounds/';
 
-	// Fetch the file from the dummy-backgrounds folder
+	// Fetch the file from SvelteKit's static directory
 	const res = await fetch(`${prefix}${encodeURIComponent(name)}`);
+
 	if (!res.ok) {
-		return new Response('Image not found', { status: 404 });
+		throw error(404, 'Image not found');
 	}
 
 	// Create a new Headers instance based on the fetched response headers
@@ -39,13 +37,9 @@ export async function GET({
 
 	// If the file is gzipped, set the proper headers
 	if (name.endsWith('.gz')) {
-		// Tell the browser this response is gzip-compressed
 		headers.set('Content-Encoding', 'gzip');
-		// Set the appropriate MIME type based on the original file type.
-		// For example, if dog.png.gz is a gzipped PNG image, set it to image/png.
-		headers.set('Content-Type', 'image/png');
+		headers.set('Content-Type', 'image/png'); // Assuming PNG files
 	} else {
-		// For non-gzipped files, ensure there is a content-type header.
 		headers.set('Content-Type', res.headers.get('content-type') || 'image/png');
 	}
 

@@ -9,7 +9,6 @@
 
 	const tabs = [
 		{ label: 'Home', value: '', icon: House },
-		{ label: 'Themes', value: 'themes', icon: Palette },
 		{ label: 'Backgrounds', value: 'backgrounds', icon: Image },
 		{ label: 'Dynamic', value: 'dynamic', icon: Zap },
 		{ label: 'Advanced', value: 'advanced', icon: Settings }
