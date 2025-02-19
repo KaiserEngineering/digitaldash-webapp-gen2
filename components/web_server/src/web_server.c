@@ -144,14 +144,14 @@ esp_err_t web_request_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "Handling request: %s", req->uri);
 
-    // 1️⃣ API Requests → Let another handler process them
+    // 1️ API Requests → Let another handler process them
     if (strncmp(req->uri, "/api/", 5) == 0)
     {
         ESP_LOGE(TAG, "API request not handled: %s", req->uri);
         return httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "API endpoint not found");
     }
 
-    // 2️⃣ Redirect `/` to `/index.html.gz`
+    // 2 Redirect `/` to `/index.html.gz`
     if (strcmp(req->uri, "/") == 0)
     {
         ESP_LOGI(TAG, "Root request received, serving /index.html.gz");
@@ -161,19 +161,19 @@ esp_err_t web_request_handler(httpd_req_t *req)
         return httpd_resp_send(req, (const char *)index_html_gz_start, index_html_gz_end - index_html_gz_start);
     }
 
-    // 3️⃣ Serve Embedded Files → If Found
-    if (embedded_file_handler(req) == ESP_OK)
+    // 3 Serve Embedded Files → If Found
+    if (strncmp(req->uri, "/embedded/", 10) == 0 && embedded_file_handler(req) == ESP_OK)
     {
         return ESP_OK;
     }
 
-    // 4️⃣ Serve SPIFFS Files → If Found
+    // 34 Serve SPIFFS Files → If Found
     if (spiffs_file_handler(req) == ESP_OK)
     {
         return ESP_OK;
     }
 
-    // 5️⃣ Default: Serve `index.html.gz` as a fallback
+    // 5 Default: Serve `index.html.gz` as a fallback
     ESP_LOGW(TAG, "File not found: %s. Serving index.html.gz as fallback", req->uri);
 
     httpd_resp_set_type(req, "text/html");

@@ -1,4 +1,5 @@
 // src/lib/imageHandler.ts
+import {factoryImageNames, embeddedPrefix, apiUrl} from '$lib/config';
 
 export interface ImageData {
 	name: string;
@@ -6,6 +7,7 @@ export interface ImageData {
 	type: 'factory' | 'user';
 	size: number;
 	lastModified: number;
+	contentType: string;
 }
 
 const FACTORY_BACKGROUNDS = ['flare.png.gz', 'galaxy.png.gz'];
@@ -22,10 +24,10 @@ export class ImageHandler {
 	 * - User images are served via an API endpoint.
 	 */
 	determineEndpoint(name: string): string {
-		if (FACTORY_BACKGROUNDS.includes(name)) {
-			return '/backgrounds/';
+		if (factoryImageNames.includes(name)) {
+			return `${embeddedPrefix}/backgrounds/`;
 		} else {
-			return '/api/backgrounds/';
+			return `${apiUrl}/backgrounds/`;
 		}
 	}
 
@@ -64,7 +66,8 @@ export class ImageHandler {
 			url: objectUrl,
 			type,
 			size,
-			lastModified
+			lastModified,
+			contentType: res.headers.get('content-type') || 'unknown'
 		};
 
 		// Cache the result.

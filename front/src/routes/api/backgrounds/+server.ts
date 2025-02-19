@@ -9,7 +9,7 @@ import path from 'path';
 const BACKGROUND_DIR = path.join(process.cwd(), 'static', 'dummy-backgrounds');
 
 // Add supported image types
-const SUPPORTED_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif'];
+const SUPPORTED_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.png.gz', '.jpg.gz', '.jpeg.gz', '.gif.gz'];
 
 export interface ImageInfo {
 	size: number;
@@ -36,34 +36,34 @@ let images: Record<string, ImageInfo> = {
 };
 
 export async function GET() {
-	// Read files from the BACKGROUND_DIR
-	const files = fs
-		.readdirSync(BACKGROUND_DIR)
-		.filter((file) => SUPPORTED_EXTENSIONS.some((ext) => file.toLowerCase().endsWith(ext)))
-		.reduce(
-			(acc, file) => {
-				const filePath = path.join(BACKGROUND_DIR, file);
+    // Read files from the BACKGROUND_DIR
+    const files = fs
+        .readdirSync(BACKGROUND_DIR)
+        .filter((file) => SUPPORTED_EXTENSIONS.some((ext) => file.toLowerCase().endsWith(ext)))
+        .reduce(
+            (acc, file) => {
+                const filePath = path.join(BACKGROUND_DIR, file);
 				const stats = fs.statSync(filePath);
-				const ext = path.extname(file).toLowerCase();
+                const ext = path.extname(file).toLowerCase();
 
-				// Determine MIME type based on extension
-				let type = 'application/octet-stream';
-				if (ext === '.png') type = 'image/png';
-				else if (ext === '.jpg' || ext === '.jpeg') type = 'image/jpeg';
-				else if (ext === '.gif') type = 'image/gif';
+                // Determine MIME type based on extension
+                let type = 'application/octet-stream';
+                if (ext === '.png' || ext === '.png.gz') type = 'image/png';
+                else if (ext === '.jpg' || ext === '.jpeg' || ext === '.jpg.gz' || ext === '.jpeg.gz') type = 'image/jpeg';
+                else if (ext === '.gif' || ext === '.gif.gz') type = 'image/gif';
 
-				acc[file] = {
-					size: stats.size,
-					lastModified: stats.mtime.getTime(),
-					type: type,
-					url: `/dummy-backgrounds/${encodeURIComponent(file)}`
-				};
-				return acc;
-			},
-			{} as Record<string, ImageInfo>
-		);
+                acc[file] = {
+                    size: stats.size,
+                    lastModified: stats.mtime.getTime(),
+                    type: type,
+                    url: `/dummy-backgrounds/${encodeURIComponent(file)}`
+                };
+                return acc;
+            },
+            {} as Record<string, ImageInfo>
+        );
 
-	return json(files);
+    return json(files);
 }
 
 // POST: Upload a new image (expects a FormData with a file and an optional filename)
