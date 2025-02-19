@@ -8,6 +8,9 @@ import path from 'path';
 // Use a path relative to your project directory
 const BACKGROUND_DIR = path.join(process.cwd(), 'static', 'dummy-backgrounds');
 
+// Add supported image types
+const SUPPORTED_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif'];
+
 export interface ImageInfo {
 	size: number;
 	type: string;
@@ -18,17 +21,17 @@ export interface ImageInfo {
 // In-memory store for uploaded images (dummy storage)
 let images: Record<string, ImageInfo> = {
 	// Preloaded dummy factory images:
-	'Flare.png.gz': {
+	'flare.png': {
 		size: 1024 * 10,
 		type: 'image/png',
 		lastModified: Date.now() - 1000000,
-		url: '/dummy-backgrounds/Flare.png.gz'
+		url: '/dummy-backgrounds/flare.png'
 	},
-	'Galaxy.png.gz': {
+	'galaxy.png': {
 		size: 1024 * 15,
 		type: 'image/png',
 		lastModified: Date.now() - 500000,
-		url: '/dummy-backgrounds/Galaxy.png.gz'
+		url: '/dummy-backgrounds/galaxy.png'
 	}
 };
 
@@ -36,21 +39,28 @@ export async function GET() {
 	// Read files from the BACKGROUND_DIR
 	const files = fs
 		.readdirSync(BACKGROUND_DIR)
-		.filter((file) => file.endsWith('.png.gz')) // Only get .png.gz files
+		.filter((file) => SUPPORTED_EXTENSIONS.some((ext) => file.toLowerCase().endsWith(ext)))
 		.reduce(
 			(acc, file) => {
 				const filePath = path.join(BACKGROUND_DIR, file);
 				const stats = fs.statSync(filePath);
+				const ext = path.extname(file).toLowerCase();
+
+				// Determine MIME type based on extension
+				let type = 'application/octet-stream';
+				if (ext === '.png') type = 'image/png';
+				else if (ext === '.jpg' || ext === '.jpeg') type = 'image/jpeg';
+				else if (ext === '.gif') type = 'image/gif';
+
 				acc[file] = {
 					size: stats.size,
 					lastModified: stats.mtime.getTime(),
-					type: 'image/png',
-					// Build the public URL for this file
+					type: type,
 					url: `/dummy-backgrounds/${encodeURIComponent(file)}`
 				};
 				return acc;
 			},
-			{} as Record<string, any>
+			{} as Record<string, ImageInfo>
 		);
 
 	return json(files);
@@ -66,7 +76,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 	const filename = data.get('filename')?.toString() || file.name;
 
-	// (Dummy) “upload” by saving file info in the in-memory object.
+	// (Dummy) "upload" by saving file info in the in-memory object.
 	images[filename] = {
 		size: file.size,
 		type: file.type,

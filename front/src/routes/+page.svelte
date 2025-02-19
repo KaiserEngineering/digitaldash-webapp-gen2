@@ -38,7 +38,7 @@
 			id: '2',
 			name: 'View Two',
 			enabled: false,
-			background: 'Flare.png.gz',
+			background: 'flare.png.gz',
 			gauges: [
 				{
 					id: '1',

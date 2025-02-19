@@ -19,7 +19,7 @@ export const load: PageLoad = async ({ fetch }) => {
 		console.error('Failed to fetch customer backgrounds:', error);
 	}
 
-	const factoryImageNames = ['Flare.png.gz', 'Galaxy.png.gz'];
+	const factoryImageNames = ['flare.png.gz', 'galaxy.png.gz'];
 
 	const results = await Promise.all(
 		factoryImageNames.map(async (filename: string) => {

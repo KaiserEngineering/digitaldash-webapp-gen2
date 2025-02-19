@@ -26,18 +26,47 @@
  */
 
 #include "BACKGROUNDS.h"
+#include "esp_err.h"
 #include "esp_http_server.h"
 #include "esp_log.h"
+#include "sys/stat.h"
 #include "sys/dirent.h"
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 static const char *TAG = "BackgroundRoutes";
 
-#define MAX_RESPONSE_SIZE 1024 // Adjust as needed
+#define MAX_PATH_SIZE 512      // Increased from 128
+#define MAX_RESPONSE_SIZE 2048 // Increased from 1024
+#define MAX_HEADER_SIZE 512
 
-esp_err_t background_get_handler(httpd_req_t *req)
+// Add supported image types
+static const char *SUPPORTED_EXTENSIONS[] = {".png", ".jpg", ".jpeg", ".gif"};
+static const char *SUPPORTED_MIME_TYPES[] = {"image/png", "image/jpeg", "image/jpeg", "image/gif"};
+static const int NUM_SUPPORTED_TYPES = 4;
+
+// Helper function to check if file is an image and get its MIME type
+static bool is_image_file(const char *filename, const char **mime_type)
 {
+    for (int i = 0; i < NUM_SUPPORTED_TYPES; i++)
+    {
+        if (strcasestr(filename, SUPPORTED_EXTENSIONS[i]))
+        {
+            if (mime_type)
+                *mime_type = SUPPORTED_MIME_TYPES[i];
+            return true;
+        }
+    }
+    return false;
+}
+
+esp_err_t list_backgrounds(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "GET request received: %s", req->uri);
+
+    ESP_LOGI(TAG, "Listing all backgrounds");
+
     char response[MAX_RESPONSE_SIZE];
     int len = snprintf(response, sizeof(response), "{");
 
@@ -45,54 +74,207 @@ esp_err_t background_get_handler(httpd_req_t *req)
     DIR *dir = opendir(background_dir);
     if (!dir)
     {
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR,
-                            "Failed to open SPIFFS background directory");
-        return ESP_FAIL;
+        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR,
+                                   "Failed to open SPIFFS background directory");
     }
 
     struct dirent *entry;
     int first = 1;
+    struct stat st;
+    char filepath[MAX_PATH_SIZE];
 
     while ((entry = readdir(dir)) != NULL)
     {
-        if (strstr(entry->d_name, ".png.gz")) // Only include .png.gz files
+        const char *mime_type;
+        if (is_image_file(entry->d_name, &mime_type)) // ✅ Ensure it's a valid image
         {
-            if (!first)
+            int path_len = snprintf(filepath, sizeof(filepath), "%s/%s", background_dir, entry->d_name);
+            if (path_len >= sizeof(filepath))
             {
-                len += snprintf(response + len, sizeof(response) - len, ",");
+                ESP_LOGE(TAG, "Path too long");
+                continue;
             }
-            len += snprintf(response + len, sizeof(response) - len,
-                            "\"%s\": {\"url\": \"/backgrounds/%s\", \"size\": 0, \"type\": \"image/png\", \"lastModified\": %lld}",
-                            entry->d_name, entry->d_name, (long long)time(NULL));
-            first = 0;
+
+            if (stat(filepath, &st) == 0)
+            {
+                if (!first)
+                {
+                    len += snprintf(response + len, sizeof(response) - len, ",");
+                }
+                len += snprintf(response + len, sizeof(response) - len,
+                                "\"%s\": {\"url\": \"/api/backgrounds/%s\", \"size\": %lld, \"type\": \"%s\", \"lastModified\": %lld}",
+                                entry->d_name, entry->d_name, (long long)st.st_size, mime_type, (long long)st.st_mtime);
+                first = 0;
+            }
         }
     }
     closedir(dir);
-
     snprintf(response + len, sizeof(response) - len, "}");
 
     httpd_resp_set_type(req, "application/json");
-    httpd_resp_send(req, response, strlen(response));
-    return ESP_OK;
+    return httpd_resp_send(req, response, strlen(response));
+
+    return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid background request");
+}
+
+esp_err_t get_background(httpd_req_t *req)
+{
+    const char *prefix = "/api/backgrounds/";
+
+    // 🔹 Case 2: Serve a single background file (`GET /api/backgrounds/someImage.png`)
+    if (strncmp(req->uri, prefix, strlen(prefix)) == 0)
+    {
+        const char *background_name = req->uri + strlen(prefix); // Extract filename
+
+        // Validate image file
+        const char *mime_type;
+        if (!is_image_file(background_name, &mime_type))
+        {
+            ESP_LOGE(TAG, "Invalid file type requested: %s", background_name);
+            return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid background type");
+        }
+
+        char filepath[MAX_PATH_SIZE];
+        snprintf(filepath, sizeof(filepath), "/spiffs/data/backgrounds/%s", background_name);
+
+        FILE *file = fopen(filepath, "rb");
+        if (!file)
+        {
+            ESP_LOGE(TAG, "File not found: %s", filepath);
+            return httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File not found");
+        }
+
+        // Set MIME type
+        httpd_resp_set_type(req, mime_type);
+
+        // Set Content-Length
+        struct stat st;
+        if (stat(filepath, &st) == 0)
+        {
+            char content_length[32];
+            snprintf(content_length, sizeof(content_length), "%lld", (long long)st.st_size);
+            httpd_resp_set_hdr(req, "Content-Length", content_length);
+        }
+
+        // ✅ Stream the file in chunks
+        char *chunk = malloc(512);
+        if (!chunk)
+        {
+            fclose(file);
+            return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Out of memory");
+        }
+
+        size_t read_bytes;
+        esp_err_t ret = ESP_OK;
+        while ((read_bytes = fread(chunk, 1, 512, file)) > 0)
+        {
+            ret = httpd_resp_send_chunk(req, chunk, read_bytes);
+            if (ret != ESP_OK)
+            {
+                fclose(file);
+                ESP_LOGE(TAG, "File sending failed: %s", esp_err_to_name(ret));
+                break;
+            }
+        }
+
+        free(chunk);
+        fclose(file);
+
+        // End response
+        if (ret == ESP_OK)
+        {
+            ret = httpd_resp_send_chunk(req, NULL, 0);
+        }
+
+        ESP_LOGI(TAG, "File sent successfully: %s", filepath);
+        return ret;
+    }
+
+    return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid background request");
+}
+
+esp_err_t background_get_handler(httpd_req_t *req)
+{
+    const char *prefix = "/api/backgrounds/";
+
+    if (strcmp(req->uri, prefix) == 0)
+    {
+        // Handle listing backgrounds
+        return list_backgrounds(req);
+    }
+
+    // Handle serving a specific image
+    return get_background(req);
 }
 
 esp_err_t background_upload_handler(httpd_req_t *req)
 {
-    char filename[64];
-    char query[128];
+    // Get the content length of the request
+    int total_len = req->content_len;
+    ESP_LOGI(TAG, "Content length: %d", total_len);
 
-    // Expect URL like: /api/backgrounds?filename=dog.png
-    if (httpd_req_get_url_query_str(req, query, sizeof(query)) == ESP_OK)
+    // Get filename from FormData
+    char *boundary = NULL;
+    char *content_type = NULL;
+    char header_value[MAX_HEADER_SIZE];
+
+    if (httpd_req_get_hdr_value_str(req, "Content-Type", header_value, MAX_HEADER_SIZE) == ESP_OK)
     {
-        if (httpd_query_key_value(query, "filename", filename, sizeof(filename)) != ESP_OK)
+        content_type = header_value;
+        // Extract boundary from Content-Type
+        boundary = strstr(content_type, "boundary=");
+        if (boundary)
         {
-            httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing filename parameter");
-            return ESP_FAIL;
+            boundary += 9; // Skip "boundary="
         }
     }
-    else
+
+    if (!boundary)
     {
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing query parameters");
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "No boundary found in multipart form data");
+        return ESP_FAIL;
+    }
+
+    // Read the first part of the multipart form data to get the filename
+    char buf[1024]; // Increase buffer size
+    int received;
+    char filename[64] = {0};
+    bool found_filename = false;
+
+    while ((received = httpd_req_recv(req, buf, sizeof(buf))) > 0)
+    {
+        char *filename_start = strstr(buf, "filename=\"");
+        if (filename_start)
+        {
+            filename_start += 10;
+            char *filename_end = strchr(filename_start, '"');
+            if (filename_end)
+            {
+                int name_len = filename_end - filename_start;
+                if (name_len < sizeof(filename))
+                {
+                    strncpy(filename, filename_start, name_len);
+                    filename[name_len] = '\0';
+
+                    // Validate file type
+                    const char *mime_type;
+                    if (!is_image_file(filename, &mime_type))
+                    {
+                        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST,
+                                            "Unsupported file type. Only PNG, JPG, JPEG, and GIF files are allowed.");
+                        return ESP_FAIL;
+                    }
+
+                    found_filename = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!found_filename)
+    {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "No filename found in form data");
         return ESP_FAIL;
     }
 
@@ -101,7 +283,7 @@ esp_err_t background_upload_handler(httpd_req_t *req)
     snprintf(filepath, sizeof(filepath), "/spiffs/data/backgrounds/%s", filename);
     ESP_LOGI(TAG, "Uploading file to: %s", filepath);
 
-    // Open the file for writing (binary mode)
+    // Open the file for writing
     FILE *file = fopen(filepath, "wb");
     if (!file)
     {
@@ -110,15 +292,21 @@ esp_err_t background_upload_handler(httpd_req_t *req)
         return ESP_FAIL;
     }
 
-    char buffer[512];
-    int received = 0;
-    while ((received = httpd_req_recv(req, buffer, sizeof(buffer))) > 0)
+    // Continue reading and writing the file content
+    while ((received = httpd_req_recv(req, buf, sizeof(buf))) > 0)
     {
-        fwrite(buffer, 1, received, file);
+        fwrite(buf, 1, received, file);
     }
     fclose(file);
 
-    httpd_resp_sendstr(req, "File uploaded successfully");
+    // Send JSON response
+    char response[256];
+    snprintf(response, sizeof(response),
+             "{\"success\": true, \"filename\": \"%s\", \"message\": \"File uploaded successfully\"}",
+             filename);
+
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_send(req, response, strlen(response));
     return ESP_OK;
 }
 
@@ -165,11 +353,12 @@ esp_err_t register_backgrounds(httpd_handle_t server)
 {
     esp_err_t ret;
 
-    // Register GET /backgrounds
-    httpd_uri_t background_get_uri = {.uri = "/api/backgrounds",
-                                      .method = HTTP_GET,
-                                      .handler = background_get_handler,
-                                      .user_ctx = NULL};
+    // ✅ Register GET handler for both list & specific file requests
+    httpd_uri_t background_get_uri = {
+        .uri = "/api/backgrounds/*",
+        .method = HTTP_GET,
+        .handler = list_backgrounds,
+        .user_ctx = NULL};
     ret = httpd_register_uri_handler(server, &background_get_uri);
     if (ret != ESP_OK)
     {
@@ -178,11 +367,12 @@ esp_err_t register_backgrounds(httpd_handle_t server)
         return ret;
     }
 
-    // Register POST /backgrounds
-    httpd_uri_t background_post_uri = {.uri = "/api/backgrounds",
-                                       .method = HTTP_POST,
-                                       .handler = background_post_handler,
-                                       .user_ctx = NULL};
+    // ✅ Register POST `/api/backgrounds` (for uploads)
+    httpd_uri_t background_post_uri = {
+        .uri = "/api/backgrounds",
+        .method = HTTP_POST,
+        .handler = background_upload_handler,
+        .user_ctx = NULL};
     ret = httpd_register_uri_handler(server, &background_post_uri);
     if (ret != ESP_OK)
     {
@@ -191,11 +381,12 @@ esp_err_t register_backgrounds(httpd_handle_t server)
         return ret;
     }
 
-    // Register DELETE /backgrounds
-    httpd_uri_t background_delete_uri = {.uri = "/api/backgrounds",
-                                         .method = HTTP_DELETE,
-                                         .handler = background_delete_handler,
-                                         .user_ctx = NULL};
+    // ✅ Register DELETE `/api/backgrounds` (for deletions)
+    httpd_uri_t background_delete_uri = {
+        .uri = "/api/backgrounds",
+        .method = HTTP_DELETE,
+        .handler = background_delete_handler,
+        .user_ctx = NULL};
     ret = httpd_register_uri_handler(server, &background_delete_uri);
     if (ret != ESP_OK)
     {

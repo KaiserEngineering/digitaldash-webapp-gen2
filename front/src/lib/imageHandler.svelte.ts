@@ -8,7 +8,7 @@ export interface ImageData {
 	lastModified: number;
 }
 
-const FACTORY_BACKGROUNDS = ['Flare.png.gz', 'Galaxy.png.gz'];
+const FACTORY_BACKGROUNDS = ['flare.png.gz', 'galaxy.png.gz'];
 
 // Simple in-memory cache for images.
 const imageCache = new Map<string, ImageData>();
