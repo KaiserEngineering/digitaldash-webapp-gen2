@@ -27,8 +27,8 @@ typedef struct
 extern const uint8_t index_html_gz_start[] asm("_binary_index_html_gz_start");
 extern const uint8_t index_html_gz_end[] asm("_binary_index_html_gz_end");
 
-extern const uint8_t favicon_start[] asm("_binary_favicon_png_start");
-extern const uint8_t favicon_end[] asm("_binary_favicon_png_end");
+extern const uint8_t favicon_start_gz[] asm("_binary_favicon_png_gz_start");
+extern const uint8_t favicon_end_gz[] asm("_binary_favicon_png_gz_end");
 
 extern const uint8_t flare_png_start[] asm("_binary_flare_png_gz_start");
 extern const uint8_t flare_png_end[] asm("_binary_flare_png_gz_end");
@@ -40,7 +40,7 @@ extern const uint8_t galaxy_png_end[] asm("_binary_galaxy_png_gz_end");
 static const EmbeddedFile embedded_files[] = {
     {"/", index_html_gz_start, index_html_gz_end, "text/html"},
     {"/index.html.gz", index_html_gz_start, index_html_gz_end, "text/html"},
-    {"/favicon.png", favicon_start, favicon_end, "image/png"},
+    {"/favicon.png", favicon_start_gz, favicon_end_gz, "image/png"},
     {"/api/embedded/background/flare.png.gz", flare_png_start, flare_png_end, "image/png"},
     {"/api/embedded/background/galaxy.png.gz", galaxy_png_start, galaxy_png_end, "image/png"},
 };
@@ -77,7 +77,7 @@ esp_err_t embedded_file_handler(httpd_req_t *req)
             while (bytes_remaining > 0)
             {
                 size_t bytes_to_send = (bytes_remaining > chunk_size) ? chunk_size : bytes_remaining;
-                
+
                 esp_err_t ret = httpd_resp_send_chunk(req, (const char *)file_ptr, bytes_to_send);
                 if (ret != ESP_OK)
                 {
@@ -166,6 +166,14 @@ static esp_err_t spiffs_file_handler(httpd_req_t *req)
 esp_err_t web_request_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "Handling request: %s", req->uri);
+
+    if (strcmp(req->uri, "/favicon.png") == 0)
+    {
+        ESP_LOGI(TAG, "Serving favicon.png");
+        httpd_resp_set_type(req, "image/png");
+        httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
+        return httpd_resp_send(req, (const char *)favicon_start_gz, favicon_end_gz - favicon_start_gz);
+    }
 
     // Redirect `/` to `/index.html.gz`
     if (strcmp(req->uri, "/") == 0)
