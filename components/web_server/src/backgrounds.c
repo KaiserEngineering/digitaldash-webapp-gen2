@@ -31,20 +31,42 @@
 #include "esp_log.h"
 #include "sys/stat.h"
 #include "sys/dirent.h"
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 static const char *TAG = "BackgroundRoutes";
 
 #define MAX_PATH_SIZE 256
-#define MAX_RESPONSE_SIZE 4096  // Static response buffer
+#define MAX_RESPONSE_SIZE 4096 // Static response buffer
 #define MAX_HEADER_SIZE 512
-#define MAX_FILES 100           // Maximum number of files that can be listed
+#define MAX_FILES 100 // Maximum number of files that can be listed
 
 // Supported image types
 static const char *SUPPORTED_EXTENSIONS[] = {".png", ".jpg", ".jpeg", ".gif"};
 static const char *SUPPORTED_MIME_TYPES[] = {"image/png", "image/jpeg", "image/jpeg", "image/gif"};
 static const int NUM_SUPPORTED_TYPES = 4;
+
+static void url_decode(char *dest, const char *src, size_t dest_size)
+{
+    char a, b;
+    while (*src && dest_size > 1)
+    {
+        if ((*src == '%') && ((a = src[1]) && (b = src[2])) &&
+            (isxdigit(a) && isxdigit(b)))
+        {
+            *dest++ = (char)((strtol((char[3]){a, b, '\0'}, NULL, 16)) & 0xFF);
+            src += 3;
+        }
+        else
+        {
+            *dest++ = *src++;
+        }
+        dest_size--;
+    }
+    *dest = '\0';
+}
 
 // Check if file is an image and get its MIME type
 static bool is_image_file(const char *filename, const char **mime_type)
@@ -61,7 +83,6 @@ static bool is_image_file(const char *filename, const char **mime_type)
     return false;
 }
 
-
 esp_err_t list_backgrounds(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "GET request received: %s", req->uri);
@@ -74,7 +95,7 @@ esp_err_t list_backgrounds(httpd_req_t *req)
     }
 
     char response[MAX_RESPONSE_SIZE] = "{";
-    size_t len = 1;  // Start after '{'
+    size_t len = 1; // Start after '{'
     struct dirent *entry;
     struct stat st;
     char filepath[MAX_PATH_SIZE];
@@ -91,7 +112,7 @@ esp_err_t list_backgrounds(httpd_req_t *req)
                 // Prevent buffer overflow
                 if (len + 256 >= MAX_RESPONSE_SIZE - 2)
                 {
-                    break;  // Stop adding more files if buffer is close to full
+                    break; // Stop adding more files if buffer is close to full
                 }
 
                 // Add comma if not the first entry
@@ -111,12 +132,11 @@ esp_err_t list_backgrounds(httpd_req_t *req)
     closedir(dir);
 
     response[len++] = '}';
-    response[len] = '\0';  // Null terminate
+    response[len] = '\0'; // Null terminate
 
     httpd_resp_set_type(req, "application/json");
     return httpd_resp_send(req, response, len);
 }
-
 
 esp_err_t get_background(httpd_req_t *req)
 {
@@ -164,13 +184,6 @@ esp_err_t get_background(httpd_req_t *req)
 
     while ((read_bytes = fread(chunk, 1, sizeof(chunk), file)) > 0)
     {
-        // Log first few bytes for debugging (in hex)
-        for (size_t i = 0; i < read_bytes && i < 16; i++)
-        {
-            printf("%02X ", (unsigned char)chunk[i]);
-        }
-        printf("\n");
-
         if (httpd_resp_send_chunk(req, chunk, read_bytes) != ESP_OK)
         {
             ESP_LOGE(TAG, "Error sending file chunk");
@@ -189,24 +202,43 @@ esp_err_t get_background(httpd_req_t *req)
 
 esp_err_t background_delete_handler(httpd_req_t *req)
 {
-    char filename[64];
+    char encoded_filename[128];
     char query[128];
+    char decoded_filename[128];
 
     if (httpd_req_get_url_query_str(req, query, sizeof(query)) == ESP_OK &&
-        httpd_query_key_value(query, "filename", filename, sizeof(filename)) == ESP_OK)
+        httpd_query_key_value(query, "filename", encoded_filename, sizeof(encoded_filename)) == ESP_OK)
     {
-        char filepath[MAX_PATH_SIZE];
-        snprintf(filepath, sizeof(filepath), "/spiffs/data/backgrounds/%s", filename);
+        url_decode(decoded_filename, encoded_filename, sizeof(decoded_filename));
+        ESP_LOGI(TAG, "Requested DELETE for file (decoded): %s", decoded_filename);
 
-        if (remove(filepath) == 0)
+        char filepath[MAX_PATH_SIZE];
+        snprintf(filepath, sizeof(filepath), "/spiffs/%s", decoded_filename);
+
+        // Open file to check if it exists (SPIFFS lacks access() support)
+        FILE *file = fopen(filepath, "r");
+        if (!file)
         {
+            ESP_LOGW(TAG, "File not found: %s", filepath);
+            return httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File not found");
+        }
+        fclose(file); // Close file before deleting
+
+        // Delete the file using unlink()
+        if (unlink(filepath) == 0)
+        {
+            ESP_LOGI(TAG, "File deleted successfully: %s", filepath);
             return httpd_resp_sendstr(req, "File deleted successfully");
+        }
+        else
+        {
+            ESP_LOGW(TAG, "Failed to delete file: %s", filepath);
+            return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to delete file");
         }
     }
 
     return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid request or file not found");
 }
-
 
 esp_err_t register_backgrounds(httpd_handle_t server)
 {
