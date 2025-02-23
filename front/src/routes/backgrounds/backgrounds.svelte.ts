@@ -67,7 +67,6 @@ export async function deleteBackground(
 		});
 
 		if (!response.ok) {
-			toast.error('Failed to delete image');
 			throw new Error(`Delete failed: ${response.statusText}`);
 		}
 
