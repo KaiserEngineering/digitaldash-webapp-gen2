@@ -3,6 +3,7 @@ import type { RequestEvent, RequestHandler } from '@sveltejs/kit';
 import { error, json } from '@sveltejs/kit';
 import path from 'path';
 import fs from 'fs/promises';
+import { factoryImages } from '@/config.js';
 
 const BACKGROUND_DIR = path.resolve('static/dummy-backgrounds');
 
@@ -35,17 +36,28 @@ export async function GET({
 	params: { name: string };
 	fetch: RequestEvent['fetch'];
 }): Promise<Response> {
-	const { name } = params;
+	let { name } = params;
 
 	if (!name) {
 		throw error(400, 'Missing image name');
 	}
 
-	// Load customer images from /static/dummy-backgrounds/
-	const prefix = '/dummy-backgrounds/';
+	// Remove "background/" prefix if present
+	const prefixToRemove = 'background/';
+	if (name.startsWith(prefixToRemove)) {
+		name = name.slice(prefixToRemove.length);
+	}
 
-	// Fetch the file from SvelteKit's static directory
-	const res = await fetch(`${prefix}${encodeURIComponent(name)}`);
+	let res;
+
+	// If images are factory images return static content
+	if (Object.keys(factoryImages).includes(name)) {
+		res = await fetch(`/background/${name}`);
+	} else {
+		// For customer images, load from dummy-backgrounds
+		const prefix = '/dummy-backgrounds/';
+		res = await fetch(`${prefix}${encodeURIComponent(name)}`);
+	}
 
 	if (!res.ok) {
 		throw error(404, 'Image not found');
@@ -124,12 +136,17 @@ export async function POST({ request }) {
 // ** DELETE: Remove an image (expects ?filename=... in query) **
 export const DELETE: RequestHandler = async ({ url }) => {
 	const filename = url.searchParams.get('filename');
-
-	if (!filename || !images[filename]) {
-		throw error(404, 'File not found');
+	if (!filename) {
+		throw error(404, 'File not provided');
 	}
-
-	delete images[filename]; // Remove from memory storage
-
-	return json({ message: 'Delete successful' });
+	const filePath = path.join(BACKGROUND_DIR, filename);
+	try {
+		await fs.unlink(filePath);
+		// Optionally update your in-memory images object if needed:
+		delete images[filename];
+		return json({ message: 'Delete successful' });
+	} catch (err) {
+		console.error(err);
+		throw error(500, 'Failed to delete file');
+	}
 };

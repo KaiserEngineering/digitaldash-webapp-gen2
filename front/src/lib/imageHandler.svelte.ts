@@ -1,5 +1,5 @@
 // src/lib/imageHandler.ts
-import { factoryImages, apiUrl } from '$lib/config';
+import { factoryImages, apiUrl, endpoints } from '$lib/config';
 
 export interface ImageData {
 	name: string;
@@ -21,10 +21,15 @@ export class ImageHandler {
 	 * - User images are served via an API endpoint.
 	 */
 	determineEndpoint(name: string): string {
-		if (Object.keys(factoryImages).includes(name)) {
-			return `/embedded/background/`;
-		} else {
+		console.log('Determining endpoint for:', name);
+
+		// Check if the image is a factory image based on the filename prefix
+		if (name.startsWith('stock_') || name.startsWith('bar_')) {
+			return `/theme/`; // Adjust if necessary
+		} else if (name.startsWith('background_')) {
 			return `/background/`;
+		} else {
+			return `${apiUrl}${endpoints.customer}`;
 		}
 	}
 
@@ -38,7 +43,7 @@ export class ImageHandler {
 		}
 
 		const endpoint = this.determineEndpoint(name);
-		const url = apiUrl + endpoint + encodeURIComponent(name);
+		const url = endpoint + encodeURI(name);
 
 		// Fetch the image.
 		try {

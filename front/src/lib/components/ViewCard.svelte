@@ -5,12 +5,10 @@
 	import { Gauge as GaugeIcon } from 'lucide-svelte';
 	import { apiUrl } from '@/config';
 	import toast from 'svelte-5-french-toast';
+	import type { string } from 'zod';
 
 	// Define the Theme type
-	type Theme = {
-		face: string;
-		needle: string;
-	};
+	type Theme = string;
 
 	// Define the types for gauges and views
 	type Gauge = {
@@ -77,7 +75,7 @@
 	onMount(async () => {
 		try {
 			// Load the image via the ImageHandler (this handles caching and endpoint selection)
-			const imageData = await imageHandler.loadImage(view.background);
+			const imageData = await imageHandler.loadImage(`background/${view.background}`);
 			backgroundUrl = imageData.url;
 
 			// Compute ideal text color based on the loaded image
@@ -90,16 +88,10 @@
 				if (!theme[gauge.theme] && !fetchedThemes.has(gauge.theme)) {
 					fetchedThemes.add(gauge.theme);
 
-					// Fetch both face and needle images in parallel
-				// 	const [faceRes, needleRes] = await Promise.all([
-				// 		fetch(`${apiUrl}/embedded/themes_${gauge.theme}_face.png.gz`),
-				// 		fetch(`${apiUrl}/embedded/themes_${gauge.theme}_needle.png.gz`)
-				// 	]);
+					const themeImageData = await imageHandler.loadImage(`${gauge.theme}.png.gz`);
+					const themeURL = themeImageData.url;
 
-				// 	theme[gauge.theme] = {
-				// 		face: faceRes.url,
-				// 		needle: needleRes.url
-				// 	};
+					theme[gauge.theme] = themeURL;
 				}
 			}
 		} catch (error) {
@@ -128,7 +120,10 @@
 			{#each view.gauges as gauge}
 				<div class="flex flex-col items-center">
 					<div class="relative h-24 w-24">
-						<GaugeIcon size="62" />
+						<img class="rounded-full" src={theme[gauge.theme]} alt={gauge.theme} />
+						<div class="absolute inset-0 flex items-center justify-center">
+							<GaugeIcon class="text-white" />
+						</div>
 					</div>
 					<span class="mt-2 rounded-full bg-purple-600 px-4 py-1 text-sm text-white">
 						{gauge.label}

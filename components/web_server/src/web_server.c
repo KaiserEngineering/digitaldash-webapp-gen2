@@ -27,22 +27,36 @@ typedef struct
 extern const uint8_t index_html_gz_start[] asm("_binary_index_html_gz_start");
 extern const uint8_t index_html_gz_end[] asm("_binary_index_html_gz_end");
 
-extern const uint8_t favicon_start_gz[] asm("_binary_favicon_png_gz_start");
-extern const uint8_t favicon_end_gz[] asm("_binary_favicon_png_gz_end");
+// factory Backgrounds:
+extern const uint8_t factoryImages_favicon_png_gz_start[] asm("_binary_factoryImages_favicon_png_gz_start");
+extern const uint8_t factoryImages_favicon_png_gz_end[] asm("_binary_factoryImages_favicon_png_gz_end");
 
-extern const uint8_t flare_png_start[] asm("_binary_flare_png_gz_start");
-extern const uint8_t flare_png_end[] asm("_binary_flare_png_gz_end");
+extern const uint8_t factoryImages_flare_png_gz_start[] asm("_binary_factoryImages_flare_png_gz_start");
+extern const uint8_t factoryImages_flare_png_gz_end[] asm("_binary_factoryImages_flare_png_gz_end");
 
-extern const uint8_t galaxy_png_start[] asm("_binary_galaxy_png_gz_start");
-extern const uint8_t galaxy_png_end[] asm("_binary_galaxy_png_gz_end");
+extern const uint8_t factoryImages_galaxy_png_gz_start[] asm("_binary_factoryImages_galaxy_png_gz_start");
+extern const uint8_t factoryImages_galaxy_png_gz_end[] asm("_binary_factoryImages_galaxy_png_gz_end");
+
+// Factory Themes:
+extern const uint8_t factoryImages_bar_aurora_png_gz_start[] asm("_binary_factoryImages_bar_aurora_png_gz_start");
+extern const uint8_t factoryImages_bar_aurora_png_gz_end[] asm("_binary_factoryImages_bar_aurora_png_gz_end");
+
+extern const uint8_t factoryImages_stock_rs_png_gz_start[] asm("_binary_factoryImages_stock_rs_png_gz_start");
+extern const uint8_t factoryImages_stock_rs_png_gz_end[] asm("_binary_factoryImages_stock_rs_png_gz_end");
+
+extern const uint8_t factoryImages_stock_st_png_gz_start[] asm("_binary_factoryImages_stock_st_png_gz_start");
+extern const uint8_t factoryImages_stock_st_png_gz_end[] asm("_binary_factoryImages_stock_st_png_gz_end");
 
 // Embedded file mappings
 static const EmbeddedFile embedded_files[] = {
     {"/", index_html_gz_start, index_html_gz_end, "text/html"},
     {"/index.html.gz", index_html_gz_start, index_html_gz_end, "text/html"},
-    {"/favicon.png", favicon_start_gz, favicon_end_gz, "image/png"},
-    {"/api/embedded/background/flare.png.gz", flare_png_start, flare_png_end, "image/png"},
-    {"/api/embedded/background/galaxy.png.gz", galaxy_png_start, galaxy_png_end, "image/png"},
+    {"/favicon.png", factoryImages_favicon_png_gz_start, factoryImages_favicon_png_gz_end, "image/png"},
+    {"/api/embedded/flare.png.gz", factoryImages_flare_png_gz_start, factoryImages_flare_png_gz_end, "image/png"},
+    {"/api/embedded/galaxy.png.gz", factoryImages_galaxy_png_gz_start, factoryImages_galaxy_png_gz_end, "image/png"},
+    {"/api/embedded/bar_aurora.png.gz", factoryImages_bar_aurora_png_gz_start, factoryImages_bar_aurora_png_gz_end, "image/png"},
+    {"/api/embedded/stock_rs.png.gz", factoryImages_stock_rs_png_gz_start, factoryImages_stock_rs_png_gz_end, "image/png"},
+    {"/api/embedded/stock_st.png.gz", factoryImages_stock_st_png_gz_start, factoryImages_stock_st_png_gz_end, "image/png"},
 };
 
 #define EMBEDDED_FILE_COUNT (sizeof(embedded_files) / sizeof(EmbeddedFile))
@@ -133,7 +147,8 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepa
 static esp_err_t spiffs_file_handler(httpd_req_t *req)
 {
     char filepath[FILE_PATH_MAX];
-    if (strlen(req->uri) >= FILE_PATH_MAX - 7) {
+    if (strlen(req->uri) >= FILE_PATH_MAX - 7)
+    {
         ESP_LOGE(TAG, "URI too long");
         return ESP_FAIL;
     }
