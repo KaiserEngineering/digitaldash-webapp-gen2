@@ -49,6 +49,22 @@
 					unit: '°C'
 				}
 			]
+		},
+		{
+			id: '3',
+			name: 'View Three',
+			enabled: false,
+			background: 'jellyfish.png.gz',
+			gauges: [
+				{
+					id: '1',
+					label: 'Oil Temp',
+					theme: 'Stock',
+					pid: 'OIL_TEMP',
+					enabled: true,
+					unit: '°C'
+				}
+			]
 		}
 	];
 </script>

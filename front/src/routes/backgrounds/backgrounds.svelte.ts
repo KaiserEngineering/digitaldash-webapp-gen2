@@ -1,5 +1,6 @@
 // src/routes/backgrounds.ts
 import { apiUrl } from '$lib/config'; // adjust as needed (or leave empty if same origin)
+import { ImageHandler } from '@/imageHandler.svelte';
 import { toast } from 'svelte-5-french-toast';
 
 interface UploadResponse {
@@ -9,17 +10,15 @@ interface UploadResponse {
 }
 
 export async function uploadBackground(
-	files: File,
+	file: File,
 	images: { [key: string]: any } = {}
 ): Promise<UploadResponse> {
-	const formData = new FormData();
-
-	formData.append('file', files);
-	formData.append('filename', files.name);
-
-	const response = await fetch(`${apiUrl}/backgrounds`, {
+	const response = await fetch(`${apiUrl}/background/${file.name}`, {
 		method: 'POST',
-		body: formData
+		body: file,
+		headers: {
+			'Content-Type': file.type // e.g., "image/png"
+		}
 	});
 
 	if (!response.ok) {
@@ -30,19 +29,18 @@ export async function uploadBackground(
 	const result: UploadResponse = await response.json();
 
 	if (result.filename) {
-		// Get the corresponding file object
-		const fileToUpload = Array.isArray(files)
-			? files.find((f) => f.name === result.filename) || files[0]
-			: files;
-
 		// Update the images object with the server response and file metadata
 		images[result.filename] = {
 			filename: result.filename,
-			url: `${apiUrl}/backgrounds/${result.filename}`,
-			size: fileToUpload.size,
-			lastModified: fileToUpload.lastModified,
-			type: fileToUpload.type
+			url: `${apiUrl}/background/${result.filename}`,
+			size: file.size,
+			lastModified: file.lastModified,
+			type: file.type
 		};
+
+		// Need to update our cache
+		const imageHandler = new ImageHandler();
+		imageHandler.clearImageCache(file.name);
 
 		toast.success('Upload successful');
 	} else {
@@ -81,4 +79,3 @@ export async function deleteBackground(
 		throw error;
 	}
 }
-

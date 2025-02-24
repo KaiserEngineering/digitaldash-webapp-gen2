@@ -40,19 +40,22 @@ void init_spiffs(void)
     }
     else
     {
-        ESP_LOGI(TAG, "SPIFFS mounted successfully. Total: %d bytes, Used: %d bytes", total, used);
+        ESP_LOGI(TAG, "SPIFFS mounted successfully. Total: %zu bytes, Used: %zu bytes", total, used);
     }
 }
 
-void list_spiffs_files() {
+void list_spiffs_files()
+{
     ESP_LOGI("SPIFFS", "Listing files in SPIFFS:");
     DIR *dir = opendir("/spiffs");
-    if (!dir) {
+    if (!dir)
+    {
         ESP_LOGE("SPIFFS", "Failed to open directory");
         return;
     }
     struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL) {
+    while ((entry = readdir(dir)) != NULL)
+    {
         ESP_LOGI("SPIFFS", "Found file: %s", entry->d_name);
     }
     closedir(dir);

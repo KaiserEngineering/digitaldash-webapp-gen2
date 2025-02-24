@@ -1,6 +1,5 @@
 export const prerender = false;
 
-import type { RequestHandler } from '@sveltejs/kit';
 import { json, error } from '@sveltejs/kit';
 import fs from 'fs';
 import path from 'path';
@@ -18,8 +17,6 @@ export interface ImageInfo {
 	url: string;
 }
 
-// Dummy storage for uploaded images
-let images: Record<string, ImageInfo> = {};
 
 // ** GET: List all images in `/dummy-backgrounds/` **
 export async function GET() {
@@ -53,44 +50,3 @@ export async function GET() {
 		throw error(500, 'Failed to read background images');
 	}
 }
-
-// ** POST: Upload a new image (expects FormData with "file" and optional "filename") **
-export const POST: RequestHandler = async ({ request }) => {
-	const data = await request.formData();
-	const file = data.get('file') as File;
-
-	if (!file) {
-		throw error(400, 'No file uploaded');
-	}
-
-	const filename = data.get('filename')?.toString() || file.name;
-	const ext = path.extname(filename).toLowerCase();
-
-	// Validate file type
-	if (!SUPPORTED_EXTENSIONS.includes(ext)) {
-		throw error(400, 'Unsupported file type');
-	}
-
-	// Simulate file storage (actual saving logic needed for persistent storage)
-	images[filename] = {
-		size: file.size,
-		type: file.type,
-		lastModified: Date.now(),
-		url: `/dummy-backgrounds/${filename}`
-	};
-
-	return json({ message: 'Upload successful', filename });
-};
-
-// ** DELETE: Remove an image (expects ?filename=... in query) **
-export const DELETE: RequestHandler = async ({ url }) => {
-	const filename = url.searchParams.get('filename');
-
-	if (!filename || !images[filename]) {
-		throw error(404, 'File not found');
-	}
-
-	delete images[filename]; // Remove from memory storage
-
-	return json({ message: 'Delete successful' });
-};

@@ -10,7 +10,7 @@
 
 static const char *TAG = "WebServer";
 
-#define FILE_PATH_MAX (ESP_VFS_PATH_MAX + 512)
+#define FILE_PATH_MAX (ESP_VFS_PATH_MAX + 1024)
 #define SCRATCH_BUFSIZE (20480)
 #define CHECK_FILE_EXTENSION(filename, ext) (strcasecmp(&filename[strlen(filename) - strlen(ext)], ext) == 0)
 
@@ -133,6 +133,10 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepa
 static esp_err_t spiffs_file_handler(httpd_req_t *req)
 {
     char filepath[FILE_PATH_MAX];
+    if (strlen(req->uri) >= FILE_PATH_MAX - 7) {
+        ESP_LOGE(TAG, "URI too long");
+        return ESP_FAIL;
+    }
     snprintf(filepath, sizeof(filepath), "/spiffs%s", req->uri);
 
     int fd = open(filepath, O_RDONLY);

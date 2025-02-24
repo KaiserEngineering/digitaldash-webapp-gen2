@@ -41,32 +41,37 @@ export class ImageHandler {
 		const url = apiUrl + endpoint + encodeURIComponent(name);
 
 		// Fetch the image.
-		const res = await fetch(url);
-		if (!res.ok) {
-			throw new Error(`Failed to load image ${name}: ${res.statusText}`);
+		try {
+			const res = await fetch(url);
+			if (!res.ok) {
+				throw new Error(`Failed to load image ${name}: ${res.statusText}`);
+			}
+
+			// Create an object URL from the fetched blob.
+			const blob = await res.blob();
+			const objectUrl = URL.createObjectURL(blob);
+
+			// Extract metadata from response headers.
+			const size = parseInt(res.headers.get('content-length') || '0', 10);
+			const lastModifiedHeader = res.headers.get('last-modified');
+			const lastModified = lastModifiedHeader ? new Date(lastModifiedHeader).getTime() : Date.now();
+
+			const imageData: ImageData = {
+				name,
+				url: objectUrl,
+				size,
+				lastModified,
+				contentType: res.headers.get('content-type') || 'unknown'
+			};
+
+			// Cache the result.
+			imageCache.set(name, imageData);
+
+			return imageData;
+		} catch (error) {
+			console.error(`Failed to load image ${name}: ${error}`);
+			throw error;
 		}
-
-		// Create an object URL from the fetched blob.
-		const blob = await res.blob();
-		const objectUrl = URL.createObjectURL(blob);
-
-		// Extract metadata from response headers.
-		const size = parseInt(res.headers.get('content-length') || '0', 10);
-		const lastModifiedHeader = res.headers.get('last-modified');
-		const lastModified = lastModifiedHeader ? new Date(lastModifiedHeader).getTime() : Date.now();
-
-		const imageData: ImageData = {
-			name,
-			url: objectUrl,
-			size,
-			lastModified,
-			contentType: res.headers.get('content-type') || 'unknown'
-		};
-
-		// Cache the result.
-		imageCache.set(name, imageData);
-
-		return imageData;
 	}
 
 	/**
@@ -80,6 +85,7 @@ export class ImageHandler {
 				URL.revokeObjectURL(data.url);
 			}
 			imageCache.delete(name);
+			console.debug(`Clearing cache for ${name}`);
 		} else {
 			imageCache.forEach((data) => {
 				URL.revokeObjectURL(data.url);

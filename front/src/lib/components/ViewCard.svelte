@@ -4,6 +4,7 @@
 	import { ImageHandler } from '$lib/imageHandler.svelte';
 	import { Gauge as GaugeIcon } from 'lucide-svelte';
 	import { apiUrl } from '@/config';
+	import toast from 'svelte-5-french-toast';
 
 	// Define the Theme type
 	type Theme = {
@@ -90,19 +91,19 @@
 					fetchedThemes.add(gauge.theme);
 
 					// Fetch both face and needle images in parallel
-					const [faceRes, needleRes] = await Promise.all([
-						fetch(`${apiUrl}/embedded/themes_${gauge.theme}_face.png.gz`),
-						fetch(`${apiUrl}/embedded/themes_${gauge.theme}_needle.png.gz`)
-					]);
+				// 	const [faceRes, needleRes] = await Promise.all([
+				// 		fetch(`${apiUrl}/embedded/themes_${gauge.theme}_face.png.gz`),
+				// 		fetch(`${apiUrl}/embedded/themes_${gauge.theme}_needle.png.gz`)
+				// 	]);
 
-					theme[gauge.theme] = {
-						face: faceRes.url,
-						needle: needleRes.url
-					};
+				// 	theme[gauge.theme] = {
+				// 		face: faceRes.url,
+				// 		needle: needleRes.url
+				// 	};
 				}
 			}
 		} catch (error) {
-			console.error('Error loading background image:', error);
+			toast.error(`Failed to load view image: ${(error as Error).message}`);
 			view.textColor = 'black';
 		} finally {
 			loading = false;
