@@ -28,24 +28,24 @@ extern const uint8_t index_html_gz_start[] asm("_binary_index_html_gz_start");
 extern const uint8_t index_html_gz_end[] asm("_binary_index_html_gz_end");
 
 // factory Backgrounds:
-extern const uint8_t factoryImages_favicon_png_gz_start[] asm("_binary_factoryImages_favicon_png_gz_start");
-extern const uint8_t factoryImages_favicon_png_gz_end[] asm("_binary_factoryImages_favicon_png_gz_end");
+extern const uint8_t factoryImages_favicon_png_gz_start[] asm("_binary_favicon_png_gz_start");
+extern const uint8_t factoryImages_favicon_png_gz_end[] asm("_binary_favicon_png_gz_end");
 
-extern const uint8_t factoryImages_flare_png_gz_start[] asm("_binary_factoryImages_flare_png_gz_start");
-extern const uint8_t factoryImages_flare_png_gz_end[] asm("_binary_factoryImages_flare_png_gz_end");
+extern const uint8_t factoryImages_flare_png_gz_start[] asm("_binary_flare_png_gz_start");
+extern const uint8_t factoryImages_flare_png_gz_end[] asm("_binary_flare_png_gz_end");
 
-extern const uint8_t factoryImages_galaxy_png_gz_start[] asm("_binary_factoryImages_galaxy_png_gz_start");
-extern const uint8_t factoryImages_galaxy_png_gz_end[] asm("_binary_factoryImages_galaxy_png_gz_end");
+extern const uint8_t factoryImages_galaxy_png_gz_start[] asm("_binary_galaxy_png_gz_start");
+extern const uint8_t factoryImages_galaxy_png_gz_end[] asm("_binary_galaxy_png_gz_end");
 
 // Factory Themes:
-extern const uint8_t factoryImages_bar_aurora_png_gz_start[] asm("_binary_factoryImages_bar_aurora_png_gz_start");
-extern const uint8_t factoryImages_bar_aurora_png_gz_end[] asm("_binary_factoryImages_bar_aurora_png_gz_end");
+extern const uint8_t factoryImages_bar_aurora_png_gz_start[] asm("_binary_bar_aurora_png_gz_start");
+extern const uint8_t factoryImages_bar_aurora_png_gz_end[] asm("_binary_bar_aurora_png_gz_end");
 
-extern const uint8_t factoryImages_stock_rs_png_gz_start[] asm("_binary_factoryImages_stock_rs_png_gz_start");
-extern const uint8_t factoryImages_stock_rs_png_gz_end[] asm("_binary_factoryImages_stock_rs_png_gz_end");
+extern const uint8_t factoryImages_stock_rs_png_gz_start[] asm("_binary_stock_rs_png_gz_start");
+extern const uint8_t factoryImages_stock_rs_png_gz_end[] asm("_binary_stock_rs_png_gz_end");
 
-extern const uint8_t factoryImages_stock_st_png_gz_start[] asm("_binary_factoryImages_stock_st_png_gz_start");
-extern const uint8_t factoryImages_stock_st_png_gz_end[] asm("_binary_factoryImages_stock_st_png_gz_end");
+extern const uint8_t factoryImages_stock_st_png_gz_start[] asm("_binary_stock_st_png_gz_start");
+extern const uint8_t factoryImages_stock_st_png_gz_end[] asm("_binary_stock_st_png_gz_end");
 
 // Embedded file mappings
 static const EmbeddedFile embedded_files[] = {
@@ -191,7 +191,7 @@ esp_err_t web_request_handler(httpd_req_t *req)
         ESP_LOGI(TAG, "Serving favicon.png");
         httpd_resp_set_type(req, "image/png");
         httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
-        return httpd_resp_send(req, (const char *)favicon_start_gz, favicon_end_gz - favicon_start_gz);
+        return httpd_resp_send(req, (const char *)factoryImages_favicon_png_gz_start, factoryImages_favicon_png_gz_end - factoryImages_favicon_png_gz_start);
     }
 
     // Redirect `/` to `/index.html.gz`
