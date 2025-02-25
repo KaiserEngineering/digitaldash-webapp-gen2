@@ -25,7 +25,7 @@ export class ImageHandler {
 
 		// Check if the image is a factory image based on the filename prefix
 		if (name.startsWith('stock_') || name.startsWith('bar_')) {
-			return `/theme/`; // Adjust if necessary
+			return `/theme/`;
 		} else if (name.startsWith('background_')) {
 			return `/background/`;
 		} else {

@@ -52,11 +52,11 @@ static const EmbeddedFile embedded_files[] = {
     {"/", index_html_gz_start, index_html_gz_end, "text/html"},
     {"/index.html.gz", index_html_gz_start, index_html_gz_end, "text/html"},
     {"/favicon.png", factoryImages_favicon_png_gz_start, factoryImages_favicon_png_gz_end, "image/png"},
-    {"/api/embedded/flare.png.gz", factoryImages_flare_png_gz_start, factoryImages_flare_png_gz_end, "image/png"},
-    {"/api/embedded/galaxy.png.gz", factoryImages_galaxy_png_gz_start, factoryImages_galaxy_png_gz_end, "image/png"},
+    {"/api/embedded/background/flare.png.gz", factoryImages_flare_png_gz_start, factoryImages_flare_png_gz_end, "image/png"},
+    {"/api/embedded/background/galaxy.png.gz", factoryImages_galaxy_png_gz_start, factoryImages_galaxy_png_gz_end, "image/png"},
     {"/api/embedded/bar_aurora.png.gz", factoryImages_bar_aurora_png_gz_start, factoryImages_bar_aurora_png_gz_end, "image/png"},
-    {"/api/embedded/stock_rs.png.gz", factoryImages_stock_rs_png_gz_start, factoryImages_stock_rs_png_gz_end, "image/png"},
-    {"/api/embedded/stock_st.png.gz", factoryImages_stock_st_png_gz_start, factoryImages_stock_st_png_gz_end, "image/png"},
+    {"/api/embedded/theme/stock_rs.png.gz", factoryImages_stock_rs_png_gz_start, factoryImages_stock_rs_png_gz_end, "image/png"},
+    {"/api/embedded/theme/stock_st.png.gz", factoryImages_stock_st_png_gz_start, factoryImages_stock_st_png_gz_end, "image/png"},
 };
 
 #define EMBEDDED_FILE_COUNT (sizeof(embedded_files) / sizeof(EmbeddedFile))
