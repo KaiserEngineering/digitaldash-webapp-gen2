@@ -13,16 +13,16 @@ export async function uploadBackground(
 	file: File,
 	images: { [key: string]: any } = {}
 ): Promise<UploadResponse> {
-	const response = await fetch(`${apiUrl}/background/${file.name}`, {
+	const response = await fetch(`${apiUrl}/user_image/${file.name}`, {
 		method: 'POST',
 		body: file,
 		headers: {
 			'Content-Type': file.type // e.g., "image/png"
 		}
 	});
-
+	
 	if (!response.ok) {
-		toast.error('Upload failed');
+		toast.error(response.statusText);
 		throw new Error(`Upload failed: ${response.statusText}`);
 	}
 
@@ -32,7 +32,7 @@ export async function uploadBackground(
 		// Update the images object with the server response and file metadata
 		images[result.filename] = {
 			filename: result.filename,
-			url: `${apiUrl}/background/${result.filename}`,
+			url: `${apiUrl}/user_images/${result.filename}`,
 			size: file.size,
 			lastModified: file.lastModified,
 			type: file.type
@@ -60,7 +60,7 @@ export async function deleteBackground(
 	}
 
 	try {
-		const response = await fetch(`${apiUrl}/backgrounds?filename=${encodeURIComponent(filename)}`, {
+		const response = await fetch(`${apiUrl}/user_image/${encodeURIComponent(filename)}`, {
 			method: 'DELETE'
 		});
 

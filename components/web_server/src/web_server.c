@@ -6,7 +6,7 @@
 #include "esp_log.h"
 #include "esp_http_server.h"
 #include "esp_err.h"
-#include "backgrounds.h"
+#include "user_images.h"
 
 static const char *TAG = "WebServer";
 
@@ -52,11 +52,13 @@ static const EmbeddedFile embedded_files[] = {
     {"/", index_html_gz_start, index_html_gz_end, "text/html"},
     {"/index.html.gz", index_html_gz_start, index_html_gz_end, "text/html"},
     {"/favicon.png", factoryImages_favicon_png_gz_start, factoryImages_favicon_png_gz_end, "image/png"},
-    {"/api/embedded/background/flare.png.gz", factoryImages_flare_png_gz_start, factoryImages_flare_png_gz_end, "image/png"},
-    {"/api/embedded/background/galaxy.png.gz", factoryImages_galaxy_png_gz_start, factoryImages_galaxy_png_gz_end, "image/png"},
+
+    // Factory images (preloaded in firmware)
+    {"/api/embedded/flare.png.gz", factoryImages_flare_png_gz_start, factoryImages_flare_png_gz_end, "image/png"},
+    {"/api/embedded/galaxy.png.gz", factoryImages_galaxy_png_gz_start, factoryImages_galaxy_png_gz_end, "image/png"},
     {"/api/embedded/bar_aurora.png.gz", factoryImages_bar_aurora_png_gz_start, factoryImages_bar_aurora_png_gz_end, "image/png"},
-    {"/api/embedded/theme/stock_rs.png.gz", factoryImages_stock_rs_png_gz_start, factoryImages_stock_rs_png_gz_end, "image/png"},
-    {"/api/embedded/theme/stock_st.png.gz", factoryImages_stock_st_png_gz_start, factoryImages_stock_st_png_gz_end, "image/png"},
+    {"/api/embedded/stock_rs.png.gz", factoryImages_stock_rs_png_gz_start, factoryImages_stock_rs_png_gz_end, "image/png"},
+    {"/api/embedded/stock_st.png.gz", factoryImages_stock_st_png_gz_start, factoryImages_stock_st_png_gz_end, "image/png"},
 };
 
 #define EMBEDDED_FILE_COUNT (sizeof(embedded_files) / sizeof(EmbeddedFile))
@@ -83,7 +85,6 @@ esp_err_t embedded_file_handler(httpd_req_t *req)
             size_t file_size = embedded_files[i].end - embedded_files[i].start;
             ESP_LOGI(TAG, "File size: %zu bytes", file_size);
 
-            // ✅ Stream file in chunks to prevent memory overflow
             const size_t chunk_size = 512;
             size_t bytes_remaining = file_size;
             const uint8_t *file_ptr = embedded_files[i].start;
@@ -101,12 +102,9 @@ esp_err_t embedded_file_handler(httpd_req_t *req)
 
                 file_ptr += bytes_to_send;
                 bytes_remaining -= bytes_to_send;
-
-                // Yield to OS
                 vTaskDelay(1 / portTICK_PERIOD_MS);
             }
 
-            // ✅ End response
             return httpd_resp_send_chunk(req, NULL, 0);
         }
     }
@@ -147,11 +145,7 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepa
 static esp_err_t spiffs_file_handler(httpd_req_t *req)
 {
     char filepath[FILE_PATH_MAX];
-    if (strlen(req->uri) >= FILE_PATH_MAX - 7)
-    {
-        ESP_LOGE(TAG, "URI too long");
-        return ESP_FAIL;
-    }
+
     snprintf(filepath, sizeof(filepath), "/spiffs%s", req->uri);
 
     int fd = open(filepath, O_RDONLY);
@@ -161,7 +155,6 @@ static esp_err_t spiffs_file_handler(httpd_req_t *req)
         set_content_type_from_file(req, filepath);
         httpd_resp_set_hdr(req, "Cache-Control", "public, max-age=31536000, immutable");
 
-        // Send file contents
         char buffer[SCRATCH_BUFSIZE];
         ssize_t read_bytes;
         while ((read_bytes = read(fd, buffer, SCRATCH_BUFSIZE)) > 0)
@@ -170,13 +163,12 @@ static esp_err_t spiffs_file_handler(httpd_req_t *req)
             {
                 close(fd);
                 ESP_LOGE(TAG, "Failed to send file: %s", filepath);
-                httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to send file");
                 return ESP_FAIL;
             }
         }
 
         close(fd);
-        httpd_resp_send_chunk(req, NULL, 0); // End response
+        httpd_resp_send_chunk(req, NULL, 0);
         return ESP_OK;
     }
     return ESP_ERR_NOT_FOUND;
@@ -227,9 +219,9 @@ esp_err_t start_webserver()
         return ESP_FAIL;
     }
 
-    if (register_backgrounds(server) != ESP_OK)
+    if (register_user_images(server) != ESP_OK)
     {
-        ESP_LOGE(TAG, "Failed to register backgrounds");
+        ESP_LOGE(TAG, "Failed to register user images");
         httpd_stop(server);
         return ESP_FAIL;
     }
@@ -241,7 +233,7 @@ esp_err_t start_webserver()
                                            .user_ctx = NULL});
 
     httpd_register_uri_handler(server, &(httpd_uri_t){
-                                           .uri = "/api/*",
+                                           .uri = "/api/user_images/*",
                                            .method = HTTP_GET,
                                            .handler = spiffs_file_handler,
                                            .user_ctx = NULL});

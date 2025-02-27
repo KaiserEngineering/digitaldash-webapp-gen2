@@ -1,5 +1,5 @@
 // src/lib/imageHandler.ts
-import { apiUrl, endpoints } from '$lib/config';
+import { apiUrl, endpoints, factoryImages } from '$lib/config';
 
 export interface ImageData {
 	name: string;
@@ -23,14 +23,12 @@ export class ImageHandler {
 	determineEndpoint(name: string): string {
 		console.log('Determining endpoint for:', name);
 
-		// Check if the image is a factory image based on the filename prefix
-		if (name.startsWith('stock_') || name.startsWith('bar_')) {
-			return `/theme/`;
-		} else if (name.startsWith('background_')) {
-			return `/background/`;
-		} else {
-			return `${apiUrl}${endpoints.customer}`;
+		// Check if the image is a factory (embedded) image
+		if (name in factoryImages) {
+			// Use the static path in dev, use `/embedded/` in production
+			return `${apiUrl}${endpoints.factory}`;
 		}
+		return `${apiUrl}${endpoints.customer}`;
 	}
 
 	/**

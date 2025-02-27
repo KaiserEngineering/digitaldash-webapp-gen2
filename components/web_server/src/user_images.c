@@ -25,19 +25,18 @@
  ******************************************************************************
  */
 
-#include "BACKGROUNDS.h"
+#include "USER_IMAGES.h"
 #include "esp_err.h"
 #include "esp_http_server.h"
 #include "esp_log.h"
 #include "sys/stat.h"
 #include "sys/dirent.h"
-#include "esp_spiffs.h"
 #include <ctype.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
 #include <unistd.h>
-#include <errno.h>
 
 #define HTTPD_507_INSUFFICIENT_STORAGE 507
 
@@ -79,19 +78,19 @@ bool is_png_file(const char *filename, const char **mime_type)
     return false;
 }
 
-esp_err_t list_backgrounds(httpd_req_t *req)
+esp_err_t list_user_images(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "GET request received: %s", req->uri);
 
-    const char *background_dir = "/spiffs";
-    DIR *dir = opendir(background_dir);
+    const char *image_dir = "/spiffs/data";
+    DIR *dir = opendir(image_dir);
     if (!dir)
     {
-        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to open SPIFFS directory");
+        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to open user images directory");
     }
 
     char response[MAX_RESPONSE_SIZE] = "{";
-    size_t len = 1; // Start after '{'
+    size_t len = 1;
     struct dirent *entry;
     struct stat st;
     char filepath[MAX_PATH_SIZE];
@@ -102,23 +101,21 @@ esp_err_t list_backgrounds(httpd_req_t *req)
         const char *mime_type;
         if (is_png_file(entry->d_name, &mime_type))
         {
-            snprintf(filepath, sizeof(filepath), "%.200s/%.50s", background_dir, entry->d_name);
+            snprintf(filepath, sizeof(filepath), "%.200s/%.50s", image_dir, entry->d_name);
             if (stat(filepath, &st) == 0)
             {
-                // Prevent buffer overflow
                 if (len + 256 >= MAX_RESPONSE_SIZE - 2)
                 {
                     break;
                 }
 
-                // Add comma if not the first entry
                 if (file_count > 0)
                 {
                     response[len++] = ',';
                 }
 
                 len += snprintf(response + len, MAX_RESPONSE_SIZE - len,
-                                "\"%s\": {\"url\": \"/api/backgrounds/%s\", \"size\": %lld, \"type\": \"%s\", \"lastModified\": %lld}",
+                                "\"%s\": {\"url\": \"/api/user_images/%s\", \"size\": %lld, \"type\": \"%s\", \"lastModified\": %lld}",
                                 entry->d_name, entry->d_name, (long long)st.st_size, mime_type, (long long)st.st_mtime);
 
                 file_count++;
@@ -134,26 +131,26 @@ esp_err_t list_backgrounds(httpd_req_t *req)
     return httpd_resp_send(req, response, len);
 }
 
-esp_err_t get_background(httpd_req_t *req)
+esp_err_t get_user_image(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "GET request received: %s", req->uri);
 
-    const char *prefix = "/api/background/";
+    const char *prefix = "/api/user_image/";
     if (strncmp(req->uri, prefix, strlen(prefix)) != 0)
     {
-        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid background request");
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid user image request");
     }
 
-    const char *background_name = req->uri + strlen(prefix);
+    const char *image_name = req->uri + strlen(prefix);
     const char *mime_type;
-    if (!is_png_file(background_name, &mime_type))
+    if (!is_png_file(image_name, &mime_type))
     {
-        ESP_LOGE(TAG, "Invalid file type requested: %s", background_name);
+        ESP_LOGE(TAG, "Invalid file type requested: %s", image_name);
         return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid file type");
     }
 
     char filepath[MAX_PATH_SIZE];
-    snprintf(filepath, sizeof(filepath), "/spiffs/data/background_%s", background_name);
+    snprintf(filepath, sizeof(filepath), "/spiffs/data/%s", image_name);
 
     FILE *file = fopen(filepath, "rb");
     if (!file)
@@ -163,14 +160,11 @@ esp_err_t get_background(httpd_req_t *req)
     }
 
     ESP_LOGI(TAG, "Serving file: %s with MIME type: %s", filepath, mime_type);
-
-    esp_err_t err;
-
-    /* Set MIME Type */
-    err = httpd_resp_set_type(req, mime_type);
+    esp_err_t err = httpd_resp_set_type(req, mime_type);
     if (err != ESP_OK)
     {
-        ESP_LOGE(TAG, "Failed to set Content-Type header: %s", esp_err_to_name(err));
+        ESP_LOGE(TAG, "Failed to set Content-Type header");
+        fclose(file);
         return err;
     }
 
@@ -217,8 +211,6 @@ esp_err_t get_background(httpd_req_t *req)
     int read_count = 0;
     while ((read_bytes = fread(chunk, 1, sizeof(chunk), file)) > 0)
     {
-        // ESP_LOGI(TAG, "Read %zu bytes from file", read_bytes);
-
         esp_err_t ret = httpd_resp_send_chunk(req, chunk, read_bytes);
         if (ret != ESP_OK) // Client disconnected or error sending data
         {
@@ -243,56 +235,16 @@ esp_err_t get_background(httpd_req_t *req)
     return httpd_resp_send_chunk(req, NULL, 0); // End response
 }
 
-esp_err_t background_delete_handler(httpd_req_t *req)
+esp_err_t user_image_upload_handler(httpd_req_t *req)
 {
-    char encoded_filename[128];
-    char query[128];
-    char decoded_filename[128];
-
-    if (httpd_req_get_url_query_str(req, query, sizeof(query)) == ESP_OK &&
-        httpd_query_key_value(query, "filename", encoded_filename, sizeof(encoded_filename)) == ESP_OK)
-    {
-        url_decode(decoded_filename, encoded_filename, sizeof(decoded_filename));
-        ESP_LOGI(TAG, "Requested DELETE for file (decoded): %s", decoded_filename);
-
-        char filepath[MAX_PATH_SIZE];
-        snprintf(filepath, sizeof(filepath), "/spiffs/%s", decoded_filename);
-
-        // Open file to check if it exists (SPIFFS lacks access() support)
-        FILE *file = fopen(filepath, "r");
-        if (!file)
-        {
-            ESP_LOGW(TAG, "File not found: %s", filepath);
-            return httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File not found");
-        }
-        fclose(file); // Close file before deleting
-
-        // Delete the file using unlink()
-        if (unlink(filepath) == 0)
-        {
-            ESP_LOGI(TAG, "File deleted successfully: %s", filepath);
-            return httpd_resp_sendstr(req, "File deleted successfully");
-        }
-        else
-        {
-            ESP_LOGW(TAG, "Failed to delete file: %s", filepath);
-            return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to delete file");
-        }
-    }
-
-    return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid request or file not found");
-}
-
-esp_err_t background_upload_handler(httpd_req_t *req)
-{
-    const char *prefix = "/api/background/";
+    const char *prefix = "/api/user_image/";
     if (strncmp(req->uri, prefix, strlen(prefix)) != 0)
     {
-        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid background request");
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid user image request");
     }
     const char *original_filename = req->uri + strlen(prefix);
     char filename[MAX_PATH_SIZE];
-    snprintf(filename, sizeof(filename), "background_%s", original_filename);
+    snprintf(filename, sizeof(filename), "%s", original_filename);
     for (char *p = filename; *p; ++p)
         *p = tolower(*p);
 
@@ -339,36 +291,78 @@ esp_err_t background_upload_handler(httpd_req_t *req)
     return httpd_resp_sendstr(req, response);
 }
 
-esp_err_t register_backgrounds(httpd_handle_t server)
+esp_err_t user_image_delete_handler(httpd_req_t *req)
 {
-    httpd_uri_t background_get_uri = {
-        .uri = "/api/background/*",
-        .method = HTTP_GET,
-        .handler = get_background,
-        .user_ctx = NULL};
-    httpd_register_uri_handler(server, &background_get_uri);
+    char encoded_filename[128];
+    char query[128];
+    char decoded_filename[128];
 
-    httpd_uri_t backgrounds_get_uri = {
-        .uri = "/api/backgrounds",
-        .method = HTTP_GET,
-        .handler = list_backgrounds,
-        .user_ctx = NULL};
-    httpd_register_uri_handler(server, &backgrounds_get_uri);
+    // Extract the filename query parameter
+    if (httpd_req_get_url_query_str(req, query, sizeof(query)) == ESP_OK &&
+        httpd_query_key_value(query, "filename", encoded_filename, sizeof(encoded_filename)) == ESP_OK)
+    {
+        url_decode(decoded_filename, encoded_filename, sizeof(decoded_filename));
+        ESP_LOGI(TAG, "Requested DELETE for file: %s", decoded_filename);
 
-    httpd_uri_t background_delete_uri = {
-        .uri = "/api/backgrounds",
+        // Construct full file path
+        char filepath[MAX_PATH_SIZE];
+        snprintf(filepath, sizeof(filepath), "/spiffs/data/%s", decoded_filename);
+
+        // Check if the file exists before attempting to delete
+        FILE *file = fopen(filepath, "r");
+        if (!file)
+        {
+            ESP_LOGW(TAG, "File not found: %s", filepath);
+            return httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File not found");
+        }
+        fclose(file); // Close file before deleting
+
+        // Delete the file
+        if (unlink(filepath) == 0)
+        {
+            ESP_LOGI(TAG, "File deleted successfully: %s", filepath);
+            return httpd_resp_sendstr(req, "File deleted successfully");
+        }
+        else
+        {
+            ESP_LOGW(TAG, "Failed to delete file: %s", filepath);
+            return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to delete file");
+        }
+    }
+
+    return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid request or file not found");
+}
+
+esp_err_t register_user_images(httpd_handle_t server)
+{
+    httpd_uri_t user_image_get_uri = {
+        .uri = "/api/user_image/*",
+        .method = HTTP_GET,
+        .handler = get_user_image,
+        .user_ctx = NULL};
+    httpd_register_uri_handler(server, &user_image_get_uri);
+
+    httpd_uri_t user_images_list_uri = {
+        .uri = "/api/user_images",
+        .method = HTTP_GET,
+        .handler = list_user_images,
+        .user_ctx = NULL};
+    httpd_register_uri_handler(server, &user_images_list_uri);
+
+    httpd_uri_t user_image_delete_uri = {
+        .uri = "/api/user_image/*",
         .method = HTTP_DELETE,
-        .handler = background_delete_handler,
+        .handler = user_image_delete_handler,
         .user_ctx = NULL};
-    httpd_register_uri_handler(server, &background_delete_uri);
+    httpd_register_uri_handler(server, &user_image_delete_uri);
 
-    httpd_uri_t background_upload_uri = {
-        .uri = "/api/background/*",
+    httpd_uri_t user_image_upload_uri = {
+        .uri = "/api/user_image/*",
         .method = HTTP_POST,
-        .handler = background_upload_handler,
+        .handler = user_image_upload_handler,
         .user_ctx = NULL};
-    httpd_register_uri_handler(server, &background_upload_uri);
+    httpd_register_uri_handler(server, &user_image_upload_uri);
 
-    ESP_LOGI(TAG, "Background routes registered successfully");
+    ESP_LOGI(TAG, "User image routes registered successfully");
     return ESP_OK;
 }

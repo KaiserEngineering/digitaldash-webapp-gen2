@@ -12,5 +12,5 @@ export const factoryImages: Record<string, { size: number; lastModified: number;
 
 export const endpoints = {
 	factory: '/embedded/',
-	customer: '/' // or your API endpoint, e.g. '/api/backgrounds/'
+	customer: '/user_image/'
 };

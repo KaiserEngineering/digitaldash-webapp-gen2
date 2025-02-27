@@ -3,9 +3,7 @@
 	import Spinner from './Spinner.svelte';
 	import { ImageHandler } from '$lib/imageHandler.svelte';
 	import { Gauge as GaugeIcon } from 'lucide-svelte';
-	import { apiUrl } from '@/config';
 	import toast from 'svelte-5-french-toast';
-	import type { string } from 'zod';
 
 	// Define the Theme type
 	type Theme = string;
@@ -75,7 +73,7 @@
 	onMount(async () => {
 		try {
 			// Load the image via the ImageHandler (this handles caching and endpoint selection)
-			const imageData = await imageHandler.loadImage(`background/${view.background}`);
+			const imageData = await imageHandler.loadImage(view.background);
 			backgroundUrl = imageData.url;
 
 			// Compute ideal text color based on the loaded image

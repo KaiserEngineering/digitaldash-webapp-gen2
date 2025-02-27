@@ -8,7 +8,7 @@ export const load: PageLoad = async ({ fetch }) => {
 
 	try {
 		// Fetch customer backgrounds from the ESP32 backend
-		const response = await fetch(`${apiUrl}/backgrounds`);
+		const response = await fetch(`${apiUrl}/user_images`);
 		if (response.ok) {
 			customerImages = await response.json();
 		} else {
