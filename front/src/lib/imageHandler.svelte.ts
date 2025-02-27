@@ -1,5 +1,5 @@
 // src/lib/imageHandler.ts
-import { factoryImages, apiUrl, endpoints } from '$lib/config';
+import { apiUrl, endpoints } from '$lib/config';
 
 export interface ImageData {
 	name: string;

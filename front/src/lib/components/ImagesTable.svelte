@@ -26,7 +26,7 @@
 </script>
 
 {#if images && Object.keys(images).length > 0}
-	<div class="overflow-x-auto rounded bg-white shadow-sm">
+	<div class="overflow-x-auto rounded bg-white shadow-xs">
 		<Table class="w-full table-auto border border-gray-300">
 			<TableHeader>
 				<TableRow class="bg-gray-100">
@@ -49,7 +49,7 @@
 						<TableCell class="p-2 align-middle">{formatDate(image.lastModified)}</TableCell>
 						{#if editable}
 							<TableCell class="p-2 text-center align-middle">
-								<Button variant="destructive" size="icon" onclick={() => deleteCallback(key)}>
+								<Button class="cursor-pointer" variant="destructive" size="icon" onclick={() => deleteCallback(key)}>
 									<Trash2 class="h-4 w-4" />
 								</Button>
 							</TableCell>

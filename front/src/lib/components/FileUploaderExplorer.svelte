@@ -25,7 +25,7 @@
 	}
 </script>
 
-<div class="space-y-4 rounded bg-white p-4 shadow-sm">
+<div class="space-y-4 rounded bg-white p-4 shadow-xs">
 	<label class="block">
 		<Input class="mt-1 cursor-pointer" type="file" onchange={handleFileChange} />
 	</label>
