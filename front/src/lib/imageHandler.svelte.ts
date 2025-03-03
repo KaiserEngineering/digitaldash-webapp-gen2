@@ -1,5 +1,5 @@
 // src/lib/imageHandler.ts
-import { apiUrl, endpoints, factoryImages } from '$lib/config';
+import { apiUrl, endpoints, factoryBackgroundImages, factoryThemeImames } from '$lib/config';
 
 export interface ImageData {
 	name: string;
@@ -12,19 +12,20 @@ export interface ImageData {
 // Simple in-memory cache for images.
 const imageCache = new Map<string, ImageData>();
 
+// Merge factory background and theme images into one flat array
+const FactoryImages = [...factoryBackgroundImages, ...factoryThemeImames];
+
 export class ImageHandler {
 	constructor() {}
 
 	/**
 	 * Determine the correct endpoint based on the image name.
-	 * - Factory images are served as static assets (e.g. from /dummy-backgrounds/)
+	 * - Factory images are served as static assets (e.g. from /embedded/)
 	 * - User images are served via an API endpoint.
 	 */
 	determineEndpoint(name: string): string {
-		console.log('Determining endpoint for:', name);
-
 		// Check if the image is a factory (embedded) image
-		if (name in factoryImages) {
+		if (FactoryImages.includes(name)) {
 			// Use the static path in dev, use `/embedded/` in production
 			return `${apiUrl}${endpoints.factory}`;
 		}

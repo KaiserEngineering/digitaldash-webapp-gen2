@@ -1,4 +1,8 @@
-<div class="spinner"></div>
+<script lang="ts">
+	let { classNames } = $props();
+</script>
+
+<div class="spinner {classNames}"></div>
 
 <style>
 	.spinner {

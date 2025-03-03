@@ -1,25 +1,26 @@
-export const prerender = false;
-
-import { apiUrl, factoryImages } from '$lib/config';
+import { apiUrl, factoryBackgroundImages } from '$lib/config';
 import type { PageLoad } from './$types';
 
+export const prerender = false;
+
 export const load: PageLoad = async ({ fetch }) => {
-	let customerImages: { [key: string]: any } = {};
+	let customerImageNames: string[] = [];
 
 	try {
-		// Fetch customer backgrounds from the ESP32 backend
+		// Fetch only customer image filenames, NOT the full images
 		const response = await fetch(`${apiUrl}/user_images`);
 		if (response.ok) {
-			customerImages = await response.json();
+			customerImageNames = Object.keys(await response.json());
 		} else {
-			console.error('Error fetching customer images:', response.statusText);
+			console.error('Error fetching customer image filenames:', response.statusText);
 		}
 	} catch (error) {
-		console.error('Failed to fetch customer backgrounds:', error);
+		console.error('Failed to fetch customer image filenames:', error);
 	}
 
+	// Factory images (predefined list)
 	return {
-		factoryImages,
-		customerImages
+		factoryImageNames: factoryBackgroundImages,
+		customerImageNames // Only return filenames (no image data)
 	};
 };
