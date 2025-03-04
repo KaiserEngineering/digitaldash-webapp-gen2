@@ -32,7 +32,7 @@ export async function uploadBackground(
 		// Update the images object with the server response and file metadata
 		images[result.filename] = {
 			filename: result.filename,
-			url: `${apiUrl}/user_images/${result.filename}`,
+			url: `${apiUrl}/user_image/${result.filename}`,
 			size: file.size,
 			lastModified: file.lastModified,
 			type: file.type
