@@ -114,38 +114,40 @@
 		<Spinner />
 	</div>
 {:else}
-	<div
-		class="view-card rounded-3xl bg-cover p-2 shadow-lg"
-		style:background-image={`url('${backgroundUrl}')`}
-	>
-		<div class="mb-6 flex items-center justify-between">
-			<h2 class="text-2xl font-bold" style:color={view.textColor}>{view.name}</h2>
-		</div>
+	<a href="/view/{view.id}">
+		<div
+			class="view-card mb-2 rounded-3xl bg-cover p-2 shadow-lg"
+			style:background-image={`url('${backgroundUrl}')`}
+		>
+			<div class="mb-6 flex items-center justify-between">
+				<h2 class="text-2xl font-bold" style:color={view.textColor}>{view.name}</h2>
+			</div>
 
-		<div class="flex justify-center space-x-2">
-			{#each view.gauges as gauge}
-				<div class="flex flex-col items-center">
-					<div class="relative h-24 w-24">
-						{#if !failedImages[gauge.theme]}
-							<img
-								class="rounded-full"
-								src={theme[gauge.theme]}
-								alt={gauge.theme}
-								onerror={() => handleImageError(gauge.theme)}
-							/>
-						{/if}
-						{#if failedImages[gauge.theme]}
-							<!-- Show GaugeIcon only if the image fails -->
-							<div class="absolute inset-0 flex items-center justify-center">
-								<GaugeIcon class="text-white" />
-							</div>
-						{/if}
+			<div class="flex justify-center space-x-2">
+				{#each view.gauges as gauge}
+					<div class="flex flex-col items-center">
+						<div class="relative h-24 w-24">
+							{#if !failedImages[gauge.theme]}
+								<img
+									class="rounded-full"
+									src={theme[gauge.theme]}
+									alt={gauge.theme}
+									onerror={() => handleImageError(gauge.theme)}
+								/>
+							{/if}
+							{#if failedImages[gauge.theme]}
+								<!-- Show GaugeIcon only if the image fails -->
+								<div class="absolute inset-0 flex items-center justify-center">
+									<GaugeIcon class="text-white" />
+								</div>
+							{/if}
+						</div>
+						<span class="mt-2 rounded-full bg-purple-600 px-4 py-1 text-sm text-white">
+							{gauge.label}{gauge.unit ? ` (${gauge.unit})` : ''}
+						</span>
 					</div>
-					<span class="mt-2 rounded-full bg-purple-600 px-4 py-1 text-sm text-white">
-						{gauge.label}{gauge.unit ? ` (${gauge.unit})` : ''}
-					</span>
-				</div>
-			{/each}
+				{/each}
+			</div>
 		</div>
-	</div>
+	</a>
 {/if}
