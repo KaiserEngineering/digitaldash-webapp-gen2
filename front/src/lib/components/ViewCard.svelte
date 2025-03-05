@@ -99,6 +99,14 @@
 			loading = false;
 		}
 	});
+
+	// Store failed image states
+	let failedImages: Record<string, boolean> = $state({});
+
+	// Function to handle image load failures
+	function handleImageError(theme: string) {
+		failedImages = { ...failedImages, [theme]: true };
+	}
 </script>
 
 {#if loading}
@@ -118,10 +126,20 @@
 			{#each view.gauges as gauge}
 				<div class="flex flex-col items-center">
 					<div class="relative h-24 w-24">
-						<img class="rounded-full" src={theme[gauge.theme]} alt={gauge.theme} />
-						<div class="absolute inset-0 flex items-center justify-center">
-							<GaugeIcon class="text-white" />
-						</div>
+						{#if !failedImages[gauge.theme]}
+							<img
+								class="rounded-full"
+								src={theme[gauge.theme]}
+								alt={gauge.theme}
+								onerror={() => handleImageError(gauge.theme)}
+							/>
+						{/if}
+						{#if failedImages[gauge.theme]}
+							<!-- Show GaugeIcon only if the image fails -->
+							<div class="absolute inset-0 flex items-center justify-center">
+								<GaugeIcon class="text-white" />
+							</div>
+						{/if}
 					</div>
 					<span class="mt-2 rounded-full bg-purple-600 px-4 py-1 text-sm text-white">
 						{gauge.label}{gauge.unit ? ` (${gauge.unit})` : ''}
