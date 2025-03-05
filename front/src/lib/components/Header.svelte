@@ -23,7 +23,7 @@
 			<div class="flex items-center justify-between">
 				<!-- Minimal Mobile Header: always visible on mobile -->
 				<div class="sm:hidden">
-					<a href="/"><CardTitle class="text-base font-bold">Digital Dash</CardTitle></a>
+					<a href="/"><CardTitle class="text-base font-bold text-3xl text-red-500">Digital Dash</CardTitle></a>
 				</div>
 				<!-- Desktop Header -->
 				<div class="hidden sm:block">
