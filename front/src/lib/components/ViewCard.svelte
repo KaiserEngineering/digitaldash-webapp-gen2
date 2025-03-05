@@ -124,10 +124,7 @@
 						</div>
 					</div>
 					<span class="mt-2 rounded-full bg-purple-600 px-4 py-1 text-sm text-white">
-						{gauge.label}
-					</span>
-					<span class="text-xs text-white">
-						{gauge.pid}{gauge.unit ? ` (${gauge.unit})` : ''}
+						{gauge.label}{gauge.unit ? ` (${gauge.unit})` : ''}
 					</span>
 				</div>
 			{/each}
