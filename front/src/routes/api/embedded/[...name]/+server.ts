@@ -16,14 +16,7 @@ export async function GET({ params, fetch }) {
 		}
 
 		const headers = new Headers(res.headers);
-
-		// Extract metadata
-		if (filename.endsWith('.gz')) {
-			headers.set('Content-Encoding', 'gzip');
-			headers.set('Content-Type', 'image/png'); // Assuming PNG files
-		} else {
-			headers.set('Content-Type', res.headers.get('content-type') || 'image/png');
-		}
+		headers.set('Content-Type', res.headers.get('content-type') || 'image/png');
 
 		// Return metadata + stream response
 		return new Response(res.body, {

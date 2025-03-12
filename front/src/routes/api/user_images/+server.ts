@@ -12,11 +12,7 @@ const SUPPORTED_EXTENSIONS = [
 	'.png',
 	'.jpg',
 	'.jpeg',
-	'.gif',
-	'.png.gz',
-	'.jpg.gz',
-	'.jpeg.gz',
-	'.gif.gz'
+	'.gif'
 ];
 
 export interface ImageInfo {

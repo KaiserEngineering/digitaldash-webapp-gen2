@@ -12,15 +12,15 @@ else()
 endif()
 
 # Clean old index.html.gz data
-file(REMOVE ${CMAKE_SOURCE_DIR}/components/web_server/index.html.gz) 
-message(STATUS "Cleaned old index.html.gz data")
+file(REMOVE ${CMAKE_SOURCE_DIR}/components/web_server/index.html) 
+message(STATUS "Cleaned old index.html data")
 
 # Copy scripts/settings.json to frontend/src/settings.json
 file(COPY ${CMAKE_SOURCE_DIR}/scripts/settings.json DESTINATION ${CMAKE_SOURCE_DIR}/front/src/lib/)
 message(STATUS "Copied settings.json to frontend/src/settings.json")
 
 # Copy frontend build to components
-file(COPY ${CMAKE_SOURCE_DIR}/front/build/index.html.gz DESTINATION ${CMAKE_SOURCE_DIR}/components/web_server/)
+file(COPY ${CMAKE_SOURCE_DIR}/front/build/index.html DESTINATION ${CMAKE_SOURCE_DIR}/components/web_server/)
 message(STATUS "Copied frontend build to components")
 
 set(WEB_SRC_DIR "${CMAKE_SOURCE_DIR}/spiffs")

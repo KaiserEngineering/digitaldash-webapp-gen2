@@ -24,41 +24,41 @@ typedef struct
 } EmbeddedFile;
 
 // Embedded files
-extern const uint8_t index_html_gz_start[] asm("_binary_index_html_gz_start");
-extern const uint8_t index_html_gz_end[] asm("_binary_index_html_gz_end");
+extern const uint8_t index_html_start[] asm("_binary_index_html_start");
+extern const uint8_t index_html_end[] asm("_binary_index_html_end");
 
 // factory Backgrounds:
-extern const uint8_t factoryImages_favicon_png_gz_start[] asm("_binary_favicon_png_gz_start");
-extern const uint8_t factoryImages_favicon_png_gz_end[] asm("_binary_favicon_png_gz_end");
+extern const uint8_t factoryImages_favicon_png_start[] asm("_binary_favicon_png_start");
+extern const uint8_t factoryImages_favicon_png_end[] asm("_binary_favicon_png_end");
 
-extern const uint8_t factoryImages_flare_png_gz_start[] asm("_binary_flare_png_gz_start");
-extern const uint8_t factoryImages_flare_png_gz_end[] asm("_binary_flare_png_gz_end");
+extern const uint8_t factoryImages_flare_png_start[] asm("_binary_flare_png_start");
+extern const uint8_t factoryImages_flare_png_end[] asm("_binary_flare_png_end");
 
-extern const uint8_t factoryImages_galaxy_png_gz_start[] asm("_binary_galaxy_png_gz_start");
-extern const uint8_t factoryImages_galaxy_png_gz_end[] asm("_binary_galaxy_png_gz_end");
+extern const uint8_t factoryImages_galaxy_png_start[] asm("_binary_galaxy_png_start");
+extern const uint8_t factoryImages_galaxy_png_end[] asm("_binary_galaxy_png_end");
 
 // Factory Themes:
-extern const uint8_t factoryImages_bar_aurora_png_gz_start[] asm("_binary_bar_aurora_png_gz_start");
-extern const uint8_t factoryImages_bar_aurora_png_gz_end[] asm("_binary_bar_aurora_png_gz_end");
+extern const uint8_t factoryImages_bar_aurora_png_start[] asm("_binary_bar_aurora_png_start");
+extern const uint8_t factoryImages_bar_aurora_png_end[] asm("_binary_bar_aurora_png_end");
 
-extern const uint8_t factoryImages_stock_rs_png_gz_start[] asm("_binary_stock_rs_png_gz_start");
-extern const uint8_t factoryImages_stock_rs_png_gz_end[] asm("_binary_stock_rs_png_gz_end");
+extern const uint8_t factoryImages_stock_rs_png_start[] asm("_binary_stock_rs_png_start");
+extern const uint8_t factoryImages_stock_rs_png_end[] asm("_binary_stock_rs_png_end");
 
-extern const uint8_t factoryImages_stock_st_png_gz_start[] asm("_binary_stock_st_png_gz_start");
-extern const uint8_t factoryImages_stock_st_png_gz_end[] asm("_binary_stock_st_png_gz_end");
+extern const uint8_t factoryImages_stock_st_png_start[] asm("_binary_stock_st_png_start");
+extern const uint8_t factoryImages_stock_st_png_end[] asm("_binary_stock_st_png_end");
 
 // Embedded file mappings
 static const EmbeddedFile embedded_files[] = {
-    {"/", index_html_gz_start, index_html_gz_end, "text/html"},
-    {"/index.html.gz", index_html_gz_start, index_html_gz_end, "text/html"},
-    {"/favicon.png", factoryImages_favicon_png_gz_start, factoryImages_favicon_png_gz_end, "image/png"},
+    {"/", index_html_start, index_html_end, "text/html"},
+    {"/index.html", index_html_start, index_html_end, "text/html"},
+    {"/favicon.png", factoryImages_favicon_png_start, factoryImages_favicon_png_end, "image/png"},
 
     // Factory images (preloaded in firmware)
-    {"/api/embedded/flare.png.gz", factoryImages_flare_png_gz_start, factoryImages_flare_png_gz_end, "image/png"},
-    {"/api/embedded/galaxy.png.gz", factoryImages_galaxy_png_gz_start, factoryImages_galaxy_png_gz_end, "image/png"},
-    {"/api/embedded/bar_aurora.png.gz", factoryImages_bar_aurora_png_gz_start, factoryImages_bar_aurora_png_gz_end, "image/png"},
-    {"/api/embedded/stock_rs.png.gz", factoryImages_stock_rs_png_gz_start, factoryImages_stock_rs_png_gz_end, "image/png"},
-    {"/api/embedded/stock_st.png.gz", factoryImages_stock_st_png_gz_start, factoryImages_stock_st_png_gz_end, "image/png"},
+    {"/api/embedded/flare.png", factoryImages_flare_png_start, factoryImages_flare_png_end, "image/png"},
+    {"/api/embedded/galaxy.png", factoryImages_galaxy_png_start, factoryImages_galaxy_png_end, "image/png"},
+    {"/api/embedded/bar_aurora.png", factoryImages_bar_aurora_png_start, factoryImages_bar_aurora_png_end, "image/png"},
+    {"/api/embedded/stock_rs.png", factoryImages_stock_rs_png_start, factoryImages_stock_rs_png_end, "image/png"},
+    {"/api/embedded/stock_st.png", factoryImages_stock_st_png_start, factoryImages_stock_st_png_end, "image/png"},
 };
 
 #define EMBEDDED_FILE_COUNT (sizeof(embedded_files) / sizeof(EmbeddedFile))
@@ -76,11 +76,6 @@ esp_err_t embedded_file_handler(httpd_req_t *req)
 
             httpd_resp_set_hdr(req, "Cache-Control", "public, max-age=31536000, immutable");
             httpd_resp_set_type(req, embedded_files[i].mime_type);
-
-            if (strstr(req->uri, ".gz") != NULL)
-            {
-                httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
-            }
 
             size_t file_size = embedded_files[i].end - embedded_files[i].start;
             ESP_LOGI(TAG, "File size: %zu bytes", file_size);
@@ -115,15 +110,6 @@ esp_err_t embedded_file_handler(httpd_req_t *req)
 static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepath)
 {
     const char *type = "text/plain";
-
-    if (CHECK_FILE_EXTENSION(filepath, ".gz"))
-    {
-        httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
-        char base_filepath[FILE_PATH_MAX];
-        strlcpy(base_filepath, filepath, sizeof(base_filepath));
-        base_filepath[strlen(filepath) - 3] = '\0'; // Remove ".gz"
-        filepath = base_filepath;
-    }
 
     if (CHECK_FILE_EXTENSION(filepath, ".html"))
         type = "text/html";
@@ -182,26 +168,23 @@ esp_err_t web_request_handler(httpd_req_t *req)
     {
         ESP_LOGI(TAG, "Serving favicon.png");
         httpd_resp_set_type(req, "image/png");
-        httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
-        return httpd_resp_send(req, (const char *)factoryImages_favicon_png_gz_start, factoryImages_favicon_png_gz_end - factoryImages_favicon_png_gz_start);
+        return httpd_resp_send(req, (const char *)factoryImages_favicon_png_start, factoryImages_favicon_png_end - factoryImages_favicon_png_start);
     }
 
-    // Redirect `/` to `/index.html.gz`
+    // Redirect `/` to `/index.html`
     if (strcmp(req->uri, "/") == 0)
     {
-        ESP_LOGI(TAG, "Root request received, serving /index.html.gz");
+        ESP_LOGI(TAG, "Root request received, serving /index.html");
 
         httpd_resp_set_type(req, "text/html");
-        httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
-        return httpd_resp_send(req, (const char *)index_html_gz_start, index_html_gz_end - index_html_gz_start);
+        return httpd_resp_send(req, (const char *)index_html_start, index_html_end - index_html_start);
     }
 
-    // Default: Serve `index.html.gz`
-    ESP_LOGW(TAG, "Serving index.html.gz for req: %s", req->uri);
+    // Default: Serve `index.html`
+    ESP_LOGW(TAG, "Serving index.html for req: %s", req->uri);
 
     httpd_resp_set_type(req, "text/html");
-    httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
-    return httpd_resp_send(req, (const char *)index_html_gz_start, index_html_gz_end - index_html_gz_start);
+    return httpd_resp_send(req, (const char *)index_html_start, index_html_end - index_html_start);
 }
 
 esp_err_t start_webserver()

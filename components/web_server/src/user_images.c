@@ -70,7 +70,7 @@ static void url_decode(char *dest, const char *src, size_t dest_size)
 // Check if file is an image and get its MIME type
 bool is_png_file(const char *filename, const char **mime_type)
 {
-    if (strstr(filename, ".png") || strstr(filename, ".png.gz"))
+    if (strstr(filename, ".png"))
     {
         *mime_type = "image/png";
         return true;
@@ -174,34 +174,6 @@ esp_err_t get_user_image(httpd_req_t *req)
     {
         ESP_LOGE(TAG, "Failed to set Connection header: %s", esp_err_to_name(err));
         return err;
-    }
-
-    bool is_gzipped = false;
-    unsigned char magic[2];
-    if (fread(magic, 1, 2, file) == 2)
-    {
-        if (magic[0] == 0x1F && magic[1] == 0x8B)
-        {
-            is_gzipped = true;
-        }
-        // Rewind the file so the entire content is sent later
-        fseek(file, 0, SEEK_SET);
-    }
-
-    if (is_gzipped)
-    {
-        err = httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
-        if (err != ESP_OK)
-        {
-            ESP_LOGE(TAG, "Failed to set Content-Encoding header: %s", esp_err_to_name(err));
-            fclose(file);
-            return err;
-        }
-        ESP_LOGI(TAG, "Serving compressed file with Content-Encoding: gzip");
-    }
-    else
-    {
-        ESP_LOGI(TAG, "Serving uncompressed PNG");
     }
 
     char chunk[512]; // Reduce chunk size for better memory handling

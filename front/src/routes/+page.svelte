@@ -7,7 +7,7 @@
 			id: '1',
 			name: 'Daily Driver',
 			enabled: true,
-			background: 'dog.png.gz',
+			background: 'dog.png',
 			gauges: [
 				{
 					id: '1',
@@ -38,7 +38,7 @@
 			id: '2',
 			name: 'View Two',
 			enabled: false,
-			background: 'flare.png.gz',
+			background: 'flare.png',
 			gauges: [
 				{
 					id: '1',
@@ -54,7 +54,7 @@
 			id: '3',
 			name: 'View Three',
 			enabled: false,
-			background: 'jellyfish.png.gz',
+			background: 'jellyfish.png',
 			gauges: [
 				{
 					id: '1',

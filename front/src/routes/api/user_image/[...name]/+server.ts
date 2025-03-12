@@ -3,16 +3,12 @@ import fs from 'fs/promises';
 import path from 'path';
 
 const BACKGROUND_DIR = path.join(process.cwd(), 'static/dummy-backgrounds');
-// Supported image extensions (including .gz versions)
+// Supported image extensions
 const SUPPORTED_EXTENSIONS = new Set([
 	'.png',
 	'.jpg',
 	'.jpeg',
-	'.gif',
-	'.png.gz',
-	'.jpg.gz',
-	'.jpeg.gz',
-	'.gif.gz'
+	'.gif'
 ]);
 
 export async function GET({ params, fetch }) {
@@ -28,13 +24,7 @@ export async function GET({ params, fetch }) {
 	// Create a new Headers instance based on the fetched response headers
 	const headers = new Headers(res.headers);
 
-	// If the file is gzipped, set the proper headers
-	if (name.endsWith('.gz')) {
-		headers.set('Content-Encoding', 'gzip');
-		headers.set('Content-Type', 'image/png'); // Assuming PNG files
-	} else {
-		headers.set('Content-Type', res.headers.get('content-type') || 'image/png');
-	}
+	headers.set('Content-Type', res.headers.get('content-type') || 'image/png');
 
 	return new Response(res.body, {
 		status: res.status,
@@ -54,7 +44,7 @@ export async function POST({ params, request}) {
 
 	// Validate file extension as before...
 	const fileName = name.toLowerCase();
-	const fullExt = getFullExtension(fileName);
+	const fullExt = path.extname(fileName).toLowerCase();
 	if (!SUPPORTED_EXTENSIONS.has(fullExt)) {
 		throw error(400, `Invalid file type. Allowed: ${Array.from(SUPPORTED_EXTENSIONS).join(', ')}`);
 	}
@@ -92,16 +82,4 @@ export async function DELETE({ params }) {
 
 	await fs.unlink(filePath);
 	return json({ message: 'File deleted successfully' });
-}
-
-/** Helper function to get full file extension (including .gz) */
-function getFullExtension(filename: string): string {
-	const ext = path.extname(filename).toLowerCase();
-	if (ext === '.gz') {
-		// Check for double extensions like .png.gz
-		const nameWithoutGz = filename.slice(0, -3); // Remove .gz
-		const secondExt = path.extname(nameWithoutGz).toLowerCase();
-		if (secondExt) return secondExt + '.gz';
-	}
-	return ext;
 }

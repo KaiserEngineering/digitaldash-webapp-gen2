@@ -86,7 +86,7 @@
 				if (!theme[gauge.theme] && !fetchedThemes.has(gauge.theme)) {
 					fetchedThemes.add(gauge.theme);
 
-					const themeImageData = await imageHandler.loadImage(`${gauge.theme}.png.gz`);
+					const themeImageData = await imageHandler.loadImage(`${gauge.theme}.png`);
 					const themeURL = themeImageData.url;
 
 					theme[gauge.theme] = themeURL;
