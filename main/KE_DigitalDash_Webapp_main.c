@@ -37,10 +37,24 @@
 #include "spiffs_init.h"
 #include "esp_wifi.h"
 #include <esp_flash_partitions.h>
-#include "esp_ota_ops.h" 
+#include "esp_ota_ops.h"
 #include "spiffs_init.h"
 
+#define CAN_STBY_GPIO GPIO_NUM_40 // GPIO40
+
 static const char *TAG = "Main";
+
+void gpio_init(void)
+{
+    // Configure GPIO40 as an output
+    gpio_config_t io_conf = {
+        .pin_bit_mask = (1ULL << CAN_STBY_GPIO),
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE};
+    gpio_config(&io_conf);
+}
 
 void init_webapp_ap(void)
 {
@@ -71,6 +85,11 @@ void init_webapp_ap(void)
 
 void app_main(void)
 {
+    gpio_init();
+
+    // Disable CAN Bus
+    gpio_set_level(CAN_STBY_GPIO, 1);
+
     init_webapp_ap();
 
     /* Mark current app as valid */
