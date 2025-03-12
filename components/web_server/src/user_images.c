@@ -68,13 +68,19 @@ static void url_decode(char *dest, const char *src, size_t dest_size)
 }
 
 // Check if file is an image and get its MIME type
-bool is_png_file(const char *filename, const char **mime_type)
+bool is_img_file(const char *filename, const char **mime_type)
 {
     if (strstr(filename, ".png"))
     {
         *mime_type = "image/png";
         return true;
     }
+    else if (strstr(filename, ".jpg") || strstr(filename, ".jpeg"))
+    {
+        *mime_type = "image/jpeg";
+        return true;
+    }
+
     return false;
 }
 
@@ -99,7 +105,7 @@ esp_err_t list_user_images(httpd_req_t *req)
     while ((entry = readdir(dir)) != NULL && file_count < MAX_FILES)
     {
         const char *mime_type;
-        if (is_png_file(entry->d_name, &mime_type))
+        if (is_img_file(entry->d_name, &mime_type))
         {
             snprintf(filepath, sizeof(filepath), "%.200s/%.50s", image_dir, entry->d_name);
             if (stat(filepath, &st) == 0)
@@ -143,7 +149,7 @@ esp_err_t get_user_image(httpd_req_t *req)
 
     const char *image_name = req->uri + strlen(prefix);
     const char *mime_type;
-    if (!is_png_file(image_name, &mime_type))
+    if (!is_img_file(image_name, &mime_type))
     {
         ESP_LOGE(TAG, "Invalid file type requested: %s", image_name);
         return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid file type");
@@ -222,7 +228,7 @@ esp_err_t user_image_upload_handler(httpd_req_t *req)
 
     /* Validate image type */
     const char *mime_type;
-    if (!is_png_file(filename, &mime_type))
+    if (!is_img_file(filename, &mime_type))
     {
         ESP_LOGE(TAG, "Unsupported file type: %s", filename);
         return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Unsupported file type");

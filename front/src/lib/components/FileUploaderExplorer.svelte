@@ -56,7 +56,7 @@
 
 	/** Handle rejected file */
 	const onFileRejected: FileDropZoneProps['onFileRejected'] = ({ reason, file }) => {
-		toast.error(`${file.name} failed to upload!`);
+		toast.error(`${file.name} failed to upload!: ${reason}`);
 	};
 
 	async function resizeImage(blob: Blob, width: number, height: number): Promise<Blob> {
