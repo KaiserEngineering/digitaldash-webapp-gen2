@@ -1,44 +1,198 @@
 <script lang="ts">
-	import { Input } from '@/components/ui/input';
-	import { Button } from '@/components/ui/button';
+	import { Button } from '$lib/components/ui/button';
+	import {
+		displaySize,
+		FileDropZone,
+		MEGABYTE,
+		type FileDropZoneProps
+	} from '$lib/components/ui/file-drop-zone';
+	import { X, Edit } from 'lucide-svelte';
+	import { onDestroy } from 'svelte';
+	import toast from 'svelte-5-french-toast';
 	import Spinner from './Spinner.svelte';
+	import * as ImageCropper from '$lib/components/ui/image-cropper';
 
-	let { uploadCallback } = $props();
-	let file: File | undefined = $state();
+	/** Define a strict file type */
+	type UploadedFile = {
+		name: string;
+		type: string;
+		size: number;
+		uploadedAt: number;
+		url: string;
+		rawFile: File;
+	};
+
+	/** Props */
+	let { uploadCallback }: { uploadCallback: (file: File) => Promise<void> } = $props();
+
+	/** Reactive states */
+	let file: UploadedFile | null = $state(null);
 	let isUploading = $state(false);
+	let openCropper = $state(false);
 
-	function handleFileChange(event: Event) {
-		const input = event.target as HTMLInputElement;
-		if (input.files && input.files.length > 0) {
-			file = input.files[0];
+	/** Temporary URL for cropping */
+	let tempUrl = $derived(file?.url ?? '');
+
+	/** Handles file selection but does NOT upload immediately */
+	const onUpload: FileDropZoneProps['onUpload'] = async ([selectedFile]: File[]) => {
+		if (!selectedFile) return;
+
+		// Remove previous file if necessary
+		if (file) removeFile();
+
+		// Create a preview URL
+		const previewUrl = URL.createObjectURL(selectedFile);
+
+		// Store file (but don't upload yet)
+		file = {
+			name: selectedFile.name,
+			type: selectedFile.type,
+			size: selectedFile.size,
+			uploadedAt: Date.now(),
+			url: previewUrl,
+			rawFile: selectedFile
+		};
+	};
+
+	/** Handle rejected file */
+	const onFileRejected: FileDropZoneProps['onFileRejected'] = ({ reason, file }) => {
+		toast.error(`${file.name} failed to upload!`);
+	};
+
+	async function resizeImage(blob: Blob, width: number, height: number): Promise<Blob> {
+		return new Promise((resolve) => {
+			const img = new Image();
+			const canvas = document.createElement('canvas');
+			const ctx = canvas.getContext('2d')!;
+
+			img.onload = () => {
+				canvas.width = width;
+				canvas.height = height;
+				ctx.drawImage(img, 0, 0, width, height);
+
+				canvas.toBlob((resizedBlob) => resolve(resizedBlob!), blob.type);
+			};
+
+			img.src = URL.createObjectURL(blob);
+		});
+	}
+
+	/** Handle cropping and update the file */
+	async function handleCropped(croppedUrl: string) {
+		if (!file) return;
+
+		try {
+			// Fetch new cropped image as Blob
+			const croppedBlob = await fetch(croppedUrl).then((res) => res.blob());
+
+			// Resize the image to 800x165
+			const resizedBlob = await resizeImage(croppedBlob, 800, 165);
+
+			// Update file with cropped version
+			file = {
+				...file,
+				url: croppedUrl,
+				rawFile: new File([resizedBlob], file.name, { type: file.type })
+			};
+			openCropper = false;
+		} catch (error) {
+			console.error('Error processing cropped image:', error);
 		}
 	}
 
-	async function handleUpload() {
-		if (!file) return;
+	/** Upload the cropped file */
+	const handleUpload = async () => {
+		if (!file?.rawFile) return;
+
 		isUploading = true;
 		try {
-			await uploadCallback(file);
+			// Upload final cropped file
+			await uploadCallback(file.rawFile);
+		} catch (error) {
+			console.error('Failed to upload file:', error);
 		} finally {
-			isUploading = false;
+			removeFile();
+		}
+		isUploading = false;
+	};
+
+	/** Reset file selection */
+	function removeFile() {
+		if (file) {
+			URL.revokeObjectURL(file.url);
+			file = null;
 		}
 	}
+
+	/** Cleanup memory */
+	onDestroy(() => {
+		if (file) {
+			URL.revokeObjectURL(file.url);
+		}
+	});
 </script>
 
-<div class="space-y-4 rounded bg-white p-4 shadow-xs">
-	<label class="block">
-		<Input class="mt-1 cursor-pointer" type="file" onchange={handleFileChange} />
-	</label>
+<!-- UI Layout -->
+<div class="flex w-full flex-col gap-4 rounded bg-white p-6 shadow">
+	{#if !file}
+		<!-- File Drop Zone -->
+		<FileDropZone
+			{onUpload}
+			{onFileRejected}
+			maxFileSize={2 * MEGABYTE}
+			accept="image/*"
+			maxFiles={1}
+			fileCount={file ? 1 : 0}
+		/>
+	{:else}
+		<!-- File Preview -->
+		<div class="flex items-center justify-between gap-4 rounded-lg bg-gray-100 p-4">
+			<div class="flex items-center gap-4">
+				<img src={file.url} alt={file.name} class="h-16 w-16 rounded-lg object-cover" />
+				<div class="flex flex-col">
+					<span class="font-medium">{file.name}</span>
+					<span class="text-xs text-gray-500">{displaySize(file.size)}</span>
+				</div>
+			</div>
+			<Button class="cursor-pointer" variant="outline" size="icon" onclick={removeFile}>
+				<X />
+			</Button>
+		</div>
 
+		<!-- Crop Button -->
+		<Button
+			class="btn flex cursor-pointer gap-2 rounded-lg bg-blue-500 px-6 py-3 font-semibold text-white shadow-md hover:bg-blue-600"
+			onclick={() => (openCropper = true)}
+		>
+			<Edit class="mr-2 h-4 w-4" />
+			Crop Image
+		</Button>
+	{/if}
+
+	<!-- Upload Button -->
 	<Button
-		class="flex items-center gap-2 px-4 py-2"
+		class="btn flex cursor-pointer gap-2 rounded-lg bg-gradient-to-r
+			from-red-500 to-red-600 px-6 py-3 font-semibold text-white shadow-md
+			transition-all duration-300 ease-in-out hover:from-red-600 hover:to-red-700
+			hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
 		onclick={handleUpload}
 		disabled={!file || isUploading}
 	>
 		{#if isUploading}
 			<Spinner />
 		{:else}
-			Upload
+			Upload File
 		{/if}
 	</Button>
+
+	<!-- Cropper Dialog -->
+	<ImageCropper.Root {tempUrl} bind:open={openCropper} onCropped={handleCropped}>
+		<ImageCropper.Dialog>
+			<ImageCropper.Cropper cropShape="rect" aspect={800 / 165} />
+			<ImageCropper.Controls>
+				<ImageCropper.Cancel class="bg-blue-200 cursor-pointer" />
+				<ImageCropper.Crop class="bg-blue-200 cursor-pointer" />
+			</ImageCropper.Controls>
+		</ImageCropper.Dialog>
+	</ImageCropper.Root>
 </div>

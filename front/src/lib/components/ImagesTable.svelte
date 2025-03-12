@@ -20,7 +20,8 @@
 			<div
 				class="group relative overflow-hidden rounded-lg bg-white shadow-md transition-all hover:shadow-lg"
 			>
-				<div class="aspect-square w-full overflow-hidden">
+				<!-- Use the correct aspect ratio on the container -->
+				<div class="aspect-[800/165] w-full overflow-hidden">
 					{#if failedImages[key]}
 						<div class="flex h-full w-full items-center justify-center bg-gray-100 p-4 text-center">
 							<p class="text-sm font-medium text-gray-500">{key}</p>
@@ -39,12 +40,12 @@
 				</div>
 				{#if editable}
 					<div
-						class="absolute right-2 top-2 opacity-100 transition-opacity duration-200 group-hover:opacity-100 sm:opacity-0"
+						class="absolute top-2 right-2 opacity-100 transition-opacity duration-200 group-hover:opacity-100 sm:opacity-0"
 					>
 						<Button
 							variant="destructive"
 							size="icon"
-							class="h-8 w-8 rounded-full bg-red-500/90 shadow-md hover:bg-red-600"
+							class="h-8 w-8 cursor-pointer rounded-full bg-red-500/90 shadow-md hover:bg-red-600"
 							onclick={() => deleteCallback(key)}
 						>
 							<Trash2 class="h-4 w-4" />

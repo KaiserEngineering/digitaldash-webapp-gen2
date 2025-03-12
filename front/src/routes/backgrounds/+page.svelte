@@ -19,7 +19,7 @@
 	// Lazy load customer images
 	async function loadCustomerImages() {
 		const imagesData: { [key: string]: any } = {};
-		console.log(data.factoryImageNames);
+
 		await Promise.all(
 			data.customerImageNames.map(async (name: string) => {
 				try {
