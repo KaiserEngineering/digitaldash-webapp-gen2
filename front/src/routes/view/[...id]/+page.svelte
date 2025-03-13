@@ -30,7 +30,7 @@
 	});
 </script>
 
-<div class="container mx-auto max-w-2xl py-10">
+<div class="container mx-auto max-w-2xl">
 	<Card>
 		<CardHeader>
 			<CardTitle class="text-2xl font-bold">Edit View {viewId}</CardTitle>
