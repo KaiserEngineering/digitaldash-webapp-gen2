@@ -13,7 +13,7 @@
 	const dialogState = useImageCropperDialog();
 </script>
 
-<Dialog.Root bind:open={dialogState.rootState.open}>
+<Dialog.Root bind:open={dialogState.rootState.opts.open.current}>
 	<Dialog.Content
 		{...rest}
 		hideClose

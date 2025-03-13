@@ -36,14 +36,6 @@
 		onCropped
 	});
 
-	$effect(() => {
-		rootState.open = open;
-	});
-
-	$effect(() => {
-		rootState.tempUrl = tempUrl;
-	});
-
 	onDestroy(() => rootState.dispose());
 </script>
 

@@ -23,7 +23,7 @@
 		{cropShape}
 		{aspect}
 		{showGrid}
-		image={cropperState.rootState.tempUrl}
+		image={cropperState.rootState.opts.tempUrl.current}
 		oncropcomplete={cropperState.onCropComplete}
 	/>
 </div>
