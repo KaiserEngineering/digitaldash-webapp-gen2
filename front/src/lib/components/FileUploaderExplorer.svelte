@@ -154,7 +154,7 @@
 					<span class="text-xs text-gray-500">{displaySize(file.size)}</span>
 				</div>
 			</div>
-			<Button class="cursor-pointer" variant="outline" size="icon" onclick={removeFile}>
+			<Button class="btn cursor-pointer" variant="outline" size="icon" onclick={removeFile}>
 				<X />
 			</Button>
 		</div>

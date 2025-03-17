@@ -1,76 +1,12 @@
 <script lang="ts">
 	import ViewCard from '@/components/ViewCard.svelte';
+	import { ConfigStore } from '$lib/config.svelte';
 
-	// Example views
-	let views: any = [
-		{
-			id: '1',
-			name: 'Daily Driver',
-			enabled: true,
-			background: 'dog.png',
-			gauges: [
-				{
-					id: '1',
-					label: 'Oil Temp',
-					theme: 'stock_rs',
-					pid: 'OIL_TEMP',
-					enabled: true,
-					unit: '°C'
-				},
-				{
-					id: '2',
-					label: 'RPM',
-					theme: 'stock_st',
-					pid: 'RPM',
-					enabled: true
-				},
-				{
-					id: '3',
-					label: 'Boost',
-					theme: 'bar_aurora',
-					pid: 'BOOST',
-					enabled: true,
-					unit: 'psi'
-				}
-			]
-		},
-		{
-			id: '2',
-			name: 'View Two',
-			enabled: false,
-			background: 'flare.png',
-			gauges: [
-				{
-					id: '1',
-					label: 'Oil Temp',
-					theme: 'stock_st',
-					pid: 'OIL_TEMP',
-					enabled: true,
-					unit: '°C'
-				}
-			]
-		},
-		{
-			id: '3',
-			name: 'View Three',
-			enabled: false,
-			background: 'jellyfish.png',
-			gauges: [
-				{
-					id: '1',
-					label: 'Oil Temp',
-					theme: 'stock_st',
-					pid: 'OIL_TEMP',
-					enabled: true,
-					unit: '°C'
-				}
-			]
-		}
-	];
+	const views = ConfigStore.config ? ConfigStore.config.view : [];
 </script>
 
 <div class="space-y-2 p-2">
-	{#each views as view (view.id)}
-		<ViewCard {view} />
+	{#each views as view, index (index)}
+		<ViewCard {view} {index} />
 	{/each}
 </div>

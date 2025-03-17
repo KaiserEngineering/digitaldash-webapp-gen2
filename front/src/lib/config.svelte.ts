@@ -1,87 +1,56 @@
-import { DigitalDashSchema } from '$schemas/Digitaldash';
+// src/lib/config.svelte.ts
+import {
+	DigitalDashSchema,
+	type AlertType,
+	type DigitalDashConfig,
+	type DynamicType,
+	type GaugeType,
+	type ViewType
+} from '$schemas/digitaldash';
 
 export class Config {
-	data = $state({
-		config: {
-			max_views: 3,
-			gauges_per_view: 3,
-			max_alerts: 5,
-			num_dynamic: 2,
-			alert_message_len: 64,
-			top_level_struc: 'digitaldash',
-			top_level_name: 'config',
-			struct_list: ['view', ['gauge'], 'alert', 'dynamic']
-		},
-		view: Array(3).fill({
-			index: true,
-			count: 3,
-			cmd: 'enable',
-			name: 'View enable',
-			desc: 'Enable or disable view by index',
-			type: 'list',
-			dataType: 'VIEW_STATE',
-			default: 'Disabled',
-			options: ['Disabled', 'Enabled'],
-			limit: 'Reserved',
-			EEBytes: 1
-		}),
-		alert: Array(5).fill({
-			index: true,
-			count: 5,
-			cmd: 'enable',
-			name: 'Alert enable',
-			desc: 'Enable or disable alerts',
-			type: 'list',
-			dataType: 'ALERT_STATE',
-			default: 'Disabled',
-			options: ['Disabled', 'Enabled'],
-			limit: 'Reserved',
-			EEBytes: 1
-		}),
-		dynamic: Array(2).fill({
-			index: true,
-			count: 2,
-			cmd: 'enable',
-			name: 'Dynamic enable',
-			desc: 'Enable or disable dynamic gauge',
-			type: 'list',
-			dataType: 'DYNAMIC_STATE',
-			default: 'Disabled',
-			options: ['Disabled', 'Enabled'],
-			limit: 'Reserved',
-			EEBytes: 1
-		}),
-		gauge: Array(3).fill({
-			index: true,
-			count: [3, 3],
-			cmd: 'theme',
-			name: 'Gauge Theme',
-			desc: 'Set the theme for gauges',
-			type: 'list',
-			dataType: 'GAUGE_THEME',
-			default: 'Stock ST',
-			options: ['Stock ST', 'Stock RS'],
-			limit: 'Reserved',
-			EEBytes: 1
-		})
-	});
+	// Reactive signal typed with the inferred type from your schema
+	config = $state<DigitalDashConfig | null>(null);
+	lastUpdated = $state<Date | null>(null);
 
-	constructor() {
-		// Validate config on initialization
-		const result = DigitalDashSchema.safeParse(this.data);
-		if (!result.success) {
-			console.error('Invalid initial config:', result.error);
-		}
-	}
-
-	saveConfig() {
-		if (!DigitalDashSchema.safeParse(this.data).success) {
-			console.error('Configuration is invalid, fix errors before saving.');
+	// Update the configuration using Zod for validation
+	update(newConfig: unknown) {
+		const parsed = DigitalDashSchema.safeParse(newConfig);
+		if (!parsed.success) {
+			// If invalid, log the error (or handle it appropriately)
+			console.error('Invalid configuration data', parsed.error);
 			return;
 		}
-		console.log('Configuration saved!', this.data);
+		this.config = parsed.data;
+		this.lastUpdated = new Date();
+	}
+
+	// Get a view by its numeric index.
+	getViewById(viewId: number): ViewType | undefined {
+		const cfg = this.config;
+		if (!cfg) return undefined;
+
+		return cfg ? cfg.view.find((v) => v.index === viewId) : undefined;
+	}
+
+	// Get gauges associated with a view.
+	getGaugesForView(viewId: number): GaugeType[] {
+		const cfg = this.config;
+		return cfg ? cfg.gauge.filter((g) => g.index === viewId) : [];
+	}
+
+	// Get alerts associated with a view.
+	getAlertsForView(viewId: number): AlertType[] {
+		const cfg = this.config;
+		return cfg ? cfg.alert.filter((a) => a.index === viewId) : [];
+	}
+
+	// Get dynamic conditions for a view.
+	getDynamicForView(viewId: number): DynamicType[] {
+		const cfg = this.config;
+		return cfg ? cfg.dynamic.filter((d) => d.index === viewId) : [];
 	}
 }
 
-// Export a shared instance
-export const config = new Config();
+// Export a singleton instance
+export const ConfigStore = new Config();
