@@ -5,7 +5,7 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 const config = {
 	// Consult https://svelte.dev/docs/kit/integrations#preprocessors
 	// for more information about preprocessors
-	preprocess: vitePreprocess(),
+	preprocess: vitePreprocess({ script: true }),
 
 	server: {
 		proxy: {
@@ -30,7 +30,6 @@ const config = {
 			'$schemas/*': './src/schemas/*'
 		},
 		prerender: {
-			entries: ['/'],
 			handleHttpError: ({ message }) => {
 				// otherwise fail the build
 				throw new Error(message);

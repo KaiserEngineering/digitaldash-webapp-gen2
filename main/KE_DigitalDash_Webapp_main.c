@@ -17,6 +17,7 @@
 
 #include "esp_vfs_semihost.h"
 #include "esp_vfs_fat.h"
+#include "esp_spiffs.h"
 #include "nvs_flash.h"
 #include "esp_netif.h"
 #include "esp_event.h"
@@ -33,11 +34,27 @@
 
 #include "web_server.h"
 #include "wifi_ap.h"
+#include "spiffs_init.h"
 #include "esp_wifi.h"
 #include <esp_flash_partitions.h>
 #include "esp_ota_ops.h"
+#include "spiffs_init.h"
+
+#define CAN_STBY_GPIO GPIO_NUM_40 // GPIO40
 
 static const char *TAG = "Main";
+
+void gpio_init(void)
+{
+    // Configure GPIO40 as an output
+    gpio_config_t io_conf = {
+        .pin_bit_mask = (1ULL << CAN_STBY_GPIO),
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE};
+    gpio_config(&io_conf);
+}
 
 void init_webapp_ap(void)
 {
@@ -50,6 +67,13 @@ void init_webapp_ap(void)
     }
     ESP_ERROR_CHECK(ret);
 
+    // Initialize SPIFFS
+    init_spiffs();
+
+    ESP_LOGI(TAG, "Listing files in SPIFFS:");
+    list_spiffs_files();
+    ESP_LOGI(TAG, "Listing files in SPIFFS done");
+
     // Initialize Wi-Fi Access Point
     wifi_init_softap();
 
@@ -61,6 +85,11 @@ void init_webapp_ap(void)
 
 void app_main(void)
 {
+    gpio_init();
+
+    // Disable CAN Bus
+    gpio_set_level(CAN_STBY_GPIO, 1);
+
     init_webapp_ap();
 
     /* Mark current app as valid */

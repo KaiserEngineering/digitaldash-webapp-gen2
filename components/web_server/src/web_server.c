@@ -1,296 +1,231 @@
 #include <string.h>
 #include <fcntl.h>
-#include "esp_vfs.h"
-#include "esp_log.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "web_server.h"
-#include "esp_ota_ops.h"
+#include "esp_vfs.h"
+#include "esp_log.h"
 #include "esp_http_server.h"
+#include "esp_err.h"
+#include "user_images.h"
 
 static const char *TAG = "WebServer";
 
-#define FILE_PATH_MAX (ESP_VFS_PATH_MAX + 128)
+#define FILE_PATH_MAX (ESP_VFS_PATH_MAX + 1024)
 #define SCRATCH_BUFSIZE (20480)
+#define CHECK_FILE_EXTENSION(filename, ext) (strcasecmp(&filename[strlen(filename) - strlen(ext)], ext) == 0)
 
-/* Error response helper */
-static void send_error_response(httpd_req_t *req, const char *status, const char *error_message, const char *log_message)
+// Define struct to map filenames to embedded binaries
+typedef struct
 {
-    ESP_LOGE(TAG, "%s", log_message);
-    httpd_resp_set_status(req, status);
-    httpd_resp_set_type(req, "application/json");
-    char response[256];
-    snprintf(response, sizeof(response), "{\"error\": \"%s\"}", error_message);
-    httpd_resp_send(req, response, HTTPD_RESP_USE_STRLEN);
+    const char *path;
+    const uint8_t *start;
+    const uint8_t *end;
+    const char *mime_type;
+} EmbeddedFile;
+
+// Embedded files
+extern const uint8_t index_html_start[] asm("_binary_index_html_start");
+extern const uint8_t index_html_end[] asm("_binary_index_html_end");
+
+// factory Backgrounds:
+extern const uint8_t factoryImages_favicon_png_start[] asm("_binary_favicon_png_start");
+extern const uint8_t factoryImages_favicon_png_end[] asm("_binary_favicon_png_end");
+
+extern const uint8_t factoryImages_flare_png_start[] asm("_binary_flare_png_start");
+extern const uint8_t factoryImages_flare_png_end[] asm("_binary_flare_png_end");
+
+extern const uint8_t factoryImages_galaxy_png_start[] asm("_binary_galaxy_png_start");
+extern const uint8_t factoryImages_galaxy_png_end[] asm("_binary_galaxy_png_end");
+
+// Factory Themes:
+extern const uint8_t factoryImages_bar_aurora_png_start[] asm("_binary_bar_aurora_png_start");
+extern const uint8_t factoryImages_bar_aurora_png_end[] asm("_binary_bar_aurora_png_end");
+
+extern const uint8_t factoryImages_stock_rs_png_start[] asm("_binary_stock_rs_png_start");
+extern const uint8_t factoryImages_stock_rs_png_end[] asm("_binary_stock_rs_png_end");
+
+extern const uint8_t factoryImages_stock_st_png_start[] asm("_binary_stock_st_png_start");
+extern const uint8_t factoryImages_stock_st_png_end[] asm("_binary_stock_st_png_end");
+
+// Embedded file mappings
+static const EmbeddedFile embedded_files[] = {
+    {"/", index_html_start, index_html_end, "text/html"},
+    {"/index.html", index_html_start, index_html_end, "text/html"},
+    {"/favicon.png", factoryImages_favicon_png_start, factoryImages_favicon_png_end, "image/png"},
+
+    // Factory images (preloaded in firmware)
+    {"/api/embedded/flare.png", factoryImages_flare_png_start, factoryImages_flare_png_end, "image/png"},
+    {"/api/embedded/galaxy.png", factoryImages_galaxy_png_start, factoryImages_galaxy_png_end, "image/png"},
+    {"/api/embedded/bar_aurora.png", factoryImages_bar_aurora_png_start, factoryImages_bar_aurora_png_end, "image/png"},
+    {"/api/embedded/stock_rs.png", factoryImages_stock_rs_png_start, factoryImages_stock_rs_png_end, "image/png"},
+    {"/api/embedded/stock_st.png", factoryImages_stock_st_png_start, factoryImages_stock_st_png_end, "image/png"},
+};
+
+#define EMBEDDED_FILE_COUNT (sizeof(embedded_files) / sizeof(EmbeddedFile))
+#define HTTPD_TASK_STACK_SIZE (8192)
+
+esp_err_t embedded_file_handler(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "Checking for embedded file: %s", req->uri);
+
+    for (int i = 0; i < EMBEDDED_FILE_COUNT; i++)
+    {
+        if (strcmp(req->uri, embedded_files[i].path) == 0)
+        {
+            ESP_LOGI(TAG, "Serving embedded file: %s", embedded_files[i].path);
+
+            httpd_resp_set_hdr(req, "Cache-Control", "public, max-age=31536000, immutable");
+            httpd_resp_set_type(req, embedded_files[i].mime_type);
+
+            size_t file_size = embedded_files[i].end - embedded_files[i].start;
+            ESP_LOGI(TAG, "File size: %zu bytes", file_size);
+
+            const size_t chunk_size = 512;
+            size_t bytes_remaining = file_size;
+            const uint8_t *file_ptr = embedded_files[i].start;
+
+            while (bytes_remaining > 0)
+            {
+                size_t bytes_to_send = (bytes_remaining > chunk_size) ? chunk_size : bytes_remaining;
+
+                esp_err_t ret = httpd_resp_send_chunk(req, (const char *)file_ptr, bytes_to_send);
+                if (ret != ESP_OK)
+                {
+                    ESP_LOGE(TAG, "File sending failed: %s", esp_err_to_name(ret));
+                    return ret;
+                }
+
+                file_ptr += bytes_to_send;
+                bytes_remaining -= bytes_to_send;
+                vTaskDelay(1 / portTICK_PERIOD_MS);
+            }
+
+            return httpd_resp_send_chunk(req, NULL, 0);
+        }
+    }
+
+    return ESP_ERR_NOT_FOUND;
 }
 
-/* Handle OTA file upload */
-esp_err_t update_post_handler(httpd_req_t *req)
+static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepath)
 {
-    char buf[1000];
-    esp_ota_handle_t ota_handle;
-    int remaining = req->content_len;
+    const char *type = "text/plain";
 
-    const esp_partition_t *ota_partition = esp_ota_get_next_update_partition(NULL);
-    ESP_ERROR_CHECK(esp_ota_begin(ota_partition, OTA_SIZE_UNKNOWN, &ota_handle));
-    if (!ota_partition)
-    {
-        send_error_response(req, "500 Internal Server Error", "Failed to get OTA partition", "OTA partition retrieval failed");
-        return ESP_FAIL;
-    }
+    if (CHECK_FILE_EXTENSION(filepath, ".html"))
+        type = "text/html";
+    else if (CHECK_FILE_EXTENSION(filepath, ".js"))
+        type = "application/javascript";
+    else if (CHECK_FILE_EXTENSION(filepath, ".css"))
+        type = "text/css";
+    else if (CHECK_FILE_EXTENSION(filepath, ".png"))
+        type = "image/png";
+    else if (CHECK_FILE_EXTENSION(filepath, ".ico"))
+        type = "image/x-icon";
+    else if (CHECK_FILE_EXTENSION(filepath, ".svg"))
+        type = "image/svg+xml";
 
-    if (esp_ota_begin(ota_partition, OTA_SIZE_UNKNOWN, &ota_handle) != ESP_OK)
-    {
-        send_error_response(req, "500 Internal Server Error", "OTA begin failed", "OTA begin operation failed");
-        return ESP_FAIL;
-    }
-
-    while (remaining > 0)
-    {
-        int recv_len = httpd_req_recv(req, buf, remaining < sizeof(buf) ? remaining : sizeof(buf));
-        if (recv_len == HTTPD_SOCK_ERR_TIMEOUT)
-        {
-            continue;
-        }
-        else if (recv_len <= 0)
-        {
-            send_error_response(req, "500 Internal Server Error", "Protocol error during OTA", "HTTP receive error during OTA");
-            esp_ota_end(ota_handle);
-            return ESP_FAIL;
-        }
-
-        if (esp_ota_write(ota_handle, (const void *)buf, recv_len) != ESP_OK)
-        {
-            send_error_response(req, "500 Internal Server Error", "Flash error during OTA", "OTA write operation failed");
-            esp_ota_end(ota_handle);
-            return ESP_FAIL;
-        }
-
-        remaining -= recv_len;
-    }
-
-    if (esp_ota_end(ota_handle) != ESP_OK || esp_ota_set_boot_partition(ota_partition) != ESP_OK)
-    {
-        send_error_response(req, "500 Internal Server Error", "Validation or activation error", "OTA end or boot partition activation failed");
-        return ESP_FAIL;
-    }
-
-    httpd_resp_sendstr(req, "Firmware update complete, rebooting now!\n");
-    vTaskDelay(500 / portTICK_PERIOD_MS);
-    esp_restart();
+    httpd_resp_set_type(req, type);
     return ESP_OK;
 }
 
-extern const uint8_t index_html_gz_start[] asm("_binary_index_html_gz_start");
-extern const uint8_t index_html_gz_end[] asm("_binary_index_html_gz_end");
-
-extern const uint8_t favicon_start[] asm("_binary_favicon_png_start");
-extern const uint8_t favicon_end[] asm("_binary_favicon_png_end");
-
-esp_err_t favicon_hanlder(httpd_req_t *req)
+static esp_err_t spiffs_file_handler(httpd_req_t *req)
 {
-    const size_t file_size = favicon_end - favicon_start;
-    httpd_resp_set_type(req, "image/png");
-    return httpd_resp_send(req, (const char *)favicon_start, file_size);
-}
+    char filepath[FILE_PATH_MAX];
 
-esp_err_t index_html_handler(httpd_req_t *req)
-{
-    extern const uint8_t index_html_gz_start[] asm("_binary_index_html_gz_start");
-    extern const uint8_t index_html_gz_end[] asm("_binary_index_html_gz_end");
+    snprintf(filepath, sizeof(filepath), "/spiffs%s", req->uri);
 
-    const size_t file_size = index_html_gz_end - index_html_gz_start;
-
-    httpd_resp_set_type(req, "text/html");
-    httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
-    return httpd_resp_send(req, (const char *)index_html_gz_start, file_size);
-}
-
-static esp_err_t update_button_handler(httpd_req_t *req)
-{
-    char buf[100];
-    int received = httpd_req_recv(req, buf, req->content_len);
-    if (received <= 0)
+    int fd = open(filepath, O_RDONLY);
+    if (fd >= 0)
     {
-        send_error_response(req, "500 Internal Server Error", "Failed to read request data", "HTTP request receive error");
-        return ESP_FAIL;
-    }
+        ESP_LOGI(TAG, "Serving SPIFFS file: %s", filepath);
+        set_content_type_from_file(req, filepath);
+        httpd_resp_set_hdr(req, "Cache-Control", "public, max-age=31536000, immutable");
 
-    buf[received] = '\0';
+        char buffer[SCRATCH_BUFSIZE];
+        ssize_t read_bytes;
+        while ((read_bytes = read(fd, buffer, SCRATCH_BUFSIZE)) > 0)
+        {
+            if (httpd_resp_send_chunk(req, buffer, read_bytes) != ESP_OK)
+            {
+                close(fd);
+                ESP_LOGE(TAG, "Failed to send file: %s", filepath);
+                return ESP_FAIL;
+            }
+        }
 
-    // Variables to hold extracted data
-    char id[50];
-    int val;
-
-    // Use sscanf to extract the values
-    // Expected payload {"id":"<cmd>","value":<val>}
-    int items = sscanf(buf, "{\"id\":\"%49[^\"]\", \"value\":%d}", id, &val);
-
-    // Check if the extraction was successful
-    if (items != 2)
-    {
-        send_error_response(req, "400 Bad Request", "Invalid JSON format", "JSON parsing error");
-        return ESP_FAIL;
-    }
-
-    char resp[128];
-    bool applied = apply_json_to_settings(id, val, resp, sizeof(resp));
-    httpd_resp_set_type(req, "application/json");
-
-    if (applied)
-    {
-        httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
+        close(fd);
+        httpd_resp_send_chunk(req, NULL, 0);
         return ESP_OK;
     }
-    else
-    {
-        send_error_response(req, "400 Bad Request", resp, "Setting application failed");
-        return ESP_FAIL;
-    }
+    return ESP_ERR_NOT_FOUND;
 }
 
-// Handler for POST requests to update slider RPMs
-static esp_err_t update_slider_handler(httpd_req_t *req)
+esp_err_t web_request_handler(httpd_req_t *req)
 {
-    char buf[100];
-    int received = httpd_req_recv(req, buf, req->content_len);
-    if (received <= 0)
+    ESP_LOGI(TAG, "Handling request: %s", req->uri);
+
+    if (strcmp(req->uri, "/favicon.png") == 0)
     {
-        send_error_response(req, "500 Internal Server Error", "Failed to read request data", "HTTP request receive error");
-        return ESP_FAIL;
+        ESP_LOGI(TAG, "Serving favicon.png");
+        httpd_resp_set_type(req, "image/png");
+        return httpd_resp_send(req, (const char *)factoryImages_favicon_png_start, factoryImages_favicon_png_end - factoryImages_favicon_png_start);
     }
 
-    buf[received] = '\0';
-
-    // Variables to hold extracted data
-    char id[50];
-    int val;
-
-    // Use sscanf to extract the values
-    // Expected payload {"id":"<cmd>","value":<val>}
-    int items = sscanf(buf, "{\"id\":\"%49[^\"]\", \"value\":%d}", id, &val);
-
-    // Check if the extraction was successful
-    if (items != 2)
+    // Redirect `/` to `/index.html`
+    if (strcmp(req->uri, "/") == 0)
     {
-        send_error_response(req, "400 Bad Request", "Invalid JSON format", "JSON parsing error");
-        return ESP_FAIL;
-    }
-    ESP_LOGI(TAG, "id: \"%s\" value: %d", id, val);
+        ESP_LOGI(TAG, "Root request received, serving /index.html");
 
-    if (strcmp(id, "RPM1000") == 0) {
-        // Do something
-    } else if (strcmp(id, "RPM2000") == 0) {
-        // Do something
-    } else
-    {
-        send_error_response(req, "400 Bad Request", "Unknown command ID", "Invalid command ID in slider update");
-        return ESP_FAIL;
+        httpd_resp_set_type(req, "text/html");
+        return httpd_resp_send(req, (const char *)index_html_start, index_html_end - index_html_start);
     }
 
-    httpd_resp_set_type(req, "application/json");
-    httpd_resp_send(req, "{\"status\": \"Slider RPM updated\"}", HTTPD_RESP_USE_STRLEN);
-    return ESP_OK;
+    // Default: Serve `index.html`
+    ESP_LOGW(TAG, "Serving index.html for req: %s", req->uri);
+
+    httpd_resp_set_type(req, "text/html");
+    return httpd_resp_send(req, (const char *)index_html_start, index_html_end - index_html_start);
 }
 
-static esp_err_t get_values_handler(httpd_req_t *req)
-{
-    char response[1024];
-    generate_setting_json(response, sizeof(response));
-
-    httpd_resp_set_type(req, "application/json");
-    httpd_resp_send(req, response, HTTPD_RESP_USE_STRLEN);
-    return ESP_OK;
-}
-
-esp_err_t start_webserver(void)
+esp_err_t start_webserver()
 {
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    config.stack_size = HTTPD_TASK_STACK_SIZE;
     config.uri_match_fn = httpd_uri_match_wildcard;
 
     ESP_LOGI(TAG, "Starting HTTP Server");
 
-    // Start the server
-    esp_err_t ret = httpd_start(&server, &config);
-    if (ret != ESP_OK)
+    if (httpd_start(&server, &config) != ESP_OK)
     {
-        ESP_LOGE(TAG, "Failed to start HTTP server: %s", esp_err_to_name(ret));
-        return ret; // Return the error code
+        ESP_LOGE(TAG, "Failed to start HTTP server");
+        return ESP_FAIL;
     }
 
-    // Register URI handlers
-    httpd_uri_t index_html = {
-        .uri = "/",
-        .method = HTTP_GET,
-        .handler = index_html_handler,
-        .user_ctx = NULL};
-
-    ret = httpd_register_uri_handler(server, &index_html);
-    if (ret != ESP_OK)
+    if (register_user_images(server) != ESP_OK)
     {
-        ESP_LOGE(TAG, "Failed to register index_html handler: %s", esp_err_to_name(ret));
-        httpd_stop(server); // Clean up the server
-        return ret;
-    }
-
-    httpd_uri_t uri_update_button = {
-        .uri = "/update_button",
-        .method = HTTP_POST,
-        .handler = update_button_handler,
-        .user_ctx = NULL};
-
-    ret = httpd_register_uri_handler(server, &uri_update_button);
-    if (ret != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to register update_button handler: %s", esp_err_to_name(ret));
+        ESP_LOGE(TAG, "Failed to register user images");
         httpd_stop(server);
-        return ret;
+        return ESP_FAIL;
     }
 
-    httpd_uri_t uri_update_slider = {
-        .uri = "/update_slider",
-        .method = HTTP_POST,
-        .handler = update_slider_handler,
-        .user_ctx = NULL};
+    httpd_register_uri_handler(server, &(httpd_uri_t){
+                                           .uri = "/api/embedded/*",
+                                           .method = HTTP_GET,
+                                           .handler = embedded_file_handler,
+                                           .user_ctx = NULL});
 
-    ret = httpd_register_uri_handler(server, &uri_update_slider);
-    if (ret != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to register update_slider handler: %s", esp_err_to_name(ret));
-        httpd_stop(server);
-        return ret;
-    }
+    httpd_register_uri_handler(server, &(httpd_uri_t){
+                                           .uri = "/api/user_images/*",
+                                           .method = HTTP_GET,
+                                           .handler = spiffs_file_handler,
+                                           .user_ctx = NULL});
 
-    httpd_uri_t uri_get_values = {
-        .uri = "/get_values",
-        .method = HTTP_GET,
-        .handler = get_values_handler,
-        .user_ctx = NULL};
-
-    ret = httpd_register_uri_handler(server, &uri_get_values);
-    if (ret != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to register get_values handler: %s", esp_err_to_name(ret));
-        httpd_stop(server);
-        return ret;
-    }
-
-    httpd_uri_t update_post = {
-        .uri = "/update",
-        .method = HTTP_POST,
-        .handler = update_post_handler,
-        .user_ctx = NULL};
-
-    ret = httpd_register_uri_handler(server, &update_post);
-    if (ret != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to register update_post handler: %s", esp_err_to_name(ret));
-        httpd_stop(server);
-        return ret;
-    }
-
-    httpd_register_uri_handler(server, &(httpd_uri_t){.uri = "/favicon.png", .method = HTTP_GET, .handler = favicon_hanlder});
+    httpd_register_uri_handler(server, &(httpd_uri_t){
+                                           .uri = "/*",
+                                           .method = HTTP_GET,
+                                           .handler = web_request_handler,
+                                           .user_ctx = NULL});
 
     ESP_LOGI(TAG, "HTTP Server started successfully");
     return ESP_OK;
