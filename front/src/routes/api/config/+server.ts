@@ -60,7 +60,8 @@ export async function GET({ fetch }) {
 				limit: 'Reserved',
 				EEBytes: 1,
 				message: 'Default alert message',
-				compare: 'Equal'
+				compare: 'Equal',
+				pid: 'RPM'
 			},
 			{
 				index: 1,
@@ -75,7 +76,8 @@ export async function GET({ fetch }) {
 				limit: 'none',
 				EEBytes: 2,
 				message: 'Threshold alert message',
-				compare: 'Greater Than'
+				compare: 'Greater Than',
+				pid: 'RPM'
 			}
 		],
 		dynamic: [

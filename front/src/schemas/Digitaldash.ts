@@ -58,7 +58,6 @@ export const GaugeArraySchema = z.object({
 export const ViewSchema = z.object({
 	index: z.number(),
 	count: z.literal(MAX_VIEWS),
-	cmd: z.string(),
 	name: z.string(),
 	desc: z.string(),
 	type: z.string(),
@@ -73,7 +72,6 @@ export const ViewSchema = z.object({
 });
 
 // Schema for an alert
-// (Optionally, you can later add a required field for PID/threshold if needed.)
 export const AlertSchema = z.object({
 	index: z.number(),
 	count: z.literal(MAX_ALERTS),
@@ -86,7 +84,7 @@ export const AlertSchema = z.object({
 	options: z.array(AlertStateEnum),
 	limit: z.string(),
 	EEBytes: z.number(),
-	// Optional alert message (up to ALERT_MESSAGE_LEN characters)
+	pid: z.string(),
 	message: z.string().max(ALERT_MESSAGE_LEN).optional(),
 	compare: AlertComparisonEnum.optional()
 });
@@ -109,7 +107,6 @@ export const DynamicSchema = z.object({
 	options: z.array(DynamicStateEnum),
 	limit: z.string(),
 	EEBytes: z.number(),
-	// Extra fields for dynamic conditions:
 	enabled: z.boolean(),
 	pid: z.string(),
 	compare: z.string(),
