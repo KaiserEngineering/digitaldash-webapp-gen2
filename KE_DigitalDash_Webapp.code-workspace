@@ -91,8 +91,12 @@
 			"cstdio": "c",
 			"web_settings.h": "c",
 			"stdbool.h": "c",
-			"esp_flash_partitions.h": "c"
+			"esp_flash_partitions.h": "c",
+			"i2c.h": "c",
+			"ke_config.h": "c",
+			"ke_digitaldash.h": "c",
+			"lib_pid.h": "c"
 		},
-		"editor.formatOnSave": true
+		"editor.formatOnSave": false
 	}
 }
