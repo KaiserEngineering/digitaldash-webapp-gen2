@@ -90,7 +90,8 @@
 			"esp_ota_ops.h": "c",
 			"cstdio": "c",
 			"web_settings.h": "c",
-			"stdbool.h": "c"
+			"stdbool.h": "c",
+			"esp_flash_partitions.h": "c"
 		},
 		"editor.formatOnSave": true
 	}

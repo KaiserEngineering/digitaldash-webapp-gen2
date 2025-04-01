@@ -39,8 +39,18 @@
 #include <esp_flash_partitions.h>
 #include "esp_ota_ops.h"
 #include "spiffs_init.h"
+#include "driver/i2c.h"
 
 #define CAN_STBY_GPIO GPIO_NUM_40 // GPIO40
+
+#define I2C_MASTER_SCL_IO 17      // GPIO for SCL
+#define I2C_MASTER_SDA_IO 16      // GPIO for SDA
+#define I2C_MASTER_FREQ_HZ 100000 // 100kHz
+#define I2C_MASTER_PORT I2C_NUM_0
+#define I2C_SLAVE_ADDR 0x2A
+#define I2C_TX_BUF_DISABLE 0
+#define I2C_RX_BUF_DISABLE 0
+uint8_t count = 0;
 
 static const char *TAG = "Main";
 
@@ -54,6 +64,19 @@ void gpio_init(void)
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
         .intr_type = GPIO_INTR_DISABLE};
     gpio_config(&io_conf);
+}
+
+void i2c_master_init()
+{
+    i2c_config_t conf = {
+        .mode = I2C_MODE_MASTER,
+        .sda_io_num = I2C_MASTER_SDA_IO,
+        .sda_pullup_en = GPIO_PULLUP_ENABLE,
+        .scl_io_num = I2C_MASTER_SCL_IO,
+        .scl_pullup_en = GPIO_PULLUP_ENABLE,
+        .master.clk_speed = I2C_MASTER_FREQ_HZ};
+    i2c_param_config(I2C_MASTER_PORT, &conf);
+    i2c_driver_install(I2C_MASTER_PORT, conf.mode, I2C_TX_BUF_DISABLE, I2C_RX_BUF_DISABLE, 0);
 }
 
 void init_webapp_ap(void)
@@ -83,9 +106,33 @@ void init_webapp_ap(void)
     ESP_LOGI(TAG, "Application started successfully");
 }
 
+void i2c_master_transmit_payload(void)
+{
+    uint8_t payload[4] = {0xAA, 0xBB, 0xCC, 0xDD};
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (I2C_SLAVE_ADDR << 1) | I2C_MASTER_WRITE, true);
+    i2c_master_write(cmd, payload, sizeof(payload), true);
+    i2c_master_stop(cmd);
+
+    esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_PORT, cmd, pdMS_TO_TICKS(100));
+    i2c_cmd_link_delete(cmd);
+
+    if (ret == ESP_OK)
+    {
+        printf("I2C transmission successful\n");
+    }
+    else
+    {
+        printf("I2C transmission failed\n");
+    }
+}
+
 void app_main(void)
 {
     gpio_init();
+
+    i2c_master_init();
 
     // Disable CAN Bus
     gpio_set_level(CAN_STBY_GPIO, 1);
@@ -112,5 +159,11 @@ void app_main(void)
     {
         // Add delay to not trigger watchdog
         vTaskDelay(pdMS_TO_TICKS(10));
+        if (count > 100)
+        {
+            i2c_master_transmit_payload();
+            count = 0;
+        }
+        count++;
     }
 }
