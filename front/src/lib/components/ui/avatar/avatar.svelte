@@ -1,10 +1,6 @@
-<!--
-	Installed from github/ieedan/shadcn-svelte-extras
--->
-
 <script lang="ts">
-	import { Avatar as AvatarPrimitive } from 'bits-ui';
-	import { cn } from '../utils/utils.js';
+	import { Avatar as AvatarPrimitive } from "bits-ui";
+	import { cn } from "$lib/utils.js";
 
 	let {
 		ref = $bindable(null),
@@ -15,6 +11,6 @@
 
 <AvatarPrimitive.Root
 	bind:ref
-	class={cn('relative flex size-10 shrink-0 overflow-hidden rounded-full', className)}
+	class={cn("relative flex size-10 shrink-0 overflow-hidden rounded-full", className)}
 	{...restProps}
 />
