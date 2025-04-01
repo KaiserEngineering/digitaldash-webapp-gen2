@@ -4,8 +4,7 @@
 	import {
 		ViewSchema,
 		GaugeArraySchema,
-		AlertArraySchema,
-		DynamicArraySchema
+		AlertArraySchema
 	} from '$schemas/digitaldash';
 	import { zod } from 'sveltekit-superforms/adapters';
 
@@ -87,21 +86,6 @@
 		}
 	});
 
-	const {
-		form: dynamicForm,
-		enhance: enhanceDynamic,
-		submitting: dynamicSubmitting
-	} = superForm(data.dynamicForm, {
-		dataType: 'json',
-		SPA: true,
-		validators: zod(DynamicArraySchema),
-		onUpdated: ({ form }) => {
-			if (form.valid) {
-				toast.success('Your dynamic conditions have been updated');
-			}
-		}
-	});
-
 	// Functions to add new items
 	function addGauge() {
 		$gaugesForm.items = [
@@ -150,32 +134,6 @@
 		setTimeout(() => document.getElementById('alerts-form')?.requestSubmit(), 100);
 	}
 
-	function addDynamicCondition() {
-		$dynamicForm.items = [
-			...$dynamicForm.items,
-			{
-				index: $dynamicForm.items.length,
-				count: 2,
-				cmd: '',
-				name: '',
-				desc: '',
-				type: '',
-				dataType: '',
-				default: 'Disabled',
-				options: ['Disabled', 'Enabled'],
-				limit: '',
-				EEBytes: 0,
-				enabled: true,
-				pid: '',
-				compare: 'EQUAL',
-				thresh: 0,
-				priority: 'Medium'
-			}
-		];
-		// Auto-save when adding a new item
-		setTimeout(() => document.getElementById('dynamic-form')?.requestSubmit(), 100);
-	}
-
 	// Functions to remove items
 	function removeGauge(index: number) {
 		$gaugesForm.items = $gaugesForm.items.filter((_, i) => i !== index);
@@ -187,12 +145,6 @@
 		$alertsForm.items = $alertsForm.items.filter((_, i) => i !== index);
 		// Auto-save when removing an item
 		setTimeout(() => document.getElementById('alerts-form')?.requestSubmit(), 100);
-	}
-
-	function removeDynamicCondition(index: number) {
-		$dynamicForm.items = $dynamicForm.items.filter((_, i) => i !== index);
-		// Auto-save when removing an item
-		setTimeout(() => document.getElementById('dynamic-form')?.requestSubmit(), 100);
 	}
 
 	// Auto-save on field change with debounce
@@ -218,7 +170,7 @@
 					Digital Dashboard
 				</h1>
 				<p class="text-muted-foreground">
-					Configure your car's digital dashboard display, gauges, alerts, and dynamic conditions.
+					Configure your car's digital dashboard display, gauges and alerts.
 				</p>
 			</div>
 			<div class="hidden md:block">
@@ -228,7 +180,7 @@
 
 		<Tabs value={activeTab} class="w-full">
 			<div class="mb-8 flex justify-center">
-				<TabsList class="grid w-full max-w-3xl grid-cols-4 rounded-xl p-1">
+				<TabsList class="grid w-full max-w-3xl grid-cols-3 rounded-xl p-1">
 					<TabsTrigger
 						value="view"
 						onclick={() => (activeTab = 'view')}
@@ -259,17 +211,6 @@
 							<Bell class="h-4 w-4" />
 							<span>Alerts</span>
 							<Badge variant="outline" class="bg-primary/5 ml-1">{$alertsForm.items.length}</Badge>
-						</div>
-					</TabsTrigger>
-					<TabsTrigger
-						value="dynamic"
-						onclick={() => (activeTab = 'dynamic')}
-						class="{activeTab === 'view' ? 'active': ''} data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-lg cursor-pointer"
-					>
-						<div class="flex items-center gap-2">
-							<Activity class="h-4 w-4" />
-							<span>Dynamic</span>
-							<Badge variant="outline" class="bg-primary/5 ml-1">{$dynamicForm.items.length}</Badge>
 						</div>
 					</TabsTrigger>
 				</TabsList>
@@ -584,140 +525,6 @@
 				</Card>
 			</TabsContent>
 
-			<!-- Dynamic Conditions Tab -->
-			<TabsContent value="dynamic">
-				<Card class="border-none shadow-lg">
-					<CardHeader class="bg-primary/5 rounded-t-xl">
-						<CardTitle class="flex items-center gap-2">
-							<Activity class="text-primary h-5 w-5" />
-							Dynamic Conditions
-						</CardTitle>
-						<CardDescription
-							>Configure dynamic conditions for your dashboard (max {$dynamicForm.items[0]?.count ||
-								2})</CardDescription
-						>
-					</CardHeader>
-					<form method="POST" use:enhanceDynamic id="dynamic-form">
-						<CardContent class="space-y-6 p-6">
-							{#each $dynamicForm.items as condition, i}
-								<div
-									class="bg-muted/10 hover:bg-muted/20 border-border/50 group relative space-y-4 rounded-xl border p-5 transition-colors"
-								>
-									<div class="flex items-center justify-between">
-										<h4 class="flex items-center gap-2 font-medium">
-											<span
-												class="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold"
-											>
-												{i + 1}
-											</span>
-											Condition Configuration
-										</h4>
-										<Button
-											type="button"
-											variant="ghost"
-											size="sm"
-											onclick={() => removeDynamicCondition(i)}
-											class="text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
-										>
-											<Trash2 class="h-4 w-4" />
-											<span class="sr-only">Remove</span>
-										</Button>
-									</div>
-									<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-										<div class="space-y-2">
-											<Label for={`dynamic-pid-${i}`} class="text-sm font-medium">PID</Label>
-											<Input
-												id={`dynamic-pid-${i}`}
-												type="text"
-												bind:value={condition.pid}
-												placeholder="PID"
-												oninput={() => autoSave('dynamic-form')}
-												class="border-input/50 focus-visible:ring-primary/50"
-											/>
-										</div>
-										<div class="space-y-2">
-											<Label for={`dynamic-compare-${i}`} class="text-sm font-medium"
-												>Comparison</Label
-											>
-											<Select.Root
-												bind:value={condition.compare}
-												onchange={() => autoSave('dynamic-form')}
-											>
-												<Select.Trigger class="border-input/50 focus:ring-primary/50 w-full">
-													<Select.Value placeholder="Select comparison" />
-												</Select.Trigger>
-												<Select.Content>
-													<Select.Item value="EQUAL">Equal</Select.Item>
-													<Select.Item value="LESS_THAN">Less Than</Select.Item>
-													<Select.Item value="GREATER_THAN">Greater Than</Select.Item>
-												</Select.Content>
-											</Select.Root>
-										</div>
-										<div class="space-y-2">
-											<Label for={`dynamic-thresh-${i}`} class="text-sm font-medium"
-												>Threshold</Label
-											>
-											<Input
-												id={`dynamic-thresh-${i}`}
-												type="number"
-												bind:value={condition.thresh}
-												placeholder="Threshold"
-												oninput={() => autoSave('dynamic-form')}
-												class="border-input/50 focus-visible:ring-primary/50"
-											/>
-										</div>
-										<div class="space-y-2">
-											<Label for={`dynamic-priority-${i}`} class="text-sm font-medium"
-												>Priority</Label
-											>
-											<Select.Root
-												bind:value={condition.priority}
-												onchange={() => autoSave('dynamic-form')}
-											>
-												<Select.Trigger class="border-input/50 focus:ring-primary/50 w-full">
-													<Select.Value placeholder="Select priority" />
-												</Select.Trigger>
-												<Select.Content>
-													<Select.Item value="Low">Low</Select.Item>
-													<Select.Item value="Medium">Medium</Select.Item>
-													<Select.Item value="High">High</Select.Item>
-												</Select.Content>
-											</Select.Root>
-										</div>
-									</div>
-								</div>
-							{/each}
-
-							{#if $dynamicForm.items.length < ($dynamicForm.items[0]?.count || 2)}
-								<Button
-									type="button"
-									variant="outline"
-									class="border-primary/30 hover:border-primary/70 hover:bg-primary/5 w-full border-dashed"
-									onclick={addDynamicCondition}
-								>
-									<Plus class="mr-2 h-4 w-4" />
-									Add Dynamic Condition
-								</Button>
-							{/if}
-						</CardContent>
-						<CardFooter class="bg-muted/10 rounded-b-xl px-6 py-4">
-							<Button
-								type="submit"
-								disabled={dynamicSubmitting}
-								class="gap-2 transition-all hover:gap-3"
-							>
-								{#if dynamicSubmitting}
-									<span class="mr-2">Saving...</span>
-								{:else}
-									<Save class="h-4 w-4" />
-									<span>Save Dynamic Conditions</span>
-									<ChevronRight class="h-3 w-3 opacity-70" />
-								{/if}
-							</Button>
-						</CardFooter>
-					</form>
-				</Card>
-			</TabsContent>
 		</Tabs>
 	</div>
 </div>
