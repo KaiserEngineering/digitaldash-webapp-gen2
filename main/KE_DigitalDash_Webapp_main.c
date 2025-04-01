@@ -50,6 +50,7 @@
 #define I2C_SLAVE_ADDR 0x2A
 #define I2C_TX_BUF_DISABLE 0
 #define I2C_RX_BUF_DISABLE 0
+#define ENABLE_I2C_TEST_TX 0
 uint8_t count = 0;
 
 static const char *TAG = "Main";
@@ -159,11 +160,13 @@ void app_main(void)
     {
         // Add delay to not trigger watchdog
         vTaskDelay(pdMS_TO_TICKS(10));
+#if ENABLE_I2C_TEST_TX
         if (count > 100)
         {
             i2c_master_transmit_payload();
             count = 0;
         }
         count++;
+#endif
     }
 }
