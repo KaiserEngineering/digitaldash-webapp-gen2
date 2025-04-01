@@ -1,0 +1,3 @@
+[submodule "components/lib_pid"]
+	path = components/lib_pid
+	url = https://github.com/KaiserEngineering/lib_pid.git
