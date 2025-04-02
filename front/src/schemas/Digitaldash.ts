@@ -114,7 +114,6 @@ export const DynamicSchema = z.object({
 	priority: DynamicPriorityEnum
 });
 
-
 export const DynamicArraySchema = z.object({
 	items: z.array(DynamicSchema)
 });
@@ -138,6 +137,12 @@ export const DigitalDashSchema = z.object({
 	alert: z.array(AlertSchema),
 	dynamic: z.array(DynamicSchema),
 	gauge: z.array(GaugeSchema)
+});
+
+export const SingleViewEditSchema = z.object({
+	view: ViewSchema,
+	gauges: z.array(GaugeSchema).default([]),
+	alerts: z.array(AlertSchema).default([])
 });
 
 // Infer TypeScript types from schema

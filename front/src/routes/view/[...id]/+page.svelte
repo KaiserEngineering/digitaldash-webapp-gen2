@@ -1,535 +1,398 @@
 <script lang="ts">
 	import { superForm } from 'sveltekit-superforms';
 	import type { PageProps } from './$types';
-	import {
-		ViewSchema,
-		GaugeArraySchema,
-		AlertArraySchema
-	} from '$schemas/digitaldash';
-	import { zod } from 'sveltekit-superforms/adapters';
-
-	// Import UI components
-	import { Button } from '$lib/components/ui/button';
-	import {
-		Card,
-		CardContent,
-		CardDescription,
-		CardFooter,
-		CardHeader,
-		CardTitle
-	} from '$lib/components/ui/card';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
-	import * as Select from '$lib/components/ui/select/index.js';
-	import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
-	import {
-		Gauge,
-		Bell,
-		Activity,
-		Save,
-		Plus,
-		Trash2,
-		ChevronRight,
-		Settings,
-		FastForward as SpeedIcon
-	} from 'lucide-svelte';
-	import { Switch } from '$lib/components/ui/switch/index.js';
-	import { Badge } from '$lib/components/ui/badge';
 	import { toast } from 'svelte-5-french-toast';
+	import { SingleViewEditSchema } from '$schemas/digitaldash';
 
-	// Get load data via $props() from our load function
+	import * as Tabs from '$lib/components/ui/tabs/index.js';
+	import * as Card from '$lib/components/ui/card/index.js';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
+	import { Label } from '$lib/components/ui/label/index.js';
+	import { Switch } from '$lib/components/ui/switch/index.js';
+	import { Settings, Gauge, Bell, Save, Plus, Trash2, ChevronRight } from 'lucide-svelte';
+	import { zod } from 'sveltekit-superforms/adapters';
+	import * as Select from '@/components/ui/select';
+
+	// Get initial data from our load function.
 	let { data }: PageProps = $props();
 
-	// Create superforms for each section using the wrapper schemas.
-	const {
-		form: viewForm,
-		enhance: enhanceView,
-		submitting: viewSubmitting
-	} = superForm(data.viewForm, {
+	// Create a superForm for the combined configuration.
+	// Expected structure: { view: {...}, gauges: [...], alerts: [...] }
+	const { form, enhance, submitting } = superForm(data.form, {
 		dataType: 'json',
 		SPA: true,
-		validators: zod(ViewSchema),
+		validators: zod(SingleViewEditSchema),
 		onUpdated: ({ form }) => {
 			if (form.valid) {
-				toast.success('Your view configuration has been updated');
+				toast.success('Configuration updated');
 			}
 		}
 	});
 
-	const {
-		form: gaugesForm,
-		enhance: enhanceGauges,
-		submitting: gaugesSubmitting
-	} = superForm(data.gaugesForm, {
-		dataType: 'json',
-		SPA: true,
-		validators: zod(GaugeArraySchema),
-		onUpdated: ({ form }) => {
-			if (form.valid) {
-				toast.success('Your gauge configuration has been updated');
+	// Store original data for diffing.
+	let originalData = structuredClone($form);
+
+	// Compute a shallow diff.
+	function getChangedFields(current: any, original: any) {
+		const changes: Record<string, any> = {};
+		for (const key in current) {
+			if (typeof current[key] === 'object' && current[key] !== null) {
+				if (JSON.stringify(current[key]) !== JSON.stringify(original[key])) {
+					changes[key] = current[key];
+				}
+			} else if (current[key] !== original[key]) {
+				changes[key] = current[key];
 			}
 		}
-	});
+		return changes;
+	}
 
-	const {
-		form: alertsForm,
-		enhance: enhanceAlerts,
-		submitting: alertsSubmitting
-	} = superForm(data.alertsForm, {
-		dataType: 'json',
-		SPA: true,
-		validators: zod(AlertArraySchema),
-		onUpdated: ({ form }) => {
-			if (form.valid) {
-				toast.success('Your alert configuration has been updated');
+	// Send only changed fields to the backend.
+	async function patchUpdate() {
+		const changes = getChangedFields($form, originalData);
+		if (Object.keys(changes).length === 0) return;
+		try {
+			const response = await fetch('/api/update-config', {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(changes)
+			});
+			if (response.ok) {
+				toast.success('Configuration updated successfully');
+				originalData = structuredClone($form);
+			} else {
+				toast.error('Update failed');
 			}
+		} catch (error) {
+			console.error(error);
+			toast.error('An error occurred while updating');
 		}
-	});
-
-	// Functions to add new items
-	function addGauge() {
-		$gaugesForm.items = [
-			...$gaugesForm.items,
-			{
-				index: $gaugesForm.items.length,
-				count: [3, 3],
-				cmd: '',
-				name: '',
-				desc: '',
-				type: '',
-				dataType: '',
-				default: 'THEME_STOCK_ST',
-				options: ['THEME_STOCK_ST', 'THEME_STOCK_RS'],
-				limit: '',
-				EEBytes: 0,
-				theme: 'THEME_STOCK_ST',
-				pid: ''
-			}
-		];
-		// Auto-save when adding a new item
-		setTimeout(() => document.getElementById('gauges-form')?.requestSubmit(), 100);
 	}
 
-	function addAlert() {
-		$alertsForm.items = [
-			...$alertsForm.items,
-			{
-				index: $alertsForm.items.length,
-				count: 5,
-				cmd: '',
-				name: '',
-				desc: '',
-				type: '',
-				dataType: '',
-				default: 'Disabled',
-				options: ['Disabled', 'Enabled'],
-				limit: '',
-				EEBytes: 0,
-				pid: '',
-				message: '',
-				compare: 'Equal'
-			}
-		];
-		// Auto-save when adding a new item
-		setTimeout(() => document.getElementById('alerts-form')?.requestSubmit(), 100);
-	}
-
-	// Functions to remove items
-	function removeGauge(index: number) {
-		$gaugesForm.items = $gaugesForm.items.filter((_, i) => i !== index);
-		// Auto-save when removing an item
-		setTimeout(() => document.getElementById('gauges-form')?.requestSubmit(), 100);
-	}
-
-	function removeAlert(index: number) {
-		$alertsForm.items = $alertsForm.items.filter((_, i) => i !== index);
-		// Auto-save when removing an item
-		setTimeout(() => document.getElementById('alerts-form')?.requestSubmit(), 100);
-	}
-
-	// Auto-save on field change with debounce
+	// Debounce auto-save calls.
 	let saveTimeout: ReturnType<typeof setTimeout>;
-	function autoSave(formId: string) {
+	function autoSave() {
 		clearTimeout(saveTimeout);
-		saveTimeout = setTimeout(() => {
-			document.getElementById(formId)?.requestSubmit();
-		}, 1000); // 1 second debounce
+		saveTimeout = setTimeout(patchUpdate, 1000);
 	}
 
-	// Active tab state
-	let activeTab = $state('view');
+	// Active tab state.
+	let activeTab: 'view' | 'gauges' | 'alerts' = $state('view');
 </script>
 
-<div class="from-background to-background/80 min-h-screen bg-gradient-to-b">
-	<div class="container mx-auto max-w-6xl px-4">
-		<div class="mb-10 flex items-center justify-between">
-			<div>
-				<h1
-					class="from-primary to-primary/70 bg-gradient-to-r bg-clip-text text-4xl font-bold tracking-tight text-transparent"
-				>
-					Digital Dashboard
-				</h1>
-				<p class="text-muted-foreground">
-					Configure your car's digital dashboard display, gauges and alerts.
-				</p>
-			</div>
-			<div class="hidden md:block">
-				<SpeedIcon class="text-primary/80 h-16 w-16" />
-			</div>
-		</div>
+<form method="POST" use:enhance>
+	<Tabs.Root value={activeTab} class="w-full">
+		<Tabs.List class="mx-auto grid w-full max-w-3xl grid-cols-3 rounded-xl p-1">
+			<Tabs.Trigger
+				value="view"
+				onclick={() => (activeTab = 'view')}
+				class="data-[state=active]:bg-primary/10 data-[state=active]:text-primary cursor-pointer rounded-lg"
+			>
+				<div class="flex items-center gap-2">
+					<Settings class="h-4 w-4" />
+					<span>Settings</span>
+				</div>
+			</Tabs.Trigger>
+			<Tabs.Trigger
+				value="gauges"
+				onclick={() => (activeTab = 'gauges')}
+				class="data-[state=active]:bg-primary/10 data-[state=active]:text-primary cursor-pointer rounded-lg"
+			>
+				<div class="flex items-center gap-2">
+					<Gauge class="h-4 w-4" />
+					<span>Gauges</span>
+					<span class="badge badge-outline ml-1">{$form.gauges.length}</span>
+				</div>
+			</Tabs.Trigger>
+			<Tabs.Trigger
+				value="alerts"
+				onclick={() => (activeTab = 'alerts')}
+				class="data-[state=active]:bg-primary/10 data-[state=active]:text-primary cursor-pointer rounded-lg"
+			>
+				<div class="flex items-center gap-2">
+					<Bell class="h-4 w-4" />
+					<span>Alerts</span>
+					<span class="badge badge-outline ml-1">{$form.alerts.length}</span>
+				</div>
+			</Tabs.Trigger>
+		</Tabs.List>
 
-		<Tabs value={activeTab} class="w-full">
-			<div class="mb-8 flex justify-center">
-				<TabsList class="grid w-full max-w-3xl grid-cols-3 rounded-xl p-1">
-					<TabsTrigger
-						value="view"
-						onclick={() => (activeTab = 'view')}
-						class="{activeTab === 'view' ? 'active': ''} data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-lg cursor-pointer"
-					>
-						<div class="flex items-center gap-2">
-							<Settings class="h-4 w-4" />
-							<span>Settings</span>
-						</div>
-					</TabsTrigger>
-					<TabsTrigger
-						value="gauges"
-						onclick={() => (activeTab = 'gauges')}
-						class="{activeTab === 'view' ? 'active': ''} data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-lg cursor-pointer"
-					>
-						<div class="flex items-center gap-2">
-							<Gauge class="h-4 w-4" />
-							<span>Gauges</span>
-							<Badge variant="outline" class="bg-primary/5 ml-1">{$gaugesForm.items.length}</Badge>
-						</div>
-					</TabsTrigger>
-					<TabsTrigger
-						value="alerts"
-						onclick={() => (activeTab = 'alerts')}
-						class="{activeTab === 'view' ? 'active': ''} data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-lg cursor-pointer"
-					>
-						<div class="flex items-center gap-2">
-							<Bell class="h-4 w-4" />
-							<span>Alerts</span>
-							<Badge variant="outline" class="bg-primary/5 ml-1">{$alertsForm.items.length}</Badge>
-						</div>
-					</TabsTrigger>
-				</TabsList>
-			</div>
-
+		<!-- Tabs Content -->
+		<div class="mt-8 space-y-8">
 			<!-- View Settings Tab -->
-			<TabsContent value="view">
-				<Card class="border-none shadow-lg">
-					<CardHeader class="bg-primary/5 rounded-t-xl">
-						<CardTitle class="flex items-center gap-2">
+			<Tabs.Content value="view">
+				<Card.Root class="border shadow-lg">
+					<Card.Header class="bg-primary/5 rounded-t-lg p-4">
+						<Card.Title class="flex items-center gap-2">
 							<Settings class="text-primary h-5 w-5" />
 							View Settings
-						</CardTitle>
-						<CardDescription>Configure the basic settings for your dashboard view</CardDescription>
-					</CardHeader>
-					<form method="POST" use:enhanceView id="view-form">
-						<CardContent class="space-y-6 p-6">
-							<div class="grid gap-6 sm:grid-cols-2">
-								<div class="space-y-2">
-									<Label for="name" class="text-sm font-medium">View Name</Label>
-									<Input
-										id="name"
-										type="text"
-										bind:value={$viewForm.name}
-										placeholder="Enter view name"
-										oninput={() => autoSave('view-form')}
-										class="border-input/50 focus-visible:ring-primary/50"
-									/>
-								</div>
-
-								<div class="space-y-2">
-									<Label for="enabled" class="text-sm font-medium">Enabled</Label>
-									<div class="flex h-10 items-center space-x-2">
-										<Switch
-											id="enabled"
-											bind:checked={$viewForm.enabled}
-											onchange={() => autoSave('view-form')}
-										/>
-										<span class="text-muted-foreground text-sm">
-											{$viewForm.enabled ? 'Active' : 'Inactive'}
-										</span>
-									</div>
-								</div>
+						</Card.Title>
+						<Card.Description>Configure your basic view settings</Card.Description>
+					</Card.Header>
+					<Card.Content class="space-y-4 p-6">
+						<div class="grid grid-cols-2 gap-4">
+							<div>
+								<Label for="view-name" class="block text-sm font-medium">View Name</Label>
+								<Input
+									id="view-name"
+									type="text"
+									bind:value={$form.view.name}
+									placeholder="Enter view name"
+									class="input input-bordered w-full"
+									onblur={autoSave}
+								/>
 							</div>
-
-							<div class="space-y-2">
-								<Label for="background" class="text-sm font-medium">Background</Label>
-								<Select.Root
-									bind:value={$viewForm.background}
-									onchange={() => autoSave('view-form')}
-								>
-									<Select.Trigger class="border-input/50 focus:ring-primary/50 w-full">
-										<Select.Value placeholder="Select background" />
-									</Select.Trigger>
-									<Select.Content>
-										<Select.Item value="BACKGROUND_BLACK.png">Black</Select.Item>
-										<Select.Item value="BACKGROUND_FLARE.png">Flare</Select.Item>
-										<Select.Item value="BACKGROUND_GALAXY.png">Galaxy</Select.Item>
-									</Select.Content>
-								</Select.Root>
+							<div class="flex items-center space-x-2">
+								<Label for="view-enabled" class="text-sm font-medium">Enabled</Label>
+								<Switch id="view-enabled" bind:checked={$form.view.enabled} onchange={autoSave} />
+								<span class="text-muted-foreground text-sm">
+									{$form.view.enabled ? 'Active' : 'Inactive'}
+								</span>
 							</div>
-						</CardContent>
-						<CardFooter class="bg-muted/10 rounded-b-xl px-6 py-4">
-							<Button
-								type="submit"
-								disabled={viewSubmitting}
-								class="gap-2 transition-all hover:gap-3"
-							>
-								{#if viewSubmitting}
-									<span class="mr-2">Saving...</span>
-								{:else}
-									<Save class="h-4 w-4" />
-									<span>Save View</span>
-									<ChevronRight class="h-3 w-3 opacity-70" />
-								{/if}
-							</Button>
-						</CardFooter>
-					</form>
-				</Card>
-			</TabsContent>
+						</div>
+						<div>
+							<Label for="view-background" class="block text-sm font-medium">Background</Label>
+							<Select.Root type="single" name="background">
+								<Select.Trigger class="input input-bordered w-full"></Select.Trigger>
+								<Select.Content>
+									<Select.Item value="BACKGROUND_BLACK.png">Black</Select.Item>
+									<Select.Item value="BACKGROUND_FLARE.png">Flare</Select.Item>
+									<Select.Item value="BACKGROUND_GALAXY.png">Galaxy</Select.Item>
+								</Select.Content>
+							</Select.Root>
+						</div>
+					</Card.Content>
+					<Card.Footer class="bg-muted/10 flex justify-end rounded-b-lg p-4">
+						<Button
+							type="button"
+							onclick={patchUpdate}
+							disabled={$submitting}
+							class="flex items-center gap-2"
+						>
+							{#if submitting}
+								<span>Saving...</span>
+							{:else}
+								<Save class="h-4 w-4" />
+								<span>Save View</span>
+								<ChevronRight class="h-3 w-3 opacity-70" />
+							{/if}
+						</Button>
+					</Card.Footer>
+				</Card.Root>
+			</Tabs.Content>
 
 			<!-- Gauges Tab -->
-			<TabsContent value="gauges">
-				<Card class="border-none shadow-lg">
-					<CardHeader class="bg-primary/5 rounded-t-xl">
-						<CardTitle class="flex items-center gap-2">
+			<Tabs.Content value="gauges">
+				<Card.Root class="border shadow-lg">
+					<Card.Header class="bg-primary/5 rounded-t-lg p-4">
+						<Card.Title class="flex items-center gap-2">
 							<Gauge class="text-primary h-5 w-5" />
 							Gauges Configuration
-						</CardTitle>
-						<CardDescription
-							>Configure the gauges displayed on your dashboard (max {$gaugesForm.items[0]
-								?.count[0] || 3})</CardDescription
+						</Card.Title>
+						<Card.Description
+							>Configure the gauges (max {$form.gauges[0]?.count[0] || 3} per view)</Card.Description
 						>
-					</CardHeader>
-					<form method="POST" use:enhanceGauges id="gauges-form">
-						<CardContent class="space-y-6 p-6">
-							{#each $gaugesForm.items as gauge, i}
-								<div
-									class="bg-muted/10 hover:bg-muted/20 border-border/50 group relative space-y-4 rounded-lg border p-5 transition-colors"
-								>
-									<div class="flex items-center justify-between">
-										<h4 class="flex items-center gap-2 font-medium">
-											<span
-												class="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold"
-											>
-												{i + 1}
-											</span>
-											Gauge Configuration
-										</h4>
-										<Button
-											type="button"
-											variant="ghost"
-											size="sm"
-											onclick={() => removeGauge(i)}
-											class="text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
-										>
-											<Trash2 class="h-4 w-4" />
-											<span class="sr-only">Remove</span>
-										</Button>
+					</Card.Header>
+					<Card.Content class="space-y-4 p-6">
+						{#each $form.gauges as gauge, i}
+							<div class="space-y-2 rounded-lg border p-4">
+								<div class="flex items-center justify-between">
+									<span class="font-semibold">Gauge #{i + 1}</span>
+									<Button
+										type="button"
+										variant="ghost"
+										size="sm"
+										onclick={() => {
+											$form.gauges = $form.gauges.filter((_, index) => index !== i);
+											autoSave();
+										}}
+									>
+										<Trash2 class="h-4 w-4" />
+									</Button>
+								</div>
+								<div class="grid grid-cols-2 gap-4">
+									<div>
+										<Label for={`gauge-pid-${i}`} class="block text-sm">PID</Label>
+										<Input
+											id={`gauge-pid-${i}`}
+											type="text"
+											bind:value={gauge.pid}
+											class="input input-bordered w-full"
+											onblur={autoSave}
+										/>
 									</div>
-									<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-										<div class="space-y-2">
-											<Label for={`gauge-pid-${i}`} class="text-sm font-medium">PID</Label>
-											<Input
-												id={`gauge-pid-${i}`}
-												type="text"
-												bind:value={gauge.pid}
-												placeholder="PID"
-												oninput={() => autoSave('gauges-form')}
-												class="border-input/50 focus-visible:ring-primary/50"
-											/>
-										</div>
-										<div class="space-y-2">
-											<Label for={`gauge-name-${i}`} class="text-sm font-medium">Name</Label>
-											<Input
-												id={`gauge-name-${i}`}
-												type="text"
-												bind:value={gauge.name}
-												placeholder="Name"
-												oninput={() => autoSave('gauges-form')}
-												class="border-input/50 focus-visible:ring-primary/50"
-											/>
-										</div>
-										<div class="space-y-2">
-											<Label for={`gauge-theme-${i}`} class="text-sm font-medium">Theme</Label>
-											<Select.Root
-												bind:value={gauge.theme}
-												onchange={() => autoSave('gauges-form')}
-											>
-												<Select.Trigger class="border-input/50 focus:ring-primary/50 w-full">
-													<Select.Value placeholder="Select theme" />
-												</Select.Trigger>
-												<Select.Content>
-													<Select.Item value="THEME_STOCK_ST">Stock ST</Select.Item>
-													<Select.Item value="THEME_STOCK_RS">Stock RS</Select.Item>
-												</Select.Content>
-											</Select.Root>
-										</div>
+									<div>
+										<Label for={`gauge-name-${i}`} class="block text-sm">Name</Label>
+										<Input
+											id={`gauge-name-${i}`}
+											type="text"
+											bind:value={gauge.name}
+											class="input input-bordered w-full"
+											onblur={autoSave}
+										/>
 									</div>
 								</div>
-							{/each}
-
-							{#if $gaugesForm.items.length < ($gaugesForm.items[0]?.count[0] || 3)}
-								<Button
-									type="button"
-									variant="outline"
-									class="border-primary/30 hover:border-primary/70 hover:bg-primary/5 w-full border-dashed"
-									onclick={addGauge}
-								>
-									<Plus class="mr-2 h-4 w-4" />
-									Add Gauge
-								</Button>
+							</div>
+						{/each}
+						<button
+							type="button"
+							class="btn btn-outline w-full"
+							onclick={() => {
+								$form.gauges = [
+									...$form.gauges,
+									{
+										index: $form.gauges.length,
+										count: [3, 3],
+										cmd: '',
+										name: '',
+										desc: '',
+										type: '',
+										dataType: '',
+										default: 'THEME_STOCK_ST',
+										options: ['THEME_STOCK_ST', 'THEME_STOCK_RS'],
+										limit: '',
+										EEBytes: 0,
+										theme: 'THEME_STOCK_ST',
+										pid: ''
+									}
+								];
+								autoSave();
+							}}
+						>
+							<Plus class="mr-2 h-4 w-4" /> Add Gauge
+						</button>
+					</Card.Content>
+					<Card.Footer class="bg-muted/10 flex justify-end rounded-b-lg p-4">
+						<Button
+							type="button"
+							onclick={patchUpdate}
+							disabled={$submitting}
+							class="flex items-center gap-2"
+						>
+							{#if submitting}
+								<span>Saving...</span>
+							{:else}
+								<Save class="h-4 w-4" />
+								<span>Save Gauges</span>
+								<ChevronRight class="h-3 w-3 opacity-70" />
 							{/if}
-						</CardContent>
-						<CardFooter class="bg-muted/10 rounded-b-xl px-6 py-4">
-							<Button
-								type="submit"
-								disabled={gaugesSubmitting}
-								class="gap-2 transition-all hover:gap-3"
-							>
-								{#if gaugesSubmitting}
-									<span class="mr-2">Saving...</span>
-								{:else}
-									<Save class="h-4 w-4" />
-									<span>Save Gauges</span>
-									<ChevronRight class="h-3 w-3 opacity-70" />
-								{/if}
-							</Button>
-						</CardFooter>
-					</form>
-				</Card>
-			</TabsContent>
+						</Button>
+					</Card.Footer>
+				</Card.Root>
+			</Tabs.Content>
 
 			<!-- Alerts Tab -->
-			<TabsContent value="alerts">
-				<Card class="border-none shadow-lg">
-					<CardHeader class="bg-primary/5 rounded-t-xl">
-						<CardTitle class="flex items-center gap-2">
+			<Tabs.Content value="alerts">
+				<Card.Root class="border shadow-lg">
+					<Card.Header class="bg-primary/5 rounded-t-lg p-4">
+						<Card.Title class="flex items-center gap-2">
 							<Bell class="text-primary h-5 w-5" />
 							Alerts Configuration
-						</CardTitle>
-						<CardDescription
-							>Configure alerts for your dashboard (max {$alertsForm.items[0]?.count ||
-								5})</CardDescription
+						</Card.Title>
+						<Card.Description
+							>Configure your alerts (max {$form.alerts[0]?.count || 5} alerts)</Card.Description
 						>
-					</CardHeader>
-					<form method="POST" use:enhanceAlerts id="alerts-form">
-						<CardContent class="space-y-6 p-6">
-							{#each $alertsForm.items as alert, i}
-								<div
-									class="bg-muted/10 hover:bg-muted/20 border-border/50 group relative space-y-4 rounded-xl border p-5 transition-colors"
-								>
-									<div class="flex items-center justify-between">
-										<h4 class="flex items-center gap-2 font-medium">
-											<span
-												class="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold"
-											>
-												{i + 1}
-											</span>
-											Alert Configuration
-										</h4>
-										<Button
-											type="button"
-											variant="ghost"
-											size="sm"
-											onclick={() => removeAlert(i)}
-											class="text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
-										>
-											<Trash2 class="h-4 w-4" />
-											<span class="sr-only">Remove</span>
-										</Button>
+					</Card.Header>
+					<Card.Content class="space-y-4 p-6">
+						{#each $form.alerts as alert, i}
+							<div class="space-y-2 rounded-lg border p-4">
+								<div class="flex items-center justify-between">
+									<span class="font-semibold">Alert #{i + 1}</span>
+									<Button
+										type="button"
+										variant="ghost"
+										size="sm"
+										onclick={() => {
+											$form.alerts = $form.alerts.filter((_, index) => index !== i);
+											autoSave();
+										}}
+									>
+										<Trash2 class="h-4 w-4" />
+									</Button>
+								</div>
+								<div class="grid grid-cols-2 gap-4">
+									<div>
+										<Label for={`alert-pid-${i}`} class="block text-sm">PID</Label>
+										<Input
+											id={`alert-pid-${i}`}
+											type="text"
+											bind:value={alert.pid}
+											class="input input-bordered w-full"
+											onblur={autoSave}
+										/>
 									</div>
-									<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-										<div class="space-y-2">
-											<Label for={`alert-pid-${i}`} class="text-sm font-medium">PID</Label>
-											<Input
-												id={`alert-pid-${i}`}
-												type="text"
-												bind:value={alert.pid}
-												placeholder="PID"
-												oninput={() => autoSave('alerts-form')}
-												class="border-input/50 focus-visible:ring-primary/50"
-											/>
-										</div>
-										<div class="space-y-2">
-											<Label for={`alert-compare-${i}`} class="text-sm font-medium"
-												>Comparison</Label
-											>
-											<Select.Root
-												bind:value={alert.compare}
-												onchange={() => autoSave('alerts-form')}
-											>
-												<Select.Trigger class="border-input/50 focus:ring-primary/50 w-full">
-													<Select.Value placeholder="Select comparison" />
-												</Select.Trigger>
-												<Select.Content>
-													<Select.Item value="Equal">Equal</Select.Item>
-													<Select.Item value="Less Than">Less Than</Select.Item>
-													<Select.Item value="Less Than Or Equal To">Less Than Or Equal</Select.Item
-													>
-													<Select.Item value="Greater Than">Greater Than</Select.Item>
-													<Select.Item value="Greater Than Or Equal To"
-														>Greater Than Or Equal</Select.Item
-													>
-													<Select.Item value="Not Equal">Not Equal</Select.Item>
-												</Select.Content>
-											</Select.Root>
-										</div>
-										<div class="space-y-2 sm:col-span-2 lg:col-span-1">
-											<Label for={`alert-message-${i}`} class="text-sm font-medium">Message</Label>
-											<Input
-												id={`alert-message-${i}`}
-												type="text"
-												bind:value={alert.message}
-												placeholder="Alert message"
-												oninput={() => autoSave('alerts-form')}
-												class="border-input/50 focus-visible:ring-primary/50"
-											/>
-										</div>
+									<div>
+										<Label for={`alert-message-${i}`} class="block text-sm">Message</Label>
+										<Input
+											id={`alert-message-${i}`}
+											type="text"
+											bind:value={alert.message}
+											class="input input-bordered w-full"
+											onblur={autoSave}
+										/>
 									</div>
 								</div>
-							{/each}
-
-							{#if $alertsForm.items.length < ($alertsForm.items[0]?.count || 5)}
-								<Button
-									type="button"
-									variant="outline"
-									class="border-primary/30 hover:border-primary/70 hover:bg-primary/5 w-full border-dashed"
-									onclick={addAlert}
-								>
-									<Plus class="mr-2 h-4 w-4" />
-									Add Alert
-								</Button>
+								<!-- You can add more fields (like a comparison select) here -->
+							</div>
+						{/each}
+						<button
+							type="button"
+							class="btn btn-outline w-full"
+							onclick={() => {
+								$form.alerts = [
+									...$form.alerts,
+									{
+										index: $form.alerts.length,
+										count: 5,
+										cmd: '',
+										name: '',
+										desc: '',
+										type: '',
+										dataType: '',
+										default: 'Disabled',
+										options: ['Disabled', 'Enabled'],
+										limit: '',
+										EEBytes: 0,
+										pid: '',
+										message: '',
+										compare: 'Equal'
+									}
+								];
+								autoSave();
+							}}
+						>
+							<Plus class="mr-2 h-4 w-4" /> Add Alert
+						</button>
+					</Card.Content>
+					<Card.Footer class="bg-muted/10 flex justify-end rounded-b-lg p-4">
+						<Button
+							type="button"
+							onclick={patchUpdate}
+							disabled={$submitting}
+							class="flex items-center gap-2"
+						>
+							{#if submitting}
+								<span>Saving...</span>
+							{:else}
+								<Save class="h-4 w-4" />
+								<span>Save Alerts</span>
+								<ChevronRight class="h-3 w-3 opacity-70" />
 							{/if}
-						</CardContent>
-						<CardFooter class="bg-muted/10 rounded-b-xl px-6 py-4">
-							<Button
-								type="submit"
-								disabled={alertsSubmitting}
-								class="gap-2 transition-all hover:gap-3"
-							>
-								{#if alertsSubmitting}
-									<span class="mr-2">Saving...</span>
-								{:else}
-									<Save class="h-4 w-4" />
-									<span>Save Alerts</span>
-									<ChevronRight class="h-3 w-3 opacity-70" />
-								{/if}
-							</Button>
-						</CardFooter>
-					</form>
-				</Card>
-			</TabsContent>
+						</Button>
+					</Card.Footer>
+				</Card.Root>
+			</Tabs.Content>
+		</div>
 
-		</Tabs>
-	</div>
-</div>
+		<!-- Optional manual save trigger -->
+		<div class="mt-4 text-center">
+			<Button type="button" onclick={patchUpdate} disabled={$submitting}>Save Changes</Button>
+		</div>
+	</Tabs.Root>
+</form>
 
-<style>
+<style lang="postcss">
 	:global(.dark) {
 		--background: 222.2 84% 4.9%;
 		--foreground: 210 40% 98%;

@@ -7,7 +7,7 @@
 	let { children } = $props();
 </script>
 
-<div class="bg-linear-to-br from-gray-100 to-gray-200">
+<div class="bg-linear-to-br from-gray-100 to-gray-300">
 	<div class="min-h-screen">
 		<Toaster />
 
