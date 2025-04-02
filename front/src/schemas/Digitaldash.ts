@@ -151,3 +151,4 @@ export type ViewType = z.infer<typeof ViewSchema>;
 export type GaugeType = z.infer<typeof GaugeSchema>;
 export type AlertType = z.infer<typeof AlertSchema>;
 export type DynamicType = z.infer<typeof DynamicSchema>;
+export type SincegleViewEditType = z.infer<typeof SingleViewEditSchema>;
