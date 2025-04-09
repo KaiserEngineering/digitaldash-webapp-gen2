@@ -43,6 +43,9 @@
 #include "lib_pid.h"
 #include "ke_config.h"
 
+#define UI_HOR_RES    800
+#define UI_VER_RES    165
+
 #define CAN_STBY_GPIO GPIO_NUM_40 // GPIO40
 
 #define I2C_MASTER_SCL_IO 17      // GPIO for SCL
@@ -53,7 +56,19 @@
 #define I2C_TX_BUF_DISABLE 0
 #define I2C_RX_BUF_DISABLE 0
 #define ENABLE_I2C_TEST_TX 0
+#define ENABLE_SPI_TEST_TX 0
 uint8_t count = 0;
+
+#define SPI_HOST       SPI2_HOST  // HSPI or SPI2 on S3
+#define DMA_CHAN       SPI_DMA_CH_AUTO
+#define PIN_NUM_MISO   12
+#define PIN_NUM_MOSI   13
+#define PIN_NUM_CLK    14
+#define PIN_NUM_CS     -1
+#define SPI_BUFFER_SIZE    32 * 1000
+uint8_t spi_buffer[SPI_BUFFER_SIZE] = {0};
+
+spi_device_handle_t spi;
 
 static const char *TAG = "Main";
 
@@ -80,6 +95,33 @@ void i2c_master_init()
         .master.clk_speed = I2C_MASTER_FREQ_HZ};
     i2c_param_config(I2C_MASTER_PORT, &conf);
     i2c_driver_install(I2C_MASTER_PORT, conf.mode, I2C_TX_BUF_DISABLE, I2C_RX_BUF_DISABLE, 0);
+}
+
+void spi_master_init()
+{
+    // Configuration for the SPI bus
+    spi_bus_config_t buscfg = {
+        .mosi_io_num = PIN_NUM_MOSI,
+        .miso_io_num = PIN_NUM_MISO,
+        .sclk_io_num = PIN_NUM_CLK,
+        .quadwp_io_num = -1,
+        .quadhd_io_num = -1,
+        .max_transfer_sz = SPI_BUFFER_SIZE
+    };
+
+    // Initialize the SPI bus
+    ESP_ERROR_CHECK(spi_bus_initialize(SPI_HOST, &buscfg, DMA_CHAN));
+
+    // Device configuration
+    spi_device_interface_config_t devcfg = {
+        .clock_speed_hz = 10 * 1000 * 1000,  // 10 MHz
+        .mode = 0,
+        .spics_io_num = PIN_NUM_CS,
+        .queue_size = 1,
+        .flags = SPI_DEVICE_NO_DUMMY,
+    };
+
+    ESP_ERROR_CHECK(spi_bus_add_device(SPI_HOST, &devcfg, &spi));
 }
 
 void init_webapp_ap(void)
@@ -131,6 +173,22 @@ void i2c_master_transmit_payload(void)
     }
 }
 
+void spi_master_transmit_payload(void)
+{
+    // Setup SPI transaction
+    spi_transaction_t t = {
+        .length = sizeof(spi_buffer) * 8,  // In bits
+        .tx_buffer = spi_buffer
+    };
+
+    for (int i = 0; i < sizeof(spi_buffer); i++) {
+        spi_buffer[i] = i % 256;
+    }
+
+    // Transmit the buffer
+    ESP_ERROR_CHECK(spi_device_transmit(spi, &t));
+}
+
 void spoof_config(void)
 {
 	// View 0
@@ -159,15 +217,17 @@ void spoof_config(void)
 	set_dynamic_enable(0, DYNAMIC_STATE_ENABLED, false);
 	set_dynamic_pid(0, MODE1_ENGINE_SPEED_UUID, false);
 	set_dynamic_priority(0, DYNAMIC_PRIORITY_HIGH, false);
-	set_dynamic_compare(0, DD_GREATER_THAN, false);
+	set_dynamic_compare(0, DYNAMIC_COMPARISON_GREATER_THAN, false);
 	set_dynamic_threshold(0, 5000, false);
 	set_dynamic_index(0, 1, false);
 }
+
 void app_main(void)
 {
     gpio_init();
 
     i2c_master_init();
+    spi_master_init();
 
     // Disable CAN Bus
     gpio_set_level(CAN_STBY_GPIO, 1);
@@ -194,13 +254,16 @@ void app_main(void)
     {
         // Add delay to not trigger watchdog
         vTaskDelay(pdMS_TO_TICKS(10));
-#if ENABLE_I2C_TEST_TX
         if (count > 100)
         {
+            #if ENABLE_SPI_TEST_TX
+            spi_master_transmit_payload();
+            #endif
+            #if ENABLE_I2C_TEST_TX
             i2c_master_transmit_payload();
+            #endif
             count = 0;
         }
         count++;
-#endif
     }
 }
