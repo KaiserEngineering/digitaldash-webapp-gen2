@@ -113,29 +113,20 @@
 		<!-- Tabs Header -->
 		<div class="sticky top-0 z-10 py-4 backdrop-blur-sm">
 			<Tabs.List class="mx-auto grid w-full max-w-3xl grid-cols-3 gap-2 rounded-xl bg-gray-100 p-1">
-				<Tabs.Trigger
-					value="view"
-					class="data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary cursor-pointer rounded-lg transition-all duration-200 data-[state=active]:bg-gradient-to-b"
-				>
+				<Tabs.Trigger value="view" class="btn-tab data-[state=active]:btn-tab-active">
 					<div class="flex items-center justify-center gap-2">
 						<Settings class="h-4 w-4" />
 						<span>Settings</span>
 					</div>
 				</Tabs.Trigger>
-				<Tabs.Trigger
-					value="gauges"
-					class="data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary cursor-pointer rounded-lg transition-all duration-200 data-[state=active]:bg-gradient-to-b"
-				>
+				<Tabs.Trigger value="gauges" class="btn-tab data-[state=active]:btn-tab-active">
 					<div class="flex items-center justify-center gap-2">
 						<Gauge class="h-4 w-4" />
 						<span>Gauges</span>
 						<Badge variant="outline" class="bg-primary/10 ml-1">{$form.gauges.length}</Badge>
 					</div>
 				</Tabs.Trigger>
-				<Tabs.Trigger
-					value="alerts"
-					class="data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary cursor-pointer rounded-lg transition-all duration-200 data-[state=active]:bg-gradient-to-b"
-				>
+				<Tabs.Trigger value="alerts" class="btn-tab data-[state=active]:btn-tab-active">
 					<div class="flex items-center justify-center gap-2">
 						<Bell class="h-4 w-4" />
 						<span>Alerts</span>
@@ -165,23 +156,22 @@
 								</Card.Header>
 								<Card.Content class="space-y-6 p-6">
 									<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-										<div class="flex items-center space-x-4">
-											<div class="flex flex-col space-y-2">
-												<Label for="view-enabled" class="text-sm font-medium">Enabled</Label>
-												<div class="flex items-center space-x-2">
-													<Switch
-														id="view-enabled"
-														bind:checked={$form.view.enabled}
-														onchange={autoSave}
-														class="{$form.view.enabled
-															? 'bg-green-200'
-															: 'bg-red-200'} border-primary/20 focus:ring-primary/20 border"
-													/>
-													<span class="text-sm">{$form.view.enabled ? 'Active' : 'Inactive'}</span>
-												</div>
+										<div>
+											<Label for="view-enabled" class="text-sm font-medium">Enabled</Label>
+											<div class="mt-1 flex items-center space-x-2">
+												<Switch
+													id="view-enabled"
+													bind:checked={$form.view.enabled}
+													onchange={autoSave}
+													class="border-primary/20 focus:ring-primary/20 border transition-colors duration-200 {$form
+														.view.enabled
+														? 'bg-green-200'
+														: 'bg-red-200'}"
+												/>
+												<span class="text-sm">{$form.view.enabled ? 'Active' : 'Inactive'}</span>
 											</div>
 										</div>
-										<div class="space-y-2">
+										<div>
 											<Label for="view-name" class="text-sm font-medium">View Name</Label>
 											<Input
 												id="view-name"
@@ -189,17 +179,23 @@
 												bind:value={$form.view.name}
 												placeholder="Enter view name"
 												onblur={autoSave}
-												class="focus:ring-primary/20 transition-all duration-200 focus:ring-2"
+												class="focus:ring-primary/20 mt-1 transition-all duration-200 focus:ring-2 focus:outline-none"
 											/>
 										</div>
 									</div>
 									<div class="space-y-2">
 										<Label for="view-background" class="text-sm font-medium">Background</Label>
-										<Select.Root type="single" bind:value={$form.view.background} onchange={autoSave}>
-											<Select.Trigger>
+										<Select.Root
+											type="single"
+											bind:value={$form.view.background}
+											onchange={autoSave}
+										>
+											<Select.Trigger
+												class="focus:ring-primary/20 flex w-1/2 items-center justify-between rounded-lg border bg-red-100 px-3 py-2 shadow-sm transition-all duration-200 hover:bg-gray-50 focus:ring-2"
+											>
 												{backgroundTriggerContent}
 											</Select.Trigger>
-											<Select.Content>
+											<Select.Content class="bg-red-200">
 												{#each backgrounds as bg (bg.value)}
 													<Select.Item value={bg.value} label={bg.label} />
 												{/each}
@@ -207,11 +203,10 @@
 										</Select.Root>
 									</div>
 								</Card.Content>
-
 								{#if $submitting}
-									<span class="flex items-center gap-2">
+									<div class="flex items-center gap-2 p-4">
 										<svg
-											class="-ml-1 mr-2 h-4 w-4 animate-spin text-white"
+											class="h-4 w-4 animate-spin text-white"
 											xmlns="http://www.w3.org/2000/svg"
 											fill="none"
 											viewBox="0 0 24 24"
@@ -231,7 +226,7 @@
 											></path>
 										</svg>
 										Saving...
-									</span>
+									</div>
 								{/if}
 							</Card.Root>
 						</div>
@@ -288,7 +283,7 @@
 																type="text"
 																bind:value={gauge.pid}
 																onblur={autoSave}
-																class="focus:ring-primary/20 transition duration-200 focus:ring-2"
+																class="focus:ring-primary/20 mt-1 transition duration-200 focus:ring-2"
 															/>
 														</div>
 														<div class="space-y-2">
@@ -298,7 +293,7 @@
 																type="text"
 																bind:value={gauge.name}
 																onblur={autoSave}
-																class="focus:ring-primary/20 transition duration-200 focus:ring-2"
+																class="focus:ring-primary/20 mt-1 transition duration-200 focus:ring-2"
 															/>
 														</div>
 													</div>
@@ -327,7 +322,7 @@
 										{#if $submitting}
 											<span class="flex items-center gap-2">
 												<svg
-													class="-ml-1 mr-2 h-4 w-4 animate-spin text-white"
+													class="mr-2 -ml-1 h-4 w-4 animate-spin text-white"
 													xmlns="http://www.w3.org/2000/svg"
 													fill="none"
 													viewBox="0 0 24 24"
@@ -412,7 +407,7 @@
 																type="text"
 																bind:value={alert.pid}
 																onblur={autoSave}
-																class="focus:ring-primary/20 transition duration-200 focus:ring-2"
+																class="focus:ring-primary/20 mt-1 transition duration-200 focus:ring-2"
 															/>
 														</div>
 														<div class="space-y-2">
@@ -422,7 +417,7 @@
 																type="text"
 																bind:value={alert.message}
 																onblur={autoSave}
-																class="focus:ring-primary/20 transition duration-200 focus:ring-2"
+																class="focus:ring-primary/20 mt-1 transition duration-200 focus:ring-2"
 															/>
 														</div>
 													</div>
@@ -446,12 +441,12 @@
 										type="button"
 										onclick={patchUpdate}
 										disabled={$submitting}
-										class="bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer cursor-pointer shadow-md transition duration-200 hover:shadow-lg"
+										class="bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer shadow-md transition duration-200 hover:shadow-lg"
 									>
 										{#if $submitting}
 											<span class="flex items-center gap-2">
 												<svg
-													class="-ml-1 mr-2 h-4 w-4 animate-spin text-white"
+													class="mr-2 -ml-1 h-4 w-4 animate-spin text-white"
 													xmlns="http://www.w3.org/2000/svg"
 													fill="none"
 													viewBox="0 0 24 24"
