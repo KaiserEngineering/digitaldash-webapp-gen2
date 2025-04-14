@@ -39,7 +39,6 @@
 #include <esp_flash_partitions.h>
 #include "esp_ota_ops.h"
 #include "spiffs_init.h"
-#include "driver/i2c.h"
 #include "lib_pid.h"
 #include "ke_config.h"
 
@@ -70,6 +69,13 @@ uint8_t spi_buffer[SPI_BUFFER_SIZE] = {0};
 
 spi_device_handle_t spi;
 
+#define EEPROM_READ_DELAY_MS 1
+#define EEPROM_WRITE_RETRY_COUNT 5
+#define EEPROM_WRITE_DELAY_MS 1
+#define EEPROM_ADDRESS_SIZE 2
+
+i2c_master_dev_handle_t eeprom_handle;
+
 static const char *TAG = "Main";
 
 void gpio_init(void)
@@ -86,15 +92,30 @@ void gpio_init(void)
 
 void i2c_master_init()
 {
-    i2c_config_t conf = {
-        .mode = I2C_MODE_MASTER,
-        .sda_io_num = I2C_MASTER_SDA_IO,
-        .sda_pullup_en = GPIO_PULLUP_ENABLE,
+    i2c_master_bus_config_t i2c_bus_config = {
+        .clk_source = I2C_CLK_SRC_DEFAULT,
+        .i2c_port = -1,
         .scl_io_num = I2C_MASTER_SCL_IO,
-        .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = I2C_MASTER_FREQ_HZ};
-    i2c_param_config(I2C_MASTER_PORT, &conf);
-    i2c_driver_install(I2C_MASTER_PORT, conf.mode, I2C_TX_BUF_DISABLE, I2C_RX_BUF_DISABLE, 0);
+        .sda_io_num = I2C_MASTER_SDA_IO,
+        .flags.enable_internal_pullup = 1,
+        .glitch_ignore_cnt = 7,
+    };
+
+    i2c_master_bus_handle_t bus_handle;
+    ESP_ERROR_CHECK(i2c_new_master_bus(&i2c_bus_config, &bus_handle));
+
+    // Configure the I2C EEPROM slave device
+    i2c_device_config_t eeprom_cfg = {
+        .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+        .device_address = I2C_SLAVE_ADDR,
+        .scl_speed_hz = 100000,
+    };
+
+    ESP_ERROR_CHECK(i2c_master_bus_add_device(bus_handle, &eeprom_cfg, &eeprom_handle));
+    ESP_LOGI(TAG, "Created I2C EEPROM slave device");
+
+    // Delay to I2C is ready
+    vTaskDelay(pdMS_TO_TICKS(EEPROM_READ_DELAY_MS));
 }
 
 void spi_master_init()
@@ -151,26 +172,63 @@ void init_webapp_ap(void)
     ESP_LOGI(TAG, "Application started successfully");
 }
 
-void i2c_master_transmit_payload(void)
+// Helper function to encode the address into the write buffer
+static void encode_address(uint16_t bAdd, uint8_t *wbuf)
 {
-    uint8_t payload[4] = {0xAA, 0xBB, 0xCC, 0xDD};
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (I2C_SLAVE_ADDR << 1) | I2C_MASTER_WRITE, true);
-    i2c_master_write(cmd, payload, sizeof(payload), true);
-    i2c_master_stop(cmd);
+    wbuf[0] = bAdd & 0xFF;        // Lower byte
+    wbuf[1] = (bAdd >> 8) & 0xFF; // Upper byte
+}
 
-    esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_PORT, cmd, pdMS_TO_TICKS(100));
-    i2c_cmd_link_delete(cmd);
+// Function to read data from EEPROM
+uint8_t eeprom_read(uint16_t bAdd)
+{
+    uint8_t wbuf[EEPROM_ADDRESS_SIZE]; // Write buffer
+    uint8_t rbuf[1];                   // Read buffer
 
-    if (ret == ESP_OK)
+    // Encode address into the buffer
+    encode_address(bAdd, wbuf);
+
+    // Optionally log the read value (uncomment for debugging)
+    ESP_LOGI(TAG, "EEPROM Begin Read at Address: %u", bAdd);
+
+    // Perform I2C read operation
+    ESP_ERROR_CHECK(i2c_master_transmit_receive(eeprom_handle, wbuf, sizeof(wbuf), rbuf, sizeof(rbuf), -1));
+
+    // Delay to ensure EEPROM read cycle has completed
+    vTaskDelay(pdMS_TO_TICKS(EEPROM_READ_DELAY_MS));
+
+    // Optionally log the read value (uncomment for debugging)
+    ESP_LOGI(TAG, "EEPROM Read: %u at Address: %u", rbuf[0], bAdd);
+
+    return rbuf[0];
+}
+
+// Function to write data to EEPROM with retries
+void eeprom_write(uint16_t bAdd, uint8_t bData)
+{
+    uint8_t wbuf[EEPROM_ADDRESS_SIZE + 1]; // Write buffer (address + data)
+
+    // Encode address into the buffer
+    encode_address(bAdd, wbuf);
+    wbuf[2] = bData; // Set the data byte
+
+    // Retry logic for I2C transmission
+    for (uint8_t i = 0; i < EEPROM_WRITE_RETRY_COUNT; i++)
     {
-        printf("I2C transmission successful\n");
+        // Perform I2C write operation
+        if (ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_transmit(eeprom_handle, wbuf, sizeof(wbuf), -1)) == ESP_OK)
+        {
+            break; // Exit loop on success
+        }
+        else
+        {
+            // Wait before retrying
+            vTaskDelay(pdMS_TO_TICKS(EEPROM_WRITE_DELAY_MS));
+        }
     }
-    else
-    {
-        printf("I2C transmission failed\n");
-    }
+
+    // Additional delay to ensure EEPROM write completion
+    vTaskDelay(pdMS_TO_TICKS(EEPROM_WRITE_DELAY_MS));
 }
 
 void spi_master_transmit_payload(void)
@@ -228,6 +286,13 @@ void app_main(void)
 
     i2c_master_init();
     spi_master_init();
+
+    // Attach EEPROM read and write handlers
+    settings_setReadHandler(eeprom_read);
+    settings_setWriteHandler(eeprom_write);
+
+    //load_settings(); // Comment out for now - This will cause an I2C bootloop if the slave doesn't respond
+    ESP_LOGI(TAG, "Settings loaded");
 
     // Disable CAN Bus
     gpio_set_level(CAN_STBY_GPIO, 1);
