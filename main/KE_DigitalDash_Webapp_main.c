@@ -45,7 +45,10 @@
 #define UI_HOR_RES    800
 #define UI_VER_RES    165
 
-#define CAN_STBY_GPIO GPIO_NUM_40 // GPIO40
+#define CAN_STBY_GPIO GPIO_NUM_40
+#define STM32_RESET_PIN GPIO_NUM_2
+#define STM32_BOOT_PIN GPIO_NUM_8
+#define STM32_RESET_DELAY_MS 25
 
 #define I2C_MASTER_SCL_IO 17      // GPIO for SCL
 #define I2C_MASTER_SDA_IO 16      // GPIO for SDA
@@ -80,14 +83,49 @@ static const char *TAG = "Main";
 
 void gpio_init(void)
 {
-    // Configure GPIO40 as an output
     gpio_config_t io_conf = {
-        .pin_bit_mask = (1ULL << CAN_STBY_GPIO),
+        .pin_bit_mask = (1ULL << CAN_STBY_GPIO) | (1ULL << STM32_RESET_PIN) | (1ULL << STM32_BOOT_PIN),
         .mode = GPIO_MODE_OUTPUT,
         .pull_up_en = GPIO_PULLUP_DISABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
         .intr_type = GPIO_INTR_DISABLE};
     gpio_config(&io_conf);
+}
+
+void stm32_reset(void)
+{
+    // Reset the STM32 (Inverse logic - connected to NFET)
+    gpio_set_level(STM32_RESET_PIN, 1);
+    ESP_LOGI(TAG, "Resetting STM32");
+
+    // Enable the STM32 boots to application code
+    gpio_set_level(STM32_BOOT_PIN, 0);
+    ESP_LOGI(TAG, "Resetting STM32 BOOT0");
+
+    // Wait for the STM32 to reset
+    vTaskDelay(pdMS_TO_TICKS(STM32_RESET_DELAY_MS));
+
+    // Release the STM32 from reset
+    gpio_set_level(STM32_RESET_PIN, 0);
+    ESP_LOGI(TAG, "Starting STM32");
+}
+
+void stm32_bootloader(void)
+{
+    // Reset the STM32 (Inverse logic - connected to NFET)
+    gpio_set_level(STM32_RESET_PIN, 1);
+    ESP_LOGI(TAG, "Resetting STM32");
+
+    // Enable the STM32 to boot to the bootloader
+    gpio_set_level(STM32_BOOT_PIN, 1);
+    ESP_LOGI(TAG, "Setting STM32 BOOT0");
+
+    // Wait for the STM32 to reset
+    vTaskDelay(pdMS_TO_TICKS(STM32_RESET_DELAY_MS));
+
+    // Release the STM32 from reset
+    gpio_set_level(STM32_RESET_PIN, 0);
+    ESP_LOGI(TAG, "Starting STM32");
 }
 
 void i2c_master_init()
@@ -311,6 +349,9 @@ void app_main(void)
             esp_ota_mark_app_valid_cancel_rollback();
         }
     }
+
+    //stm32_bootloader();
+    //stm32_reset();
 
     // Disable WIFI Power Save to allow max throughput
     esp_wifi_set_ps(WIFI_PS_NONE);
