@@ -8,7 +8,7 @@ menu "Digital Dash Webapp Configuration"
                 Example pin
     endmenu
 
-    menu "Hardware Config"
+    menu "ESP32 to STM32 I2C"
         config I2C_ENABLE
             bool "I2C Enable"
             default true
@@ -17,15 +17,59 @@ menu "Digital Dash Webapp Configuration"
 
         config I2C_MASTER_FREQUENCY
             int "Master Frequency"
-            default 400000
+            default 100000
             help
                 I2C Speed of Master device.
 
-        config EEPROM_7BIT_ADDR
-            int "EEPROM 7-Bit Base Address in decimcal format"
-            default 80
+        config STM32_7BIT_ADDR
+            int "STM32 7-Bit Base Address in decimcal format"
+            default 42
             help
-                7-Bit Base Address of the EEPROM in decimal format
+                7-Bit Base Address of the STM32 in decimal format
+
+        config ESP32_STM32_SCL_IO
+            int "SCL IO Pin"
+            default 17
+            help
+                SCL IO Pin of the I2C to STM32 connection
+
+        config ESP32_STM32_SDA_IO
+            int "SDA IO Pin"
+            default 16
+            help
+                SDA IO Pin of the I2C to STM32 connection
+    endmenu
+
+    menu "ESP32 to STM32 UART"
+        config ESP32_STM32_UART_CONTROLLER
+            int "UART Port Number"
+            default 1
+            help
+                UART port number, can be UART_NUM_0 ~ (UART_NUM_MAX -1)
+
+        config ESP32_STM32_UART_BAUD
+            int "UART Baud Rate"
+            default 115200
+            help
+                UART Baud Rate
+                
+        config ESP32_STM32_UART_BUFFER_SIZE
+            int "UART Buffer Size"
+            default 1024
+            help
+                UART Buffer Size
+
+        config STM32_RX_ESP32_TX
+            int "ESP32 TX IO Pin"
+            default 11
+            help
+                ESP32 TX pin connected to STM32 TX
+
+        config STM32_TX_ESP32_RX
+            int "ESP32 RX IO Pin"
+            default 10
+            help
+                ESP32 RX pin connected to STM32 RX
     endmenu
 
     menu "WiFi AP"

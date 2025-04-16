@@ -99,7 +99,10 @@
 			"stm_flash.h": "c",
 			"stm_pro_mode.h": "c",
 			"setjmp.h": "c",
-			"regex": "c"
+			"regex": "c",
+			"uart.h": "c",
+			"stm32_uart.h": "c",
+			"esp_flash.h": "c"
 		},
 		"editor.formatOnSave": false
 	}

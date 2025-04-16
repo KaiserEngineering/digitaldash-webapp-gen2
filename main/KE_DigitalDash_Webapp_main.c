@@ -43,6 +43,7 @@
 #include "ke_config.h"
 #include "stm_flash.h"
 #include "png.h"
+#include "stm32_uart.h"
 
 #define UI_HOR_RES    800
 #define UI_VER_RES    165
@@ -52,13 +53,7 @@
 #define STM32_BOOT_PIN GPIO_NUM_8
 #define STM32_RESET_DELAY_MS 25
 
-#define I2C_MASTER_SCL_IO 17      // GPIO for SCL
-#define I2C_MASTER_SDA_IO 16      // GPIO for SDA
-#define I2C_MASTER_FREQ_HZ 100000 // 100kHz
 #define I2C_MASTER_PORT I2C_NUM_0
-#define I2C_SLAVE_ADDR 0x2A
-#define I2C_TX_BUF_DISABLE 0
-#define I2C_RX_BUF_DISABLE 0
 #define ENABLE_I2C_TEST_TX 0
 #define ENABLE_SPI_TEST_TX 0
 uint8_t count = 0;
@@ -135,8 +130,8 @@ void i2c_master_init()
     i2c_master_bus_config_t i2c_bus_config = {
         .clk_source = I2C_CLK_SRC_DEFAULT,
         .i2c_port = -1,
-        .scl_io_num = I2C_MASTER_SCL_IO,
-        .sda_io_num = I2C_MASTER_SDA_IO,
+        .scl_io_num = CONFIG_ESP32_STM32_SCL_IO,
+        .sda_io_num = CONFIG_ESP32_STM32_SDA_IO,
         .flags.enable_internal_pullup = 1,
         .glitch_ignore_cnt = 7,
     };
@@ -147,7 +142,7 @@ void i2c_master_init()
     // Configure the I2C EEPROM slave device
     i2c_device_config_t eeprom_cfg = {
         .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-        .device_address = I2C_SLAVE_ADDR,
+        .device_address = CONFIG_STM32_7BIT_ADDR,
         .scl_speed_hz = 100000,
     };
 
@@ -415,7 +410,6 @@ void spoof_config(void)
 
 void initTask(void)
 {
-    initFlashUART();
     initGPIO();
     //initSPIFFS();
 }
@@ -423,6 +417,7 @@ void initTask(void)
 void app_main(void)
 {
     gpio_init();
+    uart_init();
 
     i2c_master_init();
     spi_master_init();

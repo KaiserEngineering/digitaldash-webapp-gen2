@@ -1,7 +1,7 @@
 message( ${CMAKE_SOURCE_DIR} )
 
 # Register ESP-IDF components
-idf_component_register(SRCS "KE_DigitalDash_Webapp_main.c" "spiffs_init.c" 
+idf_component_register(SRCS "KE_DigitalDash_Webapp_main.c" "spiffs_init.c" "stm32_uart.c"
     INCLUDE_DIRS ".")
 
 # Check if the frontend build directory exists

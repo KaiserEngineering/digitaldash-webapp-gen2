@@ -2,69 +2,6 @@
 
 static const char *TAG_STM_PRO = "stm_pro_mode";
 
-//Functions for custom adjustments
-void initFlashUART(void)
-{
-    const uart_config_t uart_config = {
-        .baud_rate = UART_BAUD_RATE,
-        .data_bits = UART_DATA_8_BITS,
-        .parity = UART_PARITY_EVEN,
-        .stop_bits = UART_STOP_BITS_1,
-        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE};
-
-    uart_driver_install(UART_CONTROLLER, UART_BUF_SIZE * 2, 0, 0, NULL, 0);
-
-    uart_param_config(UART_CONTROLLER, &uart_config);
-    uart_set_pin(UART_CONTROLLER, TXD_PIN, RXD_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-
-    logI(TAG_STM_PRO, "%s", "Initialized Flash UART");
-}
-
-void initSPIFFS(void)
-{
-    logI(TAG_STM_PRO, "%s", "Initializing SPIFFS");
-
-    esp_vfs_spiffs_conf_t conf =
-        {
-            .base_path = "/spiffs",
-            .partition_label = NULL,
-            .max_files = 5,
-            .format_if_mount_failed = true};
-
-    esp_err_t ret = esp_vfs_spiffs_register(&conf);
-
-    if (ret != ESP_OK)
-    {
-        if (ret == ESP_FAIL)
-        {
-            logE(TAG_STM_PRO, "%s", "Failed to mount or format filesystem");
-        }
-        else if (ret == ESP_ERR_NOT_FOUND)
-        {
-            logE(TAG_STM_PRO, "%s", "Failed to find SPIFFS partition");
-        }
-        else
-        {
-            logE(TAG_STM_PRO, "Failed to initialize SPIFFS (%s)", esp_err_to_name(ret));
-        }
-        return;
-    }
-
-/*  // Formatting SPIFFS - Use only for debugging
-    if (esp_spiffs_format(NULL) != ESP_OK)
-    {
-        logE(TAG_STM_PRO, "%s", "Failed to format SPIFFS");
-        return;
-    }
-*/
-
-    size_t total, used;
-    if (esp_spiffs_info(NULL, &total, &used) == ESP_OK)
-    {
-        logI(TAG_STM_PRO, "Partition size: total: %d, used: %d", total, used);
-    }
-}
-
 void initGPIO(void)
 {
     gpio_set_direction(RESET_PIN, GPIO_MODE_OUTPUT);
@@ -211,7 +148,7 @@ int sendBytes(const char *bytes, int count, int resp)
     if (length > 0)
     {
         uint8_t data[length];
-        const int rxBytes = uart_read_bytes(UART_CONTROLLER, data, length, portTICK_PERIOD_MS );
+        const int rxBytes = uart_read_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, data, length, portTICK_PERIOD_MS );
 
         if (rxBytes > 0 && data[0] == ACK)
         {
@@ -236,7 +173,7 @@ int sendBytes(const char *bytes, int count, int resp)
 
 int sendData(const char *logName, const char *data, const int count)
 {
-    const int txBytes = uart_write_bytes(UART_CONTROLLER, data, count);
+    const int txBytes = uart_write_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, data, count);
     //logD(logName, "Wrote %d bytes", count);
     return txBytes;
 }
@@ -247,7 +184,7 @@ int waitForSerialData(int dataCount, int timeout)
     int length = 0;
     while (timer < timeout)
     {
-        uart_get_buffered_data_len(UART_CONTROLLER, (size_t *)&length);
+        uart_get_buffered_data_len(CONFIG_ESP32_STM32_UART_CONTROLLER, (size_t *)&length);
         if (length >= dataCount)
         {
             return length;
@@ -300,7 +237,7 @@ esp_err_t flashPage(const char *address, const char *data)
     if (length > 0)
     {
         uint8_t data[length];
-        const int rxBytes = uart_read_bytes(UART_CONTROLLER, data, length, 1000 / portTICK_PERIOD_MS);
+        const int rxBytes = uart_read_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, data, length, 1000 / portTICK_PERIOD_MS);
         if (rxBytes > 0 && data[0] == ACK)
         {
             // logI(TAG_STM_PRO, "%s", "Flash Success");

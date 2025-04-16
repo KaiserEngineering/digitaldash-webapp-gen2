@@ -34,12 +34,6 @@
 //Macro for error checking
 #define IS_ESP_OK(x) if ((x) != ESP_OK) break;
 
-#define TXD_PIN (GPIO_NUM_11)
-#define RXD_PIN (GPIO_NUM_10)
-#define UART_BAUD_RATE 115200
-#define UART_BUF_SIZE 1024
-#define UART_CONTROLLER UART_NUM_1
-
 #define RESET_PIN (GPIO_NUM_2)
 #define BOOT0_PIN (GPIO_NUM_8)
 #define HIGH 1
@@ -50,9 +44,6 @@
 
 #define FILE_PATH_MAX 128
 #define BASE_PATH "/spiffs/"
-
-//Initialize UART functionalities
-void initFlashUART(void);
 
 //Initialize GPIO functionalities
 void initGPIO(void);
