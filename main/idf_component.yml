@@ -1,5 +1,6 @@
 ## IDF Component Manager Manifest File
 dependencies:
+  espressif/libpng: "^1.6.39~1"
   espressif/mdns: "^1.0.3"
   ## Required IDF version
   idf:

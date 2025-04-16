@@ -97,7 +97,9 @@
 			"ke_digitaldash.h": "c",
 			"lib_pid.h": "c",
 			"stm_flash.h": "c",
-			"stm_pro_mode.h": "c"
+			"stm_pro_mode.h": "c",
+			"setjmp.h": "c",
+			"regex": "c"
 		},
 		"editor.formatOnSave": false
 	}

@@ -42,6 +42,7 @@
 #include "lib_pid.h"
 #include "ke_config.h"
 #include "stm_flash.h"
+#include "png.h"
 
 #define UI_HOR_RES    800
 #define UI_VER_RES    165
@@ -286,6 +287,97 @@ void spi_master_transmit_payload(void)
     ESP_ERROR_CHECK(spi_device_transmit(spi, &t));
 }
 
+void decode_png(const char *filename) {
+    FILE *fp = fopen(filename, "rb");
+    if (!fp) {
+        ESP_LOGE(TAG, "Failed to open file: %s", filename);
+        return;
+    }
+
+    // Read header
+    png_byte header[8];
+    fread(header, 1, 8, fp);
+    if (png_sig_cmp(header, 0, 8)) {
+        ESP_LOGE(TAG, "Not a PNG file");
+        fclose(fp);
+        return;
+    }
+
+    // Initialize PNG read struct
+    png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (!png_ptr) {
+        fclose(fp);
+        ESP_LOGE(TAG, "Failed to create png read struct");
+        return;
+    }
+
+    png_infop info_ptr = png_create_info_struct(png_ptr);
+    if (!info_ptr) {
+        png_destroy_read_struct(&png_ptr, NULL, NULL);
+        fclose(fp);
+        ESP_LOGE(TAG, "Failed to create png info struct");
+        return;
+    }
+
+    if (setjmp(png_jmpbuf(png_ptr))) {
+        ESP_LOGE(TAG, "PNG error during init_io");
+        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+        fclose(fp);
+        return;
+    }
+
+    png_init_io(png_ptr, fp);
+    png_set_sig_bytes(png_ptr, 8); // Already read 8 bytes
+
+    png_read_info(png_ptr, info_ptr);
+
+    int width      = png_get_image_width(png_ptr, info_ptr);
+    int height     = png_get_image_height(png_ptr, info_ptr);
+    png_byte color_type = png_get_color_type(png_ptr, info_ptr);
+    png_byte bit_depth  = png_get_bit_depth(png_ptr, info_ptr);
+
+    ESP_LOGI(TAG, "PNG loaded: %dx%d", width, height);
+
+    // Read transformations
+    if (bit_depth == 16)
+        png_set_strip_16(png_ptr);
+
+    if (color_type == PNG_COLOR_TYPE_PALETTE)
+        png_set_palette_to_rgb(png_ptr);
+
+    if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
+        png_set_expand_gray_1_2_4_to_8(png_ptr);
+
+    if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
+        png_set_tRNS_to_alpha(png_ptr);
+
+    png_set_filler(png_ptr, 0xFF, PNG_FILLER_AFTER); // force RGBA
+    png_set_gray_to_rgb(png_ptr);
+
+    png_read_update_info(png_ptr, info_ptr);
+
+    // Allocate pixel buffer
+    png_bytep *row_pointers = malloc(sizeof(png_bytep) * height);
+    for (int y = 0; y < height; y++) {
+        row_pointers[y] = malloc(png_get_rowbytes(png_ptr, info_ptr));
+    }
+
+    png_read_image(png_ptr, row_pointers);
+
+    // Example: Log the first pixel (RGBA)
+    png_bytep first_pixel = row_pointers[0];
+    ESP_LOGI(TAG, "First pixel RGBA: %d %d %d %d", 
+             first_pixel[0], first_pixel[1], first_pixel[2], first_pixel[3]);
+
+    // Cleanup
+    for (int y = 0; y < height; y++) {
+        free(row_pointers[y]);
+    }
+    free(row_pointers);
+    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+    fclose(fp);
+}
+
 void spoof_config(void)
 {
 	// View 0
@@ -370,6 +462,8 @@ void app_main(void)
 
     // Disable WIFI Power Save to allow max throughput
     esp_wifi_set_ps(WIFI_PS_NONE);
+
+    decode_png("/spiffs/gauge125.png");
 
     while (1)
     {
