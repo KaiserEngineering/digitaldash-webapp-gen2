@@ -41,6 +41,7 @@
 #include "spiffs_init.h"
 #include "lib_pid.h"
 #include "ke_config.h"
+#include "stm_flash.h"
 
 #define UI_HOR_RES    800
 #define UI_VER_RES    165
@@ -318,6 +319,13 @@ void spoof_config(void)
 	set_dynamic_index(0, 1, false);
 }
 
+void initTask(void)
+{
+    initFlashUART();
+    initGPIO();
+    //initSPIFFS();
+}
+
 void app_main(void)
 {
     gpio_init();
@@ -352,6 +360,13 @@ void app_main(void)
 
     //stm32_bootloader();
     //stm32_reset();
+
+    /*
+    ESP_LOGI(TAG, "Starting flashing procedure...");
+    initTask();
+    flashSTM("digitaldash-firmware-gen2-stm32u5g.bin");
+    endConn();
+    */
 
     // Disable WIFI Power Save to allow max throughput
     esp_wifi_set_ps(WIFI_PS_NONE);
