@@ -179,7 +179,7 @@ int cmdExtErase(void)
 
 int cmdWrite(void)
 {
-    logI(TAG_STM_PRO, "%s", "WRITE MEMORY");
+    // logI(TAG_STM_PRO, "%s", "WRITE MEMORY");
     char bytes[2] = {0x31, 0xCE};
     int resp = 1;
     return sendBytes(bytes, sizeof(bytes), resp);
@@ -215,7 +215,7 @@ int sendBytes(const char *bytes, int count, int resp)
 
         if (rxBytes > 0 && data[0] == ACK)
         {
-            logI(TAG_STM_PRO, "%s", "Sync Success");
+            // logI(TAG_STM_PRO, "%s", "Sync Success");
             // ESP_LOG_BUFFER_HEXDUMP("SYNC", data, rxBytes, ESP_LOG_DEBUG);
             return 1;
         }
@@ -275,7 +275,7 @@ void incrementLoadAddress(char *loadAddr)
 
 esp_err_t flashPage(const char *address, const char *data)
 {
-    logI(TAG_STM_PRO, "%s", "Flashing Page");
+    // logI(TAG_STM_PRO, "%s", "Flashing Page");
 
     cmdWrite();
 
@@ -303,7 +303,7 @@ esp_err_t flashPage(const char *address, const char *data)
         const int rxBytes = uart_read_bytes(UART_CONTROLLER, data, length, 1000 / portTICK_PERIOD_MS);
         if (rxBytes > 0 && data[0] == ACK)
         {
-            logI(TAG_STM_PRO, "%s", "Flash Success");
+            // logI(TAG_STM_PRO, "%s", "Flash Success");
             return ESP_OK;
         }
         else
@@ -321,7 +321,7 @@ esp_err_t flashPage(const char *address, const char *data)
 
 esp_err_t readPage(const char *address, const char *data)
 {
-    logI(TAG_STM_PRO, "%s", "Reading page");
+    // logI(TAG_STM_PRO, "%s", "Reading page");
     char param[] = {0xFF, 0x00};
 
     cmdRead();
@@ -337,7 +337,7 @@ esp_err_t readPage(const char *address, const char *data)
 
         if (rxBytes > 0 && uart_data[0] == 0x79)
         {
-            logI(TAG_STM_PRO, "%s", "Success");
+            // logI(TAG_STM_PRO, "%s", "Success");
             if (!memcpy((void *)data, uart_data, 257))
             {
                 return ESP_FAIL;
