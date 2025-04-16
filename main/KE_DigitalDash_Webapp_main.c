@@ -449,7 +449,6 @@ void app_main(void)
 
     //stm32_bootloader();
     //stm32_reset();
-
     /*
     ESP_LOGI(TAG, "Starting flashing procedure...");
     initTask();
@@ -462,19 +461,29 @@ void app_main(void)
 
     int png_width = 0;
     int png_height = 0;
+    int png_size = 0;
     uint8_t *rgba = decode_png_to_rgba("/spiffs/gauge125.png", &png_width, &png_height);
+
+    png_size = png_width * png_height * 4;
+
+    uart_write_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, &png_size, 1);
 
     if (rgba) {
         for (int i = 0; i < png_width * png_height * 4; i++) {
             uint8_t byte = rgba[i];
         
-            // Example 1: Print to log - THIS WILL BLOW UP THE TERMINAL
-            // ESP_LOGI(TAG, "Byte %d: %02X", i, byte);
-        
-            // Example 2: Send to UART, SPI, or file
-            // uart_write_bytes(UART_NUM_1, &byte, 1);
-            // spi_device_transmit(...);
-            // fwrite(&byte, 1, 1, my_fp);
+            uart_write_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, &byte, 1);
+
+            uint8_t data = 0;
+            const int rxBytes = uart_read_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, &data, 1, 1000 / portTICK_PERIOD_MS);
+            if (rxBytes > 0 && data == byte)
+            {
+                //logI(TAG, "%s", "Flash Success");
+            }
+            else
+            {
+                //logE(TAG, "%s", "Flash Failure");
+            }
         }
 
         free(rgba); // Don't forget to free later
