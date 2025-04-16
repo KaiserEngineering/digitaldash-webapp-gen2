@@ -287,28 +287,26 @@ void spi_master_transmit_payload(void)
     ESP_ERROR_CHECK(spi_device_transmit(spi, &t));
 }
 
-void decode_png(const char *filename) {
+uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *out_height) {
     FILE *fp = fopen(filename, "rb");
     if (!fp) {
         ESP_LOGE(TAG, "Failed to open file: %s", filename);
-        return;
+        return NULL;
     }
 
-    // Read header
     png_byte header[8];
     fread(header, 1, 8, fp);
     if (png_sig_cmp(header, 0, 8)) {
         ESP_LOGE(TAG, "Not a PNG file");
         fclose(fp);
-        return;
+        return NULL;
     }
 
-    // Initialize PNG read struct
     png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr) {
         fclose(fp);
         ESP_LOGE(TAG, "Failed to create png read struct");
-        return;
+        return NULL;
     }
 
     png_infop info_ptr = png_create_info_struct(png_ptr);
@@ -316,66 +314,70 @@ void decode_png(const char *filename) {
         png_destroy_read_struct(&png_ptr, NULL, NULL);
         fclose(fp);
         ESP_LOGE(TAG, "Failed to create png info struct");
-        return;
+        return NULL;
     }
 
     if (setjmp(png_jmpbuf(png_ptr))) {
         ESP_LOGE(TAG, "PNG error during init_io");
         png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
         fclose(fp);
-        return;
+        return NULL;
     }
 
     png_init_io(png_ptr, fp);
-    png_set_sig_bytes(png_ptr, 8); // Already read 8 bytes
+    png_set_sig_bytes(png_ptr, 8);
 
     png_read_info(png_ptr, info_ptr);
 
-    int width      = png_get_image_width(png_ptr, info_ptr);
-    int height     = png_get_image_height(png_ptr, info_ptr);
+    int width = png_get_image_width(png_ptr, info_ptr);
+    int height = png_get_image_height(png_ptr, info_ptr);
     png_byte color_type = png_get_color_type(png_ptr, info_ptr);
-    png_byte bit_depth  = png_get_bit_depth(png_ptr, info_ptr);
+    png_byte bit_depth = png_get_bit_depth(png_ptr, info_ptr);
 
     ESP_LOGI(TAG, "PNG loaded: %dx%d", width, height);
 
-    // Read transformations
-    if (bit_depth == 16)
-        png_set_strip_16(png_ptr);
+    if (bit_depth == 16) png_set_strip_16(png_ptr);
+    if (color_type == PNG_COLOR_TYPE_PALETTE) png_set_palette_to_rgb(png_ptr);
+    if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) png_set_expand_gray_1_2_4_to_8(png_ptr);
+    if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) png_set_tRNS_to_alpha(png_ptr);
 
-    if (color_type == PNG_COLOR_TYPE_PALETTE)
-        png_set_palette_to_rgb(png_ptr);
-
-    if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
-        png_set_expand_gray_1_2_4_to_8(png_ptr);
-
-    if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
-        png_set_tRNS_to_alpha(png_ptr);
-
-    png_set_filler(png_ptr, 0xFF, PNG_FILLER_AFTER); // force RGBA
+    png_set_filler(png_ptr, 0xFF, PNG_FILLER_AFTER); // Force RGBA
     png_set_gray_to_rgb(png_ptr);
 
     png_read_update_info(png_ptr, info_ptr);
 
-    // Allocate pixel buffer
+    size_t rowbytes = png_get_rowbytes(png_ptr, info_ptr);
     png_bytep *row_pointers = malloc(sizeof(png_bytep) * height);
+    uint8_t *image_data = malloc(height * rowbytes);
+
+    if (!image_data || !row_pointers) {
+        ESP_LOGE(TAG, "Memory allocation failed");
+        fclose(fp);
+        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+        free(image_data);
+        free(row_pointers);
+        return NULL;
+    }
+
     for (int y = 0; y < height; y++) {
-        row_pointers[y] = malloc(png_get_rowbytes(png_ptr, info_ptr));
+        row_pointers[y] = image_data + y * rowbytes;
     }
 
     png_read_image(png_ptr, row_pointers);
 
-    // Example: Log the first pixel (RGBA)
-    png_bytep first_pixel = row_pointers[0];
-    ESP_LOGI(TAG, "First pixel RGBA: %d %d %d %d", 
-             first_pixel[0], first_pixel[1], first_pixel[2], first_pixel[3]);
-
-    // Cleanup
-    for (int y = 0; y < height; y++) {
-        free(row_pointers[y]);
+    // Optional: log first few pixels
+    for (int i = 0; i < 10 && i < width * height; i++) {
+        uint8_t *p = image_data + i * 4;
+        ESP_LOGI(TAG, "Pixel[%d] RGBA: %d %d %d %d", i, p[0], p[1], p[2], p[3]);
     }
-    free(row_pointers);
+
     png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
     fclose(fp);
+    free(row_pointers);
+
+    *out_width = width;
+    *out_height = height;
+    return image_data;
 }
 
 void spoof_config(void)
@@ -463,7 +465,25 @@ void app_main(void)
     // Disable WIFI Power Save to allow max throughput
     esp_wifi_set_ps(WIFI_PS_NONE);
 
-    decode_png("/spiffs/gauge125.png");
+    int png_width = 0;
+    int png_height = 0;
+    uint8_t *rgba = decode_png_to_rgba("/spiffs/gauge125.png", &png_width, &png_height);
+
+    if (rgba) {
+        for (int i = 0; i < png_width * png_height * 4; i++) {
+            uint8_t byte = rgba[i];
+        
+            // Example 1: Print to log - THIS WILL BLOW UP THE TERMINAL
+            // ESP_LOGI(TAG, "Byte %d: %02X", i, byte);
+        
+            // Example 2: Send to UART, SPI, or file
+            // uart_write_bytes(UART_NUM_1, &byte, 1);
+            // spi_device_transmit(...);
+            // fwrite(&byte, 1, 1, my_fp);
+        }
+
+        free(rgba); // Don't forget to free later
+    }
 
     while (1)
     {
