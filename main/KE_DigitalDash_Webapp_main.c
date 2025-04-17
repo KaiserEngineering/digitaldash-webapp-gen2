@@ -456,6 +456,7 @@ void app_main(void)
     // Disable WIFI Power Save to allow max throughput
     esp_wifi_set_ps(WIFI_PS_NONE);
 
+    /*
     int png_width = 0;
     int png_height = 0;
     int png_size = 0;
@@ -474,6 +475,7 @@ void app_main(void)
 
         free(rgba); // Don't forget to free later
     }
+    */
 
     while (1)
     {
