@@ -336,8 +336,11 @@ uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *out_heigh
     if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) png_set_expand_gray_1_2_4_to_8(png_ptr);
     if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) png_set_tRNS_to_alpha(png_ptr);
 
-    png_set_filler(png_ptr, 0xFF, PNG_FILLER_AFTER); // Force RGBA
+    png_set_filler(png_ptr, 0xFF, PNG_FILLER_BEFORE); // Force ARGB
     png_set_gray_to_rgb(png_ptr);
+
+    // Strip alpha from png
+    // png_set_strip_alpha(png_ptr);
 
     png_read_update_info(png_ptr, info_ptr);
 
@@ -359,12 +362,6 @@ uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *out_heigh
     }
 
     png_read_image(png_ptr, row_pointers);
-
-    // Optional: log first few pixels
-    for (int i = 0; i < 10 && i < width * height; i++) {
-        uint8_t *p = image_data + i * 4;
-        ESP_LOGI(TAG, "Pixel[%d] RGBA: %d %d %d %d", i, p[0], p[1], p[2], p[3]);
-    }
 
     png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
     fclose(fp);
@@ -462,28 +459,17 @@ void app_main(void)
     int png_width = 0;
     int png_height = 0;
     int png_size = 0;
-    uint8_t *rgba = decode_png_to_rgba("/spiffs/gauge125.png", &png_width, &png_height);
+    uint8_t *rgba = decode_png_to_rgba("/spiffs/1024_x_200.png", &png_width, &png_height);
 
-    png_size = png_width * png_height * 4;
-
-    uart_write_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, &png_size, 1);
+    png_size = png_width * png_height * 3;
 
     if (rgba) {
-        for (int i = 0; i < png_width * png_height * 4; i++) {
+        for (int i = 0; i < png_width * png_height * 3; i++) {
             uint8_t byte = rgba[i];
+
+            //ESP_LOGI(TAG, "Byte[%d]: %d", i, byte);
         
             uart_write_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, &byte, 1);
-
-            uint8_t data = 0;
-            const int rxBytes = uart_read_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, &data, 1, 1000 / portTICK_PERIOD_MS);
-            if (rxBytes > 0 && data == byte)
-            {
-                //logI(TAG, "%s", "Flash Success");
-            }
-            else
-            {
-                //logE(TAG, "%s", "Flash Failure");
-            }
         }
 
         free(rgba); // Don't forget to free later
