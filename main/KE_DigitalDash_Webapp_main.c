@@ -224,10 +224,10 @@ uint8_t eeprom_read(uint16_t bAdd)
     encode_address(bAdd, wbuf);
 
     // Optionally log the read value (uncomment for debugging)
-    ESP_LOGI(TAG, "EEPROM Begin Read at Address: %u", bAdd);
+    // ESP_LOGI(TAG, "EEPROM Begin Read at Address: %u", bAdd);
 
     // Perform I2C read operation
-    ESP_ERROR_CHECK(i2c_master_transmit_receive(eeprom_handle, wbuf, sizeof(wbuf), rbuf, sizeof(rbuf), -1));
+    ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_transmit_receive(eeprom_handle, wbuf, sizeof(wbuf), rbuf, sizeof(rbuf), -1));
 
     // Delay to ensure EEPROM read cycle has completed
     vTaskDelay(pdMS_TO_TICKS(EEPROM_READ_DELAY_MS));
@@ -246,6 +246,8 @@ void eeprom_write(uint16_t bAdd, uint8_t bData)
     // Encode address into the buffer
     encode_address(bAdd, wbuf);
     wbuf[2] = bData; // Set the data byte
+
+    ESP_LOGI(TAG, "EEPROM Write: %u at Address: %u", wbuf[2], bAdd);
 
     // Retry logic for I2C transmission
     for (uint8_t i = 0; i < EEPROM_WRITE_RETRY_COUNT; i++)
