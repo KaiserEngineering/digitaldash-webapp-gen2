@@ -375,34 +375,34 @@ uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *out_heigh
 void spoof_config(void)
 {
 	// View 0
-	set_view_enable(0, VIEW_STATE_ENABLED, false);
-	set_view_num_gauges(0, 3, false);
-	set_view_background(0, VIEW_BACKGROUND_USER1, false);
-	set_view_gauge_theme(0, 0, GAUGE_THEME_STOCK_ST, false);
-	set_view_gauge_theme(0, 1, GAUGE_THEME_GRUMPY_CAT, false);
-	set_view_gauge_theme(0, 2, GAUGE_THEME_STOCK_ST, false);
-	set_view_gauge_pid(0, 0, MODE1_ENGINE_SPEED_UUID, 0);
-	set_view_gauge_units(0, 0, PID_UNITS_RPM, 0);
-	set_view_gauge_pid(0, 1, MODE1_TURBOCHARGER_COMPRESSOR_INLET_PRESSURE_UUID, 0);
-	set_view_gauge_units(0, 1, PID_UNITS_PSI, 0);
-	set_view_gauge_pid(0, 2, MODE1_ENGINE_COOLANT_TEMPERATURE_UUID, 0);
-	set_view_gauge_units(0, 2, PID_UNITS_FAHRENHEIT, 0);
+	set_view_enable(0, VIEW_STATE_ENABLED, true);
+	set_view_num_gauges(0, 3, true);
+	set_view_background(0, VIEW_BACKGROUND_USER1, true);
+	set_view_gauge_theme(0, 0, GAUGE_THEME_STOCK_ST, true);
+	set_view_gauge_theme(0, 1, GAUGE_THEME_GRUMPY_CAT, true);
+	set_view_gauge_theme(0, 2, GAUGE_THEME_STOCK_ST, true);
+	set_view_gauge_pid(0, 0, MODE1_ENGINE_SPEED_UUID, true);
+	set_view_gauge_units(0, 0, PID_UNITS_RPM, true);
+	set_view_gauge_pid(0, 1, MODE1_TURBOCHARGER_COMPRESSOR_INLET_PRESSURE_UUID, true);
+	set_view_gauge_units(0, 1, PID_UNITS_PSI, true);
+	set_view_gauge_pid(0, 2, MODE1_ENGINE_COOLANT_TEMPERATURE_UUID, true);
+	set_view_gauge_units(0, 2, PID_UNITS_FAHRENHEIT, true);
 
 	// View 1
-	set_view_enable(1, VIEW_STATE_ENABLED, false);
-	set_view_num_gauges(1, 1, false);
-	set_view_background(1, VIEW_BACKGROUND_USER1, false);
-	set_view_gauge_theme(1, 0, GAUGE_THEME_STOCK_ST, false);
-	set_view_gauge_pid(1, 0, MODE1_ENGINE_SPEED_UUID, 0);
-	set_view_gauge_units(1, 0, PID_UNITS_RPM, 0);
+	set_view_enable(1, VIEW_STATE_ENABLED, true);
+	set_view_num_gauges(1, 1, true);
+	set_view_background(1, VIEW_BACKGROUND_USER1, true);
+	set_view_gauge_theme(1, 0, GAUGE_THEME_STOCK_ST, true);
+	set_view_gauge_pid(1, 0, MODE1_ENGINE_SPEED_UUID, true);
+	set_view_gauge_units(1, 0, PID_UNITS_RPM, true);
 
 	// Dynamic
-	set_dynamic_enable(0, DYNAMIC_STATE_ENABLED, false);
-	set_dynamic_pid(0, MODE1_ENGINE_SPEED_UUID, false);
-	set_dynamic_priority(0, DYNAMIC_PRIORITY_HIGH, false);
-	set_dynamic_compare(0, DYNAMIC_COMPARISON_GREATER_THAN, false);
-	set_dynamic_threshold(0, 5000, false);
-	set_dynamic_index(0, 1, false);
+	set_dynamic_enable(0, DYNAMIC_STATE_ENABLED, true);
+	set_dynamic_pid(0, MODE1_ENGINE_SPEED_UUID, true);
+	set_dynamic_priority(0, DYNAMIC_PRIORITY_HIGH, true);
+	set_dynamic_compare(0, DYNAMIC_COMPARISON_GREATER_THAN, true);
+	set_dynamic_threshold(0, 5000, true);
+	set_dynamic_index(0, 1, true);
 }
 
 void initTask(void)
