@@ -69,9 +69,9 @@ uint8_t spi_buffer[SPI_BUFFER_SIZE] = {0};
 
 spi_device_handle_t spi;
 
-#define EEPROM_READ_DELAY_MS 1
+#define EEPROM_READ_DELAY_MS 5
 #define EEPROM_WRITE_RETRY_COUNT 5
-#define EEPROM_WRITE_DELAY_MS 1
+#define EEPROM_WRITE_DELAY_MS 20
 #define EEPROM_ADDRESS_SIZE 2
 
 i2c_master_dev_handle_t eeprom_handle;
