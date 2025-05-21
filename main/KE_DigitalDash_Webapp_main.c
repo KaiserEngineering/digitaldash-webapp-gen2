@@ -73,6 +73,7 @@ spi_device_handle_t spi;
 #define EEPROM_WRITE_RETRY_COUNT 5
 #define EEPROM_WRITE_DELAY_MS 20
 #define EEPROM_ADDRESS_SIZE 2
+#define EEPROM_ENABLE 0
 
 i2c_master_dev_handle_t eeprom_handle;
 
@@ -226,11 +227,15 @@ uint8_t eeprom_read(uint16_t bAdd)
     // Optionally log the read value (uncomment for debugging)
     // ESP_LOGI(TAG, "EEPROM Begin Read at Address: %u", bAdd);
 
+    #if EEPROM_ENABLE
     // Perform I2C read operation
     ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_transmit_receive(eeprom_handle, wbuf, sizeof(wbuf), rbuf, sizeof(rbuf), -1));
 
     // Delay to ensure EEPROM read cycle has completed
     vTaskDelay(pdMS_TO_TICKS(EEPROM_READ_DELAY_MS));
+    #else
+    rbuf[0] = 0xFF;
+    #endif
 
     // Optionally log the read value (uncomment for debugging)
     ESP_LOGI(TAG, "EEPROM Read: %u at Address: %u", rbuf[0], bAdd);
@@ -249,6 +254,7 @@ void eeprom_write(uint16_t bAdd, uint8_t bData)
 
     ESP_LOGI(TAG, "EEPROM Write: %u at Address: %u", wbuf[2], bAdd);
 
+    #if EEPROM_ENABLE
     // Retry logic for I2C transmission
     for (uint8_t i = 0; i < EEPROM_WRITE_RETRY_COUNT; i++)
     {
@@ -266,6 +272,7 @@ void eeprom_write(uint16_t bAdd, uint8_t bData)
 
     // Additional delay to ensure EEPROM write completion
     vTaskDelay(pdMS_TO_TICKS(EEPROM_WRITE_DELAY_MS));
+    #endif
 }
 
 void spi_master_transmit_payload(void)
@@ -425,7 +432,7 @@ void app_main(void)
     settings_setReadHandler(eeprom_read);
     settings_setWriteHandler(eeprom_write);
 
-    //load_settings(); // Comment out for now - This will cause an I2C bootloop if the slave doesn't respond
+    load_settings(); // Comment out for now - This will cause an I2C bootloop if the slave doesn't respond
     ESP_LOGI(TAG, "Settings loaded");
 
     // Disable CAN Bus
@@ -478,6 +485,11 @@ void app_main(void)
         free(rgba); // Don't forget to free later
     }
     */
+   spoof_config();
+   //set_view_background(0, VIEW_BACKGROUND_BLACK, true);
+   //set_view_gauge_theme(0, 0, GAUGE_THEME_STOCK_ST, true);
+   //set_view_gauge_theme(0, 1, GAUGE_THEME_GRUMPY_CAT, true);
+   //set_view_gauge_theme(0, 2, GAUGE_THEME_RADIAL, true);
 
     while (1)
     {
