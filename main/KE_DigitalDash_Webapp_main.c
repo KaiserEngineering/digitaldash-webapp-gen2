@@ -44,6 +44,7 @@
 #include "stm_flash.h"
 #include "png.h"
 #include "stm32_uart.h"
+#include "ke_digitaldash.h"
 
 #define UI_HOR_RES    800
 #define UI_VER_RES    165
@@ -412,6 +413,107 @@ void spoof_config(void)
 	set_dynamic_compare(0, DYNAMIC_COMPARISON_GREATER_THAN, true);
 	set_dynamic_threshold(0, 5000, true);
 	set_dynamic_index(0, 1, true);
+}
+
+digitaldash config;
+PID_DATA dynamic_pids[NUM_DYNAMIC];
+PID_DATA alert_pids[MAX_ALERTS];
+PID_DATA gauge_pids[MAX_VIEWS][GAUGES_PER_VIEW];
+
+void load_config(void)
+{
+    config.num_views = 0;
+
+    // Iterate through each view
+    for(uint8_t view = 0; view < MAX_VIEWS; view++)
+    {
+        config.view[view].enabled = get_view_enable(view);
+
+        if( config.view[view].enabled )
+        {
+            config.num_views++;
+            config.view[view].num_gauges = get_view_num_gauges(view);
+            config.view[view].background = get_view_background(view);
+
+            // Iterate through each gauge in the view
+            for(uint8_t gauge = 0; gauge < config.view[view].num_gauges; gauge++)
+            {
+                // Get PID universally unique ID, PID, and mode
+                gauge_pids[view][gauge].pid_uuid = get_view_gauge_pid(view, gauge);
+                gauge_pids[view][gauge].pid = get_pid_by_uuid(gauge_pids[view][gauge].pid_uuid);
+                gauge_pids[view][gauge].mode = get_mode_by_uuid(gauge_pids[view][gauge].pid_uuid);
+
+                // Load the unit and default to base unit if error
+                gauge_pids[view][gauge].pid_unit = get_view_gauge_units(view, gauge);
+                if( gauge_pids[view][gauge].pid_unit == PID_UNITS_RESERVED )
+                    gauge_pids[view][gauge].pid_unit = get_pid_base_unit(gauge_pids[view][gauge].pid_uuid);
+
+                // Load the labels
+                get_pid_label(gauge_pids[view][gauge].pid_uuid, gauge_pids[view][gauge].label);
+                get_unit_label(gauge_pids[view][gauge].pid_unit, gauge_pids[view][gauge].unit_label);
+
+                gauge_pids[view][gauge].lower_limit = get_pid_lower_limit(gauge_pids[view][gauge].pid_uuid ,gauge_pids[view][gauge].pid_unit);
+                gauge_pids[view][gauge].upper_limit = get_pid_upper_limit(gauge_pids[view][gauge].pid_uuid ,gauge_pids[view][gauge].pid_unit);
+                gauge_pids[view][gauge].precision = get_pid_precision(gauge_pids[view][gauge].pid_uuid ,gauge_pids[view][gauge].pid_unit);
+
+                // Save the pointer
+                config.view[view].gauge[gauge].pid = &gauge_pids[view][gauge];
+
+                // Load the gauge theme
+                config.view[view].gauge[gauge].theme = get_view_gauge_theme(view, gauge);
+            }
+        }
+    }
+
+    // Iterate through each dynamic setting
+    for(uint8_t idx = 0; idx < NUM_DYNAMIC; idx++)
+    {
+        config.dynamic[idx].enabled = get_dynamic_enable(idx);
+
+        if( config.dynamic[idx].enabled )
+        {
+            config.dynamic[idx].priority = get_dynamic_priority(idx);
+            config.dynamic[idx].compare = get_dynamic_compare(idx);
+            config.dynamic[idx].thresh = get_dynamic_threshold(idx);
+            config.dynamic[idx].view_index = get_dynamic_index(idx);
+
+            // Get PID universally unique ID, PID, and mode
+            dynamic_pids[idx].pid_uuid = get_dynamic_pid(idx);
+            dynamic_pids[idx].pid = get_pid_by_uuid(dynamic_pids[idx].pid_uuid);
+            dynamic_pids[idx].mode = get_mode_by_uuid(dynamic_pids[idx].pid_uuid);
+
+            // Load the unit and default to base unit if error
+            dynamic_pids[idx].pid_unit = get_dynamic_units(idx);
+            if( dynamic_pids[idx].pid_unit == PID_UNITS_RESERVED )
+                dynamic_pids[idx].pid_unit = get_pid_base_unit(dynamic_pids[idx].pid_uuid);
+
+            config.dynamic[idx].pid = &dynamic_pids[idx];
+        }
+    }
+
+    // Iterate through each alert
+    for(uint8_t idx = 0; idx < MAX_ALERTS; idx++)
+    {
+        config.alert[idx].enabled = get_alert_enable(idx);
+
+        if( config.alert[idx].enabled == ALERT_STATE_ENABLED )
+        {
+            alert_pids[idx].pid_uuid = get_alert_pid(idx);
+            alert_pids[idx].pid = get_pid_by_uuid(alert_pids[idx].pid_uuid);
+            alert_pids[idx].mode = get_mode_by_uuid(alert_pids[idx].pid_uuid);
+
+            // Load the unit and default to base unit if error
+            alert_pids[idx].pid_unit = get_alert_units(idx);
+            if( alert_pids[idx].pid_unit == PID_UNITS_RESERVED )
+                alert_pids[idx].pid_unit = get_pid_base_unit(alert_pids[idx].pid_uuid);
+
+            config.alert[idx].compare = get_alert_compare(idx);
+            config.alert[idx].thresh = get_alert_threshold(idx);
+            get_alert_message(idx, config.alert[idx].msg);
+
+            config.alert[idx].pid = &alert_pids[idx];
+        }
+    }
 }
 
 void initTask(void)
