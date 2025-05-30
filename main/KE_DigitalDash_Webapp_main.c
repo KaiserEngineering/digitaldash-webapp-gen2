@@ -45,6 +45,7 @@
 #include "png.h"
 #include "stm32_uart.h"
 #include "ke_digitaldash.h"
+#include "esp_heap_caps.h"
 
 #define UI_HOR_RES    800
 #define UI_VER_RES    165
@@ -355,8 +356,8 @@ uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *out_heigh
     png_read_update_info(png_ptr, info_ptr);
 
     size_t rowbytes = png_get_rowbytes(png_ptr, info_ptr);
-    png_bytep *row_pointers = malloc(sizeof(png_bytep) * height);
-    uint8_t *image_data = malloc(height * rowbytes);
+    png_bytep *row_pointers = heap_caps_malloc(sizeof(png_bytep) * height, MALLOC_CAP_SPIRAM);
+    uint8_t *image_data = heap_caps_malloc(height * rowbytes, MALLOC_CAP_SPIRAM);
 
     if (!image_data || !row_pointers) {
         ESP_LOGE(TAG, "Memory allocation failed");
