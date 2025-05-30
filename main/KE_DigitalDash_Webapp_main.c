@@ -347,6 +347,7 @@ uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *out_heigh
     if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) png_set_expand_gray_1_2_4_to_8(png_ptr);
     if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) png_set_tRNS_to_alpha(png_ptr);
 
+    png_set_strip_alpha(png_ptr); // TODO - This works for anything without alpha. Add check
     png_set_filler(png_ptr, 0xFF, PNG_FILLER_BEFORE); // Force ARGB
     png_set_gray_to_rgb(png_ptr);
 
@@ -574,13 +575,20 @@ void app_main(void)
     int png_size = 0;
     uint8_t *rgba = decode_png_to_rgba("/spiffs/1024_x_200.png", &png_width, &png_height);
 
-    png_size = png_width * png_height * 3;
+    png_size = png_width * png_height * 4;
+
+    ESP_LOGI(TAG, "png width = %d: png height = %d", png_width, png_height);
 
     if (rgba) {
-        for (int i = 0; i < png_width * png_height * 3; i++) {
+        for (int i = 0; i < png_width * png_height * 4; i++) {
             uint8_t byte = rgba[i];
 
-            //ESP_LOGI(TAG, "Byte[%d]: %d", i, byte);
+            if( i <= 30 )
+                ESP_LOGI(TAG, "Byte[%d]: %d", i, byte);
+
+
+            if( (i % (png_width*4)) == 0)
+                ESP_LOGI(TAG, "Row[%d]: WRITTEN", i/png_height);
         
             uart_write_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, &byte, 1);
         }
