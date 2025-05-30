@@ -293,6 +293,30 @@ void spi_master_transmit_payload(void)
     ESP_ERROR_CHECK(spi_device_transmit(spi, &t));
 }
 
+/**
+ * @brief Decodes a PNG image file into a linear buffer of pixel data in ARGB format.
+ *
+ * This function reads a PNG image from the filesystem and decodes it into a
+ * raw pixel buffer stored in SPI RAM. The resulting buffer contains 4 bytes
+ * per pixel in ARGB order (alpha = 0xFF, fully opaque). Any transparency in
+ * the original PNG is stripped and replaced with opaque alpha.
+ *
+ * PNG transformations applied:
+ *   - Strips 16-bit depth down to 8-bit if necessary
+ *   - Converts palette and grayscale images to RGB
+ *   - Strips existing alpha (including tRNS transparency)
+ *   - Adds 0xFF as filler before RGB bytes, forming ARGB
+ *
+ * Memory is allocated using heap_caps_malloc() with MALLOC_CAP_SPIRAM, suitable
+ * for large images on ESP32-S3 with external RAM enabled.
+ *
+ * @param filename      Path to the PNG file to decode.
+ * @param out_width     Pointer to store the width of the decoded image.
+ * @param out_height    Pointer to store the height of the decoded image.
+ *
+ * @return Pointer to a buffer containing the ARGB image data (4 bytes per pixel),
+ *         or NULL on failure. Caller is responsible for freeing this buffer.
+ */
 uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *out_height) {
     FILE *fp = fopen(filename, "rb");
     if (!fp) {
