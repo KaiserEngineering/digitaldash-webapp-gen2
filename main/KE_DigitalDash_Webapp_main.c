@@ -423,7 +423,7 @@ uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *out_heigh
  * @note This function assumes the UART is already initialized. Transmission is
  *       done byte-by-byte;
  */
-bool send_png_data_over_uart(const char *filename)
+bool tranmsit_png_data(const char *filename)
 {
     int png_width = 0;
     int png_height = 0;
@@ -640,7 +640,7 @@ void app_main(void)
     // Disable WIFI Power Save to allow max throughput
     esp_wifi_set_ps(WIFI_PS_NONE);
 
-    //send_png_data_over_uart("/spiffs/1024_x_200.png");
+    //tranmsit_png_data("/spiffs/1024_x_200.png");
 
     //spoof_config();
     //set_view_background(0, VIEW_BACKGROUND_BLACK, true);
