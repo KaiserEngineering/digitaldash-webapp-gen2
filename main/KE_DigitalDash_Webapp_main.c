@@ -408,6 +408,53 @@ uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *out_heigh
     return image_data;
 }
 
+/**
+ * @brief Loads a PNG image from a file and transmits its ARGB pixel data over UART.
+ *
+ * This function decodes a PNG image file using `decode_png_to_rgba()` and sends
+ * the raw pixel buffer (formatted as ARGB, 4 bytes per pixel) over UART, one byte
+ * at a time. The PNG image is assumed to have been preprocessed to include an alpha
+ * channel (or filler) in the ARGB layout.
+ *
+ * @param filename Path to the PNG image file stored on the filesystem.
+ *
+ * @return true if the PNG was successfully loaded and transmitted, false otherwise.
+ *
+ * @note This function assumes the UART is already initialized. Transmission is
+ *       done byte-by-byte;
+ */
+bool send_png_data_over_uart(const char *filename)
+{
+    int png_width = 0;
+    int png_height = 0;
+    int png_size = 0;
+    uint8_t *rgba = decode_png_to_rgba(filename, &png_width, &png_height);
+
+    png_size = png_width * png_height * 4;
+
+    ESP_LOGI(TAG, "png width = %d: png height = %d", png_width, png_height);
+
+    if (rgba) {
+        for (int i = 0; i < png_width * png_height * 4; i++) {
+            uint8_t byte = rgba[i];
+
+            if ((i % (png_width * 4)) == 0)
+                ESP_LOGI(TAG, "Row[%d]: WRITTEN", i / (png_width * 4));
+
+            if( i <= 30 )
+                ESP_LOGI(TAG, "Byte[%d]: %d", i, byte);
+        
+            uart_write_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, &byte, 1);
+        }
+
+        free(rgba); // Don't forget to free later
+        return true;
+    } else {
+        ESP_LOGE(TAG, "Failed to decode PNG.");
+        return false;
+    }
+}
+
 void spoof_config(void)
 {
 	// View 0
@@ -593,38 +640,13 @@ void app_main(void)
     // Disable WIFI Power Save to allow max throughput
     esp_wifi_set_ps(WIFI_PS_NONE);
 
-    /*
-    int png_width = 0;
-    int png_height = 0;
-    int png_size = 0;
-    uint8_t *rgba = decode_png_to_rgba("/spiffs/1024_x_200.png", &png_width, &png_height);
+    //send_png_data_over_uart("/spiffs/1024_x_200.png");
 
-    png_size = png_width * png_height * 4;
-
-    ESP_LOGI(TAG, "png width = %d: png height = %d", png_width, png_height);
-
-    if (rgba) {
-        for (int i = 0; i < png_width * png_height * 4; i++) {
-            uint8_t byte = rgba[i];
-
-            if( i <= 30 )
-                ESP_LOGI(TAG, "Byte[%d]: %d", i, byte);
-
-
-            if( (i % (png_width*4)) == 0)
-                ESP_LOGI(TAG, "Row[%d]: WRITTEN", i/png_height);
-        
-            uart_write_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, &byte, 1);
-        }
-
-        free(rgba); // Don't forget to free later
-    }
-    */
-   spoof_config();
-   //set_view_background(0, VIEW_BACKGROUND_BLACK, true);
-   //set_view_gauge_theme(0, 0, GAUGE_THEME_STOCK_ST, true);
-   //set_view_gauge_theme(0, 1, GAUGE_THEME_GRUMPY_CAT, true);
-   //set_view_gauge_theme(0, 2, GAUGE_THEME_RADIAL, true);
+    //spoof_config();
+    //set_view_background(0, VIEW_BACKGROUND_BLACK, true);
+    //set_view_gauge_theme(0, 0, GAUGE_THEME_STOCK_ST, true);
+    //set_view_gauge_theme(0, 1, GAUGE_THEME_GRUMPY_CAT, true);
+    //set_view_gauge_theme(0, 2, GAUGE_THEME_RADIAL, true);
 
     while (1)
     {
