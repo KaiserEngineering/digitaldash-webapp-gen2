@@ -477,7 +477,7 @@ void app_main(void)
     // Disable WIFI Power Save to allow max throughput
     esp_wifi_set_ps(WIFI_PS_NONE);
 
-    transfer_png_data("/spiffs/Outer_Wilds.png");
+    //transfer_png_data("/spiffs/Outer_Wilds.png");
 
     //spoof_config();
     //set_view_background(0, VIEW_BACKGROUND_BLACK, true);
