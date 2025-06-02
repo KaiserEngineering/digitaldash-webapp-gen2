@@ -5,7 +5,7 @@ static const char *TAG = "UART";
 void uart_init(void)
 {
     const uart_config_t uart_config = {
-        .baud_rate = CONFIG_ESP32_STM32_UART_BAUD,
+        .baud_rate = 1000000,
         .data_bits = UART_DATA_8_BITS,
         .parity = UART_PARITY_EVEN,
         .stop_bits = UART_STOP_BITS_1,
