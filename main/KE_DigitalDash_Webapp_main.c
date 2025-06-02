@@ -371,12 +371,8 @@ uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *out_heigh
     if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) png_set_expand_gray_1_2_4_to_8(png_ptr);
     if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) png_set_tRNS_to_alpha(png_ptr);
 
-    png_set_strip_alpha(png_ptr); // TODO - This works for anything without alpha. Add check
-    png_set_filler(png_ptr, 0xFF, PNG_FILLER_BEFORE); // Force ARGB
+    png_set_filler(png_ptr, 0xFF, PNG_FILLER_AFTER); // Force RGBA
     png_set_gray_to_rgb(png_ptr);
-
-    // Strip alpha from png
-    // png_set_strip_alpha(png_ptr);
 
     png_read_update_info(png_ptr, info_ptr);
 
@@ -398,6 +394,18 @@ uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *out_heigh
     }
 
     png_read_image(png_ptr, row_pointers);
+
+    // Convert RGBA to BGRA by swapping R and B.
+    // This is needed for the memory structure in the STM32
+    for (int y = 0; y < height; y++) {
+        uint8_t *row = image_data + y * rowbytes;
+        for (int x = 0; x < width; x++) {
+            uint8_t *pixel = row + x * 4;
+            uint8_t temp = pixel[0];   // R
+            pixel[0] = pixel[2];       // B → R
+            pixel[2] = temp;           // R → B
+        }
+    }
 
     png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
     fclose(fp);
