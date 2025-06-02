@@ -448,9 +448,6 @@ bool tranmsit_png_data(const char *filename)
 
             if ((i % (png_width * 4)) == 0)
                 ESP_LOGI(TAG, "Row[%d]: WRITTEN", i / (png_width * 4));
-
-            if( i <= 30 )
-                ESP_LOGI(TAG, "Byte[%d]: %d", i, byte);
         
             uart_write_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, &byte, 1);
         }
