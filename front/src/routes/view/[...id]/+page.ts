@@ -1,38 +1,51 @@
 // src/routes/view/[id]/+page.ts
 import { superValidate } from 'sveltekit-superforms';
 import type { PageLoad } from './$types';
-import { SingleViewEditSchema, type AlertType, type GaugeType } from '$schemas/digitaldash';
 import { zod } from 'sveltekit-superforms/adapters';
-import { ConfigStore } from '$lib/config.svelte';
-
+import { getOptions } from '@/config/optionsCache';
+import { redirect } from '@sveltejs/kit';
+import { ViewSchema } from '$schemas/digitaldash';
+import { ImageHandler } from '$lib/image/handler';
+// This can be false if you're using a fallback (i.e. SPA mode)
 export const prerender = false;
 
-export const load: PageLoad = async ({ params }) => {
-	// Get the global configuration data from the store.
-	const configData = ConfigStore.config;
-	if (!configData) {
-		throw new Error('Configuration data not found');
-	}
+// We need this so that our output during build is one
+// file.
+export const ssr = false;
 
+export const load: PageLoad = async ({ params, fetch, parent }) => {
+	const { config } = await parent();
 	const viewId = Number(params.id);
-	const view = ConfigStore.getViewById(viewId);
-	if (!view) {
-		throw new Error(`View with ID ${params.id} not found`);
+
+	if (!config || !config.view) {
+		throw redirect(302, '/');
 	}
 
-	const id: number = Number(params.id);
+	const view = config.view[viewId];
+	if (!view) {
+		throw redirect(302, '/');
+	}
 
-	// Get related data using our helper methods.
-	const gauges = configData.gauge.filter((g: GaugeType) => g.index === id);
-	const alerts = configData.alert.filter((a: AlertType) => a.index === id);
+	const options = await getOptions(fetch);
+	const validatedForm = await superValidate(view, zod(ViewSchema));
 
-	const viewForm = {
-		view,
-		gauges,
-		alerts
+	if (!validatedForm.valid) {
+		console.error('Validation failed:', validatedForm.errors);
+		throw redirect(302, '/');
+	}
+
+	const imageHandler = new ImageHandler();
+
+	const customerImageNames = await imageHandler.getCustomerImageNames(fetch);
+	const factoryImageNames = imageHandler.getFactoryBackgroundImages();
+
+	const backgrounds = [...factoryImageNames, ...customerImageNames];
+
+	return {
+		form: validatedForm,
+		viewId,
+		themes: options.themes,
+		pids: options.pids,
+		backgrounds
 	};
-
-	const form = await superValidate(viewForm, zod(SingleViewEditSchema));
-
-	return { form, viewId: id };
 };

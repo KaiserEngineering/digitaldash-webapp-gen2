@@ -7,15 +7,13 @@
 	let { children } = $props();
 </script>
 
-<div class="bg-linear-to-br from-gray-100 to-gray-300">
-	<div class="min-h-screen">
-		<Toaster />
+<div class="soft flex h-screen flex-col">
+	<Toaster />
+	<Header />
 
-		<Header />
+	<main class="container mx-auto flex-1 px-4 py-4 sm:w-full md:w-2/3">
+		{@render children()}
+	</main>
 
-		<main class="container mx-auto grow px-4 sm:w-full md:w-2/3">
-			{@render children()}
-		</main>
-	</div>
 	<Footer />
 </div>

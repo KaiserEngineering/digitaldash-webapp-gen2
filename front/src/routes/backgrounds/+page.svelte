@@ -1,89 +1,77 @@
 <!-- src/routes/+page.svelte -->
 <script lang="ts">
-	// Import UI components
 	import FileUploaderExplorer from '@/components/FileUploaderExplorer.svelte';
 	import ImagesTable from '@/components/ImagesTable.svelte';
 	import type { PageProps } from './$types';
 	import { uploadBackground, deleteBackground } from './backgrounds.svelte';
-	import { ImageHandler } from '$lib/imageHandler.svelte';
 	import Spinner from '@/components/Spinner.svelte';
+	import { ImageHandler } from '@/image/handler';
+	import { onMount } from 'svelte';
+	import { ImageIcon } from 'lucide-svelte';
+	import PageCard from '@/components/PageCard.svelte';
 
-	// For SvelteKit, you may receive data from your load function.
 	let { data }: PageProps = $props();
 
-	// Initialize a reactive object for customer images.
+	const imageHandler = new ImageHandler();
+
 	let customerImages: { [key: string]: any } = $state({});
 	let factoryImages: { [key: string]: any } = $state({});
-	let imageHandler = new ImageHandler();
 
-	// Lazy load customer images
-	async function loadCustomerImages() {
-		const imagesData: { [key: string]: any } = {};
-
-		await Promise.all(
-			data.customerImageNames.map(async (name: string) => {
-				try {
-					imagesData[name] = await imageHandler.loadImage(name);
-				} catch (err) {
-					console.error(`Failed to load customer image: ${name}`, err);
-				}
-			})
-		);
-		customerImages = imagesData;
-	}
-
-	// Lazy load factory images
-	async function loadFactoryImages() {
-		const imagesData: { [key: string]: any } = {};
-		await Promise.all(
-			data.factoryImageNames.map(async (name: string) => {
-				try {
-					imagesData[name] = await imageHandler.loadImage(name);
-				} catch (err) {
-					console.error(`Failed to load factory image: ${name}`, err);
-				}
-			})
-		);
-		factoryImages = imagesData;
-	}
-
-	// Create a wrapper function to ensure reactivity
 	async function handleUpload(file: File): Promise<void> {
 		await uploadBackground(file, customerImages);
-		// Force reactivity by creating a new object
+
 		customerImages = { ...customerImages };
 	}
 
-	const factoryLoadPromise = loadFactoryImages();
-	const customerLoadPromise = loadCustomerImages();
+	let factoryLoadPromise: Promise<any> = $state(Promise.resolve());
+	let customerLoadPromise: Promise<any> = $state(Promise.resolve());
+
+	onMount(() => {
+		factoryLoadPromise = Promise.all(
+			data.factoryImageNames.map((name) => imageHandler.loadImage(name))
+		).then((arr) => {
+			const images = Object.fromEntries(arr.map((img) => [img.name, img]));
+			factoryImages = images;
+			return images;
+		});
+
+		customerLoadPromise = Promise.all(
+			data.customerImageNames.map((name) => imageHandler.loadImage(name))
+		).then((arr) => {
+			const images = Object.fromEntries(arr.map((img) => [img.name, img]));
+			customerImages = images;
+			return images;
+		});
+	});
 </script>
 
-<h1 class="text-2xl font-semibold">Background Images</h1>
+<PageCard title="Backgrounds" description="Add custom backgrounds!." icon={ImageIcon}>
+	{#snippet children()}
+		<div class="mx-auto w-full lg:w-1/2">
+			<FileUploaderExplorer uploadCallback={handleUpload} />
+		</div>
 
-<!-- File uploader area -->
-<div class="mx-auto w-full lg:w-1/2">
-	<FileUploaderExplorer uploadCallback={handleUpload} />
-</div>
+		<div class="flex flex-col items-center justify-center">
+			{#await customerLoadPromise}
+				<Spinner class="m-2" />
+			{:then}
+				<h2 class="mt-4 text-xl font-semibold">User Images</h2>
+				<ImagesTable
+					images={customerImages}
+					deleteCallback={(filename: string) => deleteBackground(filename, customerImages)}
+				/>
+			{/await}
 
-<div class="flex flex-col items-center justify-center">
-	{#await customerLoadPromise}
-		<Spinner classNames="m-2"/>
-	{:then}
-		<!-- Render Customer Images -->
-		<h2 class="mt-4 text-xl font-semibold">User Images</h2>
-		<ImagesTable
-			images={customerImages}
-			deleteCallback={(filename: string) => deleteBackground(filename, customerImages)}
-		/>
-	{/await}
+			{#await factoryLoadPromise}
+				<Spinner class="m-2" />
+			{:then}
+				<h2 class="mt-4 text-xl font-semibold">Factory Images</h2>
+				<ImagesTable images={factoryImages} editable={false} />
+			{/await}
+		</div>
+	{/snippet}
 
-	{#await factoryLoadPromise}
-		<Spinner />
-	{:then}
-		<!-- Render Factory Images -->
-		<h2 class="mt-4 text-xl font-semibold">Factory Images</h2>
-		<!-- Assuming factoryImages is provided via the page data;
-     here we render them in non-editable mode -->
-		<ImagesTable images={factoryImages} editable={false} />
-	{/await}
-</div>
+	{#snippet footerContent()}
+		<div></div>
+	{/snippet}
+</PageCard>

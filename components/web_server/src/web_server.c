@@ -2,11 +2,13 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "config_handler.h"
 #include "esp_vfs.h"
 #include "esp_log.h"
 #include "esp_http_server.h"
 #include "esp_err.h"
 #include "user_images.h"
+#include <ctype.h>
 
 static const char *TAG = "WebServer";
 
@@ -160,6 +162,12 @@ static esp_err_t spiffs_file_handler(httpd_req_t *req)
     return ESP_ERR_NOT_FOUND;
 }
 
+static bool is_spa_route(const char *uri)
+{
+    const char *dot = strrchr(uri, '.');
+    return dot == NULL; // No file extension
+}
+
 esp_err_t web_request_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "Handling request: %s", req->uri);
@@ -180,11 +188,17 @@ esp_err_t web_request_handler(httpd_req_t *req)
         return httpd_resp_send(req, (const char *)index_html_start, index_html_end - index_html_start);
     }
 
-    // Default: Serve `index.html`
-    ESP_LOGW(TAG, "Serving index.html for req: %s", req->uri);
+    // Serve index.html only for likely SPA routes
+    if (is_spa_route(req->uri))
+    {
+        ESP_LOGW(TAG, "SPA route fallback: serving index.html for %s", req->uri);
+        httpd_resp_set_type(req, "text/html");
+        return httpd_resp_send(req, (const char *)index_html_start, index_html_end - index_html_start);
+    }
 
-    httpd_resp_set_type(req, "text/html");
-    return httpd_resp_send(req, (const char *)index_html_start, index_html_end - index_html_start);
+    // If it’s a file-like path and not found earlier, return 404
+    ESP_LOGW(TAG, "Not found: %s", req->uri);
+    return httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File not found");
 }
 
 esp_err_t start_webserver()
@@ -192,6 +206,7 @@ esp_err_t start_webserver()
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.stack_size = HTTPD_TASK_STACK_SIZE;
+    config.max_uri_handlers = 16;
     config.uri_match_fn = httpd_uri_match_wildcard;
 
     ESP_LOGI(TAG, "Starting HTTP Server");
@@ -205,6 +220,13 @@ esp_err_t start_webserver()
     if (register_user_images(server) != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to register user images");
+        httpd_stop(server);
+        return ESP_FAIL;
+    }
+
+    if (register_config_routes(server) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to register config endpoints");
         httpd_stop(server);
         return ESP_FAIL;
     }

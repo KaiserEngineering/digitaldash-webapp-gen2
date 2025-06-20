@@ -1,12 +1,17 @@
 <script lang="ts">
+	import DashboardCard from '@/components/DashboardCard.svelte';
 	import ViewCard from '@/components/ViewCard.svelte';
-	import { ConfigStore } from '$lib/config.svelte';
+	import { configStore } from '@/config/configStore';
 
-	const views = ConfigStore.config ? ConfigStore.config.view : [];
+	const views = $derived($configStore.view || []);
 </script>
 
-<div class="space-y-2 p-2">
-	{#each views as view, index (index)}
-		<ViewCard {view} {index} />
-	{/each}
+<div class="space-y-6">
+	<DashboardCard>
+		<div class="grid gap-4 sm:grid-cols-1">
+			{#each views as view, index}
+				<ViewCard {view} {index} />
+			{/each}
+		</div>
+	</DashboardCard>
 </div>

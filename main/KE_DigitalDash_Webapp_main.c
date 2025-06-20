@@ -439,35 +439,6 @@ void flash_stm32_firmware(const char *bin_filename)
     endConn();
 }
 
-/* CRAIG!!! READ THIS: YOU WILL NEED TO PUSH THE MCU PUSH BUTTON ON YOUR DEV UNIT EACH BOOT   */
-/*                     THE VERY BASIC SETUP ONLY SENDS THE JSON ON MCU BOOT. THEREFORE IF YOU */
-/*                     DON'T RESET THE MCU EACH TIME THE json_data_input BUFFER WILL BE EMPTY */
-esp_err_t config_get_handler(httpd_req_t *req)
-{
-    httpd_resp_set_type(req, "application/json");
-    return httpd_resp_send(req, json_data_input, HTTPD_RESP_USE_STRLEN);
-}
-
-esp_err_t config_patch_handler(httpd_req_t *req)
-{
-    ESP_LOGI(TAG, "PATCH /api/config requested");
-
-    int total_len = req->content_len;
-    char buf[2048];
-    int received = httpd_req_recv(req, buf, MIN(total_len, sizeof(buf) - 1));
-    if (received <= 0)
-    {
-        ESP_LOGE(TAG, "Failed to receive config PATCH payload");
-        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid request");
-    }
-
-    buf[received] = '\0';
-    ESP_LOGI(TAG, "Received config update: %s", buf);
-
-    // TODO send via UART
-    return ESP_OK;
-}
-
 void app_main(void)
 {
     gpio_init();

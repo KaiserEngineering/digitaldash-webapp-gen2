@@ -1,154 +1,124 @@
-// src/lib/schemas.ts
 import { z } from 'zod';
 
-// Constraints based on your config
-const MAX_VIEWS = 3;
-const GAUGES_PER_VIEW = 3;
-const MAX_ALERTS = 5;
-const NUM_DYNAMIC = 2;
-const ALERT_MESSAGE_LEN = 64;
+/**
+ * Constants – match the C config
+ */
+export const MAX_VIEWS = 3;
+export const GAUGES_PER_VIEW = 3;
+export const MAX_ALERTS = 5;
+export const NUM_DYNAMIC = 2;
+export const ALERT_MESSAGE_LEN = 64;
 
-// Enum-like definitions
-export const ViewStateEnum = z.enum(['Disabled', 'Enabled']);
-export const ViewBackgroundEnum = z.enum([
-	'BACKGROUND_BLACK.png',
-	'BACKGROUND_FLARE.png',
-	'BACKGROUND_GALAXY.png'
+/**
+ * Enums – mapped from C enums
+ */
+export const CompareEnum = z.enum([
+	'DD_LESS_THAN',
+	'DD_LESS_THAN_OR_EQUAL_TO',
+	'DD_GREATER_THAN',
+	'DD_GREATER_THAN_OR_EQUAL_TO',
+	'DD_EQUAL',
+	'DD_NOT_EQUAL'
 ]);
-// For alerts, we use a simple Enabled/Disabled enum.
-export const AlertStateEnum = z.enum(['Disabled', 'Enabled']);
-export const AlertComparisonEnum = z.enum([
-	'Less Than',
-	'Less Than Or Equal To',
-	'Greater Than',
-	'Greater Than Or Equal To',
-	'Equal',
-	'Not Equal'
-]);
-// For dynamic conditions
-export const DynamicStateEnum = z.enum(['Disabled', 'Enabled']);
-export const DynamicPriorityEnum = z.enum(['Low', 'Medium', 'High']);
-// For gauge themes, update to include a consistent prefix.
-export const GaugeThemeEnum = z.enum(['THEME_STOCK_ST', 'THEME_STOCK_RS']);
 
-// Schema for a gauge
+export const PriorityEnum = z.enum(['DD_LOW_PRIORITY', 'DD_MEDIUM_PRIORITY', 'DD_HIGH_PRIORITY']);
+
+/**
+ * Type for referencing a PID – you can expand to include label, units, etc. if needed
+ */
+export const PIDRef = z.string();
+
+/**
+ * Gauge structure
+ * typedef struct {
+ *   GAUGE_THEME theme;
+ *   PID_DATA * pid;
+ * } digitaldash_gauge;
+ */
 export const GaugeSchema = z.object({
-	index: z.number(),
-	// Representing the allowed gauge count as a tuple, e.g. [3, 3]
-	count: z.tuple([z.literal(GAUGES_PER_VIEW), z.literal(GAUGES_PER_VIEW)]),
-	cmd: z.string(),
-	name: z.string(),
-	desc: z.string(),
-	type: z.string(),
-	dataType: z.string(),
-	default: GaugeThemeEnum,
-	options: z.array(GaugeThemeEnum),
-	limit: z.string(),
-	EEBytes: z.number(),
-	// Additional fields
-	theme: GaugeThemeEnum,
-	pid: z.string()
-});
-
-export const GaugeArraySchema = z.object({
-	items: z.array(GaugeSchema)
-});
-
-// Schema for a view
-export const ViewSchema = z.object({
-	index: z.number(),
-	count: z.literal(MAX_VIEWS),
-	name: z.string(),
-	desc: z.string(),
-	type: z.string(),
-	dataType: z.string(),
-	default: ViewStateEnum,
-	options: z.array(ViewStateEnum),
-	limit: z.string(),
-	EEBytes: z.number(),
-	// Background image must match one of the enum values
-	background: ViewBackgroundEnum.optional(),
-	enabled: z.boolean()
-});
-
-// Schema for an alert
-export const AlertSchema = z.object({
-	index: z.number(),
-	count: z.literal(MAX_ALERTS),
-	cmd: z.string(),
-	name: z.string(),
-	desc: z.string(),
-	type: z.string(),
-	dataType: z.string(),
-	default: AlertStateEnum,
-	options: z.array(AlertStateEnum),
-	limit: z.string(),
-	EEBytes: z.number(),
-	pid: z.string(),
-	message: z.string().max(ALERT_MESSAGE_LEN).optional(),
-	compare: AlertComparisonEnum.optional()
-});
-
-export const AlertArraySchema = z.object({
-	items: z.array(AlertSchema)
-});
-
-// Schema for a dynamic condition
-// We include extra fields to allow proper binding with your API.
-export const DynamicSchema = z.object({
-	index: z.number(),
-	count: z.literal(NUM_DYNAMIC),
-	cmd: z.string(),
-	name: z.string(),
-	desc: z.string(),
-	type: z.string(),
-	dataType: z.string(),
-	default: DynamicStateEnum,
-	options: z.array(DynamicStateEnum),
-	limit: z.string(),
-	EEBytes: z.number(),
+	theme: z.string(),
+	pid: PIDRef,
 	enabled: z.boolean(),
-	pid: z.string(),
-	compare: z.string(),
+	id: z.string().optional() // Optional ID for client-side use
+});
+
+/**
+ * View structure
+ * typedef struct {
+ *   uint8_t enabled;
+ *   uint8_t num_gauges;
+ *   VIEW_BACKGROUND background;
+ *   digitaldash_gauge gauge[GAUGES_PER_VIEW];
+ * } digitaldash_view;
+ */
+export const ViewSchema = z.object({
+	enabled: z.boolean(),
+	num_gauges: z.number().int(),
+	background: z.string(),
+	gauge: z.array(GaugeSchema).max(GAUGES_PER_VIEW)
+});
+
+/**
+ * Alert structure
+ * typedef struct {
+ *   uint8_t enabled;
+ *   PID_DATA * pid;
+ *   digitaldash_compare compare;
+ *   float thresh;
+ *   char msg[ALERT_MESSAGE_LEN];
+ * } digitaldash_alert;
+ */
+export const AlertSchema = z.object({
+	enabled: z.boolean(),
+	pid: PIDRef,
+	compare: CompareEnum,
 	thresh: z.number(),
-	priority: DynamicPriorityEnum
+	msg: z.string().max(ALERT_MESSAGE_LEN)
 });
 
-export const DynamicArraySchema = z.object({
-	items: z.array(DynamicSchema)
+/**
+ * Dynamic structure
+ * typedef struct {
+ *   uint8_t enabled;
+ *   uint8_t view_index;
+ *   PID_DATA * pid;
+ *   digitaldash_compare compare;
+ *   float thresh;
+ *   digitaldash_priority priority;
+ * } digitaldash_dynamic;
+ */
+export const DynamicSchema = z.object({
+	enabled: z.boolean(),
+	view_index: z.number().int(),
+	pid: PIDRef,
+	compare: CompareEnum,
+	thresh: z.number(),
+	priority: PriorityEnum
 });
 
-// Schema for the global config properties
-export const ConfigSchema = z.object({
-	max_views: z.literal(MAX_VIEWS),
-	gauges_per_view: z.literal(GAUGES_PER_VIEW),
-	max_alerts: z.literal(MAX_ALERTS),
-	num_dynamic: z.literal(NUM_DYNAMIC),
-	alert_message_len: z.literal(ALERT_MESSAGE_LEN),
-	top_level_struc: z.literal('digitaldash'),
-	top_level_name: z.literal('config'),
-	struct_list: z.array(z.union([z.string(), z.array(z.string())]))
-});
-
-// Global DigitalDash configuration schema, including all top-level keys
+/**
+ * Root digitaldash struct
+ * typedef struct {
+ *   digitaldash_view view[MAX_VIEWS];
+ *   uint8_t num_views;
+ *   digitaldash_alert alert[MAX_ALERTS];
+ *   digitaldash_dynamic dynamic[NUM_DYNAMIC];
+ * } digitaldash;
+ */
 export const DigitalDashSchema = z.object({
-	config: ConfigSchema,
-	view: z.array(ViewSchema),
-	alert: z.array(AlertSchema),
-	dynamic: z.array(DynamicSchema),
-	gauge: z.array(GaugeSchema)
+	view: z.array(ViewSchema).length(MAX_VIEWS),
+	num_views: z.number().int(),
+	alert: z.array(AlertSchema).length(MAX_ALERTS),
+	dynamic: z.array(DynamicSchema).length(NUM_DYNAMIC)
 });
 
-export const SingleViewEditSchema = z.object({
-	view: ViewSchema,
-	gauges: z.array(GaugeSchema).default([]),
-	alerts: z.array(AlertSchema).default([])
-});
-
-// Infer TypeScript types from schema
-export type DigitalDashConfig = z.infer<typeof DigitalDashSchema>;
-export type ViewType = z.infer<typeof ViewSchema>;
-export type GaugeType = z.infer<typeof GaugeSchema>;
-export type AlertType = z.infer<typeof AlertSchema>;
-export type DynamicType = z.infer<typeof DynamicSchema>;
-export type SincegleViewEditType = z.infer<typeof SingleViewEditSchema>;
+/**
+ * Inferred TypeScript types
+ */
+export type DigitalDash = z.infer<typeof DigitalDashSchema>;
+export type DigitalDashView = z.infer<typeof ViewSchema>;
+export type DigitalDashGauge = z.infer<typeof GaugeSchema>;
+export type DigitalDashAlert = z.infer<typeof AlertSchema>;
+export type DigitalDashDynamic = z.infer<typeof DynamicSchema>;
+export type DigitalDashCompare = z.infer<typeof CompareEnum>;
+export type DigitalDashPriority = z.infer<typeof PriorityEnum>;

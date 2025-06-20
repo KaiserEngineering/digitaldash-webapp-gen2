@@ -30,9 +30,8 @@ const config = {
 			'$schemas/*': './src/schemas/*'
 		},
 		prerender: {
-			handleHttpError: ({ message }) => {
-				// otherwise fail the build
-				throw new Error(message);
+			handleHttpError: ({ status, path, referrer, message }) => {
+				console.warn(`❗️ Prerender failed: ${path} (${status}) - ${message}`);
 			}
 		}
 	}

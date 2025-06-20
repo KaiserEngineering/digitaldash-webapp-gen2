@@ -1,6 +1,6 @@
 // src/routes/backgrounds.ts
-import { apiUrl } from '$lib/config'; // adjust as needed (or leave empty if same origin)
-import { ImageHandler } from '@/imageHandler.svelte';
+import { apiUrl } from '$lib/config';
+import { ImageHandler } from '$lib/image/handler';
 import { toast } from 'svelte-5-french-toast';
 
 interface UploadResponse {
