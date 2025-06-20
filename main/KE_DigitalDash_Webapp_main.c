@@ -439,6 +439,9 @@ void flash_stm32_firmware(const char *bin_filename)
     endConn();
 }
 
+/* CRAIG!!! READ THIS: YOU WILL NEED TO PUSH THE MCU PUSH BUTTON ON YOUR DEV UNIT EACH BOOT   */
+/*                     THE VERY BASIC SETUP ONLY SENDS THE JSON ON MCU BOOT. THEREFORE IF YOU */
+/*                     DON'T RESET THE MCU EACH TIME THE json_data_input BUFFER WILL BE EMPTY */
 esp_err_t config_get_handler(httpd_req_t *req)
 {
     httpd_resp_set_type(req, "application/json");
