@@ -80,7 +80,10 @@ i2c_master_dev_handle_t eeprom_handle;
 
 static const char *TAG = "Main";
 
-#define BUF_SIZE 1024
+#define JSON_BUF_SIZE 1024
+
+char json_data_input[JSON_BUF_SIZE];
+char json_data_output[JSON_BUF_SIZE];
 
 void gpio_init(void)
 {
@@ -436,6 +439,32 @@ void flash_stm32_firmware(const char *bin_filename)
     endConn();
 }
 
+esp_err_t config_get_handler(httpd_req_t *req)
+{
+    httpd_resp_set_type(req, "application/json");
+    return httpd_resp_send(req, json_data_input, HTTPD_RESP_USE_STRLEN);
+}
+
+esp_err_t config_patch_handler(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "PATCH /api/config requested");
+
+    int total_len = req->content_len;
+    char buf[2048];
+    int received = httpd_req_recv(req, buf, MIN(total_len, sizeof(buf) - 1));
+    if (received <= 0)
+    {
+        ESP_LOGE(TAG, "Failed to receive config PATCH payload");
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid request");
+    }
+
+    buf[received] = '\0';
+    ESP_LOGI(TAG, "Received config update: %s", buf);
+
+    // TODO send via UART
+    return ESP_OK;
+}
+
 void app_main(void)
 {
     gpio_init();
@@ -499,11 +528,11 @@ void app_main(void)
             #endif
             count = 0;
         }
-        uint8_t data[BUF_SIZE];
-        int len = uart_read_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, data, sizeof(data), pdMS_TO_TICKS(10));
+
+        int len = uart_read_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, json_data_input, sizeof(json_data_input), pdMS_TO_TICKS(10));
         if (len > 0) {
             for (int i = 0; i < len; i++) {
-                putchar(data[i]);  // Print raw ASCII character
+                putchar(json_data_input[i]);  // Print raw ASCII character
             }
             fflush(stdout);  // Ensure it shows up immediately
         }
