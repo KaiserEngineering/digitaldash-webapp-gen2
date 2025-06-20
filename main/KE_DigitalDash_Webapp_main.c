@@ -80,6 +80,8 @@ i2c_master_dev_handle_t eeprom_handle;
 
 static const char *TAG = "Main";
 
+#define BUF_SIZE 1024
+
 void gpio_init(void)
 {
     gpio_config_t io_conf = {
@@ -444,8 +446,8 @@ void app_main(void)
     settings_setReadHandler(eeprom_read);
     settings_setWriteHandler(eeprom_write);
 
-    load_settings(); // Comment out for now - This will cause an I2C bootloop if the slave doesn't respond
-    ESP_LOGI(TAG, "Settings loaded");
+    //load_settings(); // Comment out for now - This will cause an I2C bootloop if the slave doesn't respond
+    //ESP_LOGI(TAG, "Settings loaded");
 
     // Disable CAN Bus
     gpio_set_level(CAN_STBY_GPIO, 1);
@@ -498,6 +500,14 @@ void app_main(void)
             i2c_master_transmit_payload();
             #endif
             count = 0;
+        }
+        uint8_t data[BUF_SIZE];
+        int len = uart_read_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, data, sizeof(data), pdMS_TO_TICKS(10));
+        if (len > 0) {
+            for (int i = 0; i < len; i++) {
+                putchar(data[i]);  // Print raw ASCII character
+            }
+            fflush(stdout);  // Ensure it shows up immediately
         }
         count++;
     }
