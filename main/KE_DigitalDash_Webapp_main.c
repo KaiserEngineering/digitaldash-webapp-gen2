@@ -428,10 +428,12 @@ void load_config(void)
     }
 }
 
-void initTask(void)
+void flash_stm32_firmware(const char *bin_filename)
 {
-    initGPIO();
-    //initSPIFFS();
+    // If this causes a stack overflow increase ESP_MAIN_TASK_STACK_SIZE in menuconfig
+    ESP_LOGI(TAG, "Starting flashing procedure...");
+    flashSTM(bin_filename);
+    endConn();
 }
 
 void app_main(void)
@@ -469,17 +471,13 @@ void app_main(void)
 
     //stm32_bootloader();
     //stm32_reset();
-    /*
-    ESP_LOGI(TAG, "Starting flashing procedure...");
-    initTask();
-    flashSTM("digitaldash-firmware-gen2-stm32u5g.bin");
-    endConn();
-    */
+
+    //flash_stm32_firmware("digitaldash-firmware-gen2-stm32u5g.bin"); // UNCOMMENT TO FLASH FIRMWARE. DO THIS **ONCE*** AND THEN RE-UPLOAD WITH LINE **COMMENTED OUT**
 
     // Disable WIFI Power Save to allow max throughput
     esp_wifi_set_ps(WIFI_PS_NONE);
 
-    //transfer_png_data("/spiffs/Outer_Wilds.png");
+    //transfer_png_data("/spiffs/Outer_Wilds.png"); // UNCOMMENT TO UPLOAD IMAGE. DO THIS **ONCE*** AND THEN RE-UPLOAD WITH LINE **COMMENTED OUT**
 
     //spoof_config();
     //set_view_background(0, VIEW_BACKGROUND_BLACK, true);

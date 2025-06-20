@@ -26,7 +26,6 @@ esp_err_t writeTask(FILE *flash_file)
         }
 
         incrementLoadAddress(loadAddress);
-        printf("\n");
 
         memset(block, 0xff, 256);
     }
