@@ -6,12 +6,6 @@ import { getOptions } from '@/config/optionsCache';
 import { redirect } from '@sveltejs/kit';
 import { ViewSchema } from '$schemas/digitaldash';
 import { ImageHandler } from '$lib/image/handler';
-// This can be false if you're using a fallback (i.e. SPA mode)
-export const prerender = false;
-
-// We need this so that our output during build is one
-// file.
-export const ssr = false;
 
 export const load: PageLoad = async ({ params, fetch, parent }) => {
 	const { config } = await parent();

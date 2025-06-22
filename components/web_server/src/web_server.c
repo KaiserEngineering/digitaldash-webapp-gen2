@@ -9,6 +9,7 @@
 #include "esp_err.h"
 #include "user_images.h"
 #include <ctype.h>
+#include "version.h"
 
 static const char *TAG = "WebServer";
 
@@ -201,6 +202,18 @@ esp_err_t web_request_handler(httpd_req_t *req)
     return httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File not found");
 }
 
+esp_err_t sveltekit_version_handler(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "Handling request: %s", req->uri);
+    ESP_LOGI(TAG, "Serving SvelteKit version: %s", APP_VERSION_STRING);
+    ESP_LOGI(TAG, "VERSION_JSON_RESPONSE: %s", VERSION_JSON_RESPONSE);
+
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
+    static const char version_json[] = VERSION_JSON_RESPONSE;
+    return httpd_resp_send(req, version_json, strlen(version_json));
+}
+
 esp_err_t start_webserver()
 {
     httpd_handle_t server = NULL;
@@ -241,6 +254,12 @@ esp_err_t start_webserver()
                                            .uri = "/api/user_images/*",
                                            .method = HTTP_GET,
                                            .handler = spiffs_file_handler,
+                                           .user_ctx = NULL});
+
+    httpd_register_uri_handler(server, &(httpd_uri_t){
+                                           .uri = "/_app/version.json",
+                                           .method = HTTP_GET,
+                                           .handler = sveltekit_version_handler,
                                            .user_ctx = NULL});
 
     httpd_register_uri_handler(server, &(httpd_uri_t){

@@ -1,5 +1,3 @@
-export const prerender = false;
-
 import { superValidate } from 'sveltekit-superforms';
 import type { PageLoad } from './$types';
 import { AlertsFormSchema } from './alertsFormSchema';

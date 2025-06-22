@@ -19,4 +19,4 @@ function createConfigStore() {
 	};
 }
 
-export const configStore = createConfigStore();
+export const configStore: any = createConfigStore();

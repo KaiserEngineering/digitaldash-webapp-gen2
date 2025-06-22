@@ -380,10 +380,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@lucide/svelte@^0.518.0":
-  version "0.518.0"
-  resolved "https://registry.yarnpkg.com/@lucide/svelte/-/svelte-0.518.0.tgz#3d8fcfe8f2c011f17d930186284138fe38acca67"
-  integrity sha512-vhSikVKVZnz7eVa70WsWh/ySqdcb7Mn2R/XhG16fCfqgpMKzdu5GCHPRLaHcGaUCaM9cPDMWG8FeBXk0QY1PEg==
+"@lucide/svelte@^0.522.0":
+  version "0.522.0"
+  resolved "https://registry.yarnpkg.com/@lucide/svelte/-/svelte-0.522.0.tgz#76f398d093b45dcb0cdbae9e06076704edea88bb"
+  integrity sha512-Q10WkheTfb0sZ6y+EQVTqW4DN8nD2mym00gVpinbe3dJWRW3/R7SeTGF9pW+Ux4PrzkNV9dUdUTWcbO/AdKwQQ==
 
 "@napi-rs/wasm-runtime@^0.2.10":
   version "0.2.10"
@@ -1096,10 +1096,10 @@ bindings@^1.5.0:
   dependencies:
     file-uri-to-path "1.0.0"
 
-bits-ui@^2.8.4:
-  version "2.8.4"
-  resolved "https://registry.yarnpkg.com/bits-ui/-/bits-ui-2.8.4.tgz#bb7eaa4c8dc4d9e10c3d4170548b772b0492c025"
-  integrity sha512-q3UQH1ByPYM9VYU+doINQcpUGhWxwSLO5oMAOHjD5IvuJESOPzfr1R17zMGHFNGwJIVh9PpJM2oFlORQFFTt+g==
+bits-ui@^2.8.6:
+  version "2.8.6"
+  resolved "https://registry.yarnpkg.com/bits-ui/-/bits-ui-2.8.6.tgz#dd35f81e87c71f70b7661de80a23f721568ef0e6"
+  integrity sha512-r6GMDXnRR6Y7iTmAHW6v7dJF+IGCkOg/bYTu9rAfuAnsr6H3WMO/OG0XioRRTZwKt2YG29e1JrjQavYh5OQ8FA==
   dependencies:
     "@floating-ui/core" "^1.7.1"
     "@floating-ui/dom" "^1.7.1"
@@ -2026,10 +2026,10 @@ loupe@^3.1.4:
   resolved "https://registry.yarnpkg.com/loupe/-/loupe-3.1.4.tgz#784a0060545cb38778ffb19ccde44d7870d5fdd9"
   integrity sha512-wJzkKwJrheKtknCOKNEtDK4iqg/MxmZheEMtSTYvnzRdEYaZzmgH976nenp8WdJRdx5Vc1X/9MO0Oszl6ezeXg==
 
-lucide-svelte@^0.518.0:
-  version "0.518.0"
-  resolved "https://registry.yarnpkg.com/lucide-svelte/-/lucide-svelte-0.518.0.tgz#ada243832f1451d5fe8d257b22bddadc06eaf051"
-  integrity sha512-LWuXcRAOFqqSa6QI4Awfe1Y7yZngpX0bB6gfTUefZc/hqHUWb/lukHF5M1SuR4A2O9ra7jsT46WnDtXPMmkNvg==
+lucide-svelte@^0.522.0:
+  version "0.522.0"
+  resolved "https://registry.yarnpkg.com/lucide-svelte/-/lucide-svelte-0.522.0.tgz#1e1eba56c068d26127e8a4a2cc6410920a636e9f"
+  integrity sha512-5/Xrf9kx60WaqLqyEFvJVh3HEi6t05PFTNczYsMkH4AQPKr2BW7HctlgDYfUwScz0/OHVlHG+gfgklymMtK2UQ==
 
 magic-string@^0.30.11, magic-string@^0.30.17, magic-string@^0.30.5:
   version "0.30.17"
@@ -2451,6 +2451,13 @@ runed@^0.28.0:
   version "0.28.0"
   resolved "https://registry.yarnpkg.com/runed/-/runed-0.28.0.tgz#68e2ec076ae921f5e7ca0ebaa37e9f6598775c3c"
   integrity sha512-k2xx7RuO9hWcdd9f+8JoBeqWtYrm5CALfgpkg2YDB80ds/QE4w0qqu34A7fqiAwiBBSBQOid7TLxwxVC27ymWQ==
+  dependencies:
+    esm-env "^1.0.0"
+
+runed@^0.29.0:
+  version "0.29.0"
+  resolved "https://registry.yarnpkg.com/runed/-/runed-0.29.0.tgz#d831710a2df1692b1a37d44470954b1f8f61f65a"
+  integrity sha512-8aewcEjcaHk/dDsAWdPHQMUtsB2J9KSeL/c3USD58/3ijhUYEk0D/XT+BQSHt12ikbHNfaEf/ytJ3fmpBcf0YQ==
   dependencies:
     esm-env "^1.0.0"
 

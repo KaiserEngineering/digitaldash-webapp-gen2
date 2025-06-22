@@ -1,6 +1,4 @@
 // src/routes/advanced/+page.ts
-export const prerender = false;
-
 import { superValidate } from 'sveltekit-superforms';
 import type { PageLoad } from './$types';
 import { DigitalDashSchema } from '$schemas/digitaldash';

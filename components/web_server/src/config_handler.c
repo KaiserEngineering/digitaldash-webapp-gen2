@@ -11,6 +11,13 @@ static const char *TAG = "ConfigHandler";
 /*                     DON'T RESET THE MCU EACH TIME THE json_data_input BUFFER WILL BE EMPTY */
 esp_err_t config_get_handler(httpd_req_t *req)
 {
+    ESP_LOGI(TAG, "GET /api/config requested");
+    if (json_data_input[0] == '\0')
+    {
+        ESP_LOGE(TAG, "Config data is empty, please reset the MCU to initialize.");
+        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Config data not initialized");
+    }
+    ESP_LOGI(TAG, "Sending config data: %s", json_data_input);
     httpd_resp_set_type(req, "application/json");
     return httpd_resp_send(req, json_data_input, HTTPD_RESP_USE_STRLEN);
 }
@@ -19,6 +26,7 @@ esp_err_t config_patch_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "PATCH /api/config requested");
 
+    
     int total_len = req->content_len;
     char buf[2048];
 

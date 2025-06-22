@@ -1,0 +1,7 @@
+#ifndef VERSION_H
+#define VERSION_H
+
+#define APP_VERSION_STRING "1750630020319"
+#define VERSION_JSON_RESPONSE "{\"version\": \"1750630020319\"}"
+
+#endif

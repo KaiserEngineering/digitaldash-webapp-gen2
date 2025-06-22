@@ -1,8 +1,6 @@
 import type { PageLoad } from './$types';
 import { ImageHandler } from '$lib/image/handler';
 
-export const prerender = false;
-
 export const load: PageLoad = async ({ fetch }) => {
 	const imageHandler = new ImageHandler();
 
