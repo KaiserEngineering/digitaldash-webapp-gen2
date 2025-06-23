@@ -9,7 +9,8 @@
 	let { form, backgrounds } = $props();
 
 	const backgroundTriggerContent = $derived(
-		backgrounds.find((f: String) => f === $form.background) ?? 'Select a background'
+		backgrounds.find((f: string) => f.toLowerCase() === $form.background.toLowerCase()) ??
+			'Select a background'
 	);
 </script>
 

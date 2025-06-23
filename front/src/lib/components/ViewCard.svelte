@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { ImageHandler } from '$lib/image/handler';
 	import Spinner from './Spinner.svelte';
-	import { Gauge as GaugeIcon } from 'lucide-svelte';
 	import toast from 'svelte-5-french-toast';
 	import { ViewSchema } from '$schemas/digitaldash';
 	import { onMount } from 'svelte';
@@ -50,15 +49,26 @@
 
 	$effect(() => {
 		(async () => {
-			const imageData = await imageHandler.loadImage(view.background);
-			backgroundUrl = imageData.url;
+			try {
+				const imageData = await imageHandler.loadImage(view.background);
+				backgroundUrl = imageData.url;
+			} catch (err) {
+				toast.error(`Failed to load background: ${(err as Error).message}`);
+				backgroundUrl = '';
+			}
 
 			const gauges = view?.gauge ?? [];
 			await Promise.all(
 				gauges.map(async (gauge: { theme: string | number }) => {
-					if (!theme[gauge.theme]) {
-						const themeImageData = await imageHandler.loadImage(`${gauge.theme}.png`);
-						theme[gauge.theme] = themeImageData.url;
+					const key = `${gauge.theme}`;
+					if (!theme[key]) {
+						try {
+							const themeImageData = await imageHandler.loadImage(key);
+							theme[key] = themeImageData.url;
+						} catch (err) {
+							failedImages = { ...failedImages, [key]: true };
+							console.warn(`Failed to load theme image for "${key}":`, err);
+						}
 					}
 				})
 			);
@@ -75,21 +85,33 @@
 				return;
 			}
 
-			const imageData = await imageHandler.loadImage(view.background);
-			backgroundUrl = imageData.url;
-			view.textColor = await computeIdealTextColor(imageData.url);
+			try {
+				const imageData = await imageHandler.loadImage(view.background);
+				backgroundUrl = imageData.url;
+				view.textColor = await computeIdealTextColor(imageData.url);
+			} catch (err) {
+				toast.error(`Failed to load background: ${(err as Error).message}`);
+				backgroundUrl = '';
+				view.textColor = 'white';
+			}
 
 			const gauges = view?.gauge ?? [];
 			await Promise.all(
 				gauges.map(async (gauge: { theme: string | number }) => {
-					if (!theme[gauge.theme]) {
-						const themeImageData = await imageHandler.loadImage(`${gauge.theme}.png`);
-						theme[gauge.theme] = themeImageData.url;
+					const key = `${gauge.theme}`;
+					if (!theme[key]) {
+						try {
+							const themeImageData = await imageHandler.loadImage(key);
+							theme[key] = themeImageData.url;
+						} catch (err) {
+							failedImages = { ...failedImages, [key]: true };
+							console.warn(`Failed to load theme image for "${key}":`, err);
+						}
 					}
 				})
 			);
 		} catch (error) {
-			toast.error(`Failed to load view image: ${(error as Error).message}`);
+			toast.error(`Failed to load view: ${(error as Error).message}`);
 			view.textColor = 'white';
 		} finally {
 			loading = false;
@@ -125,18 +147,18 @@
 								<div
 									class="hover:ring-primary-400/50 relative h-24 w-24 overflow-hidden rounded-full ring-2 ring-white/20 transition-all duration-300"
 								>
-									{#if !failedImages[gauge.theme]}
+									{#if theme[gauge.theme] && !failedImages[gauge.theme]}
 										<img
 											class="h-full w-full rounded-full object-cover transition-all duration-500"
-											src={theme[gauge.theme] || '/placeholder.svg'}
+											src={theme[gauge.theme]}
 											alt={gauge.theme}
 											onerror={() => handleImageError(gauge.theme)}
 										/>
 									{:else}
 										<div
-											class="from-primary-600 to-primary-800 inset-0 flex items-center justify-center bg-gradient-to-br"
+											class="inset-0 flex h-full w-full items-center justify-center bg-black/40 text-xs text-white"
 										>
-											<GaugeIcon class="h-4 w-4 text-white opacity-70" />
+											{gauge.theme}
 										</div>
 									{/if}
 								</div>

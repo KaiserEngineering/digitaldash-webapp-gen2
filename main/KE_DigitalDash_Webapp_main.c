@@ -80,8 +80,8 @@ i2c_master_dev_handle_t eeprom_handle;
 
 static const char *TAG = "Main";
 
-#define JSON_BUF_SIZE 1024
-
+#define JSON_BUF_SIZE 10000
+int json_data_len = 0;
 char json_data_input[JSON_BUF_SIZE];
 char json_data_output[JSON_BUF_SIZE];
 
@@ -439,6 +439,34 @@ void flash_stm32_firmware(const char *bin_filename)
     endConn();
 }
 
+void loop_uart_read(void)
+{
+    uint8_t temp_buf[256];  // Temporary buffer for each read
+    int len = uart_read_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, temp_buf, sizeof(temp_buf), pdMS_TO_TICKS(10));
+
+    if (len > 0 && json_data_len + len < JSON_BUF_SIZE - 1) {
+        memcpy(&json_data_input[json_data_len], temp_buf, len);
+        json_data_len += len;
+        json_data_input[json_data_len] = '\0';  // Null-terminate
+
+        // Optional: print received part
+        fwrite(temp_buf, 1, len, stdout);
+        fflush(stdout);
+
+        // Check if JSON end detected (very basic heuristic)
+        if (strchr((char *)temp_buf, '}')) {
+            ESP_LOGI("UART", "Complete JSON received (%d bytes)", json_data_len);
+            // json_data_input now contains the full JSON string
+            // Reset counter if you're done processing
+            // Optionally: validate and send via config handler
+        }
+    } else if (json_data_len + len >= JSON_BUF_SIZE - 1) {
+        ESP_LOGW("UART", "JSON buffer overflow. Resetting.");
+        json_data_len = 0;
+        json_data_input[0] = '\0';
+    }
+}
+
 void app_main(void)
 {
     gpio_init();
@@ -503,13 +531,8 @@ void app_main(void)
             count = 0;
         }
 
-        int len = uart_read_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, json_data_input, sizeof(json_data_input), pdMS_TO_TICKS(10));
-        if (len > 0) {
-            for (int i = 0; i < len; i++) {
-                putchar(json_data_input[i]);  // Print raw ASCII character
-            }
-            fflush(stdout);  // Ensure it shows up immediately
-        }
+       loop_uart_read();
+
         count++;
     }
 }

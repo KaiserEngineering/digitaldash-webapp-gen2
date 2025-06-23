@@ -40,7 +40,7 @@ export async function uploadBackground(
 
 		// Need to update our cache
 		const imageHandler = new ImageHandler();
-		imageHandler.clearImageCache(file.name);
+		imageHandler.clearCustomerImageNameCache();
 
 		toast.success('Upload successful');
 	} else {

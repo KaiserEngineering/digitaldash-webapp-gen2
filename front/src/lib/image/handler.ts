@@ -16,8 +16,6 @@ const FactoryImages = [...factoryBackgroundImages, ...factoryThemeImames];
 
 export class ImageHandler {
 	private customerImageNamesCache: string[] | null = null;
-	private lastFetchTime: number | null = null;
-	private readonly TTL = 5 * 60 * 1000;
 
 	/**
 	 * Resolve endpoint for image name.
@@ -33,13 +31,15 @@ export class ImageHandler {
 	 * Load image, using cache if available.
 	 */
 	async loadImage(name: string): Promise<ImageData> {
-		if (imageCache.has(name)) return imageCache.get(name)!;
+		const cacheKey = `${name}.png`;
+		if (imageCache.has(cacheKey)) return imageCache.get(cacheKey)!;
 
-		const url = this.getEndpoint(name) + encodeURIComponent(name);
+		const url = this.getEndpoint(name) + encodeURIComponent(cacheKey);
 
 		try {
 			const res = await fetch(url);
-			if (!res.ok) throw new Error(`Failed to load image: ${res.statusText}`);
+			if (!res.ok)
+				throw new Error(`Failed to load image '${name}': ${res.status} ${res.statusText}`);
 
 			const blob = await res.blob();
 			const objectUrl = URL.createObjectURL(blob);
@@ -48,13 +48,23 @@ export class ImageHandler {
 			const contentType = res.headers.get('content-type') || 'unknown';
 
 			const imageData: ImageData = { name, url: objectUrl, size, lastModified, contentType };
-			imageCache.set(name, imageData);
+			imageCache.set(cacheKey, imageData);
 
 			return imageData;
 		} catch (err) {
-			console.error(`Image fetch failed for ${name}`, err);
+			console.error(`Image fetch failed for '${name}'`, err);
 			throw err;
 		}
+	}
+
+	/**
+	 * Preload multiple images for better UX
+	 */
+	async preloadImages(names: string[]): Promise<void> {
+		const promises = names.map((name) =>
+			this.loadImage(name).catch((err) => console.warn(`Preload failed for ${name}:`, err))
+		);
+		await Promise.allSettled(promises);
 	}
 
 	/**
@@ -86,9 +96,7 @@ export class ImageHandler {
 	 * Return list of customer-uploaded image filenames.
 	 */
 	async getCustomerImageNames(fetchFn: typeof fetch): Promise<string[]> {
-		const now = Date.now();
-
-		if (this.customerImageNamesCache && this.lastFetchTime && now - this.lastFetchTime < this.TTL) {
+		if (this.customerImageNamesCache) {
 			return this.customerImageNamesCache;
 		}
 
@@ -96,8 +104,16 @@ export class ImageHandler {
 			const res = await fetchFn(`${apiUrl}/user_images`);
 			if (res.ok) {
 				const json = await res.json();
+				// Remove file types from keys
+				Object.keys(json).forEach((key) => {
+					const extIndex = key.lastIndexOf('.');
+					if (extIndex !== -1) {
+						const nameWithoutExt = key.substring(0, extIndex);
+						json[nameWithoutExt] = json[key];
+						delete json[key];
+					}
+				});
 				this.customerImageNamesCache = Object.keys(json);
-				this.lastFetchTime = now;
 			} else {
 				console.error('Failed to fetch customer image names:', res.statusText);
 				this.customerImageNamesCache = [];
@@ -115,6 +131,5 @@ export class ImageHandler {
 	 */
 	clearCustomerImageNameCache() {
 		this.customerImageNamesCache = null;
-		this.lastFetchTime = null;
 	}
 }

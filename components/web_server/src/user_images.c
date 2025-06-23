@@ -25,7 +25,7 @@
  ******************************************************************************
  */
 
-#include "USER_IMAGES.h"
+#include "user_images.h"
 #include "esp_err.h"
 #include "esp_http_server.h"
 #include "esp_log.h"
@@ -223,8 +223,6 @@ esp_err_t user_image_upload_handler(httpd_req_t *req)
     const char *original_filename = req->uri + strlen(prefix);
     char filename[MAX_PATH_SIZE];
     snprintf(filename, sizeof(filename), "%s", original_filename);
-    for (char *p = filename; *p; ++p)
-        *p = tolower(*p);
 
     /* Validate image type */
     const char *mime_type;

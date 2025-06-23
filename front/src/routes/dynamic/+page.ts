@@ -12,8 +12,19 @@ export const load: PageLoad = async ({ fetch, parent }) => {
 	};
 
 	const form = await superValidate(dynamicConfig, zod(DynamicFormSchema));
-
-	const options = await getOptions(fetch);
+	let options;
+	try {
+		options = await getOptions(fetch);
+		if (!options) {
+			throw new Error('Failed to load options');
+		}
+	} catch (error) {
+		console.error('Error loading options:', error);
+		return {
+			form,
+			pids: []
+		};
+	}
 	let pids = options.pids;
 
 	return { form, pids };

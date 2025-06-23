@@ -3,12 +3,12 @@ idf_component_register(SRCS "src/web_server.c" "src/wifi_ap.c" "src/web_settings
     PRIV_REQUIRES esp_http_server esp_wifi nvs_flash mdns app_update spiffs
     EMBED_FILES
     "index.html"
-    "factoryImages/bar_aurora.png"
+    "factoryImages/Linear.png"
     "factoryImages/flare.png"
-    "factoryImages/stock_rs.png"
+    "factoryImages/Stock RS.png"
     "factoryImages/favicon.png"
     "factoryImages/galaxy.png"
-    "factoryImages/stock_st.png"
+    "factoryImages/Stock ST.png"
 )
 
 set(VERSION_JSON_PATH "${CMAKE_SOURCE_DIR}/front/build/_app/version.json")

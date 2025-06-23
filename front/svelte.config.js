@@ -22,13 +22,14 @@ const config = {
 			bundleStrategy: 'inline'
 		},
 
-		router: {
-			type: 'hash'
-		},
+		// router: {
+		// 	type: 'hash'
+		// },
 
 		alias: {
 			'@/*': './src/lib/*',
-			'$schemas/*': './src/schemas/*'
+			'$schemas/*': './src/schemas/*',
+			'$local/*': './src/local/*',
 		}
 	}
 };
