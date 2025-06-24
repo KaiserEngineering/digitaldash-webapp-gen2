@@ -42,6 +42,7 @@
 #include "stm_flash.h"
 #include "stm32_uart.h"
 #include "png_transfer.h"
+#include "lib_ke_protocol.h"
 
 #define UI_HOR_RES    1024
 #define UI_VER_RES    200

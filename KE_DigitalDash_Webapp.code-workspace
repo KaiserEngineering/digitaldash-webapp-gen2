@@ -95,6 +95,7 @@
 			"i2c.h": "c",
 			"ke_config.h": "c",
 			"lib_pid.h": "c",
+			"lib_ke_protocol.h": "c",
 			"stm_flash.h": "c",
 			"stm_pro_mode.h": "c",
 			"setjmp.h": "c",
