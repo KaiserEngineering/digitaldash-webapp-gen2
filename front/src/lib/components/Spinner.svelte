@@ -1,21 +1,22 @@
 <script lang="ts">
-	let { classNames = '' } = $props();
+	import { cn } from '$lib/utils';
+
+	let { class: className, size = 'default' } = $props<{
+		class?: string;
+		size?: 'sm' | 'default' | 'lg';
+	}>();
+
+	const sizes = {
+		sm: 'h-4 w-4',
+		default: 'h-6 w-6',
+		lg: 'h-8 w-8'
+	};
 </script>
 
-<div class="spinner {classNames}"></div>
-
-<style>
-	.spinner {
-		border: 4px solid rgba(0, 0, 0, 0.1);
-		border-left-color: #09f;
-		border-radius: 50%;
-		width: 2rem;
-		height: 2rem;
-		animation: spin 1s linear infinite;
-	}
-	@keyframes spin {
-		to {
-			transform: rotate(360deg);
-		}
-	}
-</style>
+<div
+	class={cn(
+		'border-primary-200 border-t-primary-600 animate-spin rounded-full border-2',
+		sizes[size],
+		className
+	)}
+></div>

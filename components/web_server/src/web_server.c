@@ -2,11 +2,14 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "config_handler.h"
 #include "esp_vfs.h"
 #include "esp_log.h"
 #include "esp_http_server.h"
 #include "esp_err.h"
 #include "user_images.h"
+#include <ctype.h>
+#include "version.h"
 
 static const char *TAG = "WebServer";
 
@@ -38,14 +41,14 @@ extern const uint8_t factoryImages_galaxy_png_start[] asm("_binary_galaxy_png_st
 extern const uint8_t factoryImages_galaxy_png_end[] asm("_binary_galaxy_png_end");
 
 // Factory Themes:
-extern const uint8_t factoryImages_bar_aurora_png_start[] asm("_binary_bar_aurora_png_start");
-extern const uint8_t factoryImages_bar_aurora_png_end[] asm("_binary_bar_aurora_png_end");
+extern const uint8_t factoryImages_Linear_png_start[] asm("_binary_Linear_png_start");
+extern const uint8_t factoryImages_Linear_png_end[] asm("_binary_Linear_png_end");
 
-extern const uint8_t factoryImages_stock_rs_png_start[] asm("_binary_stock_rs_png_start");
-extern const uint8_t factoryImages_stock_rs_png_end[] asm("_binary_stock_rs_png_end");
+extern const uint8_t factoryImages_Stock_RS_png_start[] asm("_binary_Stock_RS_png_start");
+extern const uint8_t factoryImages_Stock_RS_png_end[] asm("_binary_Stock_RS_png_end");
 
-extern const uint8_t factoryImages_stock_st_png_start[] asm("_binary_stock_st_png_start");
-extern const uint8_t factoryImages_stock_st_png_end[] asm("_binary_stock_st_png_end");
+extern const uint8_t factoryImages_Stock_ST_png_start[] asm("_binary_Stock_ST_png_start");
+extern const uint8_t factoryImages_Stock_ST_png_end[] asm("_binary_Stock_ST_png_end");
 
 // Embedded file mappings
 static const EmbeddedFile embedded_files[] = {
@@ -56,21 +59,60 @@ static const EmbeddedFile embedded_files[] = {
     // Factory images (preloaded in firmware)
     {"/api/embedded/flare.png", factoryImages_flare_png_start, factoryImages_flare_png_end, "image/png"},
     {"/api/embedded/galaxy.png", factoryImages_galaxy_png_start, factoryImages_galaxy_png_end, "image/png"},
-    {"/api/embedded/bar_aurora.png", factoryImages_bar_aurora_png_start, factoryImages_bar_aurora_png_end, "image/png"},
-    {"/api/embedded/stock_rs.png", factoryImages_stock_rs_png_start, factoryImages_stock_rs_png_end, "image/png"},
-    {"/api/embedded/stock_st.png", factoryImages_stock_st_png_start, factoryImages_stock_st_png_end, "image/png"},
+    {"/api/embedded/Linear.png", factoryImages_Linear_png_start, factoryImages_Linear_png_end, "image/png"},
+    {"/api/embedded/Stock RS.png", factoryImages_Stock_RS_png_start, factoryImages_Stock_RS_png_end, "image/png"},
+    {"/api/embedded/Stock ST.png", factoryImages_Stock_ST_png_start, factoryImages_Stock_ST_png_end, "image/png"},
 };
 
 #define EMBEDDED_FILE_COUNT (sizeof(embedded_files) / sizeof(EmbeddedFile))
 #define HTTPD_TASK_STACK_SIZE (8192)
 
+// Decode a URL-encoded string (e.g., "Stock%20ST.png" → "Stock ST.png")
+void url_decode(char *dest, const char *src, size_t max_len)
+{
+    char a, b;
+    size_t i = 0;
+
+    while (*src && i < max_len - 1)
+    {
+        if ((*src == '%') &&
+            (a = src[1]) && (b = src[2]) &&
+            isxdigit(a) && isxdigit(b))
+        {
+            char hex[3] = {a, b, '\0'};
+            dest[i++] = (char)strtol(hex, NULL, 16);
+            src += 3;
+        }
+        else if (*src == '+')
+        {
+            dest[i++] = ' ';
+            src++;
+        }
+        else
+        {
+            dest[i++] = *src++;
+        }
+    }
+
+    dest[i] = '\0';
+}
+
 esp_err_t embedded_file_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "Checking for embedded file: %s", req->uri);
 
+    char decoded[128];
+    const char *encoded = req->uri + strlen("/api/embedded/");
+    url_decode(decoded, encoded, sizeof(decoded));
+
+    char expected_path[128];
+    snprintf(expected_path, sizeof(expected_path), "/api/embedded/%.*s", (int)(sizeof(expected_path) - strlen("/api/embedded/") - 1), decoded);
+    ESP_LOGI(TAG, "Decoded URI: %s", expected_path);
+
     for (int i = 0; i < EMBEDDED_FILE_COUNT; i++)
     {
-        if (strcmp(req->uri, embedded_files[i].path) == 0)
+        // Match against the decoded name (e.g. "Stock ST.png")
+        if (strcmp(expected_path, embedded_files[i].path) == 0)
         {
             ESP_LOGI(TAG, "Serving embedded file: %s", embedded_files[i].path);
 
@@ -104,7 +146,7 @@ esp_err_t embedded_file_handler(httpd_req_t *req)
         }
     }
 
-    return ESP_ERR_NOT_FOUND;
+    return httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "Embedded file not found");
 }
 
 static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepath)
@@ -160,6 +202,12 @@ static esp_err_t spiffs_file_handler(httpd_req_t *req)
     return ESP_ERR_NOT_FOUND;
 }
 
+static bool is_spa_route(const char *uri)
+{
+    const char *dot = strrchr(uri, '.');
+    return dot == NULL; // No file extension
+}
+
 esp_err_t web_request_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "Handling request: %s", req->uri);
@@ -180,11 +228,29 @@ esp_err_t web_request_handler(httpd_req_t *req)
         return httpd_resp_send(req, (const char *)index_html_start, index_html_end - index_html_start);
     }
 
-    // Default: Serve `index.html`
-    ESP_LOGW(TAG, "Serving index.html for req: %s", req->uri);
+    // Serve index.html only for likely SPA routes
+    if (is_spa_route(req->uri))
+    {
+        ESP_LOGW(TAG, "SPA route fallback: serving index.html for %s", req->uri);
+        httpd_resp_set_type(req, "text/html");
+        return httpd_resp_send(req, (const char *)index_html_start, index_html_end - index_html_start);
+    }
 
-    httpd_resp_set_type(req, "text/html");
-    return httpd_resp_send(req, (const char *)index_html_start, index_html_end - index_html_start);
+    // If it’s a file-like path and not found earlier, return 404
+    ESP_LOGW(TAG, "Not found: %s", req->uri);
+    return httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File not found");
+}
+
+esp_err_t sveltekit_version_handler(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "Handling request: %s", req->uri);
+    ESP_LOGI(TAG, "Serving SvelteKit version: %s", APP_VERSION_STRING);
+    ESP_LOGI(TAG, "VERSION_JSON_RESPONSE: %s", VERSION_JSON_RESPONSE);
+
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
+    static const char version_json[] = VERSION_JSON_RESPONSE;
+    return httpd_resp_send(req, version_json, strlen(version_json));
 }
 
 esp_err_t start_webserver()
@@ -192,6 +258,7 @@ esp_err_t start_webserver()
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.stack_size = HTTPD_TASK_STACK_SIZE;
+    config.max_uri_handlers = 16;
     config.uri_match_fn = httpd_uri_match_wildcard;
 
     ESP_LOGI(TAG, "Starting HTTP Server");
@@ -209,6 +276,13 @@ esp_err_t start_webserver()
         return ESP_FAIL;
     }
 
+    if (register_config_routes(server) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to register config endpoints");
+        httpd_stop(server);
+        return ESP_FAIL;
+    }
+
     httpd_register_uri_handler(server, &(httpd_uri_t){
                                            .uri = "/api/embedded/*",
                                            .method = HTTP_GET,
@@ -219,6 +293,12 @@ esp_err_t start_webserver()
                                            .uri = "/api/user_images/*",
                                            .method = HTTP_GET,
                                            .handler = spiffs_file_handler,
+                                           .user_ctx = NULL});
+
+    httpd_register_uri_handler(server, &(httpd_uri_t){
+                                           .uri = "/_app/version.json",
+                                           .method = HTTP_GET,
+                                           .handler = sveltekit_version_handler,
                                            .user_ctx = NULL});
 
     httpd_register_uri_handler(server, &(httpd_uri_t){

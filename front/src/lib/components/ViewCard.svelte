@@ -1,34 +1,23 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { ImageHandler } from '$lib/image/handler';
 	import Spinner from './Spinner.svelte';
-	import { ImageHandler } from '$lib/imageHandler.svelte';
-	import { Gauge as GaugeIcon } from 'lucide-svelte';
 	import toast from 'svelte-5-french-toast';
-	import { ConfigStore } from '$lib/config.svelte';
-
-	// Import types and schema from our Zod schemas file
-	import type { ViewType } from '$schemas/digitaldash';
 	import { ViewSchema } from '$schemas/digitaldash';
+	import { onMount } from 'svelte';
+	import { cn } from '$lib/utils';
 
-	// Retrieve props via $props()
-	let { view, index } = $props<{ view: ViewType; index: number }>();
-
-	// Optionally validate the incoming view prop
-	const parsed = ViewSchema.safeParse(view);
-	if (!parsed.success) {
-		toast.error('Invalid view data');
-		console.error('Invalid view data', parsed.error);
-	}
-
-	const gauges = ConfigStore.config
-		? ConfigStore.config.gauge.filter((g) => g.index === index)
-		: [];
+	let { view, index, class: className = '' } = $props();
 
 	const imageHandler = new ImageHandler();
 	let loading = $state(true);
 	let backgroundUrl = $state('');
+	const theme: Record<string, string> = $state({});
+	let failedImages: Record<string, boolean> = $state({});
 
-	// Compute ideal text color based on image brightness
+	function handleImageError(themeKey: string) {
+		failedImages = { ...failedImages, [themeKey]: true };
+	}
+
 	async function computeIdealTextColor(imageUrl: string): Promise<string> {
 		return new Promise((resolve) => {
 			const img = new Image();
@@ -58,80 +47,134 @@
 		});
 	}
 
-	// Store theme images keyed by theme name
-	const theme: Record<string, string> = {};
-	let failedImages: Record<string, boolean> = $state({});
-
-	function handleImageError(themeKey: string) {
-		failedImages = { ...failedImages, [themeKey]: true };
-	}
-
-	onMount(async () => {
-		try {
-			const imageData = await imageHandler.loadImage(view.background);
-			backgroundUrl = imageData.url;
-			view.textColor = await computeIdealTextColor(imageData.url);
-
-			// If your view contains gauges and you load their images:
-			const fetchedThemes = new Set<string>();
-			// Assuming you have a corresponding property for gauge themes
-			// (You might need to adapt this part if your view structure differs)
-			for (const gauge of gauges || []) {
-				if (!theme[gauge.theme] && !fetchedThemes.has(gauge.theme)) {
-					fetchedThemes.add(gauge.theme);
-					const themeImageData = await imageHandler.loadImage(`${gauge.theme}.png`);
-					theme[gauge.theme] = themeImageData.url;
-				}
+	$effect(() => {
+		(async () => {
+			try {
+				const imageData = await imageHandler.loadImage(view.background);
+				backgroundUrl = imageData.url;
+			} catch (err) {
+				toast.error(`Failed to load background: ${(err as Error).message}`);
+				backgroundUrl = '';
 			}
+
+			const gauges = view?.gauge ?? [];
+			await Promise.all(
+				gauges.map(async (gauge: { theme: string | number }) => {
+					const key = `${gauge.theme}`;
+					if (!theme[key]) {
+						try {
+							const themeImageData = await imageHandler.loadImage(key);
+							theme[key] = themeImageData.url;
+						} catch (err) {
+							failedImages = { ...failedImages, [key]: true };
+							console.warn(`Failed to load theme image for "${key}":`, err);
+						}
+					}
+				})
+			);
+		})();
+	});
+
+	async function handleViewChange() {
+		loading = true;
+		try {
+			const parsed = ViewSchema.safeParse(view);
+			if (!parsed.success) {
+				toast.error('Invalid view data');
+				console.error('Invalid view data', parsed.error);
+				return;
+			}
+
+			try {
+				const imageData = await imageHandler.loadImage(view.background);
+				backgroundUrl = imageData.url;
+				view.textColor = await computeIdealTextColor(imageData.url);
+			} catch (err) {
+				toast.error(`Failed to load background: ${(err as Error).message}`);
+				backgroundUrl = '';
+				view.textColor = 'white';
+			}
+
+			const gauges = view?.gauge ?? [];
+			await Promise.all(
+				gauges.map(async (gauge: { theme: string | number }) => {
+					const key = `${gauge.theme}`;
+					if (!theme[key]) {
+						try {
+							const themeImageData = await imageHandler.loadImage(key);
+							theme[key] = themeImageData.url;
+						} catch (err) {
+							failedImages = { ...failedImages, [key]: true };
+							console.warn(`Failed to load theme image for "${key}":`, err);
+						}
+					}
+				})
+			);
 		} catch (error) {
-			toast.error(`Failed to load view image: ${(error as Error).message}`);
-			view.textColor = 'black';
+			toast.error(`Failed to load view: ${(error as Error).message}`);
+			view.textColor = 'white';
 		} finally {
 			loading = false;
+		}
+	}
+
+	onMount(() => {
+		if (view) {
+			handleViewChange();
+		} else {
+			toast.error('View data is not available');
 		}
 	});
 </script>
 
-{#if loading}
-	<div class="flex h-32 items-center justify-center">
-		<Spinner />
-	</div>
-{:else}
-	<a href="/view/{index}">
+<div class={cn('group', className)}>
+	{#if loading}
 		<div
-			class="view-card mb-2 rounded-3xl bg-cover p-2 shadow-lg"
-			style:background-image={`url('${backgroundUrl}')`}
+			class="bg-primary-200 border-primary-200 flex items-center justify-center rounded-2xl border"
 		>
-			<div class="mb-6 flex items-center justify-between">
-				<h2 class="text-2xl font-bold" style:color={view.textColor}>
-					{view.name || `View ${index + 1}`}
-				</h2>
-			</div>
-			<div class="flex justify-center space-x-2">
-				{#each gauges as gauge}
-					<div class="flex flex-col items-center">
-						<div class="relative h-24 w-24">
-							{#if !failedImages[gauge.theme]}
-								<img
-									class="rounded-full"
-									src={theme[gauge.theme]}
-									alt={gauge.theme}
-									onerror={() => handleImageError(gauge.theme)}
-								/>
-							{/if}
-							{#if failedImages[gauge.theme]}
-								<!-- Show GaugeIcon only if the image fails -->
-								<div class="absolute inset-0 flex items-center justify-center">
-									<GaugeIcon class="text-white" />
-								</div>
-							{/if}
-						</div>
-						<span class="mt-2 rounded-full bg-purple-600 px-4 py-1 text-sm text-white">
-							{gauge.name}
-						</span>
-					</div>
-				{/each}
-			</div>
+			<Spinner />
 		</div>
-	</a>
-{/if}
+	{:else}
+		<a href="/view/{index}" class="block">
+			<div
+				class="hover:border-primary-500/50 relative h-36 w-full overflow-hidden rounded-2xl border-2 border-transparent bg-cover shadow-md transition-all duration-500 ease-out hover:scale-[1.02] hover:shadow-xl"
+				style:background-image={`url('${backgroundUrl}')`}
+			>
+				<div class="relative z-10 flex h-full flex-col justify-between pt-4">
+					<div class="flex w-full flex-wrap justify-center gap-4">
+						{#each view?.gauge ?? [] as gauge, i}
+							<div class="flex flex-col items-center space-y-2 transition-all duration-500">
+								<div
+									class="hover:ring-primary-400/50 relative h-24 w-24 overflow-hidden rounded-full ring-2 ring-white/20 transition-all duration-300"
+								>
+									{#if theme[gauge.theme] && !failedImages[gauge.theme]}
+										<img
+											class="h-full w-full rounded-full object-cover transition-all duration-500"
+											src={theme[gauge.theme]}
+											alt={gauge.theme}
+											onerror={() => handleImageError(gauge.theme)}
+										/>
+									{:else}
+										<div
+											class="inset-0 flex h-full w-full items-center justify-center bg-black/40 text-xs text-white"
+										>
+											{gauge.theme}
+										</div>
+									{/if}
+								</div>
+
+								<div
+									class="absolute mt-20 rounded-full border border-white/20 bg-black/60 px-3 backdrop-blur-sm"
+								>
+									<span class="text-xs font-medium text-white">
+										{gauge.pid || 'No PID'}
+									</span>
+								</div>
+							</div>
+						{/each}
+					</div>
+				</div>
+			</div>
+		</a>
+	{/if}
+</div>

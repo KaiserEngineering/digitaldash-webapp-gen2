@@ -79,6 +79,7 @@ i2c_master_dev_handle_t eeprom_handle;
 static const char *TAG = "Main";
 
 #define JSON_BUF_SIZE 10000
+int json_data_len = 0;
 
 char json_data_input[JSON_BUF_SIZE];
 char json_data_output[JSON_BUF_SIZE];
@@ -305,33 +306,32 @@ void flash_stm32_firmware(const char *bin_filename)
     endConn();
 }
 
-/* CRAIG!!! READ THIS: YOU WILL NEED TO PUSH THE MCU PUSH BUTTON ON YOUR DEV UNIT EACH BOOT   */
-/*                     THE VERY BASIC SETUP ONLY SENDS THE JSON ON MCU BOOT. THEREFORE IF YOU */
-/*                     DON'T RESET THE MCU EACH TIME THE json_data_input BUFFER WILL BE EMPTY */
-esp_err_t config_get_handler(httpd_req_t *req)
+void loop_uart_read(void)
 {
-    httpd_resp_set_type(req, "application/json");
-    return httpd_resp_send(req, json_data_input, HTTPD_RESP_USE_STRLEN);
-}
+    uint8_t temp_buf[256];  // Temporary buffer for each read
+    int len = uart_read_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, temp_buf, sizeof(temp_buf), pdMS_TO_TICKS(10));
 
-esp_err_t config_patch_handler(httpd_req_t *req)
-{
-    ESP_LOGI(TAG, "PATCH /api/config requested");
+    if (len > 0 && json_data_len + len < JSON_BUF_SIZE - 1) {
+        memcpy(&json_data_input[json_data_len], temp_buf, len);
+        json_data_len += len;
+        json_data_input[json_data_len] = '\0';  // Null-terminate
 
-    int total_len = req->content_len;
-    char buf[2048];
-    int received = httpd_req_recv(req, buf, MIN(total_len, sizeof(buf) - 1));
-    if (received <= 0)
-    {
-        ESP_LOGE(TAG, "Failed to receive config PATCH payload");
-        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid request");
+        // Optional: print received part
+        fwrite(temp_buf, 1, len, stdout);
+        fflush(stdout);
+
+        // Check if JSON end detected (very basic heuristic)
+        if (strchr((char *)temp_buf, '}')) {
+            ESP_LOGI("UART", "Complete JSON received (%d bytes)", json_data_len);
+            // json_data_input now contains the full JSON string
+            // Reset counter if you're done processing
+            // Optionally: validate and send via config handler
+        }
+    } else if (json_data_len + len >= JSON_BUF_SIZE - 1) {
+        ESP_LOGW("UART", "JSON buffer overflow. Resetting.");
+        json_data_len = 0;
+        json_data_input[0] = '\0';
     }
-
-    buf[received] = '\0';
-    ESP_LOGI(TAG, "Received config update: %s", buf);
-
-    // TODO send via UART
-    return ESP_OK;
 }
 
 int stm32_tx(const uint8_t *data, size_t len)
@@ -423,6 +423,12 @@ void app_main(void)
             #endif
             count = 0;
         }
+<<<<<<< HEAD
+
+       loop_uart_read();
+
+=======
+>>>>>>> origin/main
         count++;
         KE_Service(&stm32_comm);
     }

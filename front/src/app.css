@@ -1,1 +1,378 @@
 @import 'tailwindcss';
+@layer theme, base, components, utilities;
+
+@property --tw-gradient-from {
+	syntax: '<color>';
+	inherits: false;
+	initial-value: transparent;
+}
+
+:root {
+	color-scheme: light;
+}
+
+@layer theme {
+	@theme {
+		/* Primary (Red) — from logo */
+		--color-primary-50: oklch(0.97 0.03 27);
+		--color-primary-100: oklch(0.93 0.05 27);
+		--color-primary-200: oklch(0.87 0.09 27);
+		--color-primary-300: oklch(0.78 0.13 27);
+		--color-primary-400: oklch(0.7 0.18 27);
+		--color-primary-500: oklch(0.6 0.25 27); /* bold red */
+		--color-primary-600: oklch(0.5 0.25 27);
+		--color-primary-700: oklch(0.4 0.22 27);
+		--color-primary-800: oklch(0.3 0.18 27);
+		--color-primary-900: oklch(0.2 0.12 27);
+
+		--color-secondary-50: oklch(0.97 0.03 250);
+		--color-secondary-100: oklch(0.93 0.05 250);
+		--color-secondary-200: oklch(0.87 0.09 250);
+		--color-secondary-300: oklch(0.78 0.13 250);
+		--color-secondary-400: oklch(0.7 0.18 250);
+		--color-secondary-500: oklch(0.6 0.25 250);
+		--color-secondary-600: oklch(0.5 0.25 250);
+		--color-secondary-700: oklch(0.4 0.22 250);
+		--color-secondary-800: oklch(0.3 0.18 250);
+		--color-secondary-900: oklch(0.2 0.12 250);
+
+		/* Semantic colors */
+		--color-background: oklch(1 0 0);
+		--color-foreground: oklch(0.09 0 0);
+		--color-card: oklch(1 0 0);
+		--color-card-foreground: oklch(0.09 0 0);
+		--color-popover: oklch(1 0 0);
+		--color-popover-foreground: oklch(0.09 0 0);
+		--color-muted: oklch(0.96 0 0);
+		--color-muted-foreground: oklch(0.45 0 0);
+		--color-accent: oklch(0.96 0 0);
+		--color-accent-foreground: oklch(0.09 0 0);
+		--color-border: oklch(0.9 0 0);
+		--color-input: oklch(0.9 0 0);
+		--color-ring: oklch(0.6 0.25 27);
+
+		--color-destructive: oklch(0.577 0.245 27.325);
+		--color-destructive-foreground: oklch(0.985 0 0);
+
+		--color-success-500: oklch(0.6 0.25 120); /* Green */
+		--color-success-600: oklch(0.5 0.25 120);
+		--color-success-700: oklch(0.4 0.22 120); /* Darker Green */
+
+		--color-warning-500: oklch(0.6 0.25 60); /* Yellow */
+		--color-warning-600: oklch(0.5 0.25 60);
+		--color-warning-700: oklch(0.4 0.22 60); /* Darker Yellow */
+
+		--color-error-500: oklch(0.6 0.25 0); /* Red */
+		--color-error-600: oklch(0.5 0.25 0);
+		--color-error-700: oklch(0.4 0.22 0); /* Darker Red */
+
+		--text-primary: oklch(0.6 0.25 27); /* Primary text color */
+		--text-secondary: oklch(0.5 0.25 27); /* Secondary text color */
+
+		--color-background-soft: oklch(0.4941 0.2245 323);
+		--color-background-muted: oklch(0.4941 0.2245 323);
+
+		--radius: 0.5rem;
+	}
+}
+
+@layer base {
+	* {
+		@apply border-border;
+	}
+	body {
+		@apply bg-background text-foreground;
+	}
+}
+
+@layer components {
+	/* Button Components */
+	.btn {
+		@apply focus-visible:ring-ring inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50;
+	}
+
+	.btn-sm {
+		@apply h-8 px-3 text-xs;
+	}
+
+	.btn-md {
+		@apply h-9 px-4 py-2;
+	}
+
+	.btn-lg {
+		@apply h-10 px-8;
+	}
+
+	.btn-xl {
+		@apply h-12 px-10 text-base;
+	}
+
+	/* Button Variants */
+	.btn-primary {
+		@apply bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-white shadow;
+	}
+
+	.btn-secondary {
+		@apply bg-secondary-100 text-secondary-900 hover:bg-secondary-200 active:bg-secondary-300 shadow-sm;
+	}
+
+	.btn-outline {
+		@apply border-input bg-background hover:bg-accent hover:text-accent-foreground border shadow-sm;
+	}
+
+	.btn-ghost {
+		@apply hover:bg-accent hover:text-accent-foreground;
+	}
+
+	.btn-destructive {
+		@apply bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm;
+	}
+
+	.btn-success {
+		@apply bg-success-500 hover:bg-success-600 active:bg-success-700 text-white shadow;
+	}
+
+	.btn-warning {
+		@apply bg-warning-500 hover:bg-warning-600 active:bg-warning-700 text-white shadow;
+	}
+
+	/* Card Components */
+	.card {
+		@apply bg-card text-card-foreground rounded-lg border shadow-sm;
+	}
+
+	.card-soft {
+		@apply bg-background-soft rounded-lg border-0 shadow-md;
+	}
+
+	.card-elevated {
+		@apply from-background to-background-soft rounded-lg border-0 bg-gradient-to-br shadow-lg;
+	}
+
+	/* Input Components */
+	.input {
+		@apply border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50;
+	}
+
+	/* Badge Components */
+	.badge {
+		@apply focus:ring-ring inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none;
+	}
+
+	.badge-primary {
+		@apply bg-primary-500 hover:bg-primary-600 border-transparent text-white shadow;
+	}
+
+	.badge-secondary {
+		@apply bg-secondary-100 text-secondary-900 hover:bg-secondary-200 border-transparent;
+	}
+
+	.badge-success {
+		@apply bg-success-500 hover:bg-success-600 border-transparent text-white;
+	}
+
+	.badge-warning {
+		@apply bg-warning-500 hover:bg-warning-600 border-transparent text-white;
+	}
+
+	.badge-error {
+		@apply bg-error-500 hover:bg-error-600 border-transparent text-white;
+	}
+
+	.badge-outline {
+		@apply border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground;
+	}
+}
+
+@layer utilities {
+	/* Background Utilities */
+	.bg-gradient-primary {
+		background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-700));
+	}
+
+	.bg-gradient-secondary {
+		background: linear-gradient(135deg, var(--color-secondary-100), var(--color-secondary-300));
+	}
+
+	.bg-gradient-soft {
+		background: linear-gradient(135deg, var(--color-background), var(--color-background-soft));
+	}
+
+	.bg-gradient-muted {
+		background: linear-gradient(
+			135deg,
+			var(--color-background-soft),
+			var(--color-background-muted)
+		);
+	}
+
+	/* Glass effect */
+	.bg-glass {
+		background: color-mix(in oklab, var(--color-background) 80%, transparent);
+		backdrop-filter: blur(12px);
+		border: 1px solid color-mix(in oklab, var(--color-border) 50%, transparent);
+	}
+
+	.bg-glass-primary {
+		background: color-mix(in oklab, var(--color-primary-500) 10%, transparent);
+		backdrop-filter: blur(12px);
+		border: 1px solid color-mix(in oklab, var(--color-primary-500) 20%, transparent);
+	}
+
+	/* Text Color Utilities */
+	.text-primary {
+		color: var(--color-primary-500);
+	}
+
+	.text-primary-light {
+		color: var(--color-primary-400);
+	}
+
+	.text-primary-dark {
+		color: var(--color-primary-600);
+	}
+
+	.text-success {
+		color: var(--color-success-500);
+	}
+
+	.text-warning {
+		color: var(--color-warning-500);
+	}
+
+	.text-error {
+		color: var(--color-error-500);
+	}
+
+	.text-muted {
+		color: var(--color-muted-foreground);
+	}
+
+	.text-soft {
+		color: color-mix(in oklab, var(--color-foreground) 70%, transparent);
+	}
+
+	/* Gradient Text */
+	.text-gradient-primary {
+		background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-700));
+		background-clip: text;
+		-webkit-background-clip: text;
+		color: transparent;
+	}
+
+	.text-gradient-secondary {
+		background: linear-gradient(135deg, var(--color-secondary-600), var(--color-secondary-800));
+		background-clip: text;
+		-webkit-background-clip: text;
+		color: transparent;
+	}
+
+	/* Shadow Utilities */
+	.shadow-primary {
+		box-shadow: 0 4px 14px 0 color-mix(in oklab, var(--color-primary-500) 25%, transparent);
+	}
+
+	.shadow-primary-lg {
+		box-shadow: 0 10px 25px -3px color-mix(in oklab, var(--color-primary-500) 25%, transparent);
+	}
+
+	.shadow-soft {
+		box-shadow: var(--shadow-md);
+	}
+
+	.shadow-glow {
+		box-shadow: 0 0 20px color-mix(in oklab, var(--color-primary-500) 30%, transparent);
+	}
+
+	/* Border Utilities */
+	.border-primary {
+		border-color: var(--color-primary-500);
+	}
+
+	.border-primary-light {
+		border-color: var(--color-primary-200);
+	}
+
+	.border-soft {
+		border-color: color-mix(in oklab, var(--color-border) 50%, transparent);
+	}
+
+	/* Opacity Utilities with color-mix */
+	.bg-primary\/10 {
+		background-color: color-mix(in oklab, var(--color-primary-500) 10%, transparent);
+	}
+
+	.bg-primary\/20 {
+		background-color: color-mix(in oklab, var(--color-primary-500) 20%, transparent);
+	}
+
+	.bg-primary\/30 {
+		background-color: color-mix(in oklab, var(--color-primary-500) 30%, transparent);
+	}
+
+	.bg-primary\/50 {
+		background-color: color-mix(in oklab, var(--color-primary-500) 50%, transparent);
+	}
+
+	.bg-success\/10 {
+		background-color: color-mix(in oklab, var(--color-success-500) 10%, transparent);
+	}
+
+	.bg-warning\/10 {
+		background-color: color-mix(in oklab, var(--color-warning-500) 10%, transparent);
+	}
+
+	.bg-error\/10 {
+		background-color: color-mix(in oklab, var(--color-error-500) 10%, transparent);
+	}
+
+	/* Animation Utilities */
+	.animate-glow {
+		animation: glow 2s ease-in-out infinite alternate;
+	}
+
+	@keyframes glow {
+		from {
+			box-shadow: 0 0 5px color-mix(in oklab, var(--color-primary-500) 20%, transparent);
+		}
+		to {
+			box-shadow: 0 0 20px color-mix(in oklab, var(--color-primary-500) 40%, transparent);
+		}
+	}
+
+	/* Responsive spacing */
+	.space-y-fluid > * + * {
+		margin-top: clamp(0.5rem, 2vw, 1.5rem);
+	}
+
+	.space-x-fluid > * + * {
+		margin-left: clamp(0.5rem, 2vw, 1.5rem);
+	}
+
+	/* Focus utilities */
+	.focus-ring {
+		@apply focus-visible:ring-primary-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none;
+	}
+
+	.focus-ring-inset {
+		@apply focus-visible:ring-primary-500 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset;
+	}
+
+	.text-heading {
+		@apply text-foreground text-xl font-semibold;
+	}
+	.text-subheading {
+		@apply text-muted-foreground text-lg font-medium;
+	}
+	.text-label {
+		@apply text-muted-foreground text-sm font-medium;
+	}
+
+	.skeleton {
+		@apply bg-muted animate-pulse text-transparent;
+	}
+
+	.btn-link {
+		@apply text-primary underline-offset-4 hover:underline;
+	}
+}

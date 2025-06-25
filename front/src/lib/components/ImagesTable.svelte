@@ -4,43 +4,44 @@
 
 	let { images, editable = true, deleteCallback = () => {} } = $props();
 
-	// Track which images failed to load
-	let failedImages: { [key: string]: boolean } = {};
+	let failedImages: Record<string, boolean> = {};
 
-	// Handle image load errors
 	function handleImageError(key: string) {
-		failedImages[key] = true;
+		if (!failedImages[key]) failedImages[key] = true;
 	}
 </script>
 
 {#if images && Object.keys(images).length > 0}
-	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-		{#each Object.keys(images) as key}
-			{@const image = images[key]}
+	<div class="w-full max-w-md flex flex-col">
+		{#each Object.entries(images) as [key, image]}
 			<div
-				class="group relative overflow-hidden rounded-lg bg-white shadow-md transition-all hover:shadow-lg"
+				class="group relative overflow-hidden rounded-lg bg-white shadow-sm transition-all hover:shadow-md"
 			>
-				<!-- Use the correct aspect ratio on the container -->
-				<div class="aspect-[800/165] w-full overflow-hidden">
+				<div class="aspect-video w-full overflow-hidden">
 					{#if failedImages[key]}
-						<div class="flex h-full w-full items-center justify-center bg-gray-100 p-4 text-center">
+						<div
+							class="flex h-full w-full items-center justify-center bg-gray-100 p-4 text-center transition-opacity duration-200"
+						>
 							<p class="text-sm font-medium text-gray-500">{key}</p>
 						</div>
 					{:else}
 						<img
 							src={image.url || '/placeholder.svg'}
 							alt={key}
+							loading="lazy"
 							class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
 							onerror={() => handleImageError(key)}
 						/>
 					{/if}
 				</div>
-				<div class="p-3">
+
+				<div class="p-2">
 					<p class="truncate text-sm font-medium text-gray-700">{key}</p>
 				</div>
+
 				{#if editable}
 					<div
-						class="absolute top-2 right-2 opacity-100 transition-opacity duration-200 group-hover:opacity-100 sm:opacity-0"
+						class="absolute top-2 right-2 transition-opacity duration-200 group-hover:opacity-100 sm:opacity-0"
 					>
 						<Button
 							variant="destructive"

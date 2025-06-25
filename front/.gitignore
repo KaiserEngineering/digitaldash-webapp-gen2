@@ -25,3 +25,5 @@ vite.config.ts.timestamp-*
 static/dummy-backgrounds/*
 
 *storybook.log
+
+data.sqlite

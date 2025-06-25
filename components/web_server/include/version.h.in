@@ -1,0 +1,7 @@
+#ifndef VERSION_H
+#define VERSION_H
+
+#define APP_VERSION_STRING "@APP_VERSION@"
+#define VERSION_JSON_RESPONSE "{\"version\": \"@APP_VERSION@\"}"
+
+#endif

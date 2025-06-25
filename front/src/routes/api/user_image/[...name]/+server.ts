@@ -3,13 +3,6 @@ import fs from 'fs/promises';
 import path from 'path';
 
 const BACKGROUND_DIR = path.join(process.cwd(), 'static/dummy-backgrounds');
-// Supported image extensions
-const SUPPORTED_EXTENSIONS = new Set([
-	'.png',
-	'.jpg',
-	'.jpeg',
-	'.gif'
-]);
 
 export async function GET({ params, fetch }) {
 	const { name } = params;
@@ -32,7 +25,7 @@ export async function GET({ params, fetch }) {
 	});
 }
 
-export async function POST({ params, request}) {
+export async function POST({ params, request }) {
 	const { name } = params;
 	// Instead of parsing formData, read the raw binary data
 	const buffer = Buffer.from(await request.arrayBuffer());
@@ -42,20 +35,11 @@ export async function POST({ params, request}) {
 		throw error(400, 'No filename provided');
 	}
 
-	// Validate file extension as before...
 	const fileName = name.toLowerCase();
-	const fullExt = path.extname(fileName).toLowerCase();
-	if (!SUPPORTED_EXTENSIONS.has(fullExt)) {
-		throw error(400, `Invalid file type. Allowed: ${Array.from(SUPPORTED_EXTENSIONS).join(', ')}`);
-	}
-
 	const filePath = path.join(BACKGROUND_DIR, fileName);
 
 	try {
 		fs.writeFile(filePath, buffer);
-
-		// Emulate slow network if needed
-		await new Promise((resolve) => setTimeout(resolve, 1000));
 
 		return json(
 			{
