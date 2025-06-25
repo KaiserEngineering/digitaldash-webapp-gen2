@@ -351,7 +351,7 @@ int stm32_tx(const uint8_t *data, size_t len)
         total_sent += sent;
     }
 
-    ESP_LOGI(TAG, "Sent %d bytes to STM32", total_sent);
+    //ESP_LOGI(TAG, "Sent %d bytes to STM32", total_sent);
 
     return total_sent;
 }
@@ -424,5 +424,6 @@ void app_main(void)
             count = 0;
         }
         count++;
+        KE_Service(&stm32_comm);
     }
 }

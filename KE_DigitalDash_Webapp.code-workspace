@@ -104,7 +104,8 @@
 			"stm32_uart.h": "c",
 			"esp_flash.h": "c",
 			"typeinfo": "c",
-			"esp_heap_caps.h": "c"
+			"esp_heap_caps.h": "c",
+			"cstdlib": "c"
 		},
 		"editor.formatOnSave": false
 	}
