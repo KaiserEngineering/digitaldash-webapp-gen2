@@ -306,34 +306,6 @@ void flash_stm32_firmware(const char *bin_filename)
     endConn();
 }
 
-void loop_uart_read(void)
-{
-    uint8_t temp_buf[256];  // Temporary buffer for each read
-    int len = uart_read_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, temp_buf, sizeof(temp_buf), pdMS_TO_TICKS(10));
-
-    if (len > 0 && json_data_len + len < JSON_BUF_SIZE - 1) {
-        memcpy(&json_data_input[json_data_len], temp_buf, len);
-        json_data_len += len;
-        json_data_input[json_data_len] = '\0';  // Null-terminate
-
-        // Optional: print received part
-        fwrite(temp_buf, 1, len, stdout);
-        fflush(stdout);
-
-        // Check if JSON end detected (very basic heuristic)
-        if (strchr((char *)temp_buf, '}')) {
-            ESP_LOGI("UART", "Complete JSON received (%d bytes)", json_data_len);
-            // json_data_input now contains the full JSON string
-            // Reset counter if you're done processing
-            // Optionally: validate and send via config handler
-        }
-    } else if (json_data_len + len >= JSON_BUF_SIZE - 1) {
-        ESP_LOGW("UART", "JSON buffer overflow. Resetting.");
-        json_data_len = 0;
-        json_data_input[0] = '\0';
-    }
-}
-
 int stm32_tx(const uint8_t *data, size_t len)
 {
     size_t total_sent = 0;
@@ -414,7 +386,7 @@ void app_main(void)
         vTaskDelay(pdMS_TO_TICKS(10));
         if (count > 100)
         {
-            Generate_TX_Message(&stm32_comm, KE_HEARTBEAT, 0);
+            Generate_TX_Message(&stm32_comm, KE_CONFIG_REQUEST, 0);
             #if ENABLE_SPI_TEST_TX
             spi_master_transmit_payload();
             #endif
@@ -423,12 +395,6 @@ void app_main(void)
             #endif
             count = 0;
         }
-<<<<<<< HEAD
-
-       loop_uart_read();
-
-=======
->>>>>>> origin/main
         count++;
         KE_Service(&stm32_comm);
     }
