@@ -78,10 +78,12 @@ i2c_master_dev_handle_t eeprom_handle;
 
 static const char *TAG = "Main";
 
-#define JSON_BUF_SIZE 1024
+#define JSON_BUF_SIZE 10000
 
 char json_data_input[JSON_BUF_SIZE];
 char json_data_output[JSON_BUF_SIZE];
+
+KE_PACKET_MANAGER stm32_comm;
 
 void gpio_init(void)
 {
@@ -332,10 +334,48 @@ esp_err_t config_patch_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+int stm32_tx(const uint8_t *data, size_t len)
+{
+    size_t total_sent = 0;
+
+    while (total_sent < len) {
+        int sent = uart_write_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER,
+                                    (const char *)(data + total_sent),
+                                    len - total_sent);
+
+        if (sent < 0) {
+            ESP_LOGE("UART", "TX failed at byte %d", total_sent);
+            return total_sent;  // Return bytes sent before error
+        }
+
+        total_sent += sent;
+    }
+
+    ESP_LOGI(TAG, "Sent %d bytes to STM32", total_sent);
+
+    return total_sent;
+}
+
+
+
+void stm32_communication_init(void)
+{
+    stm32_comm.init.role      = KE_PRIMARY;
+    stm32_comm.init.transmit  = &stm32_tx;        /* Function call to transmit UART data to the STM32 */
+    stm32_comm.init.req_pid   = NULL;             /* Function call to request a PID */
+    stm32_comm.init.clear_pid = NULL;             /* Function call to remove a PID */
+    stm32_comm.init.cooling   = NULL;             /* Function call to request active cooling */
+    stm32_comm.init.firmware_version_major  = 1;  /* Major firmware version */
+    stm32_comm.init.firmware_version_minor  = 0;  /* Minor firmware version */
+    stm32_comm.init.firmware_version_hotfix = 0;  /* Hot fix firmware version */
+
+    uart_init(&stm32_comm);
+}
+
 void app_main(void)
 {
     gpio_init();
-    uart_init();
+    stm32_communication_init();
 
     //i2c_master_init();
     //spi_master_init();
@@ -374,6 +414,7 @@ void app_main(void)
         vTaskDelay(pdMS_TO_TICKS(10));
         if (count > 100)
         {
+            Generate_TX_Message(&stm32_comm, KE_HEARTBEAT, 0);
             #if ENABLE_SPI_TEST_TX
             spi_master_transmit_payload();
             #endif
@@ -381,14 +422,6 @@ void app_main(void)
             i2c_master_transmit_payload();
             #endif
             count = 0;
-        }
-
-        int len = uart_read_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, json_data_input, sizeof(json_data_input), pdMS_TO_TICKS(10));
-        if (len > 0) {
-            for (int i = 0; i < len; i++) {
-                putchar(json_data_input[i]);  // Print raw ASCII character
-            }
-            fflush(stdout);  // Ensure it shows up immediately
         }
         count++;
     }

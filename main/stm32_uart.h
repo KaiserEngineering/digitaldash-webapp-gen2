@@ -34,12 +34,9 @@ extern "C"
 #endif
 
 #include "stdint.h"
-#include "driver/uart.h"
-#include "driver/gpio.h"
-#include "esp_log.h"
-#include "esp_err.h"
+#include "lib_ke_protocol.h"
 
-void uart_init(void);
+void uart_init(PKE_PACKET_MANAGER dev_ptr);
 
 #ifdef __cplusplus
 }
