@@ -83,6 +83,7 @@ int json_data_len = 0;
 
 char json_data_input[JSON_BUF_SIZE];
 char json_data_output[JSON_BUF_SIZE];
+char option_list[JSON_BUF_SIZE];
 
 KE_PACKET_MANAGER stm32_comm;
 
@@ -357,6 +358,7 @@ void stm32_communication_init(void)
     stm32_comm.init.cooling   = NULL;             /* Function call to request active cooling */
     stm32_comm.init.config_to_json = NULL;
     stm32_comm.init.json_to_config = &receive_config;
+    stm32_comm.init.json_to_options = &receive_option_list;
     stm32_comm.init.firmware_version_major  = 1;  /* Major firmware version */
     stm32_comm.init.firmware_version_minor  = 0;  /* Minor firmware version */
     stm32_comm.init.firmware_version_hotfix = 0;  /* Hot fix firmware version */
