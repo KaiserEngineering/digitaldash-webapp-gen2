@@ -37,6 +37,7 @@ extern "C"
 #include "lib_ke_protocol.h"
 
 void uart_init(PKE_PACKET_MANAGER dev_ptr);
+void uart_init_for_stm32_bootloader(void);
 
 #ifdef __cplusplus
 }

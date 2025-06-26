@@ -302,8 +302,10 @@ void flash_stm32_firmware(const char *bin_filename)
 {
     // If this causes a stack overflow increase ESP_MAIN_TASK_STACK_SIZE in menuconfig
     ESP_LOGI(TAG, "Starting flashing procedure...");
+    uart_init_for_stm32_bootloader();
     flashSTM(bin_filename);
     endConn();
+    uart_init(&stm32_comm);
 }
 
 int stm32_tx(const uint8_t *data, size_t len)
