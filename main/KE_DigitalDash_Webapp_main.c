@@ -328,7 +328,14 @@ int stm32_tx(const uint8_t *data, size_t len)
     return total_sent;
 }
 
+bool receive_config(const char *json_str)
+{
+    strncpy(json_data_input, json_str, JSON_BUF_SIZE - 1);
+    json_data_input[JSON_BUF_SIZE - 1] = '\0'; // ensure null termination
 
+    ESP_LOGI("CONFIG", "Received JSON Config:\n%s", json_data_input);
+    return true;
+}
 
 void stm32_communication_init(void)
 {
@@ -337,6 +344,8 @@ void stm32_communication_init(void)
     stm32_comm.init.req_pid   = NULL;             /* Function call to request a PID */
     stm32_comm.init.clear_pid = NULL;             /* Function call to remove a PID */
     stm32_comm.init.cooling   = NULL;             /* Function call to request active cooling */
+    stm32_comm.init.config_to_json = NULL;
+    stm32_comm.init.json_to_config = &receive_config;
     stm32_comm.init.firmware_version_major  = 1;  /* Major firmware version */
     stm32_comm.init.firmware_version_minor  = 0;  /* Minor firmware version */
     stm32_comm.init.firmware_version_hotfix = 0;  /* Hot fix firmware version */
@@ -380,13 +389,16 @@ void app_main(void)
 
     //transfer_png_data("/spiffs/Outer_Wilds.png"); // UNCOMMENT TO UPLOAD IMAGE. DO THIS **ONCE*** AND THEN RE-UPLOAD WITH LINE **COMMENTED OUT**
 
+    Generate_TX_Message(&stm32_comm, KE_CONFIG_REQUEST, 0);
+    KE_wait_for_response(&stm32_comm, 5000);
+
     while (1)
     {
         // Add delay to not trigger watchdog
         vTaskDelay(pdMS_TO_TICKS(10));
         if (count > 100)
         {
-            Generate_TX_Message(&stm32_comm, KE_CONFIG_REQUEST, 0);
+            //Generate_TX_Message(&stm32_comm, KE_CONFIG_REQUEST, 0);
             #if ENABLE_SPI_TEST_TX
             spi_master_transmit_payload();
             #endif

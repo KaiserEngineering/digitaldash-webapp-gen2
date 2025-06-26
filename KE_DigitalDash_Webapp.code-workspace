@@ -105,7 +105,8 @@
 			"esp_flash.h": "c",
 			"typeinfo": "c",
 			"esp_heap_caps.h": "c",
-			"cstdlib": "c"
+			"cstdlib": "c",
+			"config_handler.h": "c"
 		},
 		"editor.formatOnSave": false
 	}
