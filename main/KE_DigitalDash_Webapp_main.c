@@ -339,6 +339,15 @@ bool receive_config(const char *json_str)
     return true;
 }
 
+bool receive_option_list(const char *json_str)
+{
+    strncpy(option_list, json_str, JSON_BUF_SIZE - 1);
+    option_list[JSON_BUF_SIZE - 1] = '\0'; // ensure null termination
+
+    ESP_LOGI("CONFIG", "Received JSON Option List:\n%s", option_list);
+    return true;
+}
+
 void stm32_communication_init(void)
 {
     stm32_comm.init.role      = KE_PRIMARY;
@@ -398,9 +407,9 @@ void app_main(void)
     {
         // Add delay to not trigger watchdog
         vTaskDelay(pdMS_TO_TICKS(10));
-        if (count > 100)
+        if (count > 50)
         {
-            //Generate_TX_Message(&stm32_comm, KE_CONFIG_REQUEST, 0);
+            Generate_TX_Message(&stm32_comm, KE_OPTION_LIST_REQUEST, 0);
             #if ENABLE_SPI_TEST_TX
             spi_master_transmit_payload();
             #endif
