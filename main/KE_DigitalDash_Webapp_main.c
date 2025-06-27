@@ -55,7 +55,7 @@
 #define I2C_MASTER_PORT I2C_NUM_0
 #define ENABLE_I2C_TEST_TX 0
 #define ENABLE_SPI_TEST_TX 0
-uint8_t count = 0;
+uint32_t count = 0;
 
 #define SPI_HOST       SPI2_HOST  // HSPI or SPI2 on S3
 #define DMA_CHAN       SPI_DMA_CH_AUTO
@@ -402,14 +402,15 @@ void app_main(void)
 
     //transfer_png_data("/spiffs/Outer_Wilds.png"); // UNCOMMENT TO UPLOAD IMAGE. DO THIS **ONCE*** AND THEN RE-UPLOAD WITH LINE **COMMENTED OUT**
 
-    Generate_TX_Message(&stm32_comm, KE_CONFIG_REQUEST, 0);
-    KE_wait_for_response(&stm32_comm, 5000);
+    //Generate_TX_Message(&stm32_comm, KE_CONFIG_REQUEST, 0);
+    //KE_wait_for_response(&stm32_comm, 5000);
+    //Generate_TX_Message(&stm32_comm, KE_OPTION_LIST_REQUEST, 0);
 
     while (1)
     {
         // Add delay to not trigger watchdog
-        vTaskDelay(pdMS_TO_TICKS(10));
-        if (count > 50)
+        vTaskDelay(pdMS_TO_TICKS(1));
+        if (count > 100000)
         {
             Generate_TX_Message(&stm32_comm, KE_OPTION_LIST_REQUEST, 0);
             #if ENABLE_SPI_TEST_TX
