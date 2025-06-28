@@ -366,6 +366,21 @@ void stm32_communication_init(void)
     uart_init(&stm32_comm);
 }
 
+void KE_tick_wrapper(void* arg) {
+    KE_tick();
+}
+
+void start_KE_tick_timer(void) {
+    const esp_timer_create_args_t timer_args = {
+        .callback = &KE_tick_wrapper,
+        .name = "ke_tick_timer"
+    };
+
+    esp_timer_handle_t periodic_timer;
+    ESP_ERROR_CHECK(esp_timer_create(&timer_args, &periodic_timer));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, 1000)); // 1000us = 1ms
+}
+
 void app_main(void)
 {
     gpio_init();
@@ -402,9 +417,12 @@ void app_main(void)
 
     //transfer_png_data("/spiffs/Outer_Wilds.png"); // UNCOMMENT TO UPLOAD IMAGE. DO THIS **ONCE*** AND THEN RE-UPLOAD WITH LINE **COMMENTED OUT**
 
-    //Generate_TX_Message(&stm32_comm, KE_CONFIG_REQUEST, 0);
-    //KE_wait_for_response(&stm32_comm, 5000);
-    //Generate_TX_Message(&stm32_comm, KE_OPTION_LIST_REQUEST, 0);
+    start_KE_tick_timer();
+
+    Generate_TX_Message(&stm32_comm, KE_CONFIG_REQUEST, 0);
+    KE_wait_for_response(&stm32_comm, 5000);
+    Generate_TX_Message(&stm32_comm, KE_OPTION_LIST_REQUEST, 0);
+    KE_wait_for_response(&stm32_comm, 5000);
 
     while (1)
     {
@@ -412,7 +430,7 @@ void app_main(void)
         vTaskDelay(pdMS_TO_TICKS(1));
         if (count > 100000)
         {
-            Generate_TX_Message(&stm32_comm, KE_OPTION_LIST_REQUEST, 0);
+            //Generate_TX_Message(&stm32_comm, KE_OPTION_LIST_REQUEST, 0);
             #if ENABLE_SPI_TEST_TX
             spi_master_transmit_payload();
             #endif
