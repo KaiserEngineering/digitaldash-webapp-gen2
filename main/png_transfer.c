@@ -145,7 +145,7 @@ static uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *ou
  * @note This function assumes the UART is already initialized. Transmission is
  *       done byte-by-byte;
  */
-bool transfer_png_data(const char *filename)
+int transfer_png_data(const char *filename)
 {
     int png_width = 0;
     int png_height = 0;
@@ -155,23 +155,19 @@ bool transfer_png_data(const char *filename)
     png_size = png_width * png_height * 4;
 
     if (rgba) {
-        for (int i = 0; i < png_width * png_height * 4; i++) {
+        for (int i = 0; i < png_size; i++) {
             uint8_t byte = rgba[i];
-
-            // Do not let byte pixel 0 RGB = 0x00. This is used as a filter
-            if((i < 3) & (byte == 0))
-                byte++;
 
             if ((i % (png_width * 4)) == 0)
                 ESP_LOGI(TAG, "Row[%d]: WRITTEN", i / (png_width * 4));
-        
+
             uart_write_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, &byte, 1);
         }
 
-        free(rgba); // Don't forget to free later
-        return true;
+        free(rgba); // Clean up memory
+        return png_size; // Return total bytes transferred
     } else {
         ESP_LOGE(TAG, "Failed to decode PNG.");
-        return false;
+        return 0;
     }
 }
