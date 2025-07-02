@@ -373,7 +373,14 @@ void mirror_spiffs(void)
         if (cJSON_IsString(user) && user->valuestring != NULL) {
             char image_name[64] = {0};
             snprintf(image_name, sizeof(image_name), "/spiffs/%s.png", user->valuestring);
-            ESP_LOGI(TAG, "index: %d, %s", i, image_name);
+            
+            FILE *fp = fopen(image_name, "r");
+            if (fp) {
+                ESP_LOGI(TAG, "File exists: %s", image_name);
+                fclose(fp);
+            } else {
+                ESP_LOGW(TAG, "File not found: %s", image_name);
+            }
         } else {
             ESP_LOGI(TAG, "view_background[%d] is not a valid string", i);
         }
