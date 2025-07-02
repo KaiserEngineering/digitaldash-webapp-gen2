@@ -43,6 +43,7 @@
 #include "stm32_uart.h"
 #include "png_transfer.h"
 #include "lib_ke_protocol.h"
+#include "cJSON.h"
 
 #define UI_HOR_RES    1024
 #define UI_VER_RES    200
@@ -349,6 +350,37 @@ bool receive_option_list(const char *json_str)
     return true;
 }
 
+void mirror_spiffs(void)
+{
+    // Parse the JSON string
+    cJSON *root = cJSON_Parse(option_list);
+    if (root == NULL) {
+        ESP_LOGI(TAG, "Error parsing JSON!\n");
+        return;
+    }
+    
+    // Get the "view_background" array from the JSON object
+    cJSON *view_background = cJSON_GetObjectItemCaseSensitive(root, "view_background");
+    if (!cJSON_IsArray(view_background)) {
+        ESP_LOGI(TAG, "\"view_background\" is not an array or does not exist!");
+        cJSON_Delete(root);
+        return;
+    }
+    
+    int count = cJSON_GetArraySize(view_background);
+    for (int i = 0; i < count; i++) {
+        cJSON *user = cJSON_GetArrayItem(view_background, i);
+        if (cJSON_IsString(user) && user->valuestring != NULL) {
+            ESP_LOGI(TAG, "index: %d, %s.png", i, user->valuestring);
+        } else {
+            ESP_LOGI(TAG, "view_background[%d] is not a valid string", i);
+        }
+    }
+    
+    // Clean up
+    cJSON_Delete(root);
+}
+
 void stm32_communication_init(void)
 {
     stm32_comm.init.role      = KE_PRIMARY;
@@ -423,6 +455,7 @@ void app_main(void)
     KE_wait_for_response(&stm32_comm, 5000);
     Generate_TX_Message(&stm32_comm, KE_OPTION_LIST_REQUEST, 0);
     KE_wait_for_response(&stm32_comm, 5000);
+    mirror_spiffs();
 
     while (1)
     {
