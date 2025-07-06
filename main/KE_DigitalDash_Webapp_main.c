@@ -85,6 +85,8 @@ int json_data_len = 0;
 char json_data_input[JSON_BUF_SIZE];
 char json_data_output[JSON_BUF_SIZE];
 char option_list[JSON_BUF_SIZE];
+uint32_t background_crc = 0;
+uint8_t background_idx = 0xFF;
 
 KE_PACKET_MANAGER stm32_comm;
 
@@ -358,6 +360,13 @@ bool receive_option_list(const char *json_str)
     return true;
 }
 
+uint32_t recieve_crc_from_ke(uint8_t idx, uint32_t crc)
+{
+    background_crc = crc;
+    background_idx = idx;
+    return crc;
+}
+
 uint32_t png_to_rgba(char *buffer, uint32_t buffer_size, uint8_t background_idx)
 {
     int num_bytes = 0;
@@ -432,8 +441,17 @@ void mirror_spiffs(void)
             FILE *fp = fopen(image_name, "rb");
             if (fp) {
                 ESP_LOGI(TAG, "File exists: %s", image_name);
-                Generate_TX_Message(&stm32_comm, KE_BACKGROUND_SEND, &i );
-                KE_wait_for_response(&stm32_comm, 30000);
+                uint32_t img_crc = crc32_png_rgba(fp);
+                ESP_LOGI(TAG, "ESP32 CRC: %lu", img_crc);
+                Generate_TX_Message(&stm32_comm, KE_BACKGROUND_CRC_REQUEST, &i );
+                KE_wait_for_response(&stm32_comm, 1000);
+                ESP_LOGI(TAG, "STM32 CRC: %lu", background_crc);
+                if( background_crc == img_crc ) {
+                    ESP_LOGI(TAG, "Image match, skipping");
+                } else {
+                    Generate_TX_Message(&stm32_comm, KE_BACKGROUND_SEND, &i );
+                    KE_wait_for_response(&stm32_comm, 30000);
+                }
                 fclose(fp);
             } else {
                 ESP_LOGW(TAG, "File not found: %s", image_name);
@@ -457,6 +475,7 @@ void stm32_communication_init(void)
     stm32_comm.init.config_to_json = NULL;
     stm32_comm.init.json_to_config = &receive_config;
     stm32_comm.init.json_to_options = &receive_option_list;
+    stm32_comm.init.receive_rgba_crc = &recieve_crc_from_ke;
     stm32_comm.init.firmware_version_major  = 1;  /* Major firmware version */
     stm32_comm.init.firmware_version_minor  = 0;  /* Minor firmware version */
     stm32_comm.init.firmware_version_hotfix = 0;  /* Hot fix firmware version */
