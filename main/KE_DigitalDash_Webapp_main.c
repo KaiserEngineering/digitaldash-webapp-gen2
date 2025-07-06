@@ -340,6 +340,39 @@ int stm32_tx(const uint8_t *data, uint32_t len)
     return total_sent;
 }
 
+/**
+ * @brief Copies the JSON configuration data into the provided buffer.
+ *
+ * This function safely copies the contents of `json_data_output` into
+ * the given `buffer`, ensuring null termination to avoid buffer overflows
+ * or unterminated strings. The function also logs the copied JSON string
+ * for debugging purposes.
+ *
+ * @param buffer        Destination buffer where JSON data will be copied.
+ * @param buffer_size   Size of the destination buffer in bytes.
+ *
+ * @return Number of bytes copied into the buffer (excluding null terminator).
+ */
+uint32_t send_config(char *buffer, uint32_t buffer_size)
+{
+    strncpy(buffer, json_data_output, buffer_size - 1);
+    buffer[buffer_size - 1] = '\0'; // ensure null termination
+
+    ESP_LOGI("CONFIG", "JSON Config copied to buffer:\n%s", buffer);
+    return strlen(buffer);
+}
+
+/**
+ * @brief Receives and stores a JSON configuration string.
+ *
+ * Copies the provided JSON string into the internal `json_data_input` buffer,
+ * ensuring that it is safely null-terminated to prevent buffer overflows.
+ * The received configuration is then logged for debugging purposes.
+ *
+ * @param json_str  Pointer to the input JSON string.
+ *
+ * @return true     Always returns true to indicate the operation succeeded.
+ */
 bool receive_config(const char *json_str)
 {
     strncpy(json_data_input, json_str, JSON_BUF_SIZE - 1);
@@ -349,6 +382,17 @@ bool receive_config(const char *json_str)
     return true;
 }
 
+/**
+ * @brief Receives and stores a JSON-formatted option list.
+ *
+ * Copies the given JSON string into the internal `option_list` buffer,
+ * ensuring it is null-terminated to avoid buffer overflows. The received
+ * data is then logged for debugging purposes.
+ *
+ * @param json_str  Pointer to the JSON string containing the option list.
+ *
+ * @return true     Always returns true to indicate successful receipt.
+ */
 bool receive_option_list(const char *json_str)
 {
     strncpy(option_list, json_str, JSON_BUF_SIZE - 1);
@@ -470,7 +514,7 @@ void stm32_communication_init(void)
     stm32_comm.init.req_pid   = NULL;             /* Function call to request a PID */
     stm32_comm.init.clear_pid = NULL;             /* Function call to remove a PID */
     stm32_comm.init.cooling   = NULL;             /* Function call to request active cooling */
-    stm32_comm.init.config_to_json = NULL;
+    stm32_comm.init.config_to_json = &send_config;
     stm32_comm.init.json_to_config = &receive_config;
     stm32_comm.init.json_to_options = &receive_option_list;
     stm32_comm.init.receive_rgba_crc = &recieve_crc_from_ke;
