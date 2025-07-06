@@ -433,6 +433,7 @@ void mirror_spiffs(void)
             if (fp) {
                 ESP_LOGI(TAG, "File exists: %s", image_name);
                 Generate_TX_Message(&stm32_comm, KE_BACKGROUND_SEND, &i );
+                KE_wait_for_response(&stm32_comm, 30000);
                 fclose(fp);
             } else {
                 ESP_LOGW(TAG, "File not found: %s", image_name);
