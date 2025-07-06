@@ -31,10 +31,9 @@ static const char *TAG = "PNG";
  * @return Pointer to a buffer containing the ARGB image data (4 bytes per pixel),
  *         or NULL on failure. Caller is responsible for freeing this buffer.
  */
-static uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *out_height) {
-    FILE *fp = fopen(filename, "rb");
+static uint8_t* decode_png_to_rgba(const FILE *fp, int *out_width, int *out_height) {
     if (!fp) {
-        ESP_LOGE(TAG, "Failed to open file: %s", filename);
+        ESP_LOGE(TAG, "Invalid file provided");
         return NULL;
     }
 
@@ -42,13 +41,13 @@ static uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *ou
     fread(header, 1, 8, fp);
     if (png_sig_cmp(header, 0, 8)) {
         ESP_LOGE(TAG, "Not a PNG file");
-        fclose(fp);
+        //fclose(fp);
         return NULL;
     }
 
     png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr) {
-        fclose(fp);
+        //fclose(fp);
         ESP_LOGE(TAG, "Failed to create png read struct");
         return NULL;
     }
@@ -56,7 +55,7 @@ static uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *ou
     png_infop info_ptr = png_create_info_struct(png_ptr);
     if (!info_ptr) {
         png_destroy_read_struct(&png_ptr, NULL, NULL);
-        fclose(fp);
+        //fclose(fp);
         ESP_LOGE(TAG, "Failed to create png info struct");
         return NULL;
     }
@@ -64,7 +63,7 @@ static uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *ou
     if (setjmp(png_jmpbuf(png_ptr))) {
         ESP_LOGE(TAG, "PNG error during init_io");
         png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-        fclose(fp);
+        //fclose(fp);
         return NULL;
     }
 
@@ -96,7 +95,7 @@ static uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *ou
 
     if (!image_data || !row_pointers) {
         ESP_LOGE(TAG, "Memory allocation failed");
-        fclose(fp);
+        //fclose(fp);
         png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
         free(image_data);
         free(row_pointers);
@@ -122,7 +121,7 @@ static uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *ou
     }
 
     png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-    fclose(fp);
+    //fclose(fp);
     free(row_pointers);
 
     *out_width = width;
@@ -145,14 +144,16 @@ static uint8_t* decode_png_to_rgba(const char *filename, int *out_width, int *ou
  * @note This function assumes the UART is already initialized. Transmission is
  *       done byte-by-byte;
  */
-int transfer_png_data(const char *filename)
+int transfer_png_data(const FILE *fp)
 {
     int png_width = 0;
     int png_height = 0;
     int png_size = 0;
-    uint8_t *rgba = decode_png_to_rgba(filename, &png_width, &png_height);
+    uint8_t *rgba = decode_png_to_rgba(fp, &png_width, &png_height);
 
     png_size = png_width * png_height * 4;
+
+    heap_caps_print_heap_info(MALLOC_CAP_DEFAULT);
 
     if (rgba) {
         for (int i = 0; i < png_size; i++) {
@@ -161,7 +162,7 @@ int transfer_png_data(const char *filename)
             if ((i % (png_width * 4)) == 0)
                 ESP_LOGI(TAG, "Row[%d]: WRITTEN", i / (png_width * 4));
 
-            uart_write_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, &byte, 1);
+            //uart_write_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER, &byte, 1);
         }
 
         free(rgba); // Clean up memory

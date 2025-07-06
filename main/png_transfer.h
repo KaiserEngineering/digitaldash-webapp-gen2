@@ -4,6 +4,6 @@
 #include "stdbool.h"
 #include "stdio.h"
 
-int transfer_png_data(const char *filename);
+int transfer_png_data(const FILE *fp);
 
 #endif

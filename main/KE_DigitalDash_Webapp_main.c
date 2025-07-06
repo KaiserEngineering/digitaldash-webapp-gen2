@@ -374,9 +374,10 @@ void mirror_spiffs(void)
             char image_name[64] = {0};
             snprintf(image_name, sizeof(image_name), "/spiffs/%s.png", user->valuestring);
             
-            FILE *fp = fopen(image_name, "r");
+            FILE *fp = fopen(image_name, "rb");
             if (fp) {
                 ESP_LOGI(TAG, "File exists: %s", image_name);
+                transfer_png_data(fp);
                 fclose(fp);
             } else {
                 ESP_LOGW(TAG, "File not found: %s", image_name);
