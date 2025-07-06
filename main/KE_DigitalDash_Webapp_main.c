@@ -350,6 +350,53 @@ bool receive_option_list(const char *json_str)
     return true;
 }
 
+uint32_t png_to_rgba(char *buffer, uint32_t buffer_size, uint8_t background_idx)
+{
+    int num_bytes = 0;
+
+    // Parse the JSON string
+    cJSON *root = cJSON_Parse(option_list);
+    if (root == NULL) {
+        ESP_LOGI(TAG, "Error parsing JSON!\n");
+        return num_bytes;
+    }
+
+    // Get the "view_background" array from the JSON object
+    cJSON *view_background = cJSON_GetObjectItemCaseSensitive(root, "view_background");
+    if (!cJSON_IsArray(view_background)) {
+        ESP_LOGI(TAG, "\"view_background\" is not an array or does not exist!");
+        cJSON_Delete(root);
+        return num_bytes;
+    }
+
+    // Verify the background is in bounds
+    if( background_idx >= cJSON_GetArraySize(view_background) ) {
+        cJSON_Delete(root);
+        return num_bytes;
+    }
+
+    cJSON *user = cJSON_GetArrayItem(view_background, background_idx);
+    if (cJSON_IsString(user) && user->valuestring != NULL) {
+        char image_name[64] = {0};
+        snprintf(image_name, sizeof(image_name), "/spiffs/%s.png", user->valuestring);
+        
+        FILE *fp = fopen(image_name, "rb");
+        if (fp) {
+            ESP_LOGI(TAG, "%s raw bytes sent", image_name);
+            num_bytes = decode_png_to_rgba(fp, (uint8_t*)buffer, buffer_size);
+            fclose(fp);
+        } else {
+            ESP_LOGW(TAG, "File not found: %s", image_name);
+        }
+    } else {
+        ESP_LOGI(TAG, "view_background[%d] is not a valid string", background_idx);
+    }
+
+    // Clean up
+    cJSON_Delete(root);
+    return num_bytes;
+}
+
 void mirror_spiffs(void)
 {
     // Parse the JSON string
@@ -377,7 +424,7 @@ void mirror_spiffs(void)
             FILE *fp = fopen(image_name, "rb");
             if (fp) {
                 ESP_LOGI(TAG, "File exists: %s", image_name);
-                transfer_png_data(fp);
+                Generate_TX_Message(&stm32_comm, KE_BACKGROUND_SEND, &i );
                 fclose(fp);
             } else {
                 ESP_LOGW(TAG, "File not found: %s", image_name);
@@ -404,6 +451,7 @@ void stm32_communication_init(void)
     stm32_comm.init.firmware_version_major  = 1;  /* Major firmware version */
     stm32_comm.init.firmware_version_minor  = 0;  /* Minor firmware version */
     stm32_comm.init.firmware_version_hotfix = 0;  /* Hot fix firmware version */
+    stm32_comm.init.png_to_rgba = &png_to_rgba;
     stm32_comm.tx_buffer_size = (UI_HOR_RES*UI_VER_RES*4)+128;
     stm32_comm.rx_buffer_size = 6000;
     stm32_comm.tx_buffer = (uint8_t *)heap_caps_malloc(stm32_comm.tx_buffer_size, MALLOC_CAP_SPIRAM);

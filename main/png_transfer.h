@@ -4,6 +4,6 @@
 #include "stdbool.h"
 #include "stdio.h"
 
-int transfer_png_data(const FILE *fp);
+int decode_png_to_rgba(const FILE *fp, uint8_t *buffer, uint32_t buffer_size);
 
 #endif
