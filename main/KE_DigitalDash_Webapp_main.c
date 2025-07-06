@@ -329,8 +329,6 @@ int stm32_tx(const uint8_t *data, uint32_t len)
             return total_sent;  // Return bytes sent before error
         }
 
-        ESP_LOGI("UART", "Sent %d", sent);
-
         // Wait for the reciever to process data. THIS IS A MUST
         vTaskDelay(25);
 
