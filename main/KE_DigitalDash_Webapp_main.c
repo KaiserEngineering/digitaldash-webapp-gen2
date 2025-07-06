@@ -404,7 +404,10 @@ void stm32_communication_init(void)
     stm32_comm.init.firmware_version_major  = 1;  /* Major firmware version */
     stm32_comm.init.firmware_version_minor  = 0;  /* Minor firmware version */
     stm32_comm.init.firmware_version_hotfix = 0;  /* Hot fix firmware version */
-
+    stm32_comm.tx_buffer_size = (UI_HOR_RES*UI_VER_RES*4)+128;
+    stm32_comm.rx_buffer_size = 6000;
+    stm32_comm.tx_buffer = (uint8_t *)heap_caps_malloc(stm32_comm.tx_buffer_size, MALLOC_CAP_SPIRAM);
+    stm32_comm.rx_buffer = (uint8_t *)heap_caps_malloc(stm32_comm.rx_buffer_size, MALLOC_CAP_SPIRAM);
     uart_init(&stm32_comm);
 }
 
