@@ -310,7 +310,7 @@ void flash_stm32_firmware(const char *bin_filename)
     uart_init(&stm32_comm);
 }
 
-int stm32_tx(const uint8_t *data, size_t len)
+int stm32_tx(const uint8_t *data, uint32_t len)
 {
     size_t total_sent = 0;
 
