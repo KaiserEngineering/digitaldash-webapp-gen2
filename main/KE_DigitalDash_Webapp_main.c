@@ -313,16 +313,24 @@ void flash_stm32_firmware(const char *bin_filename)
 int stm32_tx(const uint8_t *data, uint32_t len)
 {
     size_t total_sent = 0;
+    size_t max_chunk_size = 0x7FFF; // 1/2 0xFFFF which is the STM32 max DMA size
 
     while (total_sent < len) {
+        size_t chunk = len - total_sent;
+        chunk = ( chunk > max_chunk_size ) ? (max_chunk_size) : chunk;
         int sent = uart_write_bytes(CONFIG_ESP32_STM32_UART_CONTROLLER,
                                     (const char *)(data + total_sent),
-                                    len - total_sent);
+                                    chunk);
 
         if (sent < 0) {
             ESP_LOGE("UART", "TX failed at byte %d", total_sent);
             return total_sent;  // Return bytes sent before error
         }
+
+        ESP_LOGI("UART", "Sent %d", sent);
+
+        // Wait for the reciever to process data. THIS IS A MUST
+        vTaskDelay(25);
 
         total_sent += sent;
     }
