@@ -107,13 +107,28 @@
 						<Loader2 class="h-6 w-6 animate-spin text-gray-400" />
 					</div>
 				{:else if failedImages[imageName] || !loadedImages[imageName]}
-					<FileUploaderExplorer
-						uploadCallback={uploadBackground}
-						slotName={imageName}
-						onUploaded={() => handleUploadSuccess(imageName)}
-					/>
+					<div class="relative">
+						<FileUploaderExplorer
+							uploadCallback={uploadBackground}
+							slotName={imageName}
+							onUploaded={() => handleUploadSuccess(imageName)}
+						/>
+
+						{#if editable}
+							<div class="absolute right-2 top-2 z-10 flex gap-2">
+								<Button
+									variant="secondary"
+									size="icon"
+									class="h-8 w-8 rounded-full bg-white/90 shadow-md hover:bg-white"
+									onclick={() => reloadImageSlot(imageName)}
+									disabled={loadingStates[imageName]}
+								>
+									<RefreshCw class="h-4 w-4" />
+								</Button>
+							</div>
+						{/if}
+					</div>
 				{:else}
-					<!-- Image + Controls -->
 					<div
 						class="group relative overflow-hidden rounded-lg border bg-white shadow-sm transition-all hover:shadow-md"
 					>
