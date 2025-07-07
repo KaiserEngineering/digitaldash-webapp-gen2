@@ -6,8 +6,12 @@ import { redirect } from '@sveltejs/kit';
 import { ViewSchema } from '$schemas/digitaldash';
 
 export const load: PageLoad = async ({ params, parent }) => {
-	const { config, options, pids } = await parent();
+	const parentData = await parent();
 	const viewId = Number(params.id);
+
+	const config = await parentData.config;
+	const options = await parentData.options;
+	const pids = await parentData.pids;
 
 	if (!config?.view) {
 		console.error('No views found in config, redirecting to home.');

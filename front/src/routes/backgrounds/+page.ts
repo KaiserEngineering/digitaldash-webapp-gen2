@@ -1,8 +1,9 @@
 // +page.ts
 import type { PageLoad } from './$types';
-import { getOptions } from '@/config/optionsCache';
 
-export const load: PageLoad = async ({ fetch }) => {
-	const options = await getOptions(fetch);
+export const load: PageLoad = async ({ parent }) => {
+	const parentData = await parent();
+	const options = await parentData.options;
+
 	return { slotNames: options?.view_background || [] };
 };

@@ -4,7 +4,9 @@ import { DynamicFormSchema } from './dynamicFormSchema';
 import { zod } from 'sveltekit-superforms/adapters';
 
 export const load: PageLoad = async ({ parent }) => {
-	const { config, pids } = await parent();
+	const parentData = await parent();
+	const config = await parentData.config;
+	const pids = await parentData.pids;
 
 	const dynamicConfig = {
 		items: config?.dynamic || []

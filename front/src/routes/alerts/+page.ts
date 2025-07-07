@@ -4,7 +4,9 @@ import { AlertsFormSchema } from './alertsFormSchema';
 import { zod } from 'sveltekit-superforms/adapters';
 
 export const load: PageLoad = async ({ parent }) => {
-	const { config, pids } = await parent();
+	const parentData = await parent();
+	const pids = await parentData.pids;
+	const config = await parentData.config;
 
 	const initialAlerts = config?.alert ?? [];
 

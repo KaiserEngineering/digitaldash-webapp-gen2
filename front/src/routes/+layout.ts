@@ -4,50 +4,23 @@ import { getOptions } from '@/config/optionsCache';
 import { pidsStore } from '@/config/PIDsStore';
 
 export const load = async ({ fetch }) => {
-	let config;
-
-	try {
-		const res = await fetch('/api/config');
-		if (!res.ok) {
-			console.error('Failed to fetch config:', res.status, res.statusText);
-			config = null;
-		} else {
-			const raw = await res.json();
-			const parsed = DigitalDashSchema.safeParse(raw);
-
-			if (!parsed.success) {
-				console.error('Failed to parse config:', parsed.error);
-				config = null;
-			} else {
+	return {
+		config: fetch('/api/config')
+			.then((res) => (res.ok ? res.json() : Promise.reject(new Error('Config fetch failed'))))
+			.then((raw) => {
+				const parsed = DigitalDashSchema.safeParse(raw);
+				if (!parsed.success) throw new Error('Invalid config schema');
 				configStore.setConfig(parsed.data);
-				config = parsed.data;
-			}
-		}
-	} catch (err) {
-		console.error('Config fetch error:', err);
-		config = null;
-	}
+				return parsed.data;
+			}),
 
-	// Load options
-	let options = null;
-	try {
-		options = await getOptions(fetch);
-	} catch (err) {
-		console.warn('Failed to load options:', err);
-	}
+		options: getOptions(fetch),
 
-	let pids = [];
-	try {
-		const res = await fetch('/api/pids');
-		if (!res.ok) {
-			console.error('Failed to fetch PIDs:', res.status, res.statusText);
-		} else {
-			pids = await res.json();
-			pidsStore.setPIDs(pids);
-		}
-	} catch (err) {
-		console.error('PID fetch error:', err);
-	}
-
-	return { config, options, pids };
+		pids: fetch('/api/pids')
+			.then((res) => (res.ok ? res.json() : Promise.reject(new Error('PID fetch failed'))))
+			.then((pids) => {
+				pidsStore.setPIDs(pids);
+				return pids;
+			})
+	};
 };
