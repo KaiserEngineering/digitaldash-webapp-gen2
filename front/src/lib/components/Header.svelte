@@ -20,8 +20,8 @@
 			value: 'firmware',
 			icon: Upload,
 			subItems: [
-				{ label: 'Web Server', value: 'firmware/web' },
-				{ label: 'STM Firmware', value: 'firmware/stm' }
+				{ label: 'Web App', value: 'firmware/web' },
+				{ label: 'Digital Dash', value: 'firmware/stm' }
 			]
 		}
 	];
