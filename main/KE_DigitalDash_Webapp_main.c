@@ -44,6 +44,7 @@
 #include "png_transfer.h"
 #include "lib_ke_protocol.h"
 #include "cJSON.h"
+#include "esp_heap_caps.h"
 
 #define UI_HOR_RES    1024
 #define UI_VER_RES    200
@@ -79,12 +80,16 @@ i2c_master_dev_handle_t eeprom_handle;
 
 static const char *TAG = "Main";
 
-#define JSON_BUF_SIZE 10000
+#define JSON_BUF_SIZE 60000
+#define OPTION_LIST_SIZE 1200
+#define PID_LIST_SIZE 10000
 int json_data_len = 0;
 
-char json_data_input[JSON_BUF_SIZE];
-char json_data_output[JSON_BUF_SIZE];
-char option_list[JSON_BUF_SIZE];
+char *json_data_input;
+char *json_data_output;
+char *option_list;
+char *pid_list;
+
 uint32_t background_crc = 0;
 uint8_t background_idx = 0xFF;
 
@@ -395,12 +400,22 @@ bool receive_config(const char *json_str)
  */
 bool receive_option_list(const char *json_str)
 {
-    strncpy(option_list, json_str, JSON_BUF_SIZE - 1);
-    option_list[JSON_BUF_SIZE - 1] = '\0'; // ensure null termination
+    strncpy(option_list, json_str, OPTION_LIST_SIZE - 1);
+    option_list[OPTION_LIST_SIZE - 1] = '\0'; // ensure null termination
 
     ESP_LOGI("CONFIG", "Received JSON Option List:\n%s", option_list);
     return true;
 }
+
+bool receive_pid_list(const char *json_str)
+{
+    strncpy(pid_list, json_str, PID_LIST_SIZE - 1);
+    pid_list[PID_LIST_SIZE - 1] = '\0'; // ensure null termination
+
+    ESP_LOGI("CONFIG", "Received JSON PID List:\n%s", pid_list);
+    return true;
+}
+
 
 uint32_t recieve_crc_from_ke(uint8_t idx, uint32_t crc)
 {
@@ -517,6 +532,7 @@ void stm32_communication_init(void)
     stm32_comm.init.config_to_json = &send_config;
     stm32_comm.init.json_to_config = &receive_config;
     stm32_comm.init.json_to_options = &receive_option_list;
+    stm32_comm.init.json_to_pid_list = &receive_pid_list;
     stm32_comm.init.receive_rgba_crc = &recieve_crc_from_ke;
     stm32_comm.init.firmware_version_major  = 1;  /* Major firmware version */
     stm32_comm.init.firmware_version_minor  = 0;  /* Minor firmware version */
@@ -546,6 +562,11 @@ void start_KE_tick_timer(void) {
 
 void app_main(void)
 {
+    json_data_input = heap_caps_malloc(JSON_BUF_SIZE, MALLOC_CAP_SPIRAM);
+    json_data_output = heap_caps_malloc(JSON_BUF_SIZE, MALLOC_CAP_SPIRAM);
+    option_list = heap_caps_malloc(OPTION_LIST_SIZE, MALLOC_CAP_SPIRAM);
+    pid_list = heap_caps_malloc(PID_LIST_SIZE, MALLOC_CAP_SPIRAM);
+
     gpio_init();
     stm32_communication_init();
 
@@ -585,6 +606,8 @@ void app_main(void)
     Generate_TX_Message(&stm32_comm, KE_CONFIG_REQUEST, 0);
     KE_wait_for_response(&stm32_comm, 5000);
     Generate_TX_Message(&stm32_comm, KE_OPTION_LIST_REQUEST, 0);
+    KE_wait_for_response(&stm32_comm, 5000);
+    Generate_TX_Message(&stm32_comm, KE_PID_LIST_REQUEST, 0);
     KE_wait_for_response(&stm32_comm, 5000);
     mirror_spiffs();
 
