@@ -92,7 +92,6 @@ export class ImageHandler {
 			cache.set(name, imageData);
 			return imageData;
 		} catch (err) {
-			console.debug(`Image fetch failed for '${name}'`, err);
 			throw err;
 		}
 	}
