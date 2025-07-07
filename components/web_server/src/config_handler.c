@@ -13,26 +13,29 @@ static const char *TAG = "ConfigHandler";
 static char *json_data_input;
 static char *json_data_output;
 static char *option_list;
-static char *pid_list;
 
-void get_json_data_input_info(char **ptr, uint32_t *max_len) {
-    if (ptr) *ptr = json_data_input;
-    if (max_len) *max_len = JSON_BUF_SIZE;
+void get_json_data_input_info(char **ptr, uint32_t *max_len)
+{
+    if (ptr)
+        *ptr = json_data_input;
+    if (max_len)
+        *max_len = JSON_BUF_SIZE;
 }
 
-void get_json_data_output_info(char **ptr, uint32_t *max_len) {
-    if (ptr) *ptr = json_data_output;
-    if (max_len) *max_len = JSON_BUF_SIZE;
+void get_json_data_output_info(char **ptr, uint32_t *max_len)
+{
+    if (ptr)
+        *ptr = json_data_output;
+    if (max_len)
+        *max_len = JSON_BUF_SIZE;
 }
 
-void get_option_list_info(char **ptr, uint32_t *max_len) {
-    if (ptr) *ptr = option_list;
-    if (max_len) *max_len = OPTION_LIST_SIZE;
-}
-
-void get_pid_list_info(char **ptr, uint32_t *max_len) {
-    if (ptr) *ptr = pid_list;
-    if (max_len) *max_len = PID_LIST_SIZE;
+void get_option_list_info(char **ptr, uint32_t *max_len)
+{
+    if (ptr)
+        *ptr = option_list;
+    if (max_len)
+        *max_len = OPTION_LIST_SIZE;
 }
 
 esp_err_t config_options_handler(httpd_req_t *req)
@@ -86,7 +89,6 @@ esp_err_t config_handler_init_buffer(void)
     json_data_input = heap_caps_malloc(JSON_BUF_SIZE, MALLOC_CAP_SPIRAM);
     json_data_output = heap_caps_malloc(JSON_BUF_SIZE, MALLOC_CAP_SPIRAM);
     option_list = heap_caps_malloc(OPTION_LIST_SIZE, MALLOC_CAP_SPIRAM);
-    pid_list = heap_caps_malloc(PID_LIST_SIZE, MALLOC_CAP_SPIRAM);
     return ESP_OK;
 }
 
