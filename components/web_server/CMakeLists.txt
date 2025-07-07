@@ -5,6 +5,7 @@ idf_component_register(SRCS
     "src/ota_handler.c"
     "src/images_handler.c"
     "src/config_handler.c"
+    "src/pids_handler.c"
     INCLUDE_DIRS "include" "../../main"
     PRIV_REQUIRES esp_http_server esp_wifi nvs_flash mdns app_update spiffs lib_ke_protocol
     EMBED_FILES

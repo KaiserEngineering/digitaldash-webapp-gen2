@@ -40,15 +40,15 @@
 				<Card.Content class={`space-y-4 ${isEnabled ? '' : 'pointer-events-none opacity-50'}`}>
 					<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 						<div class="space-y-2">
-							<Label class="text-sm font-medium">PID Signal</Label>
+							<Label class="text-sm font-medium">PID</Label>
 							<Select.Root type="single" bind:value={$form.gauge[i].pid} name={`pid-${i}`}>
 								<Select.Trigger class="!h-12 w-full">
 									<span>{$form.gauge[i].pid || 'Select PID'}</span>
 								</Select.Trigger>
 								<Select.Content>
 									{#each pids as pid (pid)}
-										<Select.Item value={pid} label={pid}>
-											{pid}
+										<Select.Item value={pid.label} label={pid.label}>
+											{pid.label}
 										</Select.Item>
 									{/each}
 								</Select.Content>

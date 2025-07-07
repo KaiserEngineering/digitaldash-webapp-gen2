@@ -10,6 +10,7 @@
 #include "images_handler.h"
 #include <ctype.h>
 #include "version.h"
+#include "pids_handler.h"
 
 static const char *TAG = "WebServer";
 
@@ -268,9 +269,30 @@ esp_err_t start_webserver()
         return ESP_FAIL;
     }
 
+    if (config_handler_init_buffer() != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to init config buffers");
+        httpd_stop(server);
+        return ESP_FAIL;
+    }
+
+    if (pids_handler_init_buffer() != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to init PIDs config buffers");
+        httpd_stop(server);
+        return ESP_FAIL;
+    }
+
     if (register_config_routes(server) != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to register config endpoints");
+        httpd_stop(server);
+        return ESP_FAIL;
+    }
+
+    if (register_pids_routes(server) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to register PIDs endpoints");
         httpd_stop(server);
         return ESP_FAIL;
     }
