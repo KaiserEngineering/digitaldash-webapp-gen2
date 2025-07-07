@@ -102,7 +102,7 @@ esp_err_t register_config_routes(httpd_handle_t server)
     httpd_register_uri_handler(server, &config_get_uri);
 
     httpd_uri_t config_patch_uri = {
-        .uri = "/api/update-config",
+        .uri = "/api/config",
         .method = HTTP_PATCH,
         .handler = config_patch_handler,
         .user_ctx = NULL};
