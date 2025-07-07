@@ -61,9 +61,7 @@
 						<div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
 							<div class="space-y-2">
 								<Label>PID</Label>
-
 								<div class="space-y-2">
-									<Label>PID</Label>
 									<select
 										bind:value={alert.pid}
 										disabled={!alert.enabled}
