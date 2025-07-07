@@ -9,6 +9,8 @@ interface UploadResponse {
 	filename?: string;
 }
 
+const imageHandler = new ImageHandler();
+
 export async function uploadBackground(
 	file: File,
 	images: { [key: string]: any } = {}
@@ -20,7 +22,7 @@ export async function uploadBackground(
 			'Content-Type': file.type
 		}
 	});
-	
+
 	if (!response.ok) {
 		toast.error(response.statusText);
 		throw new Error(`Upload failed: ${response.statusText}`);
@@ -29,17 +31,11 @@ export async function uploadBackground(
 	const result: UploadResponse = await response.json();
 
 	if (result.filename) {
-		images[result.filename] = {
-			filename: result.filename,
-			url: `${apiUrl}/image/${result.filename}`,
-			size: file.size,
-			lastModified: file.lastModified,
-			type: file.type
-		};
+		// Invalidate and reload the image to get fresh metadata + blob URL
+		imageHandler.clearCache(result.filename);
+		const fresh = await imageHandler.loadImage(result.filename);
 
-		// Need to update our cache
-		const imageHandler = new ImageHandler();
-		imageHandler.clearImageSlotCache();
+		images[result.filename] = fresh;
 
 		toast.success('Upload successful');
 	} else {
@@ -67,7 +63,8 @@ export async function deleteBackground(
 			throw new Error(`Delete failed: ${response.statusText}`);
 		}
 
-		// Remove the image from the local state if images object is provided
+		imageHandler.clearCache(filename);
+
 		if (images && filename in images) {
 			delete images[filename];
 		}
