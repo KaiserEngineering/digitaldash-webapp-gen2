@@ -19,7 +19,7 @@ void get_pid_list_info(char **ptr, uint32_t *max_len)
         *max_len = PID_LIST_SIZE;
 }
 
-esp_err_t config_pids_handler(httpd_req_t *req)
+esp_err_t get_pids_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "GET /api/pids requested");
     ESP_LOGI(TAG, "Sending PID list: %s", pid_list);
@@ -39,7 +39,7 @@ esp_err_t register_pids_routes(httpd_handle_t server)
     httpd_uri_t config_pids_uri = {
         .uri = "/api/pids",
         .method = HTTP_GET,
-        .handler = config_pids_handler,
+        .handler = get_pids_handler,
         .user_ctx = NULL};
     return httpd_register_uri_handler(server, &config_pids_uri);
 }

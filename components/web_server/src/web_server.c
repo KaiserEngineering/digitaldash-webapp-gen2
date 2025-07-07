@@ -290,6 +290,13 @@ esp_err_t start_webserver()
         return ESP_FAIL;
     }
 
+    if (register_pids_routes(server) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to register PIDs endpoints");
+        httpd_stop(server);
+        return ESP_FAIL;
+    }
+
     httpd_register_uri_handler(server, &(httpd_uri_t){
                                            .uri = "/api/embedded/*",
                                            .method = HTTP_GET,
@@ -313,13 +320,6 @@ esp_err_t start_webserver()
                                            .method = HTTP_GET,
                                            .handler = web_request_handler,
                                            .user_ctx = NULL});
-
-    if (register_pids_routes(server) != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to register PIDs endpoints");
-        httpd_stop(server);
-        return ESP_FAIL;
-    }
 
     ESP_LOGI(TAG, "HTTP Server started successfully");
     return ESP_OK;
