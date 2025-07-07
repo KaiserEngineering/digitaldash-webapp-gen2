@@ -45,6 +45,7 @@
 #include "lib_ke_protocol.h"
 #include "cJSON.h"
 #include "esp_heap_caps.h"
+#include "config_handler.h"
 
 #define UI_HOR_RES    1024
 #define UI_VER_RES    200
@@ -79,16 +80,6 @@ spi_device_handle_t spi;
 i2c_master_dev_handle_t eeprom_handle;
 
 static const char *TAG = "Main";
-
-#define JSON_BUF_SIZE 60000
-#define OPTION_LIST_SIZE 1200
-#define PID_LIST_SIZE 10000
-int json_data_len = 0;
-
-char *json_data_input;
-char *json_data_output;
-char *option_list;
-char *pid_list;
 
 uint32_t background_crc = 0;
 uint8_t background_idx = 0xFF;
@@ -360,7 +351,10 @@ int stm32_tx(const uint8_t *data, uint32_t len)
  */
 uint32_t send_config(char *buffer, uint32_t buffer_size)
 {
-    strncpy(buffer, json_data_output, buffer_size - 1);
+    char *ptr;
+    uint32_t len;
+    get_json_data_output_info(&ptr, &len);
+    strncpy(buffer, ptr, buffer_size - 1);
     buffer[buffer_size - 1] = '\0'; // ensure null termination
 
     ESP_LOGI("CONFIG", "JSON Config copied to buffer:\n%s", buffer);
@@ -380,10 +374,13 @@ uint32_t send_config(char *buffer, uint32_t buffer_size)
  */
 bool receive_config(const char *json_str)
 {
-    strncpy(json_data_input, json_str, JSON_BUF_SIZE - 1);
-    json_data_input[JSON_BUF_SIZE - 1] = '\0'; // ensure null termination
+    char *ptr;
+    uint32_t len;
+    get_json_data_input_info(&ptr, &len);
+    strncpy(ptr, json_str, len-1);
+    ptr[len - 1] = '\0'; // ensure null termination
 
-    ESP_LOGI("CONFIG", "Received JSON Config:\n%s", json_data_input);
+    ESP_LOGI("CONFIG", "Received JSON Config:\n%s", ptr);
     return true;
 }
 
@@ -400,19 +397,25 @@ bool receive_config(const char *json_str)
  */
 bool receive_option_list(const char *json_str)
 {
-    strncpy(option_list, json_str, OPTION_LIST_SIZE - 1);
-    option_list[OPTION_LIST_SIZE - 1] = '\0'; // ensure null termination
+    char *ptr;
+    uint32_t len;
+    get_option_list_info(&ptr, &len);
+    strncpy(ptr, json_str, len - 1);
+    ptr[len - 1] = '\0'; // ensure null termination
 
-    ESP_LOGI("CONFIG", "Received JSON Option List:\n%s", option_list);
+    ESP_LOGI("CONFIG", "Received JSON Option List:\n%s", ptr);
     return true;
 }
 
 bool receive_pid_list(const char *json_str)
 {
-    strncpy(pid_list, json_str, PID_LIST_SIZE - 1);
-    pid_list[PID_LIST_SIZE - 1] = '\0'; // ensure null termination
+    char *ptr;
+    uint32_t len;
+    get_pid_list_info(&ptr, &len);
+    strncpy(ptr, json_str, len - 1);
+    ptr[len - 1] = '\0'; // ensure null termination
 
-    ESP_LOGI("CONFIG", "Received JSON PID List:\n%s", pid_list);
+    ESP_LOGI("CONFIG", "Received JSON PID List:\n%s", ptr);
     return true;
 }
 
@@ -428,8 +431,12 @@ uint32_t png_to_rgba(char *buffer, uint32_t buffer_size, uint8_t background_idx)
 {
     int num_bytes = 0;
 
+    char *ptr;
+    uint32_t len;
+    get_option_list_info(&ptr, &len);
+
     // Parse the JSON string
-    cJSON *root = cJSON_Parse(option_list);
+    cJSON *root = cJSON_Parse(ptr);
     if (root == NULL) {
         ESP_LOGI(TAG, "Error parsing JSON!\n");
         return num_bytes;
@@ -473,8 +480,12 @@ uint32_t png_to_rgba(char *buffer, uint32_t buffer_size, uint8_t background_idx)
 
 void mirror_spiffs(void)
 {
+    char *ptr;
+    uint32_t len;
+    get_option_list_info(&ptr, &len);
+
     // Parse the JSON string
-    cJSON *root = cJSON_Parse(option_list);
+    cJSON *root = cJSON_Parse(ptr);
     if (root == NULL) {
         ESP_LOGI(TAG, "Error parsing JSON!\n");
         return;
@@ -562,11 +573,6 @@ void start_KE_tick_timer(void) {
 
 void app_main(void)
 {
-    json_data_input = heap_caps_malloc(JSON_BUF_SIZE, MALLOC_CAP_SPIRAM);
-    json_data_output = heap_caps_malloc(JSON_BUF_SIZE, MALLOC_CAP_SPIRAM);
-    option_list = heap_caps_malloc(OPTION_LIST_SIZE, MALLOC_CAP_SPIRAM);
-    pid_list = heap_caps_malloc(PID_LIST_SIZE, MALLOC_CAP_SPIRAM);
-
     gpio_init();
     stm32_communication_init();
 

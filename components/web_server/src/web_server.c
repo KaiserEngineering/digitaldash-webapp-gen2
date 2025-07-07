@@ -268,6 +268,13 @@ esp_err_t start_webserver()
         return ESP_FAIL;
     }
 
+    if (config_handler_init_buffer() != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to init buffers");
+        httpd_stop(server);
+        return ESP_FAIL;
+    }
+
     if (register_config_routes(server) != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to register config endpoints");
