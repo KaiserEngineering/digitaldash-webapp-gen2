@@ -1,4 +1,5 @@
 import { apiUrl } from '$lib/config';
+import type { Image } from 'lucide-svelte';
 
 export interface ImageData {
 	name: string;
@@ -16,11 +17,20 @@ export class ImageHandler {
 	 * Load a background image from /api/image/:slot
 	 */
 	async loadImage(name: string): Promise<ImageData> {
-		if (backgroundCache.has(name)) return backgroundCache.get(name)!;
+		if (backgroundCache.has(name)) {
+			const cached = backgroundCache.get(name);
+			if (cached === null) throw new Error(`Previously failed to load image: ${name}`);
+			return cached!;
+		}
 
 		const url = `${apiUrl}/image/${encodeURIComponent(name)}.png`;
-		const imageData = await this._fetchAndCacheImage(name, url, backgroundCache);
-		return imageData;
+		try {
+			const imageData = await this._fetchAndCacheImage(name, url, backgroundCache);
+			return imageData;
+		} catch (err) {
+			backgroundCache.set(name, null as unknown as ImageData);
+			throw err;
+		}
 	}
 
 	/**
