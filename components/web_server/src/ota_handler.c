@@ -4,7 +4,9 @@
 #include "esp_log.h"
 #include "esp_ota_ops.h"
 #include "esp_http_server.h"
+#include "stm32_uart.h"
 #include "ota_handler.h"
+#include "stm_flash.h"
 
 static const char *TAG = "OTAHandler";
 
@@ -21,7 +23,7 @@ static void send_error_response(httpd_req_t *req, const char *status,
 }
 
 /* OTA file upload handler */
-esp_err_t update_post_handler(httpd_req_t *req)
+esp_err_t web_update_post_handler(httpd_req_t *req)
 {
     char buf[1000];
     esp_ota_handle_t ota_handle;
@@ -82,14 +84,33 @@ esp_err_t update_post_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+// Add STM firmware update handler
+esp_err_t stm_update_post_handler(httpd_req_t *req)
+{
+    flash_stm32_firmware("digitaldash-firmware-gen2-stm32u5g.bin");
+    httpd_resp_sendstr(req, "STM32 firmware update complete, rebooting now!\n");
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+    esp_restart();
+    return ESP_OK;
+}
+
 /* Register the OTA endpoint with the HTTP server */
 esp_err_t register_ota_routes(httpd_handle_t server)
 {
     httpd_uri_t update_post = {
-        .uri = "/api/update",
+        .uri = "/api/firmware/web",
         .method = HTTP_POST,
-        .handler = update_post_handler,
+        .handler = web_update_post_handler,
         .user_ctx = NULL};
+    httpd_register_uri_handler(server, &update_post);
 
-    return httpd_register_uri_handler(server, &update_post);
+    httpd_uri_t stm_update_post = {
+        .uri = "/api/firmware/stm",
+        .method = HTTP_POST,
+        .handler = stm_update_post_handler,
+        .user_ctx = NULL};
+    httpd_register_uri_handler(server, &stm_update_post);
+
+    ESP_LOGI(TAG, "OTA routes registered successfully");
+    return ESP_OK;
 }

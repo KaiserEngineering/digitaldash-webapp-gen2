@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+void flash_stm32_firmware(const char *firmware_path);
+
 /**
  * @brief Handler for OTA file uploads.
  *
@@ -15,7 +17,7 @@ extern "C" {
  * @param req The HTTP request structure.
  * @return esp_err_t ESP_OK on success, otherwise an error code.
  */
-esp_err_t update_post_handler(httpd_req_t *req);
+esp_err_t web_update_post_handler(httpd_req_t *req);
 
 /**
  * @brief Registers OTA endpoints with the HTTP server.
@@ -24,6 +26,8 @@ esp_err_t update_post_handler(httpd_req_t *req);
  * @return esp_err_t ESP_OK on success, otherwise an error code.
  */
 esp_err_t register_ota_routes(httpd_handle_t server);
+
+esp_err_t stm_update_post_handler(httpd_req_t *req);
 
 #ifdef __cplusplus
 }

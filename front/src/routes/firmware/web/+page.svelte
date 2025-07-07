@@ -52,7 +52,7 @@
 
 		try {
 			const xhr = new XMLHttpRequest();
-			xhr.open('POST', `${apiUrl}/update`, true);
+			xhr.open('POST', `${apiUrl}/firmware/web`, true);
 			xhr.upload.onprogress = (e) => {
 				if (e.lengthComputable) uploadProgress = (e.loaded / e.total) * 100;
 			};
