@@ -6,7 +6,7 @@ import { redirect } from '@sveltejs/kit';
 import { ViewSchema } from '$schemas/digitaldash';
 
 export const load: PageLoad = async ({ params, parent }) => {
-	const { config, options } = await parent();
+	const { config, options, pids } = await parent();
 	const viewId = Number(params.id);
 
 	if (!config?.view) {
@@ -37,7 +37,7 @@ export const load: PageLoad = async ({ params, parent }) => {
 		form: validatedForm,
 		viewId,
 		themes: options?.gauge_theme || [],
-		pids: options?.pids || [],
+		pids,
 		backgrounds: options?.view_background || []
 	};
 };

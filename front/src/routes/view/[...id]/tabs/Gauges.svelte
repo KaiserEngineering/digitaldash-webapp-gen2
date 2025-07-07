@@ -47,8 +47,8 @@
 								</Select.Trigger>
 								<Select.Content>
 									{#each pids as pid (pid)}
-										<Select.Item value={pid} label={pid}>
-											{pid}
+										<Select.Item value={pid.label} label={pid.label}>
+											{pid.label}
 										</Select.Item>
 									{/each}
 								</Select.Content>

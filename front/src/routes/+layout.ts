@@ -1,13 +1,13 @@
 import { DigitalDashSchema } from '$schemas/digitaldash';
 import { configStore } from '@/config/configStore';
 import { getOptions } from '@/config/optionsCache';
+import { pidsStore } from '@/config/PIDsStore';
 
 export const load = async ({ fetch }) => {
 	let config;
 
 	try {
 		const res = await fetch('/api/config');
-
 		if (!res.ok) {
 			console.error('Failed to fetch config:', res.status, res.statusText);
 			config = null;
@@ -28,6 +28,7 @@ export const load = async ({ fetch }) => {
 		config = null;
 	}
 
+	// Load options
 	let options = null;
 	try {
 		options = await getOptions(fetch);
@@ -35,5 +36,18 @@ export const load = async ({ fetch }) => {
 		console.warn('Failed to load options:', err);
 	}
 
-	return { config, options };
+	let pids = [];
+	try {
+		const res = await fetch('/api/pids');
+		if (!res.ok) {
+			console.error('Failed to fetch PIDs:', res.status, res.statusText);
+		} else {
+			pids = await res.json();
+			pidsStore.setPIDs(pids);
+		}
+	} catch (err) {
+		console.error('PID fetch error:', err);
+	}
+
+	return { config, options, pids };
 };
