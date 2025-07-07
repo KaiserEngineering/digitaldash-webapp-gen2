@@ -7,7 +7,7 @@
 #include "esp_log.h"
 #include "esp_http_server.h"
 #include "esp_err.h"
-#include "user_images.h"
+#include "images_handler.h"
 #include <ctype.h>
 #include "version.h"
 
@@ -34,12 +34,6 @@ extern const uint8_t index_html_end[] asm("_binary_index_html_end");
 extern const uint8_t factoryImages_favicon_png_start[] asm("_binary_favicon_png_start");
 extern const uint8_t factoryImages_favicon_png_end[] asm("_binary_favicon_png_end");
 
-extern const uint8_t factoryImages_flare_png_start[] asm("_binary_flare_png_start");
-extern const uint8_t factoryImages_flare_png_end[] asm("_binary_flare_png_end");
-
-extern const uint8_t factoryImages_galaxy_png_start[] asm("_binary_galaxy_png_start");
-extern const uint8_t factoryImages_galaxy_png_end[] asm("_binary_galaxy_png_end");
-
 // Factory Themes:
 extern const uint8_t factoryImages_Linear_png_start[] asm("_binary_Linear_png_start");
 extern const uint8_t factoryImages_Linear_png_end[] asm("_binary_Linear_png_end");
@@ -57,8 +51,6 @@ static const EmbeddedFile embedded_files[] = {
     {"/favicon.png", factoryImages_favicon_png_start, factoryImages_favicon_png_end, "image/png"},
 
     // Factory images (preloaded in firmware)
-    {"/api/embedded/flare.png", factoryImages_flare_png_start, factoryImages_flare_png_end, "image/png"},
-    {"/api/embedded/galaxy.png", factoryImages_galaxy_png_start, factoryImages_galaxy_png_end, "image/png"},
     {"/api/embedded/Linear.png", factoryImages_Linear_png_start, factoryImages_Linear_png_end, "image/png"},
     {"/api/embedded/Stock RS.png", factoryImages_Stock_RS_png_start, factoryImages_Stock_RS_png_end, "image/png"},
     {"/api/embedded/Stock ST.png", factoryImages_Stock_ST_png_start, factoryImages_Stock_ST_png_end, "image/png"},
@@ -269,7 +261,7 @@ esp_err_t start_webserver()
         return ESP_FAIL;
     }
 
-    if (register_user_images(server) != ESP_OK)
+    if (register_images(server) != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to register user images");
         httpd_stop(server);
@@ -290,7 +282,7 @@ esp_err_t start_webserver()
                                            .user_ctx = NULL});
 
     httpd_register_uri_handler(server, &(httpd_uri_t){
-                                           .uri = "/api/user_images/*",
+                                           .uri = "/api/images/*",
                                            .method = HTTP_GET,
                                            .handler = spiffs_file_handler,
                                            .user_ctx = NULL});

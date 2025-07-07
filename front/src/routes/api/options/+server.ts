@@ -1,11 +1,31 @@
-// src/routes/api/options/+server.ts
-import { json } from '@sveltejs/kit';
+import { json } from "@sveltejs/kit";
 
 export async function GET() {
+	const backgroundSlots = ['User1', 'User2', 'User3'];
+
 	const options = {
-		pids: ['RPM', 'TPS', 'MAP', 'IAT', 'CLT'],
-		themes: ['Stock ST', 'Stock RS'],
-		backgrounds: ['black', 'flare', 'galaxy']
+		view_state: ['Disabled', 'Enabled'],
+		view_background: backgroundSlots,
+		gauge_theme: ['Stock ST', 'Grumpy Cat', 'Linear', 'Radial'],
+		alert_state: ['Disabled', 'Enabled'],
+		alert_comparison: [
+			'Less Than',
+			'Less Than Or Equal To',
+			'Greater Than',
+			'Greater Than Or Equal To',
+			'Equal',
+			'Not Equal'
+		],
+		dynamic_state: ['Disabled', 'Enabled'],
+		dynamic_priority: ['Low', 'Medium', 'High'],
+		dynamic_comparison: [
+			'Less Than',
+			'Less Than Or Equal To',
+			'Greater Than',
+			'Greater Than Or Equal To',
+			'Equal',
+			'Not Equal'
+		],
 	};
 
 	return json(options);

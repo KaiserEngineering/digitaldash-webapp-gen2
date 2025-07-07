@@ -99,7 +99,7 @@
 
 							<div class="space-y-2">
 								<Label>Threshold</Label>
-								<Input type="number" bind:value={rule.thresh} disabled={!rule.enabled} />
+								<Input type="number" bind:value={rule.threshold} disabled={!rule.enabled} />
 							</div>
 
 							<div class="space-y-2">
@@ -127,7 +127,7 @@
 	{/snippet}
 
 	{#snippet footerContent()}
-		<div class="mt-4 mb-6 flex items-center justify-between">
+		<div class="mb-6 mt-4 flex items-center justify-between">
 			<Button
 				type="submit"
 				disabled={$submitting}

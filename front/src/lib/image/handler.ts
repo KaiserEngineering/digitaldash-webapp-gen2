@@ -1,4 +1,4 @@
-import { apiUrl, endpoints, factoryBackgroundImages, factoryThemeImames } from '$lib/config';
+import { apiUrl } from '$lib/config';
 
 export interface ImageData {
 	name: string;
@@ -8,34 +8,58 @@ export interface ImageData {
 	contentType: string;
 }
 
-// Unified in-memory image cache
-const imageCache = new Map<string, ImageData>();
-
-// List of factory images
-const FactoryImages = [...factoryBackgroundImages, ...factoryThemeImames];
+const backgroundCache = new Map<string, ImageData>();
+const themeCache = new Map<string, ImageData>();
 
 export class ImageHandler {
-	private customerImageNamesCache: string[] | null = null;
-
 	/**
-	 * Resolve endpoint for image name.
-	 * Factory images -> static assets; others -> customer endpoint.
+	 * Load a background image from /api/image/:slot
 	 */
-	private getEndpoint(name: string): string {
-		return FactoryImages.includes(name)
-			? `${apiUrl}${endpoints.factory}`
-			: `${apiUrl}${endpoints.customer}`;
+	async loadImage(name: string): Promise<ImageData> {
+		if (backgroundCache.has(name)) return backgroundCache.get(name)!;
+
+		const url = `${apiUrl}/image/${encodeURIComponent(name)}.png`;
+		const imageData = await this._fetchAndCacheImage(name, url, backgroundCache);
+		return imageData;
 	}
 
 	/**
-	 * Load image, using cache if available.
+	 * Load a theme image from /api/embedded/:name
 	 */
-	async loadImage(name: string): Promise<ImageData> {
-		const cacheKey = `${name}.png`;
-		if (imageCache.has(cacheKey)) return imageCache.get(cacheKey)!;
+	async loadTheme(name: string): Promise<ImageData> {
+		if (themeCache.has(name)) return themeCache.get(name)!;
 
-		const url = this.getEndpoint(name) + encodeURIComponent(cacheKey);
+		const url = `${apiUrl}/embedded/${encodeURIComponent(name)}.png`;
 
+		try {
+			const res = await fetch(url);
+			if (!res.ok)
+				throw new Error(`Failed to load theme '${name}': ${res.status} ${res.statusText}`);
+
+			const blob = await res.blob();
+			const objectUrl = URL.createObjectURL(blob);
+			const size = parseInt(res.headers.get('content-length') || '0', 10);
+			const lastModified = new Date(res.headers.get('last-modified') || Date.now()).getTime();
+			const contentType = res.headers.get('content-type') || 'unknown';
+
+			const imageData: ImageData = { name, url: objectUrl, size, lastModified, contentType };
+			themeCache.set(name, imageData);
+
+			return imageData;
+		} catch (err) {
+			console.debug(`Theme fetch failed for '${name}'`, err);
+			throw err;
+		}
+	}
+
+	/**
+	 * Shared fetch logic
+	 */
+	private async _fetchAndCacheImage(
+		name: string,
+		url: string,
+		cache: Map<string, ImageData>
+	): Promise<ImageData> {
 		try {
 			const res = await fetch(url);
 			if (!res.ok)
@@ -47,89 +71,62 @@ export class ImageHandler {
 			const lastModified = new Date(res.headers.get('last-modified') || Date.now()).getTime();
 			const contentType = res.headers.get('content-type') || 'unknown';
 
-			const imageData: ImageData = { name, url: objectUrl, size, lastModified, contentType };
-			imageCache.set(cacheKey, imageData);
+			const imageData: ImageData = {
+				name,
+				url: objectUrl,
+				size,
+				lastModified,
+				contentType
+			};
 
+			cache.set(name, imageData);
 			return imageData;
 		} catch (err) {
-			console.error(`Image fetch failed for '${name}'`, err);
+			console.debug(`Image fetch failed for '${name}'`, err);
 			throw err;
 		}
 	}
 
 	/**
-	 * Preload multiple images for better UX
+	 * Preload background images
 	 */
 	async preloadImages(names: string[]): Promise<void> {
-		const promises = names.map((name) =>
-			this.loadImage(name).catch((err) => console.warn(`Preload failed for ${name}:`, err))
+		await Promise.allSettled(
+			names.map((name) =>
+				this.loadImage(name).catch((err) => console.warn(`Preload failed for ${name}:`, err))
+			)
 		);
-		await Promise.allSettled(promises);
 	}
 
 	/**
-	 * Clear the image cache, optionally by name.
+	 * Preload theme images
+	 */
+	async preloadThemes(names: string[]): Promise<void> {
+		await Promise.allSettled(
+			names.map((name) =>
+				this.loadTheme(name).catch((err) => console.warn(`Theme preload failed for ${name}:`, err))
+			)
+		);
+	}
+
+	/**
+	 * Clear all image caches
 	 */
 	clearCache(name?: string): void {
-		if (name) {
-			const data = imageCache.get(name);
-			if (data) {
-				URL.revokeObjectURL(data.url);
-				imageCache.delete(name);
-				console.debug(`Cleared cache for image: ${name}`);
-			}
-		} else {
-			imageCache.forEach((data) => URL.revokeObjectURL(data.url));
-			imageCache.clear();
-			console.debug('Cleared entire image cache');
-		}
-	}
-
-	/**
-	 * Return list of factory images (static).
-	 */
-	getFactoryBackgroundImages(): string[] {
-		return factoryBackgroundImages;
-	}
-
-	/**
-	 * Return list of customer-uploaded image filenames.
-	 */
-	async getCustomerImageNames(fetchFn: typeof fetch): Promise<string[]> {
-		if (this.customerImageNamesCache) {
-			return this.customerImageNamesCache;
-		}
-
-		try {
-			const res = await fetchFn(`${apiUrl}/user_images`);
-			if (res.ok) {
-				const json = await res.json();
-				// Remove file types from keys
-				Object.keys(json).forEach((key) => {
-					const extIndex = key.lastIndexOf('.');
-					if (extIndex !== -1) {
-						const nameWithoutExt = key.substring(0, extIndex);
-						json[nameWithoutExt] = json[key];
-						delete json[key];
-					}
-				});
-				this.customerImageNamesCache = Object.keys(json);
+		const clear = (cache: Map<string, ImageData>) => {
+			if (name) {
+				const data = cache.get(name);
+				if (data) {
+					URL.revokeObjectURL(data.url);
+					cache.delete(name);
+				}
 			} else {
-				console.error('Failed to fetch customer image names:', res.statusText);
-				this.customerImageNamesCache = [];
+				cache.forEach((data) => URL.revokeObjectURL(data.url));
+				cache.clear();
 			}
-		} catch (err) {
-			console.error('Error fetching customer image names:', err);
-			this.customerImageNamesCache = [];
-		}
+		};
 
-		return this.customerImageNamesCache;
-	}
-
-	/**
-	 * Manually clear customer image name cache.
-	 */
-	clearCustomerImageNameCache() {
-		this.customerImageNamesCache = null;
+		clear(backgroundCache);
+		clear(themeCache);
 	}
 }

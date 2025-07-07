@@ -12,7 +12,6 @@
 	import Spinner from './Spinner.svelte';
 	import * as ImageCropper from '$lib/components/ui/image-cropper';
 
-	/** Define a strict file type */
 	type UploadedFile = {
 		name: string;
 		type: string;
@@ -22,15 +21,12 @@
 		rawFile: File;
 	};
 
-	/** Props */
-	let { uploadCallback }: { uploadCallback: (file: File) => Promise<void> } = $props();
+	let { uploadCallback, slotName, onUploaded } = $props();
 
-	/** Reactive states */
-	let file: UploadedFile | null = $state(null);
+	let file = $state<UploadedFile | null>(null);
 	let isUploading = $state(false);
 	let openCropper = $state(false);
 
-	/** Temporary URL for cropping */
 	let tempUrl = $derived(file?.url ?? '');
 
 	/** Handles file selection but does NOT upload immediately */
@@ -106,14 +102,20 @@
 
 		isUploading = true;
 		try {
-			// Upload final cropped file
-			await uploadCallback(file.rawFile);
+			// Rename file to match slot name
+			const renamedFile = new File([file.rawFile], `${slotName}.png`, {
+				type: file.rawFile.type
+			});
+
+			await uploadCallback(renamedFile);
 		} catch (error) {
 			console.error('Failed to upload file:', error);
 		} finally {
 			removeFile();
+			isUploading = false;
 		}
 		isUploading = false;
+		onUploaded();
 	};
 
 	/** Reset file selection */
@@ -190,8 +192,8 @@
 		<ImageCropper.Dialog>
 			<ImageCropper.Cropper cropShape="rect" aspect={800 / 165} />
 			<ImageCropper.Controls>
-				<ImageCropper.Cancel class="bg-blue-200 cursor-pointer" />
-				<ImageCropper.Crop class="bg-blue-200 cursor-pointer" />
+				<ImageCropper.Cancel class="cursor-pointer bg-blue-200" />
+				<ImageCropper.Crop class="cursor-pointer bg-blue-200" />
 			</ImageCropper.Controls>
 		</ImageCropper.Dialog>
 	</ImageCropper.Root>

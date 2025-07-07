@@ -1,81 +1,173 @@
 <script lang="ts">
-	import { Trash2 } from 'lucide-svelte';
-	import { Button } from '@/components/ui/button';
+	import { Trash2, Loader2, RefreshCw } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { ImageHandler } from '$lib/image/handler';
+	import { onMount } from 'svelte';
+	import FileUploaderExplorer from './FileUploaderExplorer.svelte';
+	import Spinner from './Spinner.svelte';
+	import toast from 'svelte-5-french-toast';
 
-	let { images, editable = true, deleteCallback = () => {} } = $props();
+	let {
+		imageNames = [],
+		editable = true,
+		deleteCallback = () => {},
+		uploadBackground = () => {}
+	} = $props();
 
-	let failedImages: Record<string, boolean> = {};
+	const imageHandler = new ImageHandler();
 
-	function handleImageError(key: string) {
-		if (!failedImages[key]) failedImages[key] = true;
+	let failedImages = $state<Record<string | number, boolean>>({});
+	let loadedImages = $state<Record<string | number, string | null>>({});
+	let loadingStates = $state<Record<string | number, boolean>>({});
+	let deletingStates = $state<Record<string | number, boolean>>({});
+
+	function handleImageError(key: string | number) {
+		failedImages[key] = true;
+		loadedImages[key] = null;
+		loadingStates[key] = false;
 	}
+
+	async function reloadImageSlot(imageName: string) {
+		// If currently showing an image, flip to uploader
+		if (loadedImages[imageName]) {
+			failedImages[imageName] = true;
+			loadedImages[imageName] = null;
+			loadingStates[imageName] = false;
+		}
+		// If currently showing uploader, try to load the image
+		else {
+			loadingStates[imageName] = true;
+			failedImages[imageName] = false;
+
+			try {
+				const image = await imageHandler.loadImage(imageName);
+				loadedImages[imageName] = image?.url ?? null;
+
+				if (!image?.url) {
+					failedImages[imageName] = true;
+				}
+			} catch (err) {
+				console.warn(`Failed to reload image: ${imageName}`, err);
+				failedImages[imageName] = true;
+				loadedImages[imageName] = null;
+			}
+
+			loadingStates[imageName] = false;
+		}
+	}
+
+	async function handleDelete(imageName: string) {
+		deletingStates[imageName] = true;
+
+		try {
+			await deleteCallback(imageName);
+			await reloadImageSlot(imageName);
+			toast.success(`${imageName} deleted successfully`);
+		} catch (error) {
+			console.error('Delete failed:', error);
+			toast.error(`Failed to delete ${imageName}`);
+		} finally {
+			deletingStates[imageName] = false;
+		}
+	}
+
+	async function handleUploadSuccess(imageName: string) {
+		toast.success(`${imageName} uploaded successfully`);
+		await reloadImageSlot(imageName);
+	}
+
+	onMount(() => {
+		imageNames.forEach(async (imageName) => {
+			loadingStates[imageName] = true;
+
+			try {
+				const image = await imageHandler.loadImage(imageName);
+				loadedImages[imageName] = image?.url ?? null;
+			} catch (err) {
+				failedImages[imageName] = true;
+			}
+
+			loadingStates[imageName] = false;
+		});
+	});
 </script>
 
-{#if images && Object.keys(images).length > 0}
-	<div class="w-full max-w-md flex flex-col">
-		{#each Object.entries(images) as [key, image]}
-			<div
-				class="group relative overflow-hidden rounded-lg bg-white shadow-sm transition-all hover:shadow-md"
-			>
-				<div class="aspect-video w-full overflow-hidden">
-					{#if failedImages[key]}
-						<div
-							class="flex h-full w-full items-center justify-center bg-gray-100 p-4 text-center transition-opacity duration-200"
-						>
-							<p class="text-sm font-medium text-gray-500">{key}</p>
-						</div>
-					{:else}
-						<img
-							src={image.url || '/placeholder.svg'}
-							alt={key}
-							loading="lazy"
-							class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-							onerror={() => handleImageError(key)}
-						/>
-					{/if}
-				</div>
+{#if imageNames && imageNames.length > 0}
+	<div class="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+		{#each imageNames as imageName}
+			<div class="flex flex-col">
+				<h3 class="mb-3 text-sm font-medium capitalize text-gray-700">
+					{imageName.replace('-', ' ')}
+				</h3>
 
-				<div class="p-2">
-					<p class="truncate text-sm font-medium text-gray-700">{key}</p>
-				</div>
-
-				{#if editable}
+				{#if loadingStates[imageName]}
 					<div
-						class="absolute top-2 right-2 transition-opacity duration-200 group-hover:opacity-100 sm:opacity-0"
+						class="flex h-40 items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-100"
 					>
-						<Button
-							variant="destructive"
-							size="icon"
-							class="h-8 w-8 cursor-pointer rounded-full bg-red-500/90 shadow-md hover:bg-red-600"
-							onclick={() => deleteCallback(key)}
-						>
-							<Trash2 class="h-4 w-4" />
-						</Button>
+						<Loader2 class="h-6 w-6 animate-spin text-gray-400" />
+					</div>
+				{:else if failedImages[imageName] || !loadedImages[imageName]}
+					<FileUploaderExplorer
+						uploadCallback={uploadBackground}
+						slotName={imageName}
+						onUploaded={() => handleUploadSuccess(imageName)}
+					/>
+				{:else}
+					<!-- Image + Controls -->
+					<div
+						class="group relative overflow-hidden rounded-lg border bg-white shadow-sm transition-all hover:shadow-md"
+					>
+						<div class="aspect-video w-full overflow-hidden">
+							<img
+								src={loadedImages[imageName] || '/placeholder.svg'}
+								alt="{imageName} background"
+								loading="lazy"
+								class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+								onerror={() => handleImageError(imageName)}
+							/>
+						</div>
+
+						{#if editable}
+							<div
+								class="absolute inset-0 bg-black/0 transition-all duration-200 group-hover:bg-black/10"
+							>
+								<div
+									class="absolute right-2 top-2 flex gap-2 transition-opacity duration-200 group-hover:opacity-100 sm:opacity-0"
+								>
+									<Button
+										variant="secondary"
+										size="icon"
+										class="h-8 w-8 rounded-full bg-white/90 shadow-md hover:bg-white"
+										onclick={() => reloadImageSlot(imageName)}
+										disabled={loadingStates[imageName]}
+									>
+										<RefreshCw class="h-4 w-4" />
+									</Button>
+
+									<Button
+										variant="destructive"
+										size="icon"
+										class="h-8 w-8 rounded-full bg-red-500/90 shadow-md hover:bg-red-600"
+										onclick={() => handleDelete(imageName)}
+										disabled={deletingStates[imageName]}
+									>
+										{#if deletingStates[imageName]}
+											<Loader2 class="h-4 w-4 animate-spin" />
+										{:else}
+											<Trash2 class="h-4 w-4" />
+										{/if}
+									</Button>
+								</div>
+							</div>
+						{/if}
 					</div>
 				{/if}
 			</div>
 		{/each}
 	</div>
 {:else}
-	<div
-		class="mt-8 flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 p-12 text-center"
-	>
-		<div class="rounded-full bg-gray-100 p-3">
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				class="h-6 w-6 text-gray-400"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke="currentColor"
-			>
-				<path
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2"
-					d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-				/>
-			</svg>
-		</div>
-		<p class="mt-4 text-sm font-medium text-gray-500">No images found</p>
+	<div class="flex flex-col items-center justify-center py-12">
+		<Spinner />
+		<p class="mt-4 text-gray-500">Loading image slots...</p>
 	</div>
 {/if}

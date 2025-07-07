@@ -29,7 +29,7 @@ const config = {
 		alias: {
 			'@/*': './src/lib/*',
 			'$schemas/*': './src/schemas/*',
-			'$local/*': './src/local/*',
+			'$local/*': './src/local/*'
 		}
 	}
 };

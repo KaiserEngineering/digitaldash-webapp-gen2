@@ -38,7 +38,6 @@ export const PIDRef = z.string();
 export const GaugeSchema = z.object({
 	theme: z.string(),
 	pid: PIDRef,
-	enabled: z.boolean().optional(),
 	id: z.string().optional() // Optional ID for client-side use
 });
 
@@ -52,7 +51,13 @@ export const GaugeSchema = z.object({
  * } digitaldash_view;
  */
 export const ViewSchema = z.object({
-	enabled: z.boolean().optional(),
+	enabled: z
+		.union([z.enum(['Enabled', 'Disabled']), z.boolean()])
+		.transform((val) => {
+			if (typeof val === 'boolean') return val;
+			return val === 'Enabled';
+		})
+		.default(false),
 	num_gauges: z.number().int(),
 	background: z.string(),
 	gauge: z.array(GaugeSchema).max(GAUGES_PER_VIEW)
@@ -64,35 +69,45 @@ export const ViewSchema = z.object({
  *   uint8_t enabled;
  *   PID_DATA * pid;
  *   digitaldash_compare compare;
- *   float thresh;
- *   char msg[ALERT_MESSAGE_LEN];
+ *   float threshold;
+ *   char message[ALERT_MESSAGE_LEN];
  * } digitaldash_alert;
  */
 export const AlertSchema = z.object({
-	enabled: z.boolean().optional(),
+	enabled: z
+		.union([z.enum(['Enabled', 'Disabled']), z.boolean()])
+		.transform((val) => {
+			if (typeof val === 'boolean') return val;
+			return val === 'Enabled';
+		})
+		.default(false),
 	pid: PIDRef,
 	compare: CompareEnum,
-	thresh: z.number().nullable(),
-	msg: z.string().max(ALERT_MESSAGE_LEN)
+	threshold: z.number().nullable(),
+	message: z.string().max(ALERT_MESSAGE_LEN)
 });
 
 /**
  * Dynamic structure
  * typedef struct {
  *   uint8_t enabled;
- *   uint8_t view_index;
  *   PID_DATA * pid;
  *   digitaldash_compare compare;
- *   float thresh;
+ *   float threshold;
  *   digitaldash_priority priority;
  * } digitaldash_dynamic;
  */
 export const DynamicSchema = z.object({
-	enabled: z.boolean().optional(),
-	view_index: z.number().int(),
+	enabled: z
+		.union([z.enum(['Enabled', 'Disabled']), z.boolean()])
+		.transform((val) => {
+			if (typeof val === 'boolean') return val;
+			return val === 'Enabled';
+		})
+		.default(false),
 	pid: PIDRef,
 	compare: CompareEnum,
-	thresh: z.number(),
+	threshold: z.number(),
 	priority: PriorityEnum
 });
 
@@ -100,14 +115,12 @@ export const DynamicSchema = z.object({
  * Root digitaldash struct
  * typedef struct {
  *   digitaldash_view view[MAX_VIEWS];
- *   uint8_t num_views;
  *   digitaldash_alert alert[MAX_ALERTS];
  *   digitaldash_dynamic dynamic[NUM_DYNAMIC];
  * } digitaldash;
  */
 export const DigitalDashSchema = z.object({
 	view: z.array(ViewSchema).length(MAX_VIEWS),
-	num_views: z.number().int(),
 	alert: z.array(AlertSchema).length(MAX_ALERTS),
 	dynamic: z.array(DynamicSchema).length(NUM_DYNAMIC)
 });

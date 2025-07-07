@@ -73,7 +73,7 @@
 								<Label>Message</Label>
 								<Input
 									type="text"
-									bind:value={alert.msg}
+									bind:value={alert.message}
 									class="w-full"
 									disabled={!alert.enabled}
 								/>
@@ -83,7 +83,7 @@
 								<Label>Threshold</Label>
 								<Input
 									type="number"
-									bind:value={alert.thresh}
+									bind:value={alert.threshold}
 									class="w-full"
 									disabled={!alert.enabled}
 								/>

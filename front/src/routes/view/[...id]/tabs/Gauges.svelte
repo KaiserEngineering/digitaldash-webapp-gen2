@@ -5,15 +5,19 @@
 	import { Gauge as GaugeIcon } from 'lucide-svelte';
 	import * as Select from '@/components/ui/select';
 	import { Switch } from '$lib/components/ui/switch';
+	import ImageSelect from '$lib/components/ImageSelect.svelte';
 
-	let { activeTab = $bindable(), themes = [], pids = [], form } = $props();
+	let { themes = [], pids = [], form } = $props();
 </script>
 
 <Tabs.Content value="gauges" class="focus:outline-none">
 	<div class="space-y-6">
-		{#each $form.gauge as gauge, i (gauge.id)}
+		{#each Array(3) as _, i}
+			{@const gauge = $form.gauge?.[i] ?? {}}
+			{@const isEnabled = i < $form.num_gauges}
+
 			<Card.Root
-				class={`border ${gauge.enabled ? 'bg-card border-border' : 'bg-muted/50 border-dashed'}`}
+				class={`border ${isEnabled ? 'bg-card border-border' : 'bg-muted/50 border-dashed'}`}
 			>
 				<Card.Header class="pb-4">
 					<div class="flex items-center justify-between">
@@ -30,26 +34,16 @@
 						</div>
 					</div>
 
-					<Switch
-						class="border {$form.gauge[i].enabled
-							? 'border-green-300 bg-green-100'
-							: 'border-primary !bg-red-200'}"
-						bind:checked={$form.gauge[i].enabled}
-					/>
+					<Switch class="pointer-events-none opacity-60" checked={isEnabled} />
 				</Card.Header>
 
-				<Card.Content class="space-y-4 {$form.gauge[i].enabled ? '' : 'opacity-50'}">
+				<Card.Content class={`space-y-4 ${isEnabled ? '' : 'pointer-events-none opacity-50'}`}>
 					<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 						<div class="space-y-2">
 							<Label class="text-sm font-medium">PID Signal</Label>
-							<Select.Root
-								type="single"
-								bind:value={gauge.pid}
-								name={`pid-${i}`}
-								disabled={!$form.gauge[i].enabled}
-							>
-								<Select.Trigger class="w-full">
-									<span>{gauge.pid || 'Select PID'}</span>
+							<Select.Root type="single" bind:value={$form.gauge[i].pid} name={`pid-${i}`}>
+								<Select.Trigger class="!h-12 w-full">
+									<span>{$form.gauge[i].pid || 'Select PID'}</span>
 								</Select.Trigger>
 								<Select.Content>
 									{#each pids as pid (pid)}
@@ -63,23 +57,14 @@
 
 						<div class="space-y-2">
 							<Label class="text-sm font-medium">Theme</Label>
-							<Select.Root
-								type="single"
-								bind:value={gauge.theme}
-								name={`theme-${i}`}
-								disabled={!gauge.enabled}
-							>
-								<Select.Trigger class="w-full">
-									<span>{gauge.theme || 'Select Theme'}</span>
-								</Select.Trigger>
-								<Select.Content>
-									{#each themes as theme (theme)}
-										<Select.Item value={theme} label={theme}>
-											{theme}
-										</Select.Item>
-									{/each}
-								</Select.Content>
-							</Select.Root>
+							<ImageSelect
+								value={$form.gauge[i].theme}
+								options={themes}
+								placeholder="Choose a theme..."
+								onSelect={(value: any) => ($form.gauge[i].theme = value)}
+								class="w-full"
+								themes={true}
+							/>
 						</div>
 					</div>
 				</Card.Content>

@@ -8,7 +8,7 @@ export async function GET({ params, fetch }) {
 	}
 
 	try {
-		const res = await fetch(`/static/${filename}`);
+		const res = await fetch(`/${filename}`);
 
 		if (!res.ok) {
 			console.error(`Failed to load ${filename}: ${res.status} ${res.statusText}`);

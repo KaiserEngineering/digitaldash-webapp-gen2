@@ -1,14 +1,8 @@
+// +page.ts
 import type { PageLoad } from './$types';
-import { ImageHandler } from '$lib/image/handler';
+import { getOptions } from '@/config/optionsCache';
 
 export const load: PageLoad = async ({ fetch }) => {
-	const imageHandler = new ImageHandler();
-
-	const customerImageNames = await imageHandler.getCustomerImageNames(fetch);
-	const factoryImageNames = imageHandler.getFactoryBackgroundImages();
-
-	return {
-		factoryImageNames,
-		customerImageNames
-	};
+	const options = await getOptions(fetch);
+	return { slotNames: options?.view_background || [] };
 };

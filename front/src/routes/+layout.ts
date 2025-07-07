@@ -1,26 +1,39 @@
+import { DigitalDashSchema } from '$schemas/digitaldash';
 import { configStore } from '@/config/configStore';
-import { get } from 'svelte/store';
+import { getOptions } from '@/config/optionsCache';
 
 export const load = async ({ fetch }) => {
-	let config = get(configStore);
+	let config;
 
-	if (!config || !config.view) {
-		try {
-			const res = await fetch('/api/config');
+	try {
+		const res = await fetch('/api/config');
 
-			if (!res.ok) {
-				console.error('Failed to load config:', res.status, res.statusText);
+		if (!res.ok) {
+			console.error('Failed to fetch config:', res.status, res.statusText);
+			config = null;
+		} else {
+			const raw = await res.json();
+			const parsed = DigitalDashSchema.safeParse(raw);
+
+			if (!parsed.success) {
+				console.error('Failed to parse config:', parsed.error);
+				config = null;
 			} else {
-				const cfg = await res.json();
-				configStore.setConfig(cfg);
-				config = cfg;
+				configStore.setConfig(parsed.data);
+				config = parsed.data;
 			}
-		} catch (err) {
-			console.error('Error loading config:', err);
 		}
+	} catch (err) {
+		console.error('Config fetch error:', err);
+		config = null;
 	}
 
-	return {
-		config
-	};
+	let options = null;
+	try {
+		options = await getOptions(fetch);
+	} catch (err) {
+		console.warn('Failed to load options:', err);
+	}
+
+	return { config, options };
 };

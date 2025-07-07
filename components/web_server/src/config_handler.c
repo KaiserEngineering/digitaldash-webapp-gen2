@@ -6,6 +6,15 @@
 
 static const char *TAG = "ConfigHandler";
 
+esp_err_t config_options_handler(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "GET /api/options requested");
+    ESP_LOGI(TAG, "Sending options data: %s", option_list);
+
+    httpd_resp_set_type(req, "application/json");
+    return httpd_resp_send(req, option_list, HTTPD_RESP_USE_STRLEN);
+}
+
 /* CRAIG!!! READ THIS: YOU WILL NEED TO PUSH THE MCU PUSH BUTTON ON YOUR DEV UNIT EACH BOOT   */
 /*                     THE VERY BASIC SETUP ONLY SENDS THE JSON ON MCU BOOT. THEREFORE IF YOU */
 /*                     DON'T RESET THE MCU EACH TIME THE json_data_input BUFFER WILL BE EMPTY */
@@ -26,7 +35,6 @@ esp_err_t config_patch_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "PATCH /api/config requested");
 
-    
     int total_len = req->content_len;
     char buf[2048];
 
@@ -59,6 +67,13 @@ esp_err_t register_config_routes(httpd_handle_t server)
         .handler = config_patch_handler,
         .user_ctx = NULL};
     httpd_register_uri_handler(server, &config_patch_uri);
+
+    httpd_uri_t config_options_uri = {
+        .uri = "/api/options",
+        .method = HTTP_GET,
+        .handler = config_options_handler,
+        .user_ctx = NULL};
+    httpd_register_uri_handler(server, &config_options_uri);
 
     ESP_LOGI(TAG, "Config routes registered successfully");
     return ESP_OK;

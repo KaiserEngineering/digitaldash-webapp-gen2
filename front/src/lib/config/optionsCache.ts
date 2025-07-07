@@ -1,15 +1,102 @@
 // src/lib/config/optionsCache.ts
-let cachedOptions: null | Awaited<ReturnType<typeof fetchOptions>> = null;
+import { writable, get } from 'svelte/store';
 
-async function fetchOptions(fetch = globalThis.fetch) {
+type OptionsData = any;
+
+const optionsStore = writable<OptionsData | null>(null);
+const loadingStore = writable<boolean>(false);
+const errorStore = writable<Error | null>(null);
+
+// Track if we're currently fetching to prevent duplicate requests
+let fetchPromise: Promise<OptionsData> | null = null;
+
+async function fetchOptions(fetch = globalThis.fetch): Promise<OptionsData> {
 	const res = await fetch('/api/options');
-	if (!res.ok) throw new Error('Failed to fetch options');
+	if (!res.ok) {
+		throw new Error(`Failed to fetch options: ${res.status} ${res.statusText}`);
+	}
 	return await res.json();
 }
 
-export async function getOptions(fetch = globalThis.fetch) {
-	if (!cachedOptions) {
-		cachedOptions = await fetchOptions(fetch);
+export async function loadOptions(fetch = globalThis.fetch): Promise<OptionsData> {
+	// If already fetching, return the existing promise
+	if (fetchPromise) {
+		return fetchPromise;
 	}
-	return cachedOptions;
+
+	loadingStore.set(true);
+	errorStore.set(null);
+
+	try {
+		fetchPromise = fetchOptions(fetch);
+		const options = await fetchPromise;
+		optionsStore.set(options);
+		return options;
+	} catch (error) {
+		const err = error instanceof Error ? error : new Error('Unknown error');
+		errorStore.set(err);
+		throw err;
+	} finally {
+		loadingStore.set(false);
+		fetchPromise = null;
+	}
 }
+
+export async function getOptions(fetch = globalThis.fetch): Promise<OptionsData> {
+	// Check current value without creating a subscription
+	const currentValue = get(optionsStore);
+
+	if (currentValue) {
+		return currentValue;
+	}
+
+	// If not cached, load and return
+	return await loadOptions(fetch);
+}
+
+// Function to clear the cache (useful for invalidation)
+export function clearOptionsCache(): void {
+	optionsStore.set(null);
+	errorStore.set(null);
+	fetchPromise = null;
+}
+
+// Function to refresh options (force reload)
+export async function refreshOptions(fetch = globalThis.fetch): Promise<OptionsData> {
+	clearOptionsCache();
+	return await loadOptions(fetch);
+}
+
+// Export stores for reactive usage in components
+export { optionsStore, loadingStore, errorStore };
+
+// Derived store that combines loading and error states
+export const optionsState = {
+	subscribe: (
+		run: (value: { options: OptionsData | null; loading: boolean; error: Error | null }) => void
+	) => {
+		const unsubscribeOptions = optionsStore.subscribe((options) => {
+			const loading = get(loadingStore);
+			const error = get(errorStore);
+			run({ options, loading, error });
+		});
+
+		const unsubscribeLoading = loadingStore.subscribe((loading) => {
+			const options = get(optionsStore);
+			const error = get(errorStore);
+			run({ options, loading, error });
+		});
+
+		const unsubscribeError = errorStore.subscribe((error) => {
+			const options = get(optionsStore);
+			const loading = get(loadingStore);
+			run({ options, loading, error });
+		});
+
+		return () => {
+			unsubscribeOptions();
+			unsubscribeLoading();
+			unsubscribeError();
+		};
+	}
+};

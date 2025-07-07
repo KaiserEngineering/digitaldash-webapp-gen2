@@ -2,44 +2,42 @@
 import { superValidate } from 'sveltekit-superforms';
 import type { PageLoad } from './$types';
 import { zod } from 'sveltekit-superforms/adapters';
-import { getOptions } from '@/config/optionsCache';
 import { redirect } from '@sveltejs/kit';
 import { ViewSchema } from '$schemas/digitaldash';
-import { ImageHandler } from '$lib/image/handler';
 
-export const load: PageLoad = async ({ params, fetch, parent }) => {
-	const { config } = await parent();
+export const load: PageLoad = async ({ params, parent }) => {
+	const { config, options } = await parent();
 	const viewId = Number(params.id);
 
-	if (!config || !config.view) {
+	if (!config?.view) {
+		console.error('No views found in config, redirecting to home.');
 		throw redirect(302, '/');
 	}
 
 	const view = config.view[viewId];
 	if (!view) {
+		console.error(`View with ID ${viewId} not found, redirecting to home.`);
 		throw redirect(302, '/');
 	}
 
-	const options = await getOptions(fetch);
-	const validatedForm = await superValidate(view, zod(ViewSchema));
+	let validatedForm;
+	try {
+		validatedForm = await superValidate(view, zod(ViewSchema));
+	} catch (error) {
+		console.error('Error validating form:', error);
+		throw redirect(302, '/');
+	}
 
 	if (!validatedForm.valid) {
 		console.error('Validation failed:', validatedForm.errors);
 		throw redirect(302, '/');
 	}
 
-	const imageHandler = new ImageHandler();
-
-	const customerImageNames = await imageHandler.getCustomerImageNames(fetch);
-	const factoryImageNames = imageHandler.getFactoryBackgroundImages();
-
-	const backgrounds = [...factoryImageNames, ...customerImageNames];
-
 	return {
 		form: validatedForm,
 		viewId,
-		themes: options.themes,
-		pids: options.pids,
-		backgrounds
+		themes: options?.gauge_theme || [],
+		pids: options?.pids || [],
+		backgrounds: options?.view_background || []
 	};
 };

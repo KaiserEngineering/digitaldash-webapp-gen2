@@ -13,11 +13,11 @@ export async function uploadBackground(
 	file: File,
 	images: { [key: string]: any } = {}
 ): Promise<UploadResponse> {
-	const response = await fetch(`${apiUrl}/user_image/${file.name}`, {
+	const response = await fetch(`${apiUrl}/image/${file.name}`, {
 		method: 'POST',
 		body: file,
 		headers: {
-			'Content-Type': file.type // e.g., "image/png"
+			'Content-Type': file.type
 		}
 	});
 	
@@ -29,10 +29,9 @@ export async function uploadBackground(
 	const result: UploadResponse = await response.json();
 
 	if (result.filename) {
-		// Update the images object with the server response and file metadata
 		images[result.filename] = {
 			filename: result.filename,
-			url: `${apiUrl}/user_image/${result.filename}`,
+			url: `${apiUrl}/image/${result.filename}`,
 			size: file.size,
 			lastModified: file.lastModified,
 			type: file.type
@@ -40,7 +39,7 @@ export async function uploadBackground(
 
 		// Need to update our cache
 		const imageHandler = new ImageHandler();
-		imageHandler.clearCustomerImageNameCache();
+		imageHandler.clearImageSlotCache();
 
 		toast.success('Upload successful');
 	} else {
@@ -60,7 +59,7 @@ export async function deleteBackground(
 	}
 
 	try {
-		const response = await fetch(`${apiUrl}/user_image/${encodeURIComponent(filename)}`, {
+		const response = await fetch(`${apiUrl}/image/${encodeURIComponent(filename)}`, {
 			method: 'DELETE'
 		});
 

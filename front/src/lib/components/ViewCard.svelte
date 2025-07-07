@@ -53,7 +53,6 @@
 				const imageData = await imageHandler.loadImage(view.background);
 				backgroundUrl = imageData.url;
 			} catch (err) {
-				toast.error(`Failed to load background: ${(err as Error).message}`);
 				backgroundUrl = '';
 			}
 
@@ -63,11 +62,11 @@
 					const key = `${gauge.theme}`;
 					if (!theme[key]) {
 						try {
-							const themeImageData = await imageHandler.loadImage(key);
+							const themeImageData = await imageHandler.loadTheme(key);
 							theme[key] = themeImageData.url;
 						} catch (err) {
 							failedImages = { ...failedImages, [key]: true };
-							console.warn(`Failed to load theme image for "${key}":`, err);
+							console.debug(`Failed to load theme image for "${key}":`, err);
 						}
 					}
 				})
@@ -101,7 +100,7 @@
 					const key = `${gauge.theme}`;
 					if (!theme[key]) {
 						try {
-							const themeImageData = await imageHandler.loadImage(key);
+							const themeImageData = await imageHandler.loadTheme(key);
 							theme[key] = themeImageData.url;
 						} catch (err) {
 							failedImages = { ...failedImages, [key]: true };
@@ -142,35 +141,40 @@
 			>
 				<div class="relative z-10 flex h-full flex-col justify-between pt-4">
 					<div class="flex w-full flex-wrap justify-center gap-4">
-						{#each view?.gauge ?? [] as gauge, i}
-							<div class="flex flex-col items-center space-y-2 transition-all duration-500">
-								<div
-									class="hover:ring-primary-400/50 relative h-24 w-24 overflow-hidden rounded-full ring-2 ring-white/20 transition-all duration-300"
-								>
-									{#if theme[gauge.theme] && !failedImages[gauge.theme]}
-										<img
-											class="h-full w-full rounded-full object-cover transition-all duration-500"
-											src={theme[gauge.theme]}
-											alt={gauge.theme}
-											onerror={() => handleImageError(gauge.theme)}
-										/>
-									{:else}
-										<div
-											class="inset-0 flex h-full w-full items-center justify-center bg-black/40 text-xs text-white"
-										>
-											{gauge.theme}
-										</div>
-									{/if}
-								</div>
+						{#each Array(3) as _, i}
+							{@const gauge = view?.gauge?.[i] ?? {}}
+							{@const isEnabled = i < view.num_gauges}
 
-								<div
-									class="absolute mt-20 rounded-full border border-white/20 bg-black/60 px-3 backdrop-blur-sm"
-								>
-									<span class="text-xs font-medium text-white">
-										{gauge.pid || 'No PID'}
-									</span>
+							{#if isEnabled}
+								<div class="flex flex-col items-center space-y-2 transition-all duration-500">
+									<div
+										class="hover:ring-primary-400/50 relative h-24 w-24 overflow-hidden rounded-full ring-2 ring-white/20 transition-all duration-300"
+									>
+										{#if theme[gauge.theme] && !failedImages[gauge.theme]}
+											<img
+												class="h-full w-full rounded-full object-cover transition-all duration-500"
+												src={theme[gauge.theme]}
+												alt={gauge.theme}
+												onerror={() => handleImageError(gauge.theme)}
+											/>
+										{:else}
+											<div
+												class="inset-0 flex h-full w-full items-center justify-center bg-black/40 text-xs text-white"
+											>
+												{gauge.theme}
+											</div>
+										{/if}
+									</div>
+
+									<div
+										class="absolute mt-20 rounded-full border border-white/20 bg-black/60 px-3 backdrop-blur-sm"
+									>
+										<span class="text-xs font-medium text-white">
+											{gauge.pid || 'No PID'}
+										</span>
+									</div>
 								</div>
-							</div>
+							{/if}
 						{/each}
 					</div>
 				</div>
