@@ -61,12 +61,19 @@
 						<div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
 							<div class="space-y-2">
 								<Label>PID</Label>
-								<Input
-									type="text"
-									bind:value={alert.pid}
-									class="w-full"
-									disabled={!alert.enabled}
-								/>
+
+								<div class="space-y-2">
+									<Label>PID</Label>
+									<select
+										bind:value={alert.pid}
+										disabled={!alert.enabled}
+										class="w-full rounded-md border px-3 py-2 text-sm"
+									>
+										{#each data.pids as pid}
+											<option value={pid.label}>{pid.label}</option>
+										{/each}
+									</select>
+								</div>
 							</div>
 
 							<div class="space-y-2">
@@ -101,8 +108,8 @@
 	{/snippet}
 
 	{#snippet footerContent()}
-		<div class="mt-4 mb-6 flex flex-col items-center justify-between gap-4 md:flex-row">
-				<Button
+		<div class="mb-6 mt-4 flex flex-col items-center justify-between gap-4 md:flex-row">
+			<Button
 				type="submit"
 				disabled={$submitting}
 				class="w-full rounded-lg px-4 py-2.5 text-sm font-semibold md:w-auto"

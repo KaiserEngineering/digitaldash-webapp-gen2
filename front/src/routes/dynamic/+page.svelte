@@ -79,7 +79,7 @@
 									class="w-full rounded-md border px-3 py-2 text-sm"
 								>
 									{#each pids as pid}
-										<option value={pid}>{pid}</option>
+										<option value={pid.label}>{pid.label}</option>
 									{/each}
 								</select>
 							</div>
