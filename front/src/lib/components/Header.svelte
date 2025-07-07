@@ -113,7 +113,10 @@
 					<div class="bg-muted/50 border-border/30 flex gap-1 rounded-lg border p-1">
 						{#each tabs as tab}
 							{@const TabIcon = tab.icon}
-							{@const isActive = page.url.pathname.startsWith('/' + tab.value)}
+							{@const isActive =
+								tab.value === ''
+									? page.url.pathname === '/'
+									: page.url.pathname.startsWith('/' + tab.value)}
 
 							{#if tab.subItems}
 								<!-- Dropdown for Firmware -->
