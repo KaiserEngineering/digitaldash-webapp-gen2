@@ -36,7 +36,7 @@
 		<CardTitle>Update STM Firmware</CardTitle>
 	</CardHeader>
 	<CardContent class="space-y-4">
-		<Button on:click={updateFirmware} disabled={status === 'loading'} class="w-full">
+		<Button onclick={updateFirmware} disabled={status === 'loading'} class="w-full">
 			{#if status === 'loading'}
 				<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 				Updating...
