@@ -14,15 +14,20 @@ export async function updateFullConfig(
 ): Promise<boolean> {
 	let config = structuredClone(get(configStore)); // make safe mutable copy
 
-	if (!config) {
+	if (!config || typeof config !== 'object') {
 		toast.error('Configuration not loaded. Please try again.');
 		return false;
 	}
 
 	try {
-		// Let caller mutate the config
 		mutateFn(config);
+	} catch (e) {
+		console.error('Error mutating config:', e);
+		toast.error('Invalid config update.');
+		return false;
+	}
 
+	try {
 		const res = await fetch('/api/config', {
 			method: 'PATCH',
 			headers: { 'Content-Type': 'application/json' },
@@ -30,9 +35,16 @@ export async function updateFullConfig(
 		});
 
 		if (!res.ok) {
-			const msg = await res.text();
+			const contentType = res.headers.get('content-type');
+			let msg = 'Unknown error';
+			if (contentType?.includes('application/json')) {
+				const data = await res.json();
+				msg = data.message || JSON.stringify(data);
+			} else {
+				msg = await res.text();
+			}
 			console.error('Config PATCH failed:', msg);
-			toast.error('Failed to save configuration.');
+			toast.error(`Failed to save configuration: ${msg}`);
 			return false;
 		}
 
