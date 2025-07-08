@@ -336,6 +336,11 @@ int stm32_tx(const uint8_t *data, uint32_t len)
     return total_sent;
 }
 
+
+KE_PACKET_MANAGER *get_stm32_comm(void) {
+    return &stm32_comm;
+}
+
 /**
  * @brief Copies the JSON configuration data into the provided buffer.
  *

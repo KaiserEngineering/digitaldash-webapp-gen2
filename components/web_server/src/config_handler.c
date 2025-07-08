@@ -2,6 +2,7 @@
 
 #include "config_handler.h"
 #include "esp_log.h"
+#include "lib_ke_protocol.h"
 #include <sys/param.h>
 
 static const char *TAG = "ConfigHandler";
@@ -47,9 +48,6 @@ esp_err_t config_options_handler(httpd_req_t *req)
     return httpd_resp_send(req, option_list, HTTPD_RESP_USE_STRLEN);
 }
 
-/* CRAIG!!! READ THIS: YOU WILL NEED TO PUSH THE MCU PUSH BUTTON ON YOUR DEV UNIT EACH BOOT   */
-/*                     THE VERY BASIC SETUP ONLY SENDS THE JSON ON MCU BOOT. THEREFORE IF YOU */
-/*                     DON'T RESET THE MCU EACH TIME THE json_data_input BUFFER WILL BE EMPTY */
 esp_err_t config_get_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "GET /api/config requested");
@@ -79,6 +77,11 @@ esp_err_t config_patch_handler(httpd_req_t *req)
 
     buf[received] = '\0';
     ESP_LOGI(TAG, "Received config update: %s", buf);
+
+    // Now save to STM
+    receive_config(buf); // Store the updated config
+    Generate_TX_Message(get_stm32_comm(), KE_CONFIG_SEND, 0);
+    KE_wait_for_response(get_stm32_comm(), 5000);
 
     // TODO send via UART
     return ESP_OK;
