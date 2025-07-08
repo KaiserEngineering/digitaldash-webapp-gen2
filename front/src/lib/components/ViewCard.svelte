@@ -13,6 +13,7 @@
 	let backgroundUrl = $state('');
 	const theme: Record<string, string> = $state({});
 	let failedImages: Record<string, boolean> = $state({});
+	let prevBackground: string | undefined = undefined;
 
 	function handleImageError(themeKey: string) {
 		failedImages = { ...failedImages, [themeKey]: true };
@@ -53,42 +54,31 @@
 	}
 
 	$effect(() => {
+		if (!view) return;
+
+		const currentBackground = view.background;
+		const currentGauges = view.gauge;
+
 		(async () => {
 			loading = true;
 
 			try {
-				const parsed = ViewSchema.safeParse(view);
-				if (!parsed.success) {
-					toast.error('Invalid view data');
-					console.error('Invalid view data', parsed.error);
-					return;
-				}
-
-				try {
-					const imageData = await imageHandler.loadImage(view.background);
+				// Only reload background if it changed
+				if (backgroundUrl === '' || currentBackground !== prevBackground) {
+					const imageData = await imageHandler.loadImage(currentBackground);
 					backgroundUrl = imageData.url;
 					view.textColor = await computeIdealTextColor(imageData.url);
-				} catch (err) {
-					toast.error(`Failed to load background: ${(err as Error).message}`);
-					backgroundUrl = '';
-					view.textColor = 'white';
+					prevBackground = currentBackground;
 				}
 
-				const gauges = view?.gauge ?? [];
-				await Promise.all(
-					gauges.map(async (gauge: { theme: string | number }) => {
-						const key = `${gauge.theme}`;
-						if (!theme[key]) {
-							try {
-								const themeImageData = await imageHandler.loadTheme(key);
-								theme[key] = themeImageData.url;
-							} catch (err) {
-								failedImages = { ...failedImages, [key]: true };
-								console.debug(`Failed to load theme image for "${key}":`, err);
-							}
-						}
-					})
-				);
+				const gauges = currentGauges ?? [];
+				for (const gauge of gauges) {
+					const key = `${gauge.theme}`;
+					if (!theme[key] && !failedImages[key]) {
+						const themeImageData = await imageHandler.loadTheme(key);
+						theme[key] = themeImageData.url;
+					}
+				}
 			} catch (error) {
 				toast.error(`Failed to load view: ${(error as Error).message}`);
 				view.textColor = 'white';
@@ -120,7 +110,7 @@
 							{@const gauge = view?.gauge?.[i] ?? {}}
 							{@const isEnabled = i < view.num_gauges}
 							{#if isEnabled}
-								<div class="flex flex-col items-center justify-between h-full max-h-32 px-2">
+								<div class="flex h-full max-h-32 flex-col items-center justify-between px-2">
 									<GaugeComponent
 										{gauge}
 										gaugeIndex={i}

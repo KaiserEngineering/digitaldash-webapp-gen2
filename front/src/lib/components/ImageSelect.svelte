@@ -96,8 +96,11 @@
 		};
 	});
 
+	let prevOptions: string[] = $state([]);
+
 	$effect(() => {
-		if (options.length > 0) {
+		if (options.length > 0 && JSON.stringify(prevOptions) !== JSON.stringify(options)) {
+			prevOptions = [...options];
 			loadImagePreviews();
 		}
 	});

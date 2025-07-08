@@ -15,7 +15,6 @@ export async function updateFullConfig(
 	let config = structuredClone(get(configStore)); // make safe mutable copy
 
 	if (!config || typeof config !== 'object') {
-		toast.error('Configuration not loaded. Please try again.');
 		return false;
 	}
 
@@ -23,7 +22,6 @@ export async function updateFullConfig(
 		mutateFn(config);
 	} catch (e) {
 		console.error('Error mutating config:', e);
-		toast.error('Invalid config update.');
 		return false;
 	}
 
@@ -44,16 +42,13 @@ export async function updateFullConfig(
 				msg = await res.text();
 			}
 			console.error('Config PATCH failed:', msg);
-			toast.error(`Failed to save configuration: ${msg}`);
 			return false;
 		}
 
 		configStore.setConfig(config);
-		toast.success(successMessage);
 		return true;
 	} catch (error) {
 		console.error('Error saving config:', error);
-		toast.error('Error saving configuration.');
 		return false;
 	}
 }
