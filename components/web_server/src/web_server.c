@@ -116,7 +116,7 @@ esp_err_t embedded_file_handler(httpd_req_t *req)
             size_t file_size = embedded_files[i].end - embedded_files[i].start;
             ESP_LOGI(TAG, "File size: %zu bytes", file_size);
 
-            const size_t chunk_size = 512;
+            const size_t chunk_size = 4096;
             size_t bytes_remaining = file_size;
             const uint8_t *file_ptr = embedded_files[i].start;
 
@@ -133,7 +133,9 @@ esp_err_t embedded_file_handler(httpd_req_t *req)
 
                 file_ptr += bytes_to_send;
                 bytes_remaining -= bytes_to_send;
-                vTaskDelay(1 / portTICK_PERIOD_MS);
+                if (bytes_remaining > 0) {
+                    vTaskDelay(1 / portTICK_PERIOD_MS);
+                }
             }
 
             return httpd_resp_send_chunk(req, NULL, 0);

@@ -1,6 +1,6 @@
 // src/routes/backgrounds.ts
 import { apiUrl } from '$lib/config';
-import { ImageHandler } from '$lib/image/handler';
+import { ImageHandler, type ImageData } from '$lib/image/handler';
 import { toast } from 'svelte-5-french-toast';
 
 interface UploadResponse {
@@ -13,7 +13,7 @@ const imageHandler = new ImageHandler();
 
 export async function uploadBackground(
 	file: File,
-	images: { [key: string]: any } = {}
+	images: { [key: string]: ImageData } = {}
 ): Promise<UploadResponse> {
 	const response = await fetch(`${apiUrl}/image/${file.name}`, {
 		method: 'POST',
@@ -47,7 +47,7 @@ export async function uploadBackground(
 
 export async function deleteBackground(
 	filename: string,
-	images: { [key: string]: any } = {}
+	images: { [key: string]: ImageData } = {}
 ): Promise<void> {
 	if (!filename) {
 		toast.error('No filename provided');

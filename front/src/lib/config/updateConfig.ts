@@ -1,7 +1,8 @@
 // src/lib/config/updateConfig.ts
-import { configStore } from '@/config/configStore';
+import { configStore } from '$lib/config/configStore';
 import { get } from 'svelte/store';
 import { toast } from 'svelte-5-french-toast';
+import type { DigitalDash } from '$schemas/digitaldash';
 
 /**
  * Updates the entire config object after applying custom modifications.
@@ -9,7 +10,7 @@ import { toast } from 'svelte-5-french-toast';
  * @param successMessage Toast message to show on success
  */
 export async function updateFullConfig(
-	mutateFn: (cfg: any) => void,
+	mutateFn: (cfg: DigitalDash) => void,
 	successMessage = 'Configuration updated!'
 ): Promise<boolean> {
 	let config = structuredClone(get(configStore)); // make safe mutable copy

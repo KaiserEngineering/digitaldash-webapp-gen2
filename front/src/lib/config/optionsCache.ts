@@ -1,7 +1,17 @@
 // src/lib/config/optionsCache.ts
 import { writable, get } from 'svelte/store';
 
-type OptionsData = any;
+interface OptionsData {
+	[key: string]: {
+		label: string;
+		value: string | number | boolean;
+		type: 'string' | 'number' | 'boolean' | 'select';
+		options?: string[];
+		min?: number;
+		max?: number;
+		description?: string;
+	};
+}
 
 const optionsStore = writable<OptionsData | null>(null);
 const loadingStore = writable<boolean>(false);

@@ -5,6 +5,7 @@
 	import toast from 'svelte-5-french-toast';
 	import { ViewSchema } from '$schemas/digitaldash';
 	import { cn } from '$lib/utils';
+	import { computeIdealTextColor } from '$lib/utils/imageProcessor';
 
 	let { view, index, class: className = '' } = $props();
 
@@ -19,39 +20,6 @@
 		failedImages = { ...failedImages, [themeKey]: true };
 	}
 
-	async function computeIdealTextColor(imageUrl: string): Promise<string> {
-		return new Promise((resolve) => {
-			const img = new Image();
-			img.crossOrigin = 'Anonymous';
-			img.src = imageUrl;
-
-			img.onload = () => {
-				const canvas = document.createElement('canvas');
-				canvas.width = img.width;
-				canvas.height = img.height;
-				const ctx = canvas.getContext('2d');
-
-				if (ctx) {
-					ctx.drawImage(img, 0, 0);
-					const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-					let total = 0;
-
-					for (let i = 0; i < imageData.data.length; i += 4) {
-						const brightness =
-							(imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2]) / 3;
-						total += brightness;
-					}
-
-					const avgBrightness = total / (canvas.width * canvas.height);
-					resolve(avgBrightness < 128 ? 'white' : 'black');
-				} else {
-					resolve('black');
-				}
-			};
-
-			img.onerror = () => resolve('black');
-		});
-	}
 
 	$effect(() => {
 		if (!view) return;
@@ -67,7 +35,12 @@
 				if (backgroundUrl === '' || currentBackground !== prevBackground) {
 					const imageData = await imageHandler.loadImage(currentBackground);
 					backgroundUrl = imageData.url;
-					view.textColor = await computeIdealTextColor(imageData.url);
+					try {
+						view.textColor = await computeIdealTextColor(imageData.url);
+					} catch (error) {
+						console.warn('Failed to compute text color, using fallback:', error);
+						view.textColor = 'white';
+					}
 					prevBackground = currentBackground;
 				}
 
