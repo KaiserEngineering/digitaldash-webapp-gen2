@@ -21,9 +21,12 @@
 			{/if}
 		{:else}
 			<div
-				class="flex h-16 w-16 items-center justify-center rounded border border-white/20 bg-black/40"
+				class="flex h-16 w-16 flex-col items-center justify-center rounded border border-white/20 bg-black/40"
 			>
 				<span class="text-xs text-white/60">{gauge.theme}</span>
+				{#if gauge.pid}
+					<span class="mt-1 text-xs text-white/80">{gauge.pid}</span>
+				{/if}
 			</div>
 		{/if}
 	</div>

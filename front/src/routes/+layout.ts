@@ -13,7 +13,11 @@ export const load = async ({ fetch }) => {
 			return parsed.data;
 		});
 
-	const optionsPromise = getOptions(fetch);
+	const optionsPromise = getOptions(fetch).catch((error) => {
+		console.error('Options fetch failed:', error);
+		// Return empty options object as fallback
+		return {};
+	});
 
 	const pidsPromise = fetch('/api/pids')
 		.then((res) => (res.ok ? res.json() : Promise.reject(new Error('PID fetch failed'))))

@@ -27,7 +27,8 @@
 		const currentBackground = view.background;
 		const currentGauges = view.gauge;
 
-		(async () => {
+		// Debounce to prevent rapid reloads
+		const timeoutId = setTimeout(async () => {
 			loading = true;
 
 			try {
@@ -45,20 +46,31 @@
 				}
 
 				const gauges = currentGauges ?? [];
-				for (const gauge of gauges) {
+				const themePromises = gauges.map(async (gauge) => {
 					const key = `${gauge.theme}`;
-					if (!theme[key] && !failedImages[key]) {
-						const themeImageData = await imageHandler.loadTheme(key);
-						theme[key] = themeImageData.url;
+					if (!theme[key] && !failedImages[key] && gauge.theme) {
+						try {
+							const themeImageData = await imageHandler.loadTheme(key);
+							theme[key] = themeImageData.url;
+						} catch (error) {
+							console.warn(`Failed to load theme "${key}":`, error);
+							failedImages[key] = true;
+						}
 					}
-				}
+				});
+				
+				// Wait for all theme loads to complete
+				await Promise.allSettled(themePromises);
 			} catch (error) {
 				toast.error(`Failed to load view: ${(error as Error).message}`);
 				view.textColor = 'white';
 			} finally {
 				loading = false;
 			}
-		})();
+		}, 300); // 300ms debounce delay
+		
+		// Cleanup timeout on component unmount or effect re-run
+		return () => clearTimeout(timeoutId);
 	});
 </script>
 

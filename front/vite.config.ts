@@ -7,10 +7,22 @@ export default defineConfig({
 	build: {
 		rollupOptions: {
 			output: {
-				manualChunks: {
-					vendor: ['svelte', '@sveltejs/kit'],
-					ui: ['bits-ui', 'lucide-svelte', 'tailwind-merge'],
-					utils: ['clsx', 'zod', 'sveltekit-superforms']
+				manualChunks: (id) => {
+					// Chunk node_modules separately from app code
+					if (id.includes('node_modules')) {
+						// Group large UI libraries
+						if (id.includes('lucide-svelte') || id.includes('motion-start')) {
+							return 'ui-vendor';
+						}
+						// Group utility libraries
+						if (id.includes('zod') || id.includes('sveltekit-superforms')) {
+							return 'utils-vendor';
+						}
+						// Everything else goes to vendor
+						return 'vendor';
+					}
+					// App code stays in main chunk
+					return undefined;
 				}
 			}
 		}
