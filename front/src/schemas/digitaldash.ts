@@ -6,7 +6,7 @@ import { z } from 'zod';
 export const MAX_VIEWS = 3;
 export const GAUGES_PER_VIEW = 3;
 export const MAX_ALERTS = 5;
-export const NUM_DYNAMIC = 2;
+export const NUM_DYNAMIC = 3;
 export const ALERT_MESSAGE_LEN = 64;
 
 /**
