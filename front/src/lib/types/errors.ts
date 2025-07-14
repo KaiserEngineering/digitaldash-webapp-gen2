@@ -4,42 +4,64 @@
  */
 
 export class DigitalDashError extends Error {
-	constructor(message: string, public code: string, public statusCode?: number) {
+	constructor(
+		message: string,
+		public code: string,
+		public statusCode?: number
+	) {
 		super(message);
 		this.name = 'DigitalDashError';
 	}
 }
 
 export class ConfigError extends DigitalDashError {
-	constructor(message: string, public originalError?: Error) {
+	constructor(
+		message: string,
+		public originalError?: Error
+	) {
 		super(message, 'CONFIG_ERROR');
 		this.name = 'ConfigError';
 	}
 }
 
 export class NetworkError extends DigitalDashError {
-	constructor(message: string, public statusCode: number, public originalError?: Error) {
+	constructor(
+		message: string,
+		public statusCode: number,
+		public originalError?: Error
+	) {
 		super(message, 'NETWORK_ERROR', statusCode);
 		this.name = 'NetworkError';
 	}
 }
 
 export class ValidationError extends DigitalDashError {
-	constructor(message: string, public field?: string, public originalError?: Error) {
+	constructor(
+		message: string,
+		public field?: string,
+		public originalError?: Error
+	) {
 		super(message, 'VALIDATION_ERROR');
 		this.name = 'ValidationError';
 	}
 }
 
 export class ImageError extends DigitalDashError {
-	constructor(message: string, public filename?: string, public originalError?: Error) {
+	constructor(
+		message: string,
+		public filename?: string,
+		public originalError?: Error
+	) {
 		super(message, 'IMAGE_ERROR');
 		this.name = 'ImageError';
 	}
 }
 
 export class DeviceError extends DigitalDashError {
-	constructor(message: string, public originalError?: Error) {
+	constructor(
+		message: string,
+		public originalError?: Error
+	) {
 		super(message, 'DEVICE_ERROR');
 		this.name = 'DeviceError';
 	}
@@ -94,18 +116,18 @@ export function toDigitalDashError(error: unknown): DigitalDashError {
 	if (isDigitalDashError(error)) {
 		return error;
 	}
-	
+
 	if (error instanceof Error) {
 		return new DigitalDashError(error.message, 'UNKNOWN_ERROR');
 	}
-	
+
 	return new DigitalDashError(String(error), 'UNKNOWN_ERROR');
 }
 
 /**
  * Result type for operations that can fail
  */
-export type Result<T, E = DigitalDashError> = 
+export type Result<T, E = DigitalDashError> =
 	| { success: true; data: T }
 	| { success: false; error: E };
 
@@ -126,9 +148,7 @@ export function failure<E extends DigitalDashError>(error: E): Result<never, E> 
 /**
  * Utility function to wrap async operations in a Result type
  */
-export async function tryAsync<T>(
-	operation: () => Promise<T>
-): Promise<Result<T>> {
+export async function tryAsync<T>(operation: () => Promise<T>): Promise<Result<T>> {
 	try {
 		const data = await operation();
 		return success(data);
@@ -140,9 +160,7 @@ export async function tryAsync<T>(
 /**
  * Utility function to wrap sync operations in a Result type
  */
-export function trySync<T>(
-	operation: () => T
-): Result<T> {
+export function trySync<T>(operation: () => T): Result<T> {
 	try {
 		const data = operation();
 		return success(data);

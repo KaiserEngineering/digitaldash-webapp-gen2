@@ -23,14 +23,14 @@ let fetchPromise: Promise<OptionsData> | null = null;
 async function fetchOptions(fetch = globalThis.fetch): Promise<OptionsData> {
 	const controller = new AbortController();
 	const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-	
+
 	try {
 		const res = await fetch('/api/options', {
 			signal: controller.signal
 		});
-		
+
 		clearTimeout(timeoutId);
-		
+
 		if (!res.ok) {
 			throw new Error(`Failed to fetch options: ${res.status} ${res.statusText}`);
 		}

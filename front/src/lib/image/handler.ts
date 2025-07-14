@@ -11,6 +11,8 @@ export interface ImageData {
 
 const backgroundCache = new Map<string, ImageData>();
 const themeCache = new Map<string, ImageData>();
+// Track themes that failed to load - themes are embedded in firmware so they never change
+const failedThemes = new Set<string>();
 
 export class ImageHandler {
 	/**
@@ -45,6 +47,11 @@ export class ImageHandler {
 	async loadTheme(name: string): Promise<ImageData> {
 		if (themeCache.has(name)) return themeCache.get(name)!;
 
+		// Don't retry failed themes - themes are embedded in firmware and never change
+		if (failedThemes.has(name)) {
+			throw new Error(`Theme '${name}' is not available in firmware`);
+		}
+
 		const url = `${apiUrl}/embedded/${encodeURIComponent(name)}.png`;
 
 		try {
@@ -63,7 +70,9 @@ export class ImageHandler {
 
 			return imageData;
 		} catch (err) {
-			console.debug(`Theme fetch failed for '${name}'`, err);
+			console.warn(`Theme '${name}' not found in firmware - will not retry`, err);
+			// Mark as permanently failed since themes are embedded in firmware
+			failedThemes.add(name);
 			throw err;
 		}
 	}
@@ -153,5 +162,11 @@ export class ImageHandler {
 
 		clear(backgroundCache);
 		clear(themeCache);
+
+		// Only clear failed themes cache if specific name provided
+		// Otherwise keep failed themes cached to avoid retries
+		if (name) {
+			failedThemes.delete(name);
+		}
 	}
 }

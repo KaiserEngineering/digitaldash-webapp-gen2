@@ -16,11 +16,11 @@ function getWorker(): Worker {
 		worker = new Worker(new URL('../workers/imageProcessor.ts', import.meta.url), {
 			type: 'module'
 		});
-		
+
 		worker.onmessage = (event) => {
 			const { id, result, error } = event.data;
 			const pending = pendingRequests.get(id);
-			
+
 			if (pending) {
 				pendingRequests.delete(id);
 				if (error) {
@@ -30,7 +30,7 @@ function getWorker(): Worker {
 				}
 			}
 		};
-		
+
 		worker.onerror = (error) => {
 			console.error('Image processor worker error:', error);
 			// Reject all pending requests
@@ -40,7 +40,7 @@ function getWorker(): Worker {
 			pendingRequests.clear();
 		};
 	}
-	
+
 	return worker;
 }
 
@@ -52,15 +52,15 @@ export async function computeIdealTextColor(imageUrl: string): Promise<string> {
 	return new Promise((resolve, reject) => {
 		const id = crypto.randomUUID();
 		const worker = getWorker();
-		
+
 		pendingRequests.set(id, { resolve, reject });
-		
+
 		worker.postMessage({
 			type: 'computeIdealTextColor',
 			imageUrl,
 			id
 		});
-		
+
 		// Timeout after 5 seconds
 		setTimeout(() => {
 			if (pendingRequests.has(id)) {

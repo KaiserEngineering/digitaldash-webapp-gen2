@@ -111,7 +111,7 @@
 		type="button"
 		class={cn(
 			'relative w-full cursor-pointer rounded-lg border bg-white px-3 py-2 text-left shadow-sm transition-colors',
-			'border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500',
+			'border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none',
 			disabled && 'cursor-not-allowed bg-gray-50 text-gray-500',
 			isOpen && 'border-blue-500 ring-1 ring-blue-500'
 		)}

@@ -18,7 +18,7 @@ function createConfigStore() {
 		setConfig: (newConfig: DigitalDash) => set(newConfig),
 
 		updateField: <K extends keyof DigitalDash>(key: K, value: DigitalDash[K]) => {
-			update((cfg) => cfg ? { ...cfg, [key]: value } : null);
+			update((cfg) => (cfg ? { ...cfg, [key]: value } : null));
 		},
 
 		reset: () => set(null),

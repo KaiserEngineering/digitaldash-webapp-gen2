@@ -1,4 +1,4 @@
-import { json } from "@sveltejs/kit";
+import { json } from '@sveltejs/kit';
 
 export async function GET() {
 	const backgroundSlots = ['User1', 'User2', 'User3'];
@@ -6,7 +6,7 @@ export async function GET() {
 	const options = {
 		view_state: ['Disabled', 'Enabled'],
 		view_background: backgroundSlots,
-		gauge_theme: ['Stock ST', 'Grumpy Cat', 'Linear', 'Radial'],
+		gauge_theme: ['Linear', 'Stock RS', 'Stock ST'],
 		alert_state: ['Disabled', 'Enabled'],
 		alert_comparison: [
 			'Less Than',
@@ -25,7 +25,7 @@ export async function GET() {
 			'Greater Than Or Equal To',
 			'Equal',
 			'Not Equal'
-		],
+		]
 	};
 
 	return json(options);

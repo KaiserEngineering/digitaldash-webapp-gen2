@@ -1,12 +1,36 @@
 <script lang="ts">
-	let { gauge, gaugeIndex, themeUrl, failed, textColor = 'white', onImageError } = $props();
+	let {
+		gauge,
+		gaugeIndex,
+		themeUrl,
+		failed,
+		textColor = 'white',
+		onImageError,
+		numGauges = 1
+	} = $props();
+
+	// Adjust image size based on number of gauges to prevent overcrowding
+	const getImageSizeClass = (numGauges: number) => {
+		switch (numGauges) {
+			case 1:
+				return 'max-w-[140px] md:max-w-[160px] lg:max-w-[180px]';
+			case 2:
+				return 'max-w-[120px] md:max-w-[140px] lg:max-w-[160px]';
+			case 3:
+				return 'max-w-[80px] md:max-w-[90px] lg:max-w-[100px]';
+			default:
+				return 'max-w-[100px] md:max-w-[120px] lg:max-w-[140px]';
+		}
+	};
 </script>
 
 <div class="flex h-full flex-col items-center justify-center px-2">
 	<div class="relative flex items-center justify-center">
 		{#if themeUrl && !failed}
 			<img
-				class="aspect-square w-full max-w-[100px] object-contain transition-all duration-300 md:max-w-[120px] lg:max-w-[140px]"
+				class="aspect-square w-full object-contain transition-all duration-300 {getImageSizeClass(
+					numGauges
+				)}"
 				src={themeUrl || '/placeholder.svg'}
 				alt={gauge.theme}
 				onerror={onImageError}

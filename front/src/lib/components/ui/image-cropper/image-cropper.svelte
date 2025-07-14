@@ -27,7 +27,7 @@
 		),
 		open: box.with(
 			() => open,
-			(v) => open = v
+			(v) => (open = v)
 		),
 		tempUrl: box.with(
 			() => tempUrl,

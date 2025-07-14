@@ -5,6 +5,8 @@
 	import Footer from '@/components/Footer.svelte';
 	import { Toaster } from 'svelte-5-french-toast';
 	import Spinner from '@/components/Spinner.svelte';
+	import RecoveryBanner from '$lib/components/RecoveryBanner.svelte';
+	import { recoveryStore } from '$lib/stores/recoveryMode';
 
 	let { children, data } = $props();
 </script>
@@ -21,6 +23,7 @@
 		<!-- App layout after data is ready -->
 		<div class="soft flex h-screen flex-col">
 			<Toaster />
+			<RecoveryBanner recovery={$recoveryStore} />
 			<Header />
 
 			<main class="container mx-auto flex-1 px-4 py-4 sm:w-full md:w-2/3">

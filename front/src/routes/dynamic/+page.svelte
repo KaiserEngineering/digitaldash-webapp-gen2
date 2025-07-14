@@ -127,7 +127,7 @@
 	{/snippet}
 
 	{#snippet footerContent()}
-		<div class="mb-6 mt-4 flex items-center justify-between">
+		<div class="mt-4 mb-6 flex items-center justify-between">
 			<Button
 				type="submit"
 				disabled={$submitting}

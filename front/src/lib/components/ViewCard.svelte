@@ -12,14 +12,13 @@
 	const imageHandler = new ImageHandler();
 	let loading = $state(true);
 	let backgroundUrl = $state('');
-	const theme: Record<string, string> = $state({});
+	let theme: Record<string, string> = $state({});
 	let failedImages: Record<string, boolean> = $state({});
 	let prevBackground: string | undefined = undefined;
 
 	function handleImageError(themeKey: string) {
 		failedImages = { ...failedImages, [themeKey]: true };
 	}
-
 
 	$effect(() => {
 		if (!view) return;
@@ -51,16 +50,20 @@
 					if (!theme[key] && !failedImages[key] && gauge.theme) {
 						try {
 							const themeImageData = await imageHandler.loadTheme(key);
-							theme[key] = themeImageData.url;
+							theme = { ...theme, [key]: themeImageData.url };
 						} catch (error) {
 							console.warn(`Failed to load theme "${key}":`, error);
-							failedImages[key] = true;
+							failedImages = { ...failedImages, [key]: true };
 						}
 					}
 				});
-				
+
 				// Wait for all theme loads to complete
 				await Promise.allSettled(themePromises);
+
+				// Force reactive update by reassigning state objects
+				theme = { ...theme };
+				failedImages = { ...failedImages };
 			} catch (error) {
 				toast.error(`Failed to load view: ${(error as Error).message}`);
 				view.textColor = 'white';
@@ -68,7 +71,7 @@
 				loading = false;
 			}
 		}, 300); // 300ms debounce delay
-		
+
 		// Cleanup timeout on component unmount or effect re-run
 		return () => clearTimeout(timeoutId);
 	});
@@ -102,6 +105,7 @@
 										themeUrl={theme[gauge.theme]}
 										failed={failedImages[gauge.theme]}
 										textColor={view.textColor}
+										numGauges={view.num_gauges}
 										onImageError={() => handleImageError(gauge.theme)}
 									/>
 								</div>
