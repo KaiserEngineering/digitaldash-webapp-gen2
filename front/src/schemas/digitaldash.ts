@@ -120,9 +120,9 @@ export const DynamicSchema = z.object({
  * } digitaldash;
  */
 export const DigitalDashSchema = z.object({
-	view: z.array(ViewSchema).length(MAX_VIEWS),
-	alert: z.array(AlertSchema).length(MAX_ALERTS),
-	dynamic: z.array(DynamicSchema).length(NUM_DYNAMIC)
+	view: z.array(ViewSchema).max(MAX_VIEWS),
+	alert: z.array(AlertSchema).max(MAX_ALERTS),
+	dynamic: z.array(DynamicSchema).max(NUM_DYNAMIC)
 });
 
 /**
