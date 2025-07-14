@@ -81,10 +81,18 @@ esp_err_t config_patch_handler(httpd_req_t *req)
     // Now save to STM
     receive_config(buf); // Store the updated config
     Generate_TX_Message(get_stm32_comm(), KE_CONFIG_SEND, 0);
-    KE_wait_for_response(get_stm32_comm(), 5000);
+    bool success = KE_wait_for_response(get_stm32_comm(), 5000);
 
-    // TODO send via UART
-    return ESP_OK;
+    // Send HTTP response
+    httpd_resp_set_type(req, "application/json");
+    if (success) {
+        const char* success_response = "{\"success\":true,\"message\":\"Configuration saved successfully\"}";
+        ESP_LOGI(TAG, "Config saved successfully, sending success response");
+        return httpd_resp_send(req, success_response, HTTPD_RESP_USE_STRLEN);
+    } else {
+        ESP_LOGE(TAG, "Config save failed, sending error response");
+        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to save config to device");
+    }
 }
 
 esp_err_t config_handler_init_buffer(void)
