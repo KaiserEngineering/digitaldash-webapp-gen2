@@ -96,10 +96,6 @@
 	<div class="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
 		{#each imageNames as imageName}
 			<div class="flex flex-col">
-				<h3 class="mb-3 text-sm font-medium text-gray-700 capitalize">
-					{imageName.replace('-', ' ')}
-				</h3>
-
 				{#if loadingStates[imageName]}
 					<div
 						class="flex h-40 items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-100"

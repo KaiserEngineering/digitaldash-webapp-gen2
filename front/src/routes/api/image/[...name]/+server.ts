@@ -8,7 +8,8 @@ const validSlots = ['User1', 'User2', 'User3'];
 
 export async function GET({ params }) {
 	const { name } = params;
-	const base = path.parse(name).name;
+	// Remove .png extension if it exists to avoid double extensions
+	const base = name.endsWith('.png') ? name.slice(0, -4) : name;
 
 	if (!name || !validSlots.includes(base)) {
 		throw error(400, 'Invalid slot name');
@@ -29,8 +30,8 @@ export async function POST({ request, params }) {
 		throw error(400, 'Missing filename in URL');
 	}
 
-	// Ensure it's only a .png filename
-	const baseName = path.parse(name).name; // strips extension if passed
+	// Remove .png extension if it exists to avoid double extensions
+	const baseName = name.endsWith('.png') ? name.slice(0, -4) : name;
 	const fileName = `${baseName}.png`;
 
 	const filePath = path.join(BACKGROUND_DIR, fileName);
@@ -52,11 +53,13 @@ export async function POST({ request, params }) {
 
 export async function DELETE({ params }) {
 	const { name } = params;
+	// Remove .png extension if it exists to avoid double extensions
+	const base = name.endsWith('.png') ? name.slice(0, -4) : name;
 
-	if (!name || !validSlots.includes(name)) {
+	if (!name || !validSlots.includes(base)) {
 		throw error(400, 'Invalid slot name');
 	}
 
-	await fs.unlink(path.join(BACKGROUND_DIR, name + '.png'));
+	await fs.unlink(path.join(BACKGROUND_DIR, base + '.png'));
 	return json({ message: 'File deleted successfully' });
 }

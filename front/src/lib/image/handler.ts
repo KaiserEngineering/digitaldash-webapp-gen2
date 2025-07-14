@@ -28,7 +28,9 @@ export class ImageHandler {
 			return cached!;
 		}
 
-		const url = `${apiUrl}/image/${encodeURIComponent(name)}.png`;
+		// Remove .png extension if it exists to avoid double extensions
+		const baseName = name.endsWith('.png') ? name.slice(0, -4) : name;
+		const url = `${apiUrl}/image/${encodeURIComponent(baseName)}.png`;
 		try {
 			const imageData = await this._fetchAndCacheImage(name, url, backgroundCache);
 			return imageData;

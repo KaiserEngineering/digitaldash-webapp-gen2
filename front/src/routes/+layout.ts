@@ -11,44 +11,22 @@ export const load = async ({ fetch }) => {
 		.then((raw) => {
 			const parsed = DigitalDashSchema.safeParse(raw);
 			if (!parsed.success) {
-				console.error('Invalid config schema, using fallback:', parsed.error);
+				console.error('Invalid config schema:', parsed.error);
 				issues.push('Invalid configuration schema detected');
-				// Return fallback config that allows firmware update
-				const fallbackConfig = {
-					view: [
-						{ enabled: false, num_gauges: 0, background: 'User1', gauge: [], textColor: 'white' },
-						{ enabled: false, num_gauges: 0, background: 'User1', gauge: [], textColor: 'white' },
-						{ enabled: false, num_gauges: 0, background: 'User1', gauge: [], textColor: 'white' }
-					],
-					alert: [],
-					dynamic: []
-				};
-				configStore.setConfig(fallbackConfig);
-				return fallbackConfig;
+				throw new Error('Invalid config schema');
 			}
 			configStore.setConfig(parsed.data);
 			return parsed.data;
 		})
 		.catch((error) => {
-			console.error('Config fetch failed completely, using fallback:', error);
+			console.error('Config fetch failed:', error);
 			issues.push('Failed to connect to device configuration');
-			// Return fallback config that allows firmware update
-			const fallbackConfig = {
-				view: [
-					{ enabled: false, num_gauges: 0, background: 'User1', gauge: [], textColor: 'white' },
-					{ enabled: false, num_gauges: 0, background: 'User1', gauge: [], textColor: 'white' },
-					{ enabled: false, num_gauges: 0, background: 'User1', gauge: [], textColor: 'white' }
-				],
-				alert: [],
-				dynamic: []
-			};
-			configStore.setConfig(fallbackConfig);
-			return fallbackConfig;
+			return null;
 		});
 
 	const optionsPromise = getOptions(fetch).catch((error) => {
 		console.error('Options fetch failed:', error);
-		// Return empty options object as fallback
+		issues.push('Failed to load device options');
 		return {};
 	});
 
@@ -59,30 +37,9 @@ export const load = async ({ fetch }) => {
 			return pids;
 		})
 		.catch((error) => {
-			console.error('PIDs fetch failed, using fallback:', error);
+			console.error('PIDs fetch failed:', error);
 			issues.push('Failed to load PID definitions');
-			// Return fallback PIDs that allows basic functionality
-			const fallbackPids = [
-				{
-					desc: 'Engine Speed',
-					label: 'RPM',
-					units: ['rpm'],
-					min: [0],
-					max: [8000],
-					decimals: [0]
-				},
-				{
-					desc: 'Vehicle Speed',
-					label: 'Speed',
-					units: ['mph', 'km/h'],
-					min: [0, 0],
-					max: [180, 270],
-					decimals: [0, 0]
-				},
-				{ desc: 'Engine Load', label: 'Load', units: ['%'], min: [0], max: [100], decimals: [1] }
-			];
-			pidsStore.setPIDs(fallbackPids);
-			return fallbackPids;
+			return [];
 		});
 
 	// Wait for all promises to resolve and check for recovery mode

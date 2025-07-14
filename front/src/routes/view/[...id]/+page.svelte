@@ -55,7 +55,7 @@
 		<div class="bg-background/95 border-border border-b backdrop-blur">
 			<div class="p-2">
 				<Tabs.Root bind:value={activeTab} class="w-full">
-					<ViewCard view={$form} index={viewId} />
+					<ViewCard view={$form} index={viewId} pids={data.pids} />
 
 					<Tabs.List class="grid w-full grid-cols-2">
 						<Tabs.Trigger

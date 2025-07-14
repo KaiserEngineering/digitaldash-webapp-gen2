@@ -15,6 +15,8 @@ export async function uploadBackground(
 	file: File,
 	images: { [key: string]: ImageData } = {}
 ): Promise<UploadResponse> {
+	console.log('backgrounds.svelte.ts: uploading file with name:', file.name);
+	console.log('backgrounds.svelte.ts: POST URL:', `${apiUrl}/image/${file.name}`);
 	const response = await fetch(`${apiUrl}/image/${file.name}`, {
 		method: 'POST',
 		body: file,

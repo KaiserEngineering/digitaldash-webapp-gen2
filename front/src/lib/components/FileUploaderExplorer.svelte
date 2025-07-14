@@ -102,10 +102,12 @@
 
 		isUploading = true;
 		try {
-			// Rename file to match slot name
-			const renamedFile = new File([file.rawFile], `${slotName}.png`, {
+			// Rename file to match slot name (don't add .png as it's handled by the API)
+			console.log('FileUploaderExplorer: uploading with slotName:', slotName);
+			const renamedFile = new File([file.rawFile], slotName, {
 				type: file.rawFile.type
 			});
+			console.log('FileUploaderExplorer: created file with name:', renamedFile.name);
 
 			await uploadCallback(renamedFile);
 		} catch (error) {
@@ -145,6 +147,7 @@
 			accept="image/*"
 			maxFiles={1}
 			fileCount={file ? 1 : 0}
+			minimal={true}
 		/>
 	{:else}
 		<!-- File Preview -->
