@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { recoveryStore } from '$lib/stores/recoveryMode';
 	import { AlertTriangle, Upload } from 'lucide-svelte';
 
 	let { recovery } = $props();

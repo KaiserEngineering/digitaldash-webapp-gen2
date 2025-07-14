@@ -5,7 +5,7 @@
 	import { pidsStore } from '@/config/PIDsStore';
 
 	const views = $derived($configStore.view || []);
-	const pids = $derived($pidsStore.getValue());
+	const pids = $derived(pidsStore.getValue());
 </script>
 
 <div class="space-y-6">

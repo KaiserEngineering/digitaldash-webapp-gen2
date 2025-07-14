@@ -26,7 +26,6 @@ export async function uploadBackground(
 	});
 
 	if (!response.ok) {
-		toast.error(response.statusText);
 		throw new Error(`Upload failed: ${response.statusText}`);
 	}
 
@@ -38,12 +37,7 @@ export async function uploadBackground(
 		const fresh = await imageHandler.loadImage(result.filename);
 
 		images[result.filename] = fresh;
-
-		toast.success('Upload successful');
-	} else {
-		toast.error(result.message || 'Upload failed');
 	}
-
 	return result;
 }
 

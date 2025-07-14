@@ -73,6 +73,7 @@
 
 	async function handleUploadSuccess(imageName: string) {
 		toast.success(`${imageName} uploaded successfully`);
+		imageHandler.clearCache(imageName);
 		await reloadImageSlot(imageName);
 	}
 
@@ -111,7 +112,7 @@
 						/>
 
 						{#if editable}
-							<div class="absolute top-2 right-2 z-10 flex gap-2">
+							<div class="absolute right-2 top-2 z-10 flex gap-2">
 								<Button
 									variant="secondary"
 									size="icon"
@@ -143,7 +144,7 @@
 								class="absolute inset-0 bg-black/0 transition-all duration-200 group-hover:bg-black/10"
 							>
 								<div
-									class="absolute top-2 right-2 flex gap-2 transition-opacity duration-200 group-hover:opacity-100 sm:opacity-0"
+									class="absolute right-2 top-2 flex gap-2 transition-opacity duration-200 group-hover:opacity-100 sm:opacity-0"
 								>
 									<Button
 										variant="secondary"
