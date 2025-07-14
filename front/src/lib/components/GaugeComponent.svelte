@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { PIDMetadata } from '$lib/config/PIDsStore';
+
 	let {
 		gauge,
 		gaugeIndex,
@@ -6,8 +8,16 @@
 		failed,
 		textColor = 'white',
 		onImageError,
-		numGauges = 1
+		numGauges = 1,
+		pids = []
 	} = $props();
+
+	// Helper function to find PID label by desc (since config stores desc but we want to show label)
+	function getPidLabelByDesc(pidDesc: string): string {
+		if (!pidDesc) return '';
+		const pid = pids.find((p: PIDMetadata) => p.desc === pidDesc);
+		return pid ? pid.label : pidDesc; // Fallback to desc if not found
+	}
 
 	// Adjust image size based on number of gauges to prevent overcrowding
 	const getImageSizeClass = (numGauges: number) => {
@@ -40,7 +50,7 @@
 				<div
 					class="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded border border-white/20 bg-black/60 px-2 py-0.5 text-xs backdrop-blur-sm"
 				>
-					<span style:color={textColor} style:opacity="0.9">{gauge.pid}</span>
+					<span style:color={textColor} style:opacity="0.9">{getPidLabelByDesc(gauge.pid)}</span>
 				</div>
 			{/if}
 		{:else}
@@ -49,7 +59,7 @@
 			>
 				<span class="text-xs text-white/60">{gauge.theme}</span>
 				{#if gauge.pid}
-					<span class="mt-1 text-xs text-white/80">{gauge.pid}</span>
+					<span class="mt-1 text-xs text-white/80">{getPidLabelByDesc(gauge.pid)}</span>
 				{/if}
 			</div>
 		{/if}

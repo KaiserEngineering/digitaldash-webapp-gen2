@@ -3,11 +3,10 @@
 	import Spinner from './Spinner.svelte';
 	import GaugeComponent from './GaugeComponent.svelte';
 	import toast from 'svelte-5-french-toast';
-	import { ViewSchema } from '$schemas/digitaldash';
 	import { cn } from '$lib/utils';
 	import { computeIdealTextColor } from '$lib/utils/imageProcessor';
 
-	let { view, index, class: className = '' } = $props();
+	let { view, index, class: className = '', pids = [] } = $props();
 
 	const imageHandler = new ImageHandler();
 	let loading = $state(true);
@@ -106,6 +105,7 @@
 										failed={failedImages[gauge.theme]}
 										textColor={view.textColor}
 										numGauges={view.num_gauges}
+										{pids}
 										onImageError={() => handleImageError(gauge.theme)}
 									/>
 								</div>

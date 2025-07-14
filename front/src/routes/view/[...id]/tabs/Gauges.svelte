@@ -7,6 +7,20 @@
 	import ImageSelect from '$lib/components/ImageSelect.svelte';
 
 	let { themes = [], pids = [], form } = $props();
+
+	// Helper function to find PID label by desc (since config stores desc but we want to show label)
+	function getPidLabelByDesc(pidDesc: string): string {
+		if (!pidDesc) return '';
+		const pid = pids.find(p => p.desc === pidDesc);
+		return pid ? pid.label : pidDesc; // Fallback to desc if not found
+	}
+
+	// Helper function to find PID desc by label (for form selection)
+	function getPidDescByLabel(pidLabel: string): string {
+		if (!pidLabel) return '';
+		const pid = pids.find(p => p.label === pidLabel);
+		return pid ? pid.desc : pidLabel; // Fallback to label if not found
+	}
 </script>
 
 <Tabs.Content value="gauges" class="focus:outline-none">
@@ -43,7 +57,7 @@
 						<div>
 							<h4 class="text-foreground font-medium">Gauge {i + 1}</h4>
 							<p class="text-muted-foreground text-xs">
-								{gauge.pid || 'No PID selected'} • {gauge.theme || 'No theme selected'}
+								{getPidLabelByDesc(gauge.pid) || 'No PID selected'} • {gauge.theme || 'No theme selected'}
 							</p>
 						</div>
 					</div>
@@ -53,9 +67,18 @@
 					<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 						<div class="space-y-2">
 							<Label class="text-sm font-medium">PID</Label>
-							<Select.Root type="single" bind:value={$form.gauge[i].pid} name={`pid-${i}`}>
+							<Select.Root 
+								type="single" 
+								bind:value={$form.gauge[i].pid} 
+								name={`pid-${i}`}
+								onValueChange={(selectedLabel) => {
+									if (selectedLabel) {
+										$form.gauge[i].pid = getPidDescByLabel(selectedLabel);
+									}
+								}}
+							>
 								<Select.Trigger class="!h-12 w-full">
-									<span>{$form.gauge[i].pid || 'Select PID'}</span>
+									<span>{getPidLabelByDesc($form.gauge[i].pid) || 'Select PID'}</span>
 								</Select.Trigger>
 								<Select.Content>
 									{#each pids as pid (pid)}
