@@ -85,10 +85,29 @@ export const offlineStore = createOfflineStore();
 
 // Online/offline status
 export const isOnline = writable(browser ? navigator.onLine : true);
+export const isDeviceConnected = writable(false);
 
 if (browser) {
 	window.addEventListener('online', () => isOnline.set(true));
 	window.addEventListener('offline', () => isOnline.set(false));
+	
+	// Check DigitalDash device connectivity
+	async function checkDeviceConnectivity() {
+		try {
+			const response = await fetch('/api/firmware-version', { 
+				method: 'GET',
+				cache: 'no-store',
+				signal: AbortSignal.timeout(3000) // 3 second timeout
+			});
+			isDeviceConnected.set(response.ok);
+		} catch {
+			isDeviceConnected.set(false);
+		}
+	}
+	
+	// Check device connectivity on load and periodically
+	checkDeviceConnectivity();
+	setInterval(checkDeviceConnectivity, 10000); // Check every 10 seconds
 }
 
 // Derived store that indicates if cached data is still valid
@@ -101,13 +120,3 @@ export const hasValidCache = derived(
 	}
 );
 
-// Derived store for offline-ready state
-export const isOfflineReady = derived(
-	[offlineStore, hasValidCache],
-	([$offlineStore, $hasValidCache]) => {
-		return $hasValidCache && 
-			$offlineStore.config !== null && 
-			$offlineStore.options !== null && 
-			$offlineStore.pids !== null;
-	}
-);

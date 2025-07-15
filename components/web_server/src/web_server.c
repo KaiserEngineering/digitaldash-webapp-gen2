@@ -33,36 +33,12 @@ extern const uint8_t static_index_html_start[] asm("_binary_index_html_start");
 extern const uint8_t static_index_html_end[] asm("_binary_index_html_end");
 
 
-// PWA assets
-extern const uint8_t static_manifest_json_start[] asm("_binary_manifest_json_start");
-extern const uint8_t static_manifest_json_end[] asm("_binary_manifest_json_end");
-
+// Basic web assets
 extern const uint8_t static_favicon_ico_start[] asm("_binary_favicon_ico_start");
 extern const uint8_t static_favicon_ico_end[] asm("_binary_favicon_ico_end");
 
 extern const uint8_t static_favicon_png_start[] asm("_binary_favicon_png_start");
 extern const uint8_t static_favicon_png_end[] asm("_binary_favicon_png_end");
-
-extern const uint8_t static_pwa_64x64_png_start[] asm("_binary_pwa_64x64_png_start");
-extern const uint8_t static_pwa_64x64_png_end[] asm("_binary_pwa_64x64_png_end");
-
-extern const uint8_t static_pwa_192x192_png_start[] asm("_binary_pwa_192x192_png_start");
-extern const uint8_t static_pwa_192x192_png_end[] asm("_binary_pwa_192x192_png_end");
-
-extern const uint8_t static_pwa_512x512_png_start[] asm("_binary_pwa_512x512_png_start");
-extern const uint8_t static_pwa_512x512_png_end[] asm("_binary_pwa_512x512_png_end");
-
-extern const uint8_t static_maskable_icon_512x512_png_start[] asm("_binary_maskable_icon_512x512_png_start");
-extern const uint8_t static_maskable_icon_512x512_png_end[] asm("_binary_maskable_icon_512x512_png_end");
-
-extern const uint8_t static_apple_touch_icon_180x180_png_start[] asm("_binary_apple_touch_icon_180x180_png_start");
-extern const uint8_t static_apple_touch_icon_180x180_png_end[] asm("_binary_apple_touch_icon_180x180_png_end");
-
-extern const uint8_t static_site_webmanifest_start[] asm("_binary_site_webmanifest_start");
-extern const uint8_t static_site_webmanifest_end[] asm("_binary_site_webmanifest_end");
-
-extern const uint8_t static_sw_js_start[] asm("_binary_sw_js_start");
-extern const uint8_t static_sw_js_end[] asm("_binary_sw_js_end");
 
 // Theme files
 extern const uint8_t themes_Linear_png_start[] asm("_binary_Linear_png_start");
@@ -81,22 +57,19 @@ extern const uint8_t themes_Bar_Aurora_png_start[] asm("_binary_Bar_Aurora_png_s
 extern const uint8_t themes_Bar_Aurora_png_end[] asm("_binary_Bar_Aurora_png_end");
 
 
+
 // Embedded file mappings
 static const EmbeddedFile embedded_files[] = {
     {"/", static_index_html_start, static_index_html_end, "text/html"},
     {"/index.html", static_index_html_start, static_index_html_end, "text/html"},
+    
+    // Basic static files
+    {"/favicon.png", static_favicon_png_start, static_favicon_png_end, "image/png"},
+    {"/favicon.ico", static_favicon_ico_start, static_favicon_ico_end, "image/x-icon"},
+    
+    // API embedded paths
     {"/api/embedded/favicon.png", static_favicon_png_start, static_favicon_png_end, "image/png"},
     {"/api/embedded/favicon.ico", static_favicon_ico_start, static_favicon_ico_end, "image/x-icon"},
-    
-    // PWA manifest and assets
-    {"/api/embedded/manifest.json", static_manifest_json_start, static_manifest_json_end, "application/json"},
-    {"/api/embedded/site.webmanifest", static_site_webmanifest_start, static_site_webmanifest_end, "application/manifest+json"},
-    {"/api/embedded/sw.js", static_sw_js_start, static_sw_js_end, "application/javascript"},
-    {"/api/embedded/pwa-64x64.png", static_pwa_64x64_png_start, static_pwa_64x64_png_end, "image/png"},
-    {"/api/embedded/pwa-192x192.png", static_pwa_192x192_png_start, static_pwa_192x192_png_end, "image/png"},
-    {"/api/embedded/pwa-512x512.png", static_pwa_512x512_png_start, static_pwa_512x512_png_end, "image/png"},
-    {"/api/embedded/maskable-icon-512x512.png", static_maskable_icon_512x512_png_start, static_maskable_icon_512x512_png_end, "image/png"},
-    {"/api/embedded/apple-touch-icon-180x180.png", static_apple_touch_icon_180x180_png_start, static_apple_touch_icon_180x180_png_end, "image/png"},
 
     // Theme images (dashboard themes)
     {"/api/embedded/Linear.png", themes_Linear_png_start, themes_Linear_png_end, "image/png"},
@@ -269,6 +242,45 @@ esp_err_t web_request_handler(httpd_req_t *req)
         return httpd_resp_send(req, (const char *)static_index_html_start, static_index_html_end - static_index_html_start);
     }
 
+    // Check if this is an embedded file first (for asset requests)
+    for (int i = 0; i < EMBEDDED_FILE_COUNT; i++)
+    {
+        if (strcmp(req->uri, embedded_files[i].path) == 0)
+        {
+            ESP_LOGI(TAG, "Serving embedded file from general handler: %s", embedded_files[i].path);
+
+            httpd_resp_set_hdr(req, "Cache-Control", "public, max-age=31536000, immutable");
+            httpd_resp_set_type(req, embedded_files[i].mime_type);
+
+            size_t file_size = embedded_files[i].end - embedded_files[i].start;
+            ESP_LOGI(TAG, "File size: %zu bytes", file_size);
+
+            const size_t chunk_size = 4096;
+            size_t bytes_remaining = file_size;
+            const uint8_t *file_ptr = embedded_files[i].start;
+
+            while (bytes_remaining > 0)
+            {
+                size_t bytes_to_send = (bytes_remaining > chunk_size) ? chunk_size : bytes_remaining;
+
+                esp_err_t ret = httpd_resp_send_chunk(req, (const char *)file_ptr, bytes_to_send);
+                if (ret != ESP_OK)
+                {
+                    ESP_LOGE(TAG, "File sending failed: %s", esp_err_to_name(ret));
+                    return ret;
+                }
+
+                file_ptr += bytes_to_send;
+                bytes_remaining -= bytes_to_send;
+                if (bytes_remaining > 0) {
+                    vTaskDelay(1 / portTICK_PERIOD_MS);
+                }
+            }
+
+            return httpd_resp_send_chunk(req, NULL, 0);
+        }
+    }
+
     // Serve index.html only for likely SPA routes
     if (is_spa_route(req->uri))
     {
@@ -277,7 +289,7 @@ esp_err_t web_request_handler(httpd_req_t *req)
         return httpd_resp_send(req, (const char *)static_index_html_start, static_index_html_end - static_index_html_start);
     }
 
-    // If it’s a file-like path and not found earlier, return 404
+    // If it's a file-like path and not found earlier, return 404
     ESP_LOGW(TAG, "Not found: %s", req->uri);
     return httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File not found");
 }
@@ -297,18 +309,20 @@ esp_err_t sveltekit_version_handler(httpd_req_t *req)
 esp_err_t start_webserver()
 {
     httpd_handle_t server = NULL;
+    
+    ESP_LOGI(TAG, "Starting HTTP server...");
+    
+    // Configure HTTP server
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.stack_size = HTTPD_TASK_STACK_SIZE;
     config.max_uri_handlers = 16;
     config.uri_match_fn = httpd_uri_match_wildcard;
 
-    ESP_LOGI(TAG, "Starting HTTP Server");
-
-    if (httpd_start(&server, &config) != ESP_OK)
-    {
+    if (httpd_start(&server, &config) != ESP_OK) {
         ESP_LOGE(TAG, "Failed to start HTTP server");
         return ESP_FAIL;
     }
+    ESP_LOGI(TAG, "HTTP Server started successfully on port 80");
 
     if (register_images(server) != ESP_OK)
     {
@@ -370,12 +384,20 @@ esp_err_t start_webserver()
                                            .handler = sveltekit_version_handler,
                                            .user_ctx = NULL});
 
+    // Register specific API routes BEFORE the catch-all handler
+    httpd_register_uri_handler(server, &(httpd_uri_t){
+                                           .uri = "/api/firmware-version",
+                                           .method = HTTP_GET,
+                                           .handler = sveltekit_version_handler,
+                                           .user_ctx = NULL});
+
+    // Register catch-all handler LAST so specific routes are matched first
     httpd_register_uri_handler(server, &(httpd_uri_t){
                                            .uri = "/*",
                                            .method = HTTP_GET,
                                            .handler = web_request_handler,
                                            .user_ctx = NULL});
 
-    ESP_LOGI(TAG, "HTTP Server started successfully");
+    ESP_LOGI(TAG, "Web server started successfully");
     return ESP_OK;
 }

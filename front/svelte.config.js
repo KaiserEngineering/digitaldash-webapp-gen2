@@ -12,9 +12,6 @@ const config = {
 			fallback: 'index.html'
 		}),
 
-		paths: {
-			assets: process.env.NODE_ENV === 'production' ? 'http://digitaldash.local/api/embedded' : ''
-		},
 
 		version: {
 			pollInterval: 0
