@@ -18,7 +18,7 @@
 					</div>
 				</div>
 				<a
-					href="/firmware"
+					href="/firmware/stm"
 					class="flex items-center gap-2 rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-800"
 				>
 					<Upload class="h-4 w-4" />

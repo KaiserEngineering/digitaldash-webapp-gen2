@@ -1,0 +1,17 @@
+{
+  "name": "Digital Dash",
+  "short_name": "Digital Dash",
+  "description": "ESP32-S3 Digital Dashboard Web App",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ]
+}
