@@ -52,7 +52,7 @@
 </script>
 
 <script lang="ts">
-	import { cn } from '../utils/utils';
+	import { cn } from '$lib/utils';
 	import { Upload } from 'lucide-svelte';
 	import { displaySize } from '.';
 	import { useId } from 'bits-ui';

@@ -1,7 +1,3 @@
-<!--
-	Installed from github/ieedan/shadcn-svelte-extras
--->
-
 <script lang="ts">
 	import { box } from 'svelte-toolbelt';
 	import { useImageCropperRoot } from './image-cropper.svelte.js';
@@ -12,9 +8,8 @@
 	let {
 		id = useId(),
 		src = $bindable(''),
-		open = $bindable(false),
-		tempUrl = $bindable(''),
 		onCropped = () => {},
+		onUnsupportedFile = () => {},
 		children,
 		...rest
 	}: ImageCropperRootProps = $props();
@@ -25,15 +20,8 @@
 			() => src,
 			(v) => (src = v)
 		),
-		open: box.with(
-			() => open,
-			(v) => (open = v)
-		),
-		tempUrl: box.with(
-			() => tempUrl,
-			(v) => (tempUrl = v)
-		),
-		onCropped
+		onCropped: box.with(() => onCropped),
+		onUnsupportedFile: box.with(() => onUnsupportedFile)
 	});
 
 	onDestroy(() => rootState.dispose());

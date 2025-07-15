@@ -1,10 +1,6 @@
-<!--
-	Installed from github/ieedan/shadcn-svelte-extras
--->
-
 <script lang="ts">
-	import * as Dialog from '../dialog';
-	import { cn } from '../utils/utils';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { cn } from '$lib/utils';
 	import { useImageCropperDialog } from './image-cropper.svelte.js';
 	import type { ImageCropperDialogProps } from './types';
 
@@ -13,7 +9,7 @@
 	const dialogState = useImageCropperDialog();
 </script>
 
-<Dialog.Root bind:open={dialogState.rootState.opts.open.current}>
+<Dialog.Root bind:open={dialogState.rootState.open}>
 	<Dialog.Content
 		{...rest}
 		hideClose

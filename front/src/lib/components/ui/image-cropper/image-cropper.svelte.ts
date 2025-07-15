@@ -1,21 +1,27 @@
-/*
-	Installed from github/ieedan/shadcn-svelte-extras
-*/
-
-import type { ReadableBoxedValues, WritableBoxedValues } from '../utils/box';
+import type { ReadableBoxedValues, WritableBoxedValues } from 'svelte-toolbelt';
 import { Context } from 'runed';
 import type { CropArea, DispatchEvents } from 'svelte-easy-crop';
 import { getCroppedImg } from './utils';
 
+// https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/img#supported_image_formats
+export const VALID_IMAGE_TYPES = [
+	'image/apng',
+	'image/avif',
+	'image/gif',
+	'image/jpeg',
+	'image/png',
+	'image/svg+xml',
+	'image/webp'
+];
+
 export type ImageCropperRootProps = WritableBoxedValues<{
 	src: string;
-	open: boolean;
 }> &
 	ReadableBoxedValues<{
 		id: string;
-	}> & {
 		onCropped: (url: string) => void;
-	};
+		onUnsupportedFile: (file: File) => void;
+	}>;
 
 class ImageCropperRootState {
 	#createdUrls = $state<string[]>([]);
@@ -31,15 +37,19 @@ class ImageCropperRootState {
 	}
 
 	onUpload(file: File) {
+		if (!VALID_IMAGE_TYPES.includes(file.type)) {
+			this.opts.onUnsupportedFile.current(file);
+			return;
+		}
+
 		this.tempUrl = URL.createObjectURL(file);
 		this.#createdUrls.push(this.tempUrl);
 		this.open = true;
 	}
 
 	onCancel() {
-		// We want to keep our temp URL
-		// this.tempUrl = undefined;
-		this.opts.open.current = false;
+		this.tempUrl = undefined;
+		this.open = false;
 		this.pixelCrop = undefined;
 	}
 
@@ -50,7 +60,7 @@ class ImageCropperRootState {
 
 		this.open = false;
 
-		this.opts.onCropped(this.opts.src.current);
+		this.opts.onCropped.current(this.opts.src.current);
 	}
 
 	get src() {

@@ -45,7 +45,7 @@
 				}
 
 				const gauges = currentGauges ?? [];
-				const themePromises = gauges.map(async (gauge) => {
+				const themePromises = gauges.map(async (gauge: { theme: any; }) => {
 					const key = `${gauge.theme}`;
 					if (!theme[key] && !failedImages[key] && gauge.theme) {
 						try {
