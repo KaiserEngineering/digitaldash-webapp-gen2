@@ -175,7 +175,7 @@
 				{:else if options.length === 0}
 					<div class="px-3 py-2 text-sm text-gray-500">No images available</div>
 				{:else}
-					{#each options.filter(option => !failedImages[option]) as option}
+					{#each options.filter(option => themes || !failedImages[option]) as option}
 						<button
 							type="button"
 							class={cn(

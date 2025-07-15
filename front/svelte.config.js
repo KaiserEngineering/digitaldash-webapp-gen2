@@ -22,10 +22,6 @@ const config = {
 			bundleStrategy: 'inline'
 		},
 
-		// router: {
-		// 	type: 'hash'
-		// },
-
 		alias: {
 			'@/*': './src/lib/*',
 			'$schemas/*': './src/schemas/*',
