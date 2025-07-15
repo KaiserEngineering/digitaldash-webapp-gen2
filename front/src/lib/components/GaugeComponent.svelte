@@ -38,7 +38,7 @@
 	<div class="relative flex items-center justify-center">
 		{#if themeUrl && !failed}
 			<img
-				class="aspect-square w-full object-contain transition-all duration-300 {getImageSizeClass(
+				class="aspect-square w-full min-w-[50px] object-contain transition-all duration-300 {getImageSizeClass(
 					numGauges
 				)}"
 				src={themeUrl || '/placeholder.svg'}
