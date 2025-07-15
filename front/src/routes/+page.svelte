@@ -4,7 +4,7 @@
 	import { configStore } from '$lib/stores/configStore';
 	import { pidsStore } from '$lib/stores/PIDsStore';
 
-	const views = $derived($configStore.view || []);
+	const views = $derived($configStore?.view || []);
 	const pids = $derived(pidsStore.getValue());
 </script>
 

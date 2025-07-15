@@ -1,6 +1,5 @@
 // src/lib/config/optionsCache.ts
 import { writable, get } from 'svelte/store';
-import { offlineStore, isOnline } from '$lib/stores/offlineStore';
 
 interface OptionsData {
 	[key: string]: {
@@ -55,20 +54,10 @@ export async function loadOptions(fetch = globalThis.fetch): Promise<OptionsData
 		fetchPromise = fetchOptions(fetch);
 		const options = await fetchPromise;
 		optionsStore.set(options);
-		offlineStore.saveOptions(options);
 		return options;
 	} catch (error) {
 		const err = error instanceof Error ? error : new Error('Unknown error');
 		errorStore.set(err);
-		
-		// Try to use offline data if available
-		const offlineData = get(offlineStore);
-		if (offlineData.options && !get(isOnline)) {
-			console.log('Using cached options data while offline');
-			optionsStore.set(offlineData.options);
-			return offlineData.options;
-		}
-		
 		throw err;
 	} finally {
 		loadingStore.set(false);
@@ -82,16 +71,6 @@ export async function getOptions(fetch = globalThis.fetch): Promise<OptionsData>
 
 	if (currentValue) {
 		return currentValue;
-	}
-
-	// If offline, try to use cached data
-	if (!get(isOnline)) {
-		const offlineData = get(offlineStore);
-		if (offlineData.options) {
-			console.log('Using cached options data while offline');
-			optionsStore.set(offlineData.options);
-			return offlineData.options;
-		}
 	}
 
 	// If not cached, load and return

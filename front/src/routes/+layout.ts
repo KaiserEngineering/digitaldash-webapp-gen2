@@ -3,11 +3,18 @@ import { configStore } from '$lib/stores/configStore';
 import { getOptions } from '$lib/stores/optionsCache';
 import { pidsStore } from '$lib/stores/PIDsStore';
 import { recoveryStore } from '$lib/stores/recoveryMode';
-import { offlineStore, isOnline } from '$lib/stores/offlineStore';
-import { get } from 'svelte/store';
 
-export const load = async ({ fetch }) => {
+export const load = async ({ fetch, url }) => {
 	const issues: string[] = [];
+	
+	// Debug trigger via URL: ?debug=recovery
+	if (url.searchParams.get('debug') === 'recovery') {
+		issues.push('Debug mode: Simulated device connection failure');
+		issues.push('Failed to connect to device configuration');
+		issues.push('Failed to load PID definitions');
+		recoveryStore.enterRecoveryMode(issues);
+		return { config: null, options: {}, pids: [] };
+	}
 	const configPromise = fetch('/api/config')
 		.then((res) => (res.ok ? res.json() : Promise.reject(new Error('Config fetch failed'))))
 		.then((raw) => {
@@ -22,15 +29,6 @@ export const load = async ({ fetch }) => {
 		})
 		.catch((error) => {
 			console.error('Config fetch failed:', error);
-			
-			// Try offline data if available
-			const offlineData = get(offlineStore);
-			if (offlineData.config && !get(isOnline)) {
-				console.log('Using cached config while offline');
-				configStore.setConfig(offlineData.config);
-				return offlineData.config;
-			}
-			
 			issues.push('Failed to connect to device configuration');
 			return null;
 		});
@@ -49,15 +47,6 @@ export const load = async ({ fetch }) => {
 		})
 		.catch((error) => {
 			console.error('PIDs fetch failed:', error);
-			
-			// Try offline data if available
-			const offlineData = get(offlineStore);
-			if (offlineData.pids && !get(isOnline)) {
-				console.log('Using cached PIDs while offline');
-				pidsStore.setPIDs(offlineData.pids);
-				return offlineData.pids;
-			}
-			
 			issues.push('Failed to load PID definitions');
 			return [];
 		});

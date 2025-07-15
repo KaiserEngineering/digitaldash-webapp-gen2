@@ -1,5 +1,4 @@
 import { writable, get, type Writable } from 'svelte/store';
-import { offlineStore } from '$lib/stores/offlineStore';
 
 export type PIDMetadata = {
 	desc: string;
@@ -24,7 +23,6 @@ function createPIDStore(): PIDsStore {
 		subscribe,
 		setPIDs: (pids: PIDMetadata[]) => {
 			set(pids);
-			offlineStore.savePids(pids);
 		},
 		getValue: () => get({ subscribe }),
 		reset: () => set([])
