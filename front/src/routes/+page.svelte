@@ -1,8 +1,8 @@
 <script lang="ts">
 	import DashboardCard from '@/components/DashboardCard.svelte';
 	import ViewCard from '@/components/ViewCard.svelte';
-	import { configStore } from '@/config/configStore';
-	import { pidsStore } from '@/config/PIDsStore';
+	import { configStore } from '$lib/stores/configStore';
+	import { pidsStore } from '$lib/stores/PIDsStore';
 
 	const views = $derived($configStore.view || []);
 	const pids = $derived(pidsStore.getValue());

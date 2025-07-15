@@ -1,7 +1,7 @@
 // src/routes/view/[id]/+page.ts
 import { superValidate } from 'sveltekit-superforms';
 import type { PageLoad } from './$types';
-import { zod } from 'sveltekit-superforms/adapters';
+import { zod4 } from 'sveltekit-superforms/adapters';
 import { redirect } from '@sveltejs/kit';
 import { ViewSchema } from '$schemas/digitaldash';
 
@@ -26,7 +26,7 @@ export const load: PageLoad = async ({ params, parent }) => {
 
 	let validatedForm;
 	try {
-		validatedForm = await superValidate(view, zod(ViewSchema));
+		validatedForm = await superValidate(view, zod4(ViewSchema));
 	} catch (error) {
 		console.error('Error validating form:', error);
 		throw redirect(302, '/');

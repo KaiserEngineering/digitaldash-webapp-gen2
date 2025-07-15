@@ -1,8 +1,10 @@
 import { DigitalDashSchema } from '$schemas/digitaldash';
-import { configStore } from '@/config/configStore';
-import { getOptions } from '@/config/optionsCache';
-import { pidsStore } from '@/config/PIDsStore';
+import { configStore } from '$lib/stores/configStore';
+import { getOptions } from '$lib/stores/optionsCache';
+import { pidsStore } from '$lib/stores/PIDsStore';
 import { recoveryStore } from '$lib/stores/recoveryMode';
+import { offlineStore, isOnline } from '$lib/stores/offlineStore';
+import { get } from 'svelte/store';
 
 export const load = async ({ fetch }) => {
 	const issues: string[] = [];
@@ -20,6 +22,15 @@ export const load = async ({ fetch }) => {
 		})
 		.catch((error) => {
 			console.error('Config fetch failed:', error);
+			
+			// Try offline data if available
+			const offlineData = get(offlineStore);
+			if (offlineData.config && !get(isOnline)) {
+				console.log('Using cached config while offline');
+				configStore.setConfig(offlineData.config);
+				return offlineData.config;
+			}
+			
 			issues.push('Failed to connect to device configuration');
 			return null;
 		});
@@ -38,6 +49,15 @@ export const load = async ({ fetch }) => {
 		})
 		.catch((error) => {
 			console.error('PIDs fetch failed:', error);
+			
+			// Try offline data if available
+			const offlineData = get(offlineStore);
+			if (offlineData.pids && !get(isOnline)) {
+				console.log('Using cached PIDs while offline');
+				pidsStore.setPIDs(offlineData.pids);
+				return offlineData.pids;
+			}
+			
 			issues.push('Failed to load PID definitions');
 			return [];
 		});

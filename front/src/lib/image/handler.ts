@@ -1,5 +1,4 @@
 import { apiUrl } from '$lib/config';
-import type { Image } from 'lucide-svelte';
 
 export interface ImageData {
 	name: string;

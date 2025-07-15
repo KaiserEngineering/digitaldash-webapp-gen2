@@ -7,12 +7,14 @@ const config = {
 
 	kit: {
 		adapter: adapter({
-			pages: 'build',
-			assets: 'build',
 			precompress: false,
 			strict: true,
 			fallback: 'index.html'
 		}),
+
+		paths: {
+			assets: process.env.NODE_ENV === 'production' ? 'http://digitaldash.local/api/embedded' : ''
+		},
 
 		version: {
 			pollInterval: 0

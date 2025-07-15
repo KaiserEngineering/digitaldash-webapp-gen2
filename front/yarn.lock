@@ -931,10 +931,10 @@
   resolved "https://registry.yarnpkg.com/@sveltejs/adapter-static/-/adapter-static-3.0.8.tgz#f23ee99a9678dbaec58b79d183bc3defbfe99f1a"
   integrity sha512-YaDrquRpZwfcXbnlDsSrBQNCChVOT9MGuSg+dMAyfsAa1SmiAhrA5jUYUiIMC59G92kIbY/AaQOWcBdq+lh+zg==
 
-"@sveltejs/kit@^2.22.5":
-  version "2.23.0"
-  resolved "https://registry.yarnpkg.com/@sveltejs/kit/-/kit-2.23.0.tgz#4984b882ad4a2f013082902d9ab47b35f7d935d5"
-  integrity sha512-jAgNHbzYiiQe3VFtVkAvX4r/9Py1dhRJSLz95viuGVNY+atqhoYTR4G1bvw1YAlxqh9LtXoJ1Onen+GpnXq69g==
+"@sveltejs/kit@^2.24.0":
+  version "2.24.0"
+  resolved "https://registry.yarnpkg.com/@sveltejs/kit/-/kit-2.24.0.tgz#3bc3b872703d48f7ed3840d997c2ec9856d664c7"
+  integrity sha512-6aCsU6PwxB4CQBJEvLnOoSv8hoviZWDVTKDTzQoERG6vpIHeXJufVWQlyaOXrdSlqBiwknHm0nQT/S/Nn3518A==
   dependencies:
     "@sveltejs/acorn-typescript" "^1.0.5"
     "@types/cookie" "^0.6.0"
@@ -1166,7 +1166,7 @@
   dependencies:
     undici-types "~6.21.0"
 
-"@types/node@^24.0.13":
+"@types/node@^24.0.14":
   version "24.0.14"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-24.0.14.tgz#6e3d4fb6d858c48c69707394e1a0e08ce1ecc1bc"
   integrity sha512-4zXMWD91vBLGRtHK3YbIoFMia+1nqEz72coM42C5ETjnNCa/heoj7NT1G67iAfOqMmcfhuCZ4uNpyz8EjlAejw==
@@ -3240,10 +3240,10 @@ svelte-writable-derived@^3.1.1:
   resolved "https://registry.yarnpkg.com/svelte-writable-derived/-/svelte-writable-derived-3.1.1.tgz#03222b32f8a66ea503e95b3cce8b94bec0810044"
   integrity sha512-w4LR6/bYZEuCs7SGr+M54oipk/UQKtiMadyOhW0PTwAtJ/Ai12QS77sLngEcfBx2q4H8ZBQucc9ktSA5sUGZWw==
 
-svelte@^5.35.6:
-  version "5.36.0"
-  resolved "https://registry.yarnpkg.com/svelte/-/svelte-5.36.0.tgz#f1e03494c3653080ba11c562dad530872752824b"
-  integrity sha512-mQwp864P/ipJTElwU8L1LzkbzdUHfrn1su/R8mTJrH7M9mSi42hsgfHA0JU0f4OSkiznlWixan5FcUdR85G3BQ==
+svelte@^5.36.1:
+  version "5.36.1"
+  resolved "https://registry.yarnpkg.com/svelte/-/svelte-5.36.1.tgz#c93075d00843e161a9a33ccbfeb72189179a5ea8"
+  integrity sha512-h8GmkFVKHP9zcr0/tFZH7kx/3gRkuslFKy5rKd4H66zM+Q/ywmUzeiebC14LjpHkM4feMsTClQvlWROZgEftRw==
   dependencies:
     "@ampproject/remapping" "^2.3.0"
     "@jridgewell/sourcemap-codec" "^1.5.0"
@@ -3467,7 +3467,7 @@ type-fest@^2.19.0:
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-2.19.0.tgz#88068015bb33036a598b952e55e9311a60fd3a9b"
   integrity sha512-RAH822pAdBgcNMAfWnCBU3CFZcfZ/i1eZjwFU/dsLKumyuuP3niueg2UAukXYF0E2AAoc82ZSSf9J0WQBinzHA==
 
-typescript-eslint@^8.36.0:
+typescript-eslint@^8.37.0:
   version "8.37.0"
   resolved "https://registry.yarnpkg.com/typescript-eslint/-/typescript-eslint-8.37.0.tgz#2235ddfa40cdbdadb1afb05f8bda688a2294b4c2"
   integrity sha512-TnbEjzkE9EmcO0Q2zM+GE8NQLItNAJpMmED1BdgoBMYNdqMhzlbqfdSwiRlAzEK2pA9UzVW0gzaaIzXWg2BjfA==

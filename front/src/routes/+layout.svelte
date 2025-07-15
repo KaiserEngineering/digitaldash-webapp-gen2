@@ -6,6 +6,7 @@
 	import { Toaster } from 'svelte-5-french-toast';
 	import Spinner from '@/components/Spinner.svelte';
 	import RecoveryBanner from '$lib/components/RecoveryBanner.svelte';
+	import OfflineBanner from '$lib/components/OfflineBanner.svelte';
 	import { recoveryStore } from '$lib/stores/recoveryMode';
 
 	let { children, data } = $props();
@@ -24,6 +25,7 @@
 		<div class="soft flex h-screen flex-col">
 			<Toaster />
 			<RecoveryBanner recovery={$recoveryStore} />
+			<OfflineBanner />
 			<Header />
 
 			<main class="container mx-auto flex-1 px-4 py-4 sm:w-full md:w-2/3">

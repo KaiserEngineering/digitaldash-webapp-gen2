@@ -6,8 +6,8 @@
 	import { Alert, AlertDescription } from '$lib/components/ui/alert';
 	import { Loader2, Save, FileText } from 'lucide-svelte';
 	import { superForm } from 'sveltekit-superforms';
-	import { zod } from 'sveltekit-superforms/adapters';
-	import { updateFullConfig } from '@/config/updateConfig.js';
+	import { zod4 } from 'sveltekit-superforms/adapters';
+	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
 	import PageCard from '@/components/PageCard.svelte';
 
 	let { data } = $props();
@@ -17,7 +17,7 @@
 	const { enhance, submitting, message } = superForm(data.form, {
 		dataType: 'json',
 		SPA: true,
-		validators: zod(DigitalDashSchema),
+		validators: zod4(DigitalDashSchema),
 		onSubmit: async () => {
 			try {
 				const parsedConfig = JSON.parse(configJson);

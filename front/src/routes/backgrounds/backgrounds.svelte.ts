@@ -64,8 +64,6 @@ export async function deleteBackground(
 		if (images && filename in images) {
 			delete images[filename];
 		}
-
-		toast.success('Image deleted successfully');
 	} catch (error) {
 		toast.error('Failed to delete image');
 		throw error;

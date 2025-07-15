@@ -2,14 +2,14 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { toast } from 'svelte-5-french-toast';
 	import { ViewSchema } from '$schemas/digitaldash';
-	import { zod } from 'sveltekit-superforms/adapters';
+	import { zod4 } from 'sveltekit-superforms/adapters';
 	import { Button } from '@/components/ui/button';
 	import * as Tabs from '$lib/components/ui/tabs/index.js';
 	import { Settings as SettingsIcon, Gauge, Save } from 'lucide-svelte';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import Gauges from './tabs/Gauges.svelte';
 	import Settings from './tabs/Settings.svelte';
-	import { updateFullConfig } from '@/config/updateConfig';
+	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
 	import ViewCard from '@/components/ViewCard.svelte';
 	import PageCard from '@/components/PageCard.svelte';
 
@@ -22,7 +22,7 @@
 		dataType: 'json',
 		SPA: true,
 		resetForm: false,
-		validators: zod(ViewSchema),
+		validators: zod4(ViewSchema),
 		onSubmit: async ({ cancel }) => {
 			// Cancel the default form submission and handle manually
 			cancel();

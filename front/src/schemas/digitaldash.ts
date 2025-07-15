@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 /**
  * Constants – match the C config
@@ -60,7 +60,7 @@ export const ViewSchema = z.object({
 		.default(false),
 	num_gauges: z.number().int(),
 	background: z.string(),
-	gauge: z.array(GaugeSchema).max(GAUGES_PER_VIEW)
+	gauge: z.array(GaugeSchema).max(GAUGES_PER_VIEW),
 });
 
 /**

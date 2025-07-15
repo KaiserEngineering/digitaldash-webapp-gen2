@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { PIDMetadata } from '$lib/config/PIDsStore';
+	import type { PIDMetadata } from '$lib/stores/PIDsStore';
 
 	let {
 		gauge,
