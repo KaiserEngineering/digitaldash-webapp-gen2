@@ -1,7 +1,6 @@
 // src/lib/utils/updateConfig.ts
 import { configStore } from '$lib/stores/configStore';
 import { get } from 'svelte/store';
-import { toast } from 'svelte-5-french-toast';
 import type { DigitalDash } from '$schemas/digitaldash';
 
 /**
@@ -18,8 +17,7 @@ export async function updateConfig(
 	try {
 		const currentConfig = get(configStore);
 		if (!currentConfig) {
-			toast.error('No configuration available');
-			return false;
+			throw new Error('No configuration available');
 		}
 
 		// Create a deep copy to avoid mutating the original
@@ -44,11 +42,8 @@ export async function updateConfig(
 
 		// Update the store with the new config
 		configStore.setConfig(configCopy);
-		toast.success(successMessage);
 		return true;
 	} catch (error) {
-		console.error('Error updating config:', error);
-		toast.error(errorMessage);
-		return false;
+		throw error;
 	}
 }
