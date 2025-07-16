@@ -67,10 +67,6 @@ static const EmbeddedFile embedded_files[] = {
     {"/favicon.png", static_favicon_png_start, static_favicon_png_end, "image/png"},
     {"/favicon.ico", static_favicon_ico_start, static_favicon_ico_end, "image/x-icon"},
     
-    // API embedded paths
-    {"/api/embedded/favicon.png", static_favicon_png_start, static_favicon_png_end, "image/png"},
-    {"/api/embedded/favicon.ico", static_favicon_ico_start, static_favicon_ico_end, "image/x-icon"},
-
     // Theme images (dashboard themes)
     {"/api/embedded/Linear.png", themes_Linear_png_start, themes_Linear_png_end, "image/png"},
     {"/api/embedded/Radial.png", themes_Radial_png_start, themes_Radial_png_end, "image/png"},
@@ -240,6 +236,23 @@ esp_err_t web_request_handler(httpd_req_t *req)
 
         httpd_resp_set_type(req, "text/html");
         return httpd_resp_send(req, (const char *)static_index_html_start, static_index_html_end - static_index_html_start);
+    }
+
+    // Fast favicon handling - common browser requests
+    if (strcmp(req->uri, "/favicon.ico") == 0)
+    {
+        ESP_LOGI(TAG, "Serving favicon.ico");
+        httpd_resp_set_hdr(req, "Cache-Control", "public, max-age=31536000, immutable");
+        httpd_resp_set_type(req, "image/x-icon");
+        return httpd_resp_send(req, (const char *)static_favicon_ico_start, static_favicon_ico_end - static_favicon_ico_start);
+    }
+
+    if (strcmp(req->uri, "/favicon.png") == 0)
+    {
+        ESP_LOGI(TAG, "Serving favicon.png");
+        httpd_resp_set_hdr(req, "Cache-Control", "public, max-age=31536000, immutable");
+        httpd_resp_set_type(req, "image/png");
+        return httpd_resp_send(req, (const char *)static_favicon_png_start, static_favicon_png_end - static_favicon_png_start);
     }
 
     // Check if this is an embedded file first (for asset requests)
