@@ -29,6 +29,7 @@
 		const timeoutId = setTimeout(async () => {
 			loading = true;
 
+			// Load background independently - failure won't affect theme loading
 			try {
 				// Only reload background if it changed
 				if (backgroundUrl === '' || currentBackground !== prevBackground) {
@@ -43,7 +44,15 @@
 					view.textColor = 'white';
 					prevBackground = currentBackground;
 				}
+			} catch (error) {
+				console.warn(`Failed to load background "${currentBackground}":`, error);
+				toast.error(`Failed to load background: ${(error as Error).message}`);
+				view.textColor = 'white';
+				// Don't set backgroundUrl to empty - keep previous or use fallback
+			}
 
+			// Load themes independently - always attempt regardless of background status
+			try {
 				const gauges = currentGauges ?? [];
 				const themePromises = gauges.map(async (gauge: { theme: any; }) => {
 					const key = `${gauge.theme}`;
@@ -65,11 +74,11 @@
 				theme = { ...theme };
 				failedImages = { ...failedImages };
 			} catch (error) {
-				toast.error(`Failed to load view: ${(error as Error).message}`);
-				view.textColor = 'white';
-			} finally {
-				loading = false;
+				console.warn('Failed to load themes:', error);
+				// Don't show toast for theme errors - they're handled individually
 			}
+
+			loading = false;
 		}, 300); // 300ms debounce delay
 
 		// Cleanup timeout on component unmount or effect re-run
