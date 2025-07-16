@@ -25,7 +25,6 @@
 
 	let file = $state<UploadedFile | null>(null);
 	let isUploading = $state(false);
-	let openCropper = $state(false);
 
 	let tempUrl = $derived(file?.url ?? '');
 
@@ -90,7 +89,6 @@
 				url: croppedUrl,
 				rawFile: new File([resizedBlob], file.name, { type: file.type })
 			};
-			openCropper = false;
 		} catch (error) {
 			console.error('Error processing cropped image:', error);
 		}
@@ -102,10 +100,12 @@
 
 		isUploading = true;
 		try {
-			// Rename file to match slot name
-			const renamedFile = new File([file.rawFile], `${slotName}.png`, {
+			// Rename file to match slot name (don't add .png as it's handled by the API)
+			console.log('FileUploaderExplorer: uploading with slotName:', slotName);
+			const renamedFile = new File([file.rawFile], slotName, {
 				type: file.rawFile.type
 			});
+			console.log('FileUploaderExplorer: created file with name:', renamedFile.name);
 
 			await uploadCallback(renamedFile);
 		} catch (error) {
@@ -145,6 +145,7 @@
 			accept="image/*"
 			maxFiles={1}
 			fileCount={file ? 1 : 0}
+			minimal={true}
 		/>
 	{:else}
 		<!-- File Preview -->
@@ -164,7 +165,20 @@
 		<!-- Crop Button -->
 		<Button
 			class="btn flex cursor-pointer gap-2 rounded-lg bg-blue-500 px-6 py-3 font-semibold text-white shadow-md hover:bg-blue-600"
-			onclick={() => (openCropper = true)}
+			onclick={() => {
+				if (file?.rawFile) {
+					// Trigger the cropper by programmatically uploading the file
+					const event = new Event('change', { bubbles: true });
+					const input = document.getElementById('crop-file-input');
+					if (input) {
+						const fileInput = input as HTMLInputElement;
+						const dataTransfer = new DataTransfer();
+						dataTransfer.items.add(file.rawFile);
+						fileInput.files = dataTransfer.files;
+						fileInput.dispatchEvent(event);
+					}
+				}
+			}}
 		>
 			<Edit class="mr-2 h-4 w-4" />
 			Crop Image
@@ -188,7 +202,7 @@
 	</Button>
 
 	<!-- Cropper Dialog -->
-	<ImageCropper.Root {tempUrl} bind:open={openCropper} onCropped={handleCropped}>
+	<ImageCropper.Root id="crop-file-input" bind:src={tempUrl} onCropped={handleCropped}>
 		<ImageCropper.Dialog>
 			<ImageCropper.Cropper cropShape="rect" aspect={800 / 165} />
 			<ImageCropper.Controls>

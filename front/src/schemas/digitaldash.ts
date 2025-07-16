@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 /**
  * Constants – match the C config
@@ -6,7 +6,7 @@ import { z } from 'zod';
 export const MAX_VIEWS = 3;
 export const GAUGES_PER_VIEW = 3;
 export const MAX_ALERTS = 5;
-export const NUM_DYNAMIC = 2;
+export const NUM_DYNAMIC = 3;
 export const ALERT_MESSAGE_LEN = 64;
 
 /**
@@ -60,7 +60,7 @@ export const ViewSchema = z.object({
 		.default(false),
 	num_gauges: z.number().int(),
 	background: z.string(),
-	gauge: z.array(GaugeSchema).max(GAUGES_PER_VIEW)
+	gauge: z.array(GaugeSchema).max(GAUGES_PER_VIEW),
 });
 
 /**
@@ -120,9 +120,9 @@ export const DynamicSchema = z.object({
  * } digitaldash;
  */
 export const DigitalDashSchema = z.object({
-	view: z.array(ViewSchema).length(MAX_VIEWS),
-	alert: z.array(AlertSchema).length(MAX_ALERTS),
-	dynamic: z.array(DynamicSchema).length(NUM_DYNAMIC)
+	view: z.array(ViewSchema).max(MAX_VIEWS),
+	alert: z.array(AlertSchema).max(MAX_ALERTS),
+	dynamic: z.array(DynamicSchema).max(NUM_DYNAMIC)
 });
 
 /**

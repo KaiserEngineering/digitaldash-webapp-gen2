@@ -2,26 +2,34 @@ import { writable, get, type Writable } from 'svelte/store';
 import type { DigitalDash } from '$schemas/digitaldash';
 
 type ConfigStore = {
-	subscribe: Writable<DigitalDash>['subscribe'];
+	subscribe: Writable<DigitalDash | null>['subscribe'];
 	setConfig: (newConfig: DigitalDash) => void;
 	updateField: <K extends keyof DigitalDash>(key: K, value: DigitalDash[K]) => void;
 	reset: () => void;
-	getValue: () => DigitalDash;
+	getValue: () => DigitalDash | null;
 };
 
 function createConfigStore() {
-	const { subscribe, set, update } = writable<DigitalDash>();
+	const { subscribe, set, update } = writable<DigitalDash | null>(null);
 
 	return {
 		subscribe,
 
-		setConfig: (newConfig: DigitalDash) => set(newConfig),
-
-		updateField: <K extends keyof DigitalDash>(key: K, value: DigitalDash[K]) => {
-			update((cfg) => ({ ...cfg, [key]: value }));
+		setConfig: (newConfig: DigitalDash) => {
+			set(newConfig);
 		},
 
-		reset: () => set(null as unknown as DigitalDash),
+		updateField: <K extends keyof DigitalDash>(key: K, value: DigitalDash[K]) => {
+			update((cfg) => {
+				if (cfg) {
+					const updated = { ...cfg, [key]: value };
+					return updated;
+				}
+				return null;
+			});
+		},
+
+		reset: () => set(null),
 
 		getValue: () => get({ subscribe })
 	};

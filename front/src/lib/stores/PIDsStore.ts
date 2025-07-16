@@ -21,7 +21,9 @@ function createPIDStore(): PIDsStore {
 
 	return {
 		subscribe,
-		setPIDs: (pids: PIDMetadata[]) => set(pids),
+		setPIDs: (pids: PIDMetadata[]) => {
+			set(pids);
+		},
 		getValue: () => get({ subscribe }),
 		reset: () => set([])
 	};

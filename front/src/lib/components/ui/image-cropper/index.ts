@@ -1,7 +1,3 @@
-/*
-	Installed from github/ieedan/shadcn-svelte-extras
-*/
-
 import Root from './image-cropper.svelte';
 import UploadTrigger from './image-cropper-upload-trigger.svelte';
 import Preview from './image-cropper-preview.svelte';
@@ -13,3 +9,5 @@ import Cancel from './image-cropper-cancel.svelte';
 import { getFileFromUrl } from './utils';
 
 export { Root, UploadTrigger, Preview, Dialog, Cropper, Controls, Crop, Cancel, getFileFromUrl };
+
+export type * from './types';

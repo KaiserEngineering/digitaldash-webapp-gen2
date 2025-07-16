@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { superForm } from 'sveltekit-superforms';
 	import { DynamicFormSchema } from './dynamicFormSchema';
-	import { zod } from 'sveltekit-superforms/adapters';
+	import { zod4 } from 'sveltekit-superforms/adapters';
 	import { toast } from 'svelte-5-french-toast';
 	import { Button } from '@/components/ui/button';
 	import { Input } from '@/components/ui/input';
 	import { Label } from '@/components/ui/label';
 	import { Switch } from '@/components/ui/switch';
-	import { updateFullConfig } from '@/config/updateConfig';
+	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
 	import PageCard from '@/components/PageCard.svelte';
 	import { Settings } from 'lucide-svelte';
 	import { Motion } from 'motion-start';
@@ -21,7 +21,7 @@
 	const { form, submitting, enhance } = superForm(data.form, {
 		dataType: 'json',
 		SPA: true,
-		validators: zod(DynamicFormSchema),
+		validators: zod4(DynamicFormSchema),
 		onSubmit: async () => {
 			const success = await updateFullConfig((config) => {
 				config.dynamic = $form.items;
@@ -127,7 +127,7 @@
 	{/snippet}
 
 	{#snippet footerContent()}
-		<div class="mb-6 mt-4 flex items-center justify-between">
+		<div class="mt-4 mb-6 flex items-center justify-between">
 			<Button
 				type="submit"
 				disabled={$submitting}

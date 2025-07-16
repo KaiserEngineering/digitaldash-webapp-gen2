@@ -2,32 +2,42 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { toast } from 'svelte-5-french-toast';
 	import { ViewSchema } from '$schemas/digitaldash';
-	import { zod } from 'sveltekit-superforms/adapters';
+	import { zod4 } from 'sveltekit-superforms/adapters';
 	import { Button } from '@/components/ui/button';
 	import * as Tabs from '$lib/components/ui/tabs/index.js';
 	import { Settings as SettingsIcon, Gauge, Save } from 'lucide-svelte';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import Gauges from './tabs/Gauges.svelte';
 	import Settings from './tabs/Settings.svelte';
-	import { updateFullConfig } from '@/config/updateConfig';
+	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
 	import ViewCard from '@/components/ViewCard.svelte';
 	import PageCard from '@/components/PageCard.svelte';
 
 	let { data } = $props();
 	const viewId = data.viewId;
 
-	const { form, enhance, submitting } = superForm(data.form, {
+	let isSubmitting = $state(false);
+
+	const { form, enhance } = superForm(data.form, {
 		dataType: 'json',
 		SPA: true,
 		resetForm: false,
-		validators: zod(ViewSchema),
-		onSubmit: async () => {
-			const success = await updateFullConfig((config) => {
-				config.view[viewId] = { ...config.view[viewId], ...$form };
-			}, 'View settings updated successfully!');
+		validators: zod4(ViewSchema),
+		onSubmit: async ({ cancel }) => {
+			// Cancel the default form submission and handle manually
+			cancel();
 
-			if (!success) {
-				toast.error('Failed to save view settings. Please try again.');
+			isSubmitting = true;
+			try {
+				const success = await updateFullConfig((config) => {
+					config.view[viewId] = { ...config.view[viewId], ...$form };
+				}, 'View settings updated successfully!');
+
+				if (!success) {
+					toast.error('Failed to save view settings. Please try again.');
+				}
+			} finally {
+				isSubmitting = false;
 			}
 		}
 	});
@@ -45,7 +55,7 @@
 		<div class="bg-background/95 border-border border-b backdrop-blur">
 			<div class="p-2">
 				<Tabs.Root bind:value={activeTab} class="w-full">
-					<ViewCard view={$form} index={viewId} />
+					<ViewCard view={$form} index={viewId} pids={data.pids} />
 
 					<Tabs.List class="grid w-full grid-cols-2">
 						<Tabs.Trigger
@@ -69,7 +79,7 @@
 							<Gauge class="h-4 w-4" />
 							<span>Gauges</span>
 							<Badge variant="secondary" class="ml-1 text-xs">
-								{$form.gauge?.length || 0}
+								{$form.num_gauges || 0}
 							</Badge>
 						</Tabs.Trigger>
 					</Tabs.List>
@@ -89,8 +99,8 @@
 	{#snippet footerContent()}
 		<div class="border-border bg-muted/30 border-t px-6 py-4">
 			<div class="flex items-center justify-between">
-				<Button type="submit" class="flex items-center gap-2">
-					{#if $submitting}
+				<Button type="submit" class="flex items-center gap-2" disabled={isSubmitting}>
+					{#if isSubmitting}
 						<div
 							class="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
 						></div>

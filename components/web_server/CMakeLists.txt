@@ -9,11 +9,14 @@ idf_component_register(SRCS
     INCLUDE_DIRS "include" "../../main"
     PRIV_REQUIRES esp_http_server esp_wifi nvs_flash mdns app_update spiffs lib_ke_protocol stm_flash
     EMBED_FILES
-    "index.html"
-    "factoryImages/Linear.png"
-    "factoryImages/Stock RS.png"
-    "factoryImages/Stock ST.png"
-    "factoryImages/favicon.png"
+    "static/index.html"
+    "static/favicon.png"
+    "static/favicon.ico"
+    "themes/Linear.png"
+    "themes/Radial.png"
+    "themes/Stock RS.png"
+    "themes/Stock ST.png"
+    "themes/Bar Aurora.png"
 )
 
 set(VERSION_JSON_PATH "${CMAKE_SOURCE_DIR}/front/build/_app/version.json")

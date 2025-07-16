@@ -3,54 +3,20 @@
 	import Spinner from './Spinner.svelte';
 	import GaugeComponent from './GaugeComponent.svelte';
 	import toast from 'svelte-5-french-toast';
-	import { ViewSchema } from '$schemas/digitaldash';
 	import { cn } from '$lib/utils';
+	import { computeIdealTextColor } from '$lib/utils/imageProcessor';
 
-	let { view, index, class: className = '' } = $props();
+	let { view, index, class: className = '', pids = [] } = $props();
 
 	const imageHandler = new ImageHandler();
 	let loading = $state(true);
 	let backgroundUrl = $state('');
-	const theme: Record<string, string> = $state({});
+	let theme: Record<string, string> = $state({});
 	let failedImages: Record<string, boolean> = $state({});
 	let prevBackground: string | undefined = undefined;
 
 	function handleImageError(themeKey: string) {
 		failedImages = { ...failedImages, [themeKey]: true };
-	}
-
-	async function computeIdealTextColor(imageUrl: string): Promise<string> {
-		return new Promise((resolve) => {
-			const img = new Image();
-			img.crossOrigin = 'Anonymous';
-			img.src = imageUrl;
-
-			img.onload = () => {
-				const canvas = document.createElement('canvas');
-				canvas.width = img.width;
-				canvas.height = img.height;
-				const ctx = canvas.getContext('2d');
-
-				if (ctx) {
-					ctx.drawImage(img, 0, 0);
-					const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-					let total = 0;
-
-					for (let i = 0; i < imageData.data.length; i += 4) {
-						const brightness =
-							(imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2]) / 3;
-						total += brightness;
-					}
-
-					const avgBrightness = total / (canvas.width * canvas.height);
-					resolve(avgBrightness < 128 ? 'white' : 'black');
-				} else {
-					resolve('black');
-				}
-			};
-
-			img.onerror = () => resolve('black');
-		});
 	}
 
 	$effect(() => {
@@ -59,33 +25,64 @@
 		const currentBackground = view.background;
 		const currentGauges = view.gauge;
 
-		(async () => {
+		// Debounce to prevent rapid reloads
+		const timeoutId = setTimeout(async () => {
 			loading = true;
 
+			// Load background independently - failure won't affect theme loading
 			try {
 				// Only reload background if it changed
 				if (backgroundUrl === '' || currentBackground !== prevBackground) {
 					const imageData = await imageHandler.loadImage(currentBackground);
 					backgroundUrl = imageData.url;
-					view.textColor = await computeIdealTextColor(imageData.url);
+					// try {
+					// 	view.textColor = await computeIdealTextColor(imageData.url);
+					// } catch (error) {
+					// 	console.warn('Failed to compute text color, using fallback:', error);
+					// 	view.textColor = 'white';
+					// }
+					view.textColor = 'white';
 					prevBackground = currentBackground;
 				}
-
-				const gauges = currentGauges ?? [];
-				for (const gauge of gauges) {
-					const key = `${gauge.theme}`;
-					if (!theme[key] && !failedImages[key]) {
-						const themeImageData = await imageHandler.loadTheme(key);
-						theme[key] = themeImageData.url;
-					}
-				}
 			} catch (error) {
-				toast.error(`Failed to load view: ${(error as Error).message}`);
+				console.warn(`Failed to load background "${currentBackground}":`, error);
+				toast.error(`Failed to load background: ${(error as Error).message}`);
 				view.textColor = 'white';
-			} finally {
-				loading = false;
+				// Don't set backgroundUrl to empty - keep previous or use fallback
 			}
-		})();
+
+			// Load themes independently - always attempt regardless of background status
+			try {
+				const gauges = currentGauges ?? [];
+				const themePromises = gauges.map(async (gauge: { theme: any; }) => {
+					const key = `${gauge.theme}`;
+					if (!theme[key] && !failedImages[key] && gauge.theme) {
+						try {
+							const themeImageData = await imageHandler.loadTheme(key);
+							theme = { ...theme, [key]: themeImageData.url };
+						} catch (error) {
+							console.warn(`Failed to load theme "${key}":`, error);
+							failedImages = { ...failedImages, [key]: true };
+						}
+					}
+				});
+
+				// Wait for all theme loads to complete
+				await Promise.allSettled(themePromises);
+
+				// Force reactive update by reassigning state objects
+				theme = { ...theme };
+				failedImages = { ...failedImages };
+			} catch (error) {
+				console.warn('Failed to load themes:', error);
+				// Don't show toast for theme errors - they're handled individually
+			}
+
+			loading = false;
+		}, 300); // 300ms debounce delay
+
+		// Cleanup timeout on component unmount or effect re-run
+		return () => clearTimeout(timeoutId);
 	});
 </script>
 
@@ -117,6 +114,8 @@
 										themeUrl={theme[gauge.theme]}
 										failed={failedImages[gauge.theme]}
 										textColor={view.textColor}
+										numGauges={view.num_gauges}
+										{pids}
 										onImageError={() => handleImageError(gauge.theme)}
 									/>
 								</div>

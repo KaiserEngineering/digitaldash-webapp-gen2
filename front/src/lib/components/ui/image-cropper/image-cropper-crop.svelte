@@ -1,23 +1,34 @@
-<!--
-	Installed from github/ieedan/shadcn-svelte-extras
--->
-
 <script lang="ts">
-	import { type ButtonProps, Button } from '../button';
-	import type { WithoutChildren } from 'bits-ui';
+	import { type ButtonElementProps, Button } from '$lib/components/ui/button';
 	import { useImageCropperCrop } from './image-cropper.svelte.js';
-	import { Crop } from 'lucide-svelte';
+	import CropIcon from '@lucide/svelte/icons/crop';
 
 	let {
+		ref = $bindable(null),
 		variant = 'default',
 		size = 'sm',
+		onclick,
 		...rest
-	}: Omit<WithoutChildren<ButtonProps>, 'onclick'> = $props();
+	}: ButtonElementProps = $props();
 
 	const cropState = useImageCropperCrop();
 </script>
 
-<Button {...rest} {size} {variant} onclick={cropState.onclick}>
-	<Crop />
+<Button
+	{...rest}
+	bind:ref
+	{size}
+	{variant}
+	onclick={(
+		e: MouseEvent & {
+			currentTarget: EventTarget & HTMLButtonElement;
+		}
+	) => {
+		onclick?.(e);
+
+		cropState.onclick();
+	}}
+>
+	<CropIcon />
 	<span>Crop</span>
 </Button>

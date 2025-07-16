@@ -7,12 +7,11 @@ const config = {
 
 	kit: {
 		adapter: adapter({
-			pages: 'build',
-			assets: 'build',
 			precompress: false,
 			strict: true,
 			fallback: 'index.html'
 		}),
+
 
 		version: {
 			pollInterval: 0
@@ -21,10 +20,6 @@ const config = {
 		output: {
 			bundleStrategy: 'inline'
 		},
-
-		// router: {
-		// 	type: 'hash'
-		// },
 
 		alias: {
 			'@/*': './src/lib/*',

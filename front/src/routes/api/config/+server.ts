@@ -1,11 +1,12 @@
 // src/routes/api/config/+server.ts
 import { configStore } from '$local/server/configStore';
-import { json } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit';
 import { DigitalDashSchema } from '$schemas/digitaldash';
 import { deviceClient } from '$local/server/deviceClient';
 import { useDeviceApi } from '$lib/config';
 
 export async function GET() {
+	error(500, "dog");
 	const config = await configStore.get();
 	if (!config) return json({ error: 'Config not found' }, { status: 404 });
 	return json(config);

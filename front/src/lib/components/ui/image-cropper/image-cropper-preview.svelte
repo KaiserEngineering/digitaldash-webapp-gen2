@@ -1,13 +1,9 @@
-<!--
-	Installed from github/ieedan/shadcn-svelte-extras
--->
-
 <script lang="ts">
-	import * as Avatar from '../avatar';
+	import * as Avatar from '$lib/components/ui/avatar';
 	import type { ImageCropperPreviewProps } from './types';
 	import { useImageCropperPreview } from './image-cropper.svelte.js';
-	import { Upload } from 'lucide-svelte';
-	import { cn } from '../utils/utils';
+	import UploadIcon from '@lucide/svelte/icons/upload';
+	import { cn } from '$lib/utils';
 
 	let { child, class: className }: ImageCropperPreviewProps = $props();
 
@@ -22,7 +18,7 @@
 	>
 		<Avatar.Image src={previewState.rootState.src} />
 		<Avatar.Fallback>
-			<Upload class="size-4" />
+			<UploadIcon class="size-4" />
 			<span class="sr-only">Upload image</span>
 		</Avatar.Fallback>
 	</Avatar.Root>

@@ -42,8 +42,15 @@ void get_option_list_info(char **ptr, uint32_t *max_len)
 esp_err_t config_options_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "GET /api/options requested");
+    
+    // Check if option_list is properly initialized
+    if (option_list == NULL || option_list[0] == '\0') {
+        ESP_LOGW(TAG, "Options data is empty, sending empty object");
+        httpd_resp_set_type(req, "application/json");
+        return httpd_resp_send(req, "{}", HTTPD_RESP_USE_STRLEN);
+    }
+    
     ESP_LOGI(TAG, "Sending options data: %s", option_list);
-
     httpd_resp_set_type(req, "application/json");
     return httpd_resp_send(req, option_list, HTTPD_RESP_USE_STRLEN);
 }
@@ -83,8 +90,15 @@ esp_err_t config_patch_handler(httpd_req_t *req)
     Generate_TX_Message(get_stm32_comm(), KE_CONFIG_SEND, 0);
     KE_wait_for_response(get_stm32_comm(), 5000);
 
-    // TODO send via UART
-    return ESP_OK;
+    // Send HTTP response - always return success since we got this far
+    httpd_resp_set_type(req, "application/json");
+    const char* success_response = "{\"success\":true,\"message\":\"Configuration saved successfully\"}";
+    ESP_LOGI(TAG, "Config saved successfully, sending success response");
+
+    // Small delay to prevent immediate flood of requests from frontend
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+
+    return httpd_resp_send(req, success_response, HTTPD_RESP_USE_STRLEN);
 }
 
 esp_err_t config_handler_init_buffer(void)

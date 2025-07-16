@@ -1,8 +1,7 @@
 import { error } from '@sveltejs/kit';
 
 export async function GET({ params, fetch }) {
-	const filename = params?.name;
-
+	const filename = decodeURIComponent(params?.name ?? '');
 	if (!filename) {
 		throw error(400, 'Filename is required');
 	}

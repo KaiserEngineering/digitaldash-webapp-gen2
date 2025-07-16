@@ -1,6 +1,6 @@
 // src/routes/backgrounds.ts
 import { apiUrl } from '$lib/config';
-import { ImageHandler } from '$lib/image/handler';
+import { ImageHandler, type ImageData } from '$lib/image/handler';
 import { toast } from 'svelte-5-french-toast';
 
 interface UploadResponse {
@@ -13,8 +13,10 @@ const imageHandler = new ImageHandler();
 
 export async function uploadBackground(
 	file: File,
-	images: { [key: string]: any } = {}
+	images: { [key: string]: ImageData } = {}
 ): Promise<UploadResponse> {
+	console.log('backgrounds.svelte.ts: uploading file with name:', file.name);
+	console.log('backgrounds.svelte.ts: POST URL:', `${apiUrl}/image/${file.name}`);
 	const response = await fetch(`${apiUrl}/image/${file.name}`, {
 		method: 'POST',
 		body: file,
@@ -24,7 +26,6 @@ export async function uploadBackground(
 	});
 
 	if (!response.ok) {
-		toast.error(response.statusText);
 		throw new Error(`Upload failed: ${response.statusText}`);
 	}
 
@@ -36,18 +37,13 @@ export async function uploadBackground(
 		const fresh = await imageHandler.loadImage(result.filename);
 
 		images[result.filename] = fresh;
-
-		toast.success('Upload successful');
-	} else {
-		toast.error(result.message || 'Upload failed');
 	}
-
 	return result;
 }
 
 export async function deleteBackground(
 	filename: string,
-	images: { [key: string]: any } = {}
+	images: { [key: string]: ImageData } = {}
 ): Promise<void> {
 	if (!filename) {
 		toast.error('No filename provided');
@@ -68,8 +64,6 @@ export async function deleteBackground(
 		if (images && filename in images) {
 			delete images[filename];
 		}
-
-		toast.success('Image deleted successfully');
 	} catch (error) {
 		toast.error('Failed to delete image');
 		throw error;

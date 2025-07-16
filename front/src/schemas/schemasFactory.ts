@@ -1,5 +1,5 @@
 // schemasFactory.ts
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 export async function buildSchemasFromOptions() {
 	const res = await fetch('/api/options');

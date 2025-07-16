@@ -1,17 +1,14 @@
-<!--
-	Installed from github/ieedan/shadcn-svelte-extras
--->
-
 <script lang="ts">
-	import Cropper, { type CropperProps } from 'svelte-easy-crop';
+	import Cropper from 'svelte-easy-crop';
 	import { useImageCropperCropper } from './image-cropper.svelte.js';
+	import type { ImageCropperCropperProps } from './types.js';
 
 	let {
 		cropShape = 'round',
 		aspect = 1,
 		showGrid = false,
 		...rest
-	}: Omit<Partial<CropperProps>, 'oncropcomplete' | 'image'> = $props();
+	}: ImageCropperCropperProps = $props();
 
 	const cropperState = useImageCropperCropper();
 </script>
@@ -23,7 +20,7 @@
 		{cropShape}
 		{aspect}
 		{showGrid}
-		image={cropperState.rootState.opts.tempUrl.current}
+		image={cropperState.rootState.tempUrl}
 		oncropcomplete={cropperState.onCropComplete}
 	/>
 </div>

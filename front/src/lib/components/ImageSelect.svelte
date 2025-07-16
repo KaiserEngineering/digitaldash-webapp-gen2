@@ -111,7 +111,7 @@
 		type="button"
 		class={cn(
 			'relative w-full cursor-pointer rounded-lg border bg-white px-3 py-2 text-left shadow-sm transition-colors',
-			'border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500',
+			'border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none',
 			disabled && 'cursor-not-allowed bg-gray-50 text-gray-500',
 			isOpen && 'border-blue-500 ring-1 ring-blue-500'
 		)}
@@ -144,9 +144,11 @@
 					</div>
 				{/if}
 
-				<span class={cn('block truncate', !value && 'text-gray-500')}>
-					{value || placeholder}
-				</span>
+				{#if !value}
+					<span class="block truncate text-gray-500">
+						{placeholder}
+					</span>
+				{/if}
 			</div>
 
 			<ChevronDown
@@ -173,7 +175,7 @@
 				{:else if options.length === 0}
 					<div class="px-3 py-2 text-sm text-gray-500">No images available</div>
 				{:else}
-					{#each options as option}
+					{#each options.filter(option => themes || !failedImages[option]) as option}
 						<button
 							type="button"
 							class={cn(
@@ -187,7 +189,7 @@
 						>
 							<div class="flex items-center justify-between">
 								<div class="flex items-center space-x-3">
-									{#if imageUrls[option] && !failedImages[option]}
+									{#if imageUrls[option]}
 										<img
 											src={imageUrls[option] || '/placeholder.svg'}
 											alt={option}
@@ -199,17 +201,6 @@
 											<ImageIcon class="h-5 w-5 text-gray-400" />
 										</div>
 									{/if}
-
-									<div class="flex flex-col">
-										<span class="text-sm font-medium">{option}</span>
-										{#if failedImages[option]}
-											<span class="text-xs text-red-500">Failed to load</span>
-										{:else if imageUrls[option]}
-											<span class="text-xs text-gray-500">Loaded</span>
-										{:else}
-											<span class="text-xs text-gray-400">Loading...</span>
-										{/if}
-									</div>
 								</div>
 
 								{#if value === option}

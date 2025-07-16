@@ -25,6 +25,8 @@
 		children?: Snippet<[]>;
 		/** Called when a file does not meet the upload criteria (size, or type) */
 		onFileRejected?: (opts: { reason: FileRejectedReason; file: File }) => void;
+		/** Show minimal UI without repetitive text */
+		minimal?: boolean;
 
 		// just for extra documentation
 		/** Takes a comma separated list of one or more file types.
@@ -50,7 +52,7 @@
 </script>
 
 <script lang="ts">
-	import { cn } from '../utils/utils';
+	import { cn } from '$lib/utils';
 	import { Upload } from 'lucide-svelte';
 	import { displaySize } from '.';
 	import { useId } from 'bits-ui';
@@ -65,6 +67,7 @@
 		onUpload,
 		onFileRejected,
 		accept,
+		minimal = false,
 		class: className,
 		...rest
 	}: FileDropZoneProps = $props();
@@ -189,24 +192,32 @@
 			>
 				<Upload class="size-7" />
 			</div>
-			<div class="flex flex-col gap-0.5 text-center">
-				<span class="text-muted-foreground font-medium">
-					Drag 'n' drop files here, or click to select files
-				</span>
-				{#if maxFiles || maxFileSize}
-					<span class="text-muted-foreground/75 text-sm">
-						{#if maxFiles}
-							<span>You can upload {maxFiles} files</span>
-						{/if}
-						{#if maxFiles && maxFileSize}
-							<span>(up to {displaySize(maxFileSize)} each)</span>
-						{/if}
-						{#if maxFileSize && !maxFiles}
-							<span>Maximum size {displaySize(maxFileSize)}</span>
-						{/if}
+			{#if !minimal}
+				<div class="flex flex-col gap-0.5 text-center">
+					<span class="text-muted-foreground font-medium">
+						Drag 'n' drop files here, or click to select files
 					</span>
-				{/if}
-			</div>
+					{#if maxFiles || maxFileSize}
+						<span class="text-muted-foreground/75 text-sm">
+							{#if maxFiles}
+								<span>You can upload {maxFiles} files</span>
+							{/if}
+							{#if maxFiles && maxFileSize}
+								<span>(up to {displaySize(maxFileSize)} each)</span>
+							{/if}
+							{#if maxFileSize && !maxFiles}
+								<span>Maximum size {displaySize(maxFileSize)}</span>
+							{/if}
+						</span>
+					{/if}
+				</div>
+			{:else}
+				<div class="flex flex-col gap-0.5 text-center">
+					<span class="text-muted-foreground text-sm">
+						Click to upload
+					</span>
+				</div>
+			{/if}
 		</div>
 	{/if}
 	<input

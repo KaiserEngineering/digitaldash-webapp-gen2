@@ -10,8 +10,8 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { AlertsFormSchema } from './alertsFormSchema';
 	import { toast } from 'svelte-5-french-toast';
-	import { zod } from 'sveltekit-superforms/adapters';
-	import { updateFullConfig } from '@/config/updateConfig';
+	import { zod4 } from 'sveltekit-superforms/adapters';
+	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
 	import PageCard from '@/components/PageCard.svelte';
 	import { Switch } from '@/components/ui/switch';
 
@@ -20,7 +20,7 @@
 	const { form, enhance, submitting } = superForm(data.form, {
 		dataType: 'json',
 		SPA: true,
-		validators: zod(AlertsFormSchema),
+		validators: zod4(AlertsFormSchema),
 		onSubmit: async () => {
 			const success = await updateFullConfig((config) => {
 				config.alert = $form.items;
@@ -106,7 +106,7 @@
 	{/snippet}
 
 	{#snippet footerContent()}
-		<div class="mb-6 mt-4 flex flex-col items-center justify-between gap-4 md:flex-row">
+		<div class="mt-4 mb-6 flex flex-col items-center justify-between gap-4 md:flex-row">
 			<Button
 				type="submit"
 				disabled={$submitting}

@@ -1,5 +1,4 @@
 import { apiUrl } from '$lib/config';
-import type { Image } from 'lucide-svelte';
 
 export interface ImageData {
 	name: string;
@@ -11,10 +10,15 @@ export interface ImageData {
 
 const backgroundCache = new Map<string, ImageData>();
 const themeCache = new Map<string, ImageData>();
+// Track themes that failed to load - themes are embedded in firmware so they never change
+const failedThemes = new Set<string>();
 
 export class ImageHandler {
 	/**
 	 * Load a background image from /api/image/:slot
+	 * @param name - The name of the image to load
+	 * @returns Promise<ImageData> - The loaded image data including URL and metadata
+	 * @throws Error if the image fails to load or doesn't exist
 	 */
 	async loadImage(name: string): Promise<ImageData> {
 		if (backgroundCache.has(name)) {
@@ -23,7 +27,9 @@ export class ImageHandler {
 			return cached!;
 		}
 
-		const url = `${apiUrl}/image/${encodeURIComponent(name)}.png`;
+		// Remove .png extension if it exists to avoid double extensions
+		const baseName = name.endsWith('.png') ? name.slice(0, -4) : name;
+		const url = `${apiUrl}/image/${encodeURIComponent(baseName)}.png`;
 		try {
 			const imageData = await this._fetchAndCacheImage(name, url, backgroundCache);
 			return imageData;
@@ -35,9 +41,17 @@ export class ImageHandler {
 
 	/**
 	 * Load a theme image from /api/embedded/:name
+	 * @param name - The name of the theme to load
+	 * @returns Promise<ImageData> - The loaded theme data including URL and metadata
+	 * @throws Error if the theme fails to load or doesn't exist
 	 */
 	async loadTheme(name: string): Promise<ImageData> {
 		if (themeCache.has(name)) return themeCache.get(name)!;
+
+		// Don't retry failed themes - themes are embedded in firmware and never change
+		if (failedThemes.has(name)) {
+			throw new Error(`Theme '${name}' is not available in firmware`);
+		}
 
 		const url = `${apiUrl}/embedded/${encodeURIComponent(name)}.png`;
 
@@ -57,13 +71,20 @@ export class ImageHandler {
 
 			return imageData;
 		} catch (err) {
-			console.debug(`Theme fetch failed for '${name}'`, err);
+			console.warn(`Theme '${name}' not found in firmware - will not retry`, err);
+			// Mark as permanently failed since themes are embedded in firmware
+			failedThemes.add(name);
 			throw err;
 		}
 	}
 
 	/**
-	 * Shared fetch logic
+	 * Shared fetch logic for loading and caching images
+	 * @param name - The name of the image
+	 * @param url - The URL to fetch the image from
+	 * @param cache - The cache to store the image data in
+	 * @returns Promise<ImageData> - The loaded and cached image data
+	 * @throws Error if the fetch fails or response is not ok
 	 */
 	private async _fetchAndCacheImage(
 		name: string,
@@ -97,7 +118,9 @@ export class ImageHandler {
 	}
 
 	/**
-	 * Preload background images
+	 * Preload background images for better performance
+	 * @param names - Array of image names to preload
+	 * @returns Promise<void> - Resolves when all preloads complete (success or failure)
 	 */
 	async preloadImages(names: string[]): Promise<void> {
 		await Promise.allSettled(
@@ -108,7 +131,9 @@ export class ImageHandler {
 	}
 
 	/**
-	 * Preload theme images
+	 * Preload theme images for better performance
+	 * @param names - Array of theme names to preload
+	 * @returns Promise<void> - Resolves when all preloads complete (success or failure)
 	 */
 	async preloadThemes(names: string[]): Promise<void> {
 		await Promise.allSettled(
@@ -119,7 +144,8 @@ export class ImageHandler {
 	}
 
 	/**
-	 * Clear all image caches
+	 * Clear image caches and revoke object URLs to prevent memory leaks
+	 * @param name - Optional specific image name to clear. If not provided, clears all caches
 	 */
 	clearCache(name?: string): void {
 		const clear = (cache: Map<string, ImageData>) => {
@@ -137,5 +163,11 @@ export class ImageHandler {
 
 		clear(backgroundCache);
 		clear(themeCache);
+
+		// Only clear failed themes cache if specific name provided
+		// Otherwise keep failed themes cached to avoid retries
+		if (name) {
+			failedThemes.delete(name);
+		}
 	}
 }

@@ -1,7 +1,17 @@
 // src/lib/config/optionsCache.ts
 import { writable, get } from 'svelte/store';
 
-type OptionsData = any;
+interface OptionsData {
+	[key: string]: {
+		label: string;
+		value: string | number | boolean;
+		type: 'string' | 'number' | 'boolean' | 'select';
+		options?: string[];
+		min?: number;
+		max?: number;
+		description?: string;
+	};
+}
 
 const optionsStore = writable<OptionsData | null>(null);
 const loadingStore = writable<boolean>(false);
@@ -11,11 +21,24 @@ const errorStore = writable<Error | null>(null);
 let fetchPromise: Promise<OptionsData> | null = null;
 
 async function fetchOptions(fetch = globalThis.fetch): Promise<OptionsData> {
-	const res = await fetch('/api/options');
-	if (!res.ok) {
-		throw new Error(`Failed to fetch options: ${res.status} ${res.statusText}`);
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+	try {
+		const res = await fetch('/api/options', {
+			signal: controller.signal
+		});
+
+		clearTimeout(timeoutId);
+
+		if (!res.ok) {
+			throw new Error(`Failed to fetch options: ${res.status} ${res.statusText}`);
+		}
+		return await res.json();
+	} catch (error) {
+		clearTimeout(timeoutId);
+		throw error;
 	}
-	return await res.json();
 }
 
 export async function loadOptions(fetch = globalThis.fetch): Promise<OptionsData> {
