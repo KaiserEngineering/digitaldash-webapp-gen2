@@ -73,20 +73,18 @@ esp_err_t config_patch_handler(httpd_req_t *req)
     ESP_LOGI(TAG, "PATCH /api/config requested");
 
     int total_len = req->content_len;
-    char buf[2048];
 
-    int received = httpd_req_recv(req, buf, MIN(total_len, sizeof(buf) - 1));
+    int received = httpd_req_recv(req, json_data_output, MIN(total_len, JSON_BUF_SIZE));
     if (received <= 0)
     {
         ESP_LOGE(TAG, "Failed to receive config PATCH payload");
         return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid request");
     }
 
-    buf[received] = '\0';
-    ESP_LOGI(TAG, "Received config update: %s", buf);
+    json_data_output[received] = '\0';
+    ESP_LOGI(TAG, "Received config update: %s", json_data_output);
 
     // Now save to STM
-    receive_config(buf); // Store the updated config
     Generate_TX_Message(get_stm32_comm(), KE_CONFIG_SEND, 0);
     KE_wait_for_response(get_stm32_comm(), 5000);
 
