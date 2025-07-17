@@ -44,18 +44,18 @@ export const GaugeSchema = z.object({
 /**
  * View structure
  * typedef struct {
- *   uint8_t enabled;
+ *   uint8_t enable;
  *   uint8_t num_gauges;
  *   VIEW_BACKGROUND background;
  *   digitaldash_gauge gauge[GAUGES_PER_VIEW];
  * } digitaldash_view;
  */
 export const ViewSchema = z.object({
-	enabled: z
-		.union([z.enum(['Enabled', 'Disabled']), z.boolean()])
+	enable: z
+		.union([z.enum(['Enable', 'Disable']), z.boolean()])
 		.transform((val) => {
 			if (typeof val === 'boolean') return val;
-			return val === 'Enabled';
+			return val === 'Enable';
 		})
 		.default(false),
 	num_gauges: z.number().int(),
@@ -66,7 +66,7 @@ export const ViewSchema = z.object({
 /**
  * Alert structure
  * typedef struct {
- *   uint8_t enabled;
+ *   uint8_t enable;
  *   PID_DATA * pid;
  *   digitaldash_compare compare;
  *   float threshold;
@@ -74,7 +74,7 @@ export const ViewSchema = z.object({
  * } digitaldash_alert;
  */
 export const AlertSchema = z.object({
-	enabled: z
+	enable: z
 		.union([z.enum(['Enabled', 'Disabled']), z.boolean()])
 		.transform((val) => {
 			if (typeof val === 'boolean') return val;
@@ -90,7 +90,7 @@ export const AlertSchema = z.object({
 /**
  * Dynamic structure
  * typedef struct {
- *   uint8_t enabled;
+ *   uint8_t enable;
  *   PID_DATA * pid;
  *   digitaldash_compare compare;
  *   float threshold;
@@ -98,7 +98,7 @@ export const AlertSchema = z.object({
  * } digitaldash_dynamic;
  */
 export const DynamicSchema = z.object({
-	enabled: z
+	enable: z
 		.union([z.enum(['Enabled', 'Disabled']), z.boolean()])
 		.transform((val) => {
 			if (typeof val === 'boolean') return val;

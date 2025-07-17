@@ -27,24 +27,24 @@
 					class="bg-muted/30 border-border/50 flex items-center justify-between rounded-lg border p-4"
 				>
 					<div>
-						<Label for="enabled" class="text-sm font-medium">View Status</Label>
+						<Label for="enable" class="text-sm font-medium">View Status</Label>
 						<p class="text-muted-foreground mt-1 text-xs">Enable or disable this view</p>
 					</div>
 					<div class="flex items-center gap-3">
 						<Switch
-							class="border {$form.enabled
+							class="border {$form.enable
 								? 'border-green-300 bg-green-100'
 								: 'border-primary !bg-red-200'}"
-							id="enabled"
-							name="enabled"
-							bind:checked={$form.enabled}
+							id="enable"
+							name="enable"
+							bind:checked={$form.enable}
 						/>
 						<span
 							class={`rounded-full px-2 py-1 text-xs font-medium ${
-								$form.enabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+								$form.enable ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
 							}`}
 						>
-							{$form.enabled ? 'Active' : 'Inactive'}
+							{$form.enable ? 'Active' : 'Inactive'}
 						</span>
 					</div>
 				</div>
