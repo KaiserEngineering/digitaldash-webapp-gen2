@@ -20,53 +20,51 @@
 </script>
 
 <Tabs.Content value="view" class="focus:outline-none">
-	<div class="space-y-6">
-		<Card.Root class="border-0 bg-transparent shadow-none">
-			<Card.Content class="space-y-6 px-0">
-				<div
-					class="bg-muted/30 border-border/50 flex items-center justify-between rounded-lg border p-4"
-				>
-					<div>
-						<Label for="enable" class="text-sm font-medium">View Status</Label>
-						<p class="text-muted-foreground mt-1 text-xs">Enable or disable this view</p>
-					</div>
-					<div class="flex items-center gap-3">
-						<Switch
-							class="border {$form.enable === 'Enabled'
-								? 'border-green-300 bg-green-100'
-								: 'border-primary !bg-red-200'}"
-							id="enable"
-							name="enable"
-							checked={$form.enable === 'Enabled'}
-							onCheckedChange={(checked) => ($form.enable = checked ? 'Enabled' : 'Disabled')}
-						/>
-						<span
-							class={`rounded-full px-2 py-1 text-xs font-medium ${
-								$form.enable === 'Enabled' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-							}`}
-						>
-							{$form.enable === 'Enabled' ? 'Active' : 'Inactive'}
-						</span>
-					</div>
+	<Card.Root class="border-0 bg-transparent shadow-none">
+		<Card.Content class="space-y-6 px-0">
+			<div
+				class="bg-muted/30 border-border/50 flex items-center justify-between rounded-lg border p-4"
+			>
+				<div>
+					<Label for="enable" class="text-sm font-medium">View Status</Label>
+					<p class="text-muted-foreground mt-1 text-xs">Enable or disable this view</p>
 				</div>
-
-				<div class="space-y-3">
-					<div class="flex items-center gap-2">
-						<Image class="text-muted-foreground h-4 w-4" />
-						<Label for="view-background" class="text-sm font-medium">Background Image</Label>
-					</div>
-
-					<ImageSelect
-						bind:value={selectedBackground}
-						options={backgrounds}
-						placeholder="Choose a background image..."
-						onSelect={handleBackgroundSelect}
-						class="w-full"
+				<div class="flex items-center gap-3">
+					<Switch
+						class="border {$form.enable === 'Enabled'
+							? 'border-green-300 bg-green-100'
+							: 'border-primary !bg-red-200'}"
+						id="enable"
+						name="enable"
+						checked={$form.enable === 'Enabled'}
+						onCheckedChange={(checked) => ($form.enable = checked ? 'Enabled' : 'Disabled')}
 					/>
+					<span
+						class={`rounded-full px-2 py-1 text-xs font-medium ${
+							$form.enable === 'Enabled'
+								? 'bg-green-100 text-green-700'
+								: 'bg-gray-100 text-gray-600'
+						}`}
+					>
+						{$form.enable === 'Enabled' ? 'Active' : 'Inactive'}
+					</span>
 				</div>
-			</Card.Content>
-		</Card.Root>
-	</div>
+			</div>
+
+			<div class="flex items-center gap-2">
+				<Image class="text-muted-foreground h-4 w-4" />
+				<Label for="view-background" class="text-sm font-medium">Background Image</Label>
+			</div>
+
+			<ImageSelect
+				bind:value={selectedBackground}
+				options={backgrounds}
+				placeholder="Choose a background image..."
+				onSelect={handleBackgroundSelect}
+				class="w-full"
+			/>
+		</Card.Content>
+	</Card.Root>
 </Tabs.Content>
 
 <input type="hidden" bind:value={$form.num_gauges} />

@@ -7,10 +7,10 @@
 	let {
 		title = 'Page Title',
 		description = 'Page description',
-		headerClass = 'bg-primary-50 relative m-2 rounded-2xl p-6',
-		cardClass = 'border-primary-200 overflow-hidden rounded-2xl border shadow-lg',
+		headerClass = 'bg-muted relative m-1 rounded-2xl p-2',
+		cardClass = 'border-primary-200 overflow-hidden rounded-2xl border shadow-lg p-2',
 		footerClass = 'bg-muted/50 flex justify-end gap-2',
-		containerClass = 'container mx-auto max-w-4xl space-y-6 rounded p-6',
+		containerClass = 'container mx-auto max-w-4xl space-y-2 rounded p-2',
 		enhance = undefined,
 		children,
 		icon,

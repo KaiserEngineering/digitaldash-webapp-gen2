@@ -94,7 +94,7 @@
 </script>
 
 {#if imageNames && imageNames.length > 0}
-	<div class="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+	<div class="grid grid-cols-1">
 		{#each imageNames as imageName}
 			<div class="flex flex-col">
 				{#if loadingStates[imageName]}
@@ -127,14 +127,14 @@
 					</div>
 				{:else}
 					<div
-						class="group relative overflow-hidden rounded-lg border bg-white shadow-sm transition-all hover:shadow-md"
+						class="group relative overflow-hidden rounded-lg bg-white transition-all hover:shadow-md"
 					>
-						<div class="aspect-video w-full overflow-hidden">
+						<div class="m-1">
 							<img
 								src={loadedImages[imageName] || '/placeholder.svg'}
 								alt="{imageName} background"
 								loading="lazy"
-								class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+								class="w-full rounded-lg object-cover transition-transform duration-300 group-hover:scale-105"
 								onerror={() => handleImageError(imageName)}
 							/>
 						</div>

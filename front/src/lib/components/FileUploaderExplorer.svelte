@@ -137,16 +137,21 @@
 <!-- UI Layout -->
 <div class="flex w-full flex-col gap-4 rounded bg-white p-6 shadow">
 	{#if !file}
-		<!-- File Drop Zone -->
-		<FileDropZone
-			{onUpload}
-			{onFileRejected}
-			maxFileSize={2 * MEGABYTE}
-			accept="image/*"
-			maxFiles={1}
-			fileCount={file ? 1 : 0}
-			minimal={true}
-		/>
+		<div
+			class="relative h-[80px] overflow-hidden rounded-md border border-dashed border-gray-300 bg-gray-50"
+		>
+			<!-- File Drop Zone -->
+			<FileDropZone
+				{onUpload}
+				{onFileRejected}
+				maxFileSize={2 * MEGABYTE}
+				accept="image/*"
+				maxFiles={1}
+				fileCount={file ? 1 : 0}
+				minimal={true}
+				class="flex h-full items-center justify-center text-sm"
+			/>
+		</div>
 	{:else}
 		<!-- File Preview -->
 		<div class="flex items-center justify-between gap-4 rounded-lg bg-gray-100 p-4">
@@ -186,20 +191,22 @@
 	{/if}
 
 	<!-- Upload Button -->
-	<Button
-		class="btn flex cursor-pointer gap-2 rounded-lg bg-gradient-to-r
+	{#if file}
+		<Button
+			class="btn flex cursor-pointer gap-2 rounded-lg bg-gradient-to-r
 			from-red-500 to-red-600 px-6 py-3 font-semibold text-white shadow-md
 			transition-all duration-300 ease-in-out hover:from-red-600 hover:to-red-700
 			hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-		onclick={handleUpload}
-		disabled={!file || isUploading}
-	>
-		{#if isUploading}
-			<Spinner />
-		{:else}
-			Upload File
-		{/if}
-	</Button>
+			onclick={handleUpload}
+			disabled={!file || isUploading}
+		>
+			{#if isUploading}
+				<Spinner />
+			{:else}
+				Upload File
+			{/if}
+		</Button>
+	{/if}
 
 	<!-- Cropper Dialog -->
 	<ImageCropper.Root id="crop-file-input" bind:src={tempUrl} onCropped={handleCropped}>

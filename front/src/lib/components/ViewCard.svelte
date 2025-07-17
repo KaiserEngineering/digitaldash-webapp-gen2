@@ -98,9 +98,9 @@
 			<Spinner />
 		</div>
 	{:else}
-		<a href="/view/{index}" class="m-1 block sm:m-2">
+		<a href="/view/{index}" class="m-1 block">
 			<div
-				class="hover:border-primary-500/50 relative h-48 w-full overflow-hidden rounded-2xl border-2 border-transparent bg-cover shadow-md transition-all duration-500 ease-out hover:scale-[1.02] hover:shadow-xl sm:h-52"
+				class="hover:border-primary-500/50 relative h-20 w-full overflow-hidden rounded-2xl border-2 border-transparent bg-cover shadow-md transition-all duration-500 ease-out hover:scale-[1.02] hover:shadow-xl sm:h-52"
 				style:background-image={`url('${backgroundUrl}')`}
 			>
 				{#if showGearIcon}
@@ -116,7 +116,7 @@
 							{@const gauge = view?.gauge?.[i] ?? {}}
 							{@const isEnabled = i < view.num_gauges}
 							{#if isEnabled}
-								<div class="flex h-full flex-col items-center justify-center px-0.5 sm:px-1">
+								<div class="flex flex-col items-center justify-center px-0.5 sm:px-1">
 									<GaugeComponent
 										{gauge}
 										gaugeIndex={i}
