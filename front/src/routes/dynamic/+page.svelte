@@ -7,6 +7,7 @@
 	import { Input } from '@/components/ui/input';
 	import { Label } from '@/components/ui/label';
 	import { Switch } from '@/components/ui/switch';
+	import * as Select from '@/components/ui/select';
 	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
 	import PageCard from '@/components/PageCard.svelte';
 	import { Settings } from 'lucide-svelte';
@@ -17,6 +18,7 @@
 
 	let { data } = $props();
 	const pids = data.pids || [];
+	const options = data.options || [];
 
 	const { form, submitting, enhance } = superForm(data.form, {
 		dataType: 'json',
@@ -33,14 +35,7 @@
 		}
 	});
 
-	const compareOps = [
-		{ label: 'Less Than', value: 'Less Than' },
-		{ label: '≤', value: 'Less Than Or Equal To' },
-		{ label: '>', value: 'Greater Than' },
-		{ label: '≥', value: 'Greater Than Or Equal To' },
-		{ label: '=', value: 'Equal' },
-		{ label: '≠', value: 'Not Equal' }
-	];
+	const compareOps = options.dynamic_comparison || [];
 
 	const priorities = ['Low', 'Medium', 'High'];
 </script>
@@ -56,7 +51,7 @@
 				<Motion.div key={i} class="overflow-hidden">
 					<div
 						class={`relative rounded-xl border p-5 transition duration-200 ${
-							rule.enabled
+							rule.enable === 'Enabled'
 								? 'border-primary-100 bg-primary-50 hover:-translate-y-1 hover:shadow-md'
 								: 'border-gray-200 bg-gray-50 opacity-60'
 						}`}
@@ -73,50 +68,74 @@
 						<div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
 							<div class="space-y-2">
 								<Label>PID</Label>
-								<select
+								<Select.Root
 									bind:value={rule.pid}
-									disabled={!rule.enabled}
-									class="w-full rounded-md border px-3 py-2 text-sm"
+									disabled={rule.enable !== 'Enabled'}
+									type="single"
 								>
-									{#each pids as pid}
-										<option value={pid.label}>{pid.label}</option>
-									{/each}
-								</select>
+									<Select.Trigger class="w-full h-10">
+										<span>{rule.pid || 'Select PID'}</span>
+									</Select.Trigger>
+									<Select.Content>
+										{#each pids as pid}
+											<Select.Item value={pid.label} label={pid.label}>
+												{pid.label}
+											</Select.Item>
+										{/each}
+									</Select.Content>
+								</Select.Root>
 							</div>
 
 							<div class="space-y-2">
 								<Label>Compare</Label>
-								<select
+								<Select.Root
 									bind:value={rule.compare}
-									disabled={!rule.enabled}
-									class="w-full rounded-md border px-3 py-2 text-sm"
+									disabled={rule.enable !== 'Enabled'}
+									type="single"
 								>
-									{#each compareOps as op}
-										<option value={op.value}>{op.label}</option>
-									{/each}
-								</select>
+									<Select.Trigger class="w-full h-10">
+										<span>{rule.compare || 'Select Compare'}</span>
+									</Select.Trigger>
+									<Select.Content>
+										{#each compareOps as op}
+											<Select.Item value={op} label={op}>
+												{op}
+											</Select.Item>
+										{/each}
+									</Select.Content>
+								</Select.Root>
 							</div>
 
 							<div class="space-y-2">
 								<Label>Threshold</Label>
-								<Input type="number" bind:value={rule.threshold} disabled={!rule.enabled} />
+								<Input type="number" bind:value={rule.threshold} disabled={!rule.enable} />
 							</div>
 
 							<div class="space-y-2">
 								<Label>Priority</Label>
-								<select
+								<Select.Root
 									bind:value={rule.priority}
-									disabled={!rule.enabled}
-									class="w-full rounded-md border px-3 py-2 text-sm"
+									disabled={rule.enable !== 'Enabled'}
+									type="single"
 								>
-									{#each priorities as p}
-										<option value={p}>{p}</option>
-									{/each}
-								</select>
+									<Select.Trigger class="w-full h-10">
+										<span>{rule.priority || 'Select Priority'}</span>
+									</Select.Trigger>
+									<Select.Content>
+										{#each priorities as p}
+											<Select.Item value={p} label={p}>
+												{p}
+											</Select.Item>
+										{/each}
+									</Select.Content>
+								</Select.Root>
 							</div>
 
 							<div class="flex items-center gap-2">
-								<Switch bind:checked={rule.enabled} />
+								<Switch
+									checked={rule.enable === 'Enabled'}
+									onCheckedChange={(checked) => (rule.enable = checked ? 'Enabled' : 'Disabled')}
+								/>
 								<Label>Enabled</Label>
 							</div>
 						</div>

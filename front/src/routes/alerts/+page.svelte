@@ -14,8 +14,11 @@
 	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
 	import PageCard from '@/components/PageCard.svelte';
 	import { Switch } from '@/components/ui/switch';
+	import * as Select from '@/components/ui/select';
 
 	let { data } = $props();
+	const pids = data.pids || [];
+	const compareOps = data.options?.alert_comparison || [];
 
 	const { form, enhance, submitting } = superForm(data.form, {
 		dataType: 'json',
@@ -44,7 +47,7 @@
 				<Motion.div key={i} class="overflow-hidden">
 					<div
 						class={`relative rounded-xl border p-5 transition duration-200 ${
-							alert.enabled
+							alert.enable === 'Enabled'
 								? 'border-primary-100 bg-primary-50 hover:-translate-y-1 hover:shadow-md'
 								: 'border-gray-200 bg-gray-50 opacity-60'
 						}`}
@@ -61,17 +64,42 @@
 						<div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
 							<div class="space-y-2">
 								<Label>PID</Label>
-								<div class="space-y-2">
-									<select
-										bind:value={alert.pid}
-										disabled={!alert.enabled}
-										class="w-full rounded-md border px-3 py-2 text-sm"
-									>
+								<Select.Root
+									bind:value={alert.pid}
+									disabled={alert.enable !== 'Enabled'}
+									type="single"
+								>
+									<Select.Trigger class="w-full h-10">
+										<span>{alert.pid || 'Select PID'}</span>
+									</Select.Trigger>
+									<Select.Content>
 										{#each data.pids as pid}
-											<option value={pid.label}>{pid.label}</option>
+											<Select.Item value={pid.label} label={pid.label}>
+												{pid.label}
+											</Select.Item>
 										{/each}
-									</select>
-								</div>
+									</Select.Content>
+								</Select.Root>
+							</div>
+
+							<div class="space-y-2">
+								<Label>Compare</Label>
+								<Select.Root
+									bind:value={alert.compare}
+									disabled={alert.enable !== 'Enabled'}
+									type="single"
+								>
+									<Select.Trigger class="w-full h-10">
+										<span>{alert.compare || 'Select Compare'}</span>
+									</Select.Trigger>
+									<Select.Content>
+										{#each compareOps as op}
+											<Select.Item value={op} label={op}>
+												{op}
+											</Select.Item>
+										{/each}
+									</Select.Content>
+								</Select.Root>
 							</div>
 
 							<div class="space-y-2">
@@ -80,7 +108,7 @@
 									type="text"
 									bind:value={alert.message}
 									class="w-full"
-									disabled={!alert.enabled}
+									disabled={alert.enable !== 'Enabled'}
 								/>
 							</div>
 
@@ -90,12 +118,15 @@
 									type="number"
 									bind:value={alert.threshold}
 									class="w-full"
-									disabled={!alert.enabled}
+									disabled={alert.enable !== 'Enabled'}
 								/>
 							</div>
 
 							<div class="flex items-center gap-2">
-								<Switch bind:checked={alert.enabled} />
+								<Switch
+									checked={alert.enable === 'Enabled'}
+									onCheckedChange={(checked) => (alert.enable = checked ? 'Enabled' : 'Disabled')}
+								/>
 								<Label>Enabled</Label>
 							</div>
 						</div>

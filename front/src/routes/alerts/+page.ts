@@ -7,10 +7,11 @@ export const load: PageLoad = async ({ parent }) => {
 	const parentData = await parent();
 	const pids = await parentData.pids;
 	const config = await parentData.config;
+	const options = await parentData.options;
 
 	const initialAlerts = config?.alert ?? [];
 
 	const form = await superValidate({ items: initialAlerts }, zod4(AlertsFormSchema));
 
-	return { form, pids };
+	return { form, pids, options };
 };

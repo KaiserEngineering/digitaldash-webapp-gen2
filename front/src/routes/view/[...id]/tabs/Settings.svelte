@@ -32,19 +32,20 @@
 					</div>
 					<div class="flex items-center gap-3">
 						<Switch
-							class="border {$form.enable
+							class="border {$form.enable === 'Enabled'
 								? 'border-green-300 bg-green-100'
 								: 'border-primary !bg-red-200'}"
 							id="enable"
 							name="enable"
-							bind:checked={$form.enable}
+							checked={$form.enable === 'Enabled'}
+							onCheckedChange={(checked) => ($form.enable = checked ? 'Enabled' : 'Disabled')}
 						/>
 						<span
 							class={`rounded-full px-2 py-1 text-xs font-medium ${
-								$form.enable ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+								$form.enable === 'Enabled' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
 							}`}
 						>
-							{$form.enable ? 'Active' : 'Inactive'}
+							{$form.enable === 'Enabled' ? 'Active' : 'Inactive'}
 						</span>
 					</div>
 				</div>
