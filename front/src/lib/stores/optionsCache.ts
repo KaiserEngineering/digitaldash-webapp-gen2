@@ -1,16 +1,16 @@
 // src/lib/config/optionsCache.ts
 import { writable, get } from 'svelte/store';
 
-interface OptionsData {
-	[key: string]: {
-		label: string;
-		value: string | number | boolean;
-		type: 'string' | 'number' | 'boolean' | 'select';
-		options?: string[];
-		min?: number;
-		max?: number;
-		description?: string;
-	};
+export interface OptionsData {
+	view_state?: string[];
+	view_background?: string[];
+	gauge_theme?: string[];
+	alert_state?: string[];
+	alert_comparison?: string[];
+	dynamic_state?: string[];
+	dynamic_priority?: string[];
+	dynamic_comparison?: string[];
+	[key: string]: string[] | undefined;
 }
 
 const optionsStore = writable<OptionsData | null>(null);

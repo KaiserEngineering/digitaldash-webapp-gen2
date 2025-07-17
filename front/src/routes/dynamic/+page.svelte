@@ -18,7 +18,7 @@
 
 	let { data } = $props();
 	const pids = data.pids || [];
-	const options = data.options || [];
+	const options = data.options || {};
 
 	const { form, submitting, enhance } = superForm(data.form, {
 		dataType: 'json',

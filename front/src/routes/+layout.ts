@@ -1,6 +1,6 @@
 import { DigitalDashSchema } from '$schemas/digitaldash';
 import { configStore } from '$lib/stores/configStore';
-import { getOptions } from '$lib/stores/optionsCache';
+import { getOptions, type OptionsData } from '$lib/stores/optionsCache';
 import { pidsStore } from '$lib/stores/PIDsStore';
 import { recoveryStore } from '$lib/stores/recoveryMode';
 
@@ -13,7 +13,7 @@ export const load = async ({ fetch, url }) => {
 		issues.push('Failed to connect to device configuration');
 		issues.push('Failed to load PID definitions');
 		recoveryStore.enterRecoveryMode(issues);
-		return { config: null, options: {}, pids: [] };
+		return { config: null, options: {} as OptionsData, pids: [] };
 	}
 	const configPromise = fetch('/api/config')
 		.then((res) => (res.ok ? res.json() : Promise.reject(new Error('Config fetch failed'))))
@@ -36,7 +36,7 @@ export const load = async ({ fetch, url }) => {
 	const optionsPromise = getOptions(fetch).catch((error) => {
 		console.error('Options fetch failed:', error);
 		issues.push('Failed to load device options');
-		return {};
+		return {} as OptionsData;
 	});
 
 	const pidsPromise = fetch('/api/pids')
@@ -63,7 +63,7 @@ export const load = async ({ fetch, url }) => {
 
 	return {
 		config: results[0].status === 'fulfilled' ? results[0].value : null,
-		options: results[1].status === 'fulfilled' ? results[1].value : {},
+		options: results[1].status === 'fulfilled' ? results[1].value : ({} as OptionsData),
 		pids: results[2].status === 'fulfilled' ? results[2].value : []
 	};
 };
