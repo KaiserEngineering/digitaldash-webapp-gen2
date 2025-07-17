@@ -38,6 +38,7 @@ export const PIDRef = z.string();
 export const GaugeSchema = z.object({
 	theme: z.string(),
 	pid: PIDRef,
+	units: z.string().default('None'),
 	id: z.string().optional() // Optional ID for client-side use
 });
 
@@ -52,10 +53,10 @@ export const GaugeSchema = z.object({
  */
 export const ViewSchema = z.object({
 	enable: z
-		.union([z.enum(['Enable', 'Disable']), z.boolean()])
+		.union([z.enum(['Enable', 'Disable', 'Enabled', 'Disabled']), z.boolean()])
 		.transform((val) => {
 			if (typeof val === 'boolean') return val;
-			return val === 'Enable';
+			return val === 'Enable' || val === 'Enabled';
 		})
 		.default(false),
 	num_gauges: z.number().int(),
@@ -75,13 +76,14 @@ export const ViewSchema = z.object({
  */
 export const AlertSchema = z.object({
 	enable: z
-		.union([z.enum(['Enabled', 'Disabled']), z.boolean()])
+		.union([z.enum(['Enable', 'Disable', 'Enabled', 'Disabled']), z.boolean()])
 		.transform((val) => {
 			if (typeof val === 'boolean') return val;
-			return val === 'Enabled';
+			return val === 'Enable' || val === 'Enabled';
 		})
 		.default(false),
 	pid: PIDRef,
+	units: z.string().default('None'),
 	compare: CompareEnum,
 	threshold: z.number().nullable(),
 	message: z.string().max(ALERT_MESSAGE_LEN)
@@ -99,16 +101,18 @@ export const AlertSchema = z.object({
  */
 export const DynamicSchema = z.object({
 	enable: z
-		.union([z.enum(['Enabled', 'Disabled']), z.boolean()])
+		.union([z.enum(['Enable', 'Disable', 'Enabled', 'Disabled']), z.boolean()])
 		.transform((val) => {
 			if (typeof val === 'boolean') return val;
-			return val === 'Enabled';
+			return val === 'Enable' || val === 'Enabled';
 		})
 		.default(false),
 	pid: PIDRef,
+	units: z.string().default('None'),
 	compare: CompareEnum,
 	threshold: z.number(),
-	priority: PriorityEnum
+	priority: PriorityEnum,
+	index: z.number().optional()
 });
 
 /**
