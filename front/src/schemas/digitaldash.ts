@@ -55,7 +55,7 @@ export const ViewSchema = z.object({
 	enable: z
 		.union([z.enum(['Enable', 'Disable', 'Enabled', 'Disabled']), z.boolean()])
 		.transform((val) => {
-			if (typeof val === 'boolean') return val;
+			if (typeof val === 'boolean') return val ? 'Enabled' : 'Disabled';
 			return val === 'Enable' || val === 'Enabled';
 		})
 		.default(false),
@@ -78,7 +78,7 @@ export const AlertSchema = z.object({
 	enable: z
 		.union([z.enum(['Enable', 'Disable', 'Enabled', 'Disabled']), z.boolean()])
 		.transform((val) => {
-			if (typeof val === 'boolean') return val;
+			if (typeof val === 'boolean') return val ? 'Enabled' : 'Disabled';
 			return val === 'Enable' || val === 'Enabled';
 		})
 		.default(false),
@@ -103,7 +103,7 @@ export const DynamicSchema = z.object({
 	enable: z
 		.union([z.enum(['Enable', 'Disable', 'Enabled', 'Disabled']), z.boolean()])
 		.transform((val) => {
-			if (typeof val === 'boolean') return val;
+			if (typeof val === 'boolean') return val ? 'Enabled' : 'Disabled';
 			return val === 'Enable' || val === 'Enabled';
 		})
 		.default(false),
