@@ -6,7 +6,6 @@ import { deviceClient } from '$local/server/deviceClient';
 import { useDeviceApi } from '$lib/config';
 
 export async function GET() {
-	error(500, "dog");
 	const config = await configStore.get();
 	if (!config) return json({ error: 'Config not found' }, { status: 404 });
 	return json(config);

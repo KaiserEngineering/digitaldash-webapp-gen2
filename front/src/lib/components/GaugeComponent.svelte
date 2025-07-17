@@ -23,22 +23,22 @@
 	const getImageSizeClass = (numGauges: number) => {
 		switch (numGauges) {
 			case 1:
-				return 'max-w-[140px] md:max-w-[160px] lg:max-w-[180px]';
+				return 'max-w-[140px] sm:max-w-[160px] md:max-w-[180px] lg:max-w-[200px]';
 			case 2:
-				return 'max-w-[120px] md:max-w-[140px] lg:max-w-[160px]';
+				return 'max-w-[120px] sm:max-w-[140px] md:max-w-[160px] lg:max-w-[180px]';
 			case 3:
-				return 'max-w-[80px] md:max-w-[90px] lg:max-w-[100px]';
+				return 'max-w-[90px] sm:max-w-[100px] md:max-w-[120px] lg:max-w-[140px]';
 			default:
-				return 'max-w-[100px] md:max-w-[120px] lg:max-w-[140px]';
+				return 'max-w-[100px] sm:max-w-[120px] md:max-w-[140px] lg:max-w-[160px]';
 		}
 	};
 </script>
 
-<div class="flex h-full flex-col items-center justify-center px-2">
+<div class="flex h-full flex-col items-center justify-center px-1 sm:px-2">
 	<div class="relative flex items-center justify-center">
 		{#if themeUrl && !failed}
 			<img
-				class="aspect-square w-full min-w-[50px] object-contain transition-all duration-300 {getImageSizeClass(
+				class="aspect-square w-full min-w-[50px] sm:min-w-[60px] object-contain transition-all duration-300 {getImageSizeClass(
 					numGauges
 				)}"
 				src={themeUrl || '/placeholder.svg'}
@@ -55,7 +55,7 @@
 			{/if}
 		{:else}
 			<div
-				class="flex h-16 w-16 flex-col items-center justify-center rounded border border-white/20 bg-black/40"
+				class="flex h-12 w-12 sm:h-16 sm:w-16 flex-col items-center justify-center rounded border border-white/20 bg-black/40"
 			>
 				<span class="text-xs text-white/60">{gauge.theme}</span>
 				{#if gauge.pid}

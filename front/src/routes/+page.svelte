@@ -8,12 +8,10 @@
 	const pids = $derived(pidsStore.getValue());
 </script>
 
-<div class="space-y-6">
+<div class="space-y-2 sm:space-y-4">
 	<DashboardCard>
-		<div class="grid gap-4 sm:grid-cols-1">
-			{#each views as view, index}
-				<ViewCard {view} {index} {pids} />
-			{/each}
-		</div>
+		{#each views as view, index}
+			<ViewCard {view} {index} {pids} />
+		{/each}
 	</DashboardCard>
 </div>

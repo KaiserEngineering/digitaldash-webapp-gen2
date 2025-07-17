@@ -89,25 +89,25 @@
 <div class={cn('group', className)}>
 	{#if loading}
 		<div
-			class="bg-primary-200 border-primary-200 flex h-36 items-center justify-center rounded-2xl border"
+			class="bg-primary-200 border-primary-200 flex h-48 sm:h-52 items-center justify-center rounded-2xl border m-1 sm:m-2"
 		>
 			<Spinner />
 		</div>
 	{:else}
-		<a href="/view/{index}" class="block">
+		<a href="/view/{index}" class="block m-1 sm:m-2">
 			<div
-				class="hover:border-primary-500/50 relative h-36 w-full overflow-hidden rounded-2xl border-2 border-transparent bg-cover shadow-md transition-all duration-500 ease-out hover:scale-[1.02] hover:shadow-xl"
+				class="hover:border-primary-500/50 relative h-48 sm:h-52 w-full overflow-hidden rounded-2xl border-2 border-transparent bg-cover shadow-md transition-all duration-500 ease-out hover:scale-[1.02] hover:shadow-xl"
 				style:background-image={`url('${backgroundUrl}')`}
 			>
 				<div class="absolute inset-0 rounded-2xl bg-black/10"></div>
 
-				<div class="relative z-10 flex h-full items-center justify-center px-6">
-					<div class="flex w-full items-center justify-center gap-6 px-4">
+				<div class="relative z-10 flex h-full items-center justify-center px-2 sm:px-4">
+					<div class="flex w-full items-center justify-center gap-4 sm:gap-8 px-1 sm:px-2">
 						{#each Array(3) as _, i}
 							{@const gauge = view?.gauge?.[i] ?? {}}
 							{@const isEnabled = i < view.num_gauges}
 							{#if isEnabled}
-								<div class="flex h-full max-h-32 flex-col items-center justify-between px-2">
+								<div class="flex h-full flex-col items-center justify-center px-0.5 sm:px-1">
 									<GaugeComponent
 										{gauge}
 										gaugeIndex={i}

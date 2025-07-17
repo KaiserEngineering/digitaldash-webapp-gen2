@@ -53,46 +53,44 @@
 >
 	{#snippet children()}
 		<div class="bg-background/95 border-border border-b backdrop-blur">
-			<div class="p-2">
-				<Tabs.Root bind:value={activeTab} class="w-full">
-					<ViewCard view={$form} index={viewId} pids={data.pids} />
+			<Tabs.Root bind:value={activeTab} class="w-full">
+				<ViewCard view={$form} index={viewId} pids={data.pids} />
 
-					<Tabs.List class="grid w-full grid-cols-2">
-						<Tabs.Trigger
-							value="view"
-							class="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-background/50 flex items-center justify-center gap-2 rounded-md
+				<Tabs.List class="grid w-full grid-cols-2">
+					<Tabs.Trigger
+						value="view"
+						class="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-background/50 flex items-center justify-center gap-2 rounded-md
 				text-sm
 				font-medium transition-all
 				data-[state=active]:shadow-sm"
-						>
-							<SettingsIcon class="h-4 w-4" />
-							<span>Settings</span>
-						</Tabs.Trigger>
+					>
+						<SettingsIcon class="h-4 w-4" />
+						<span>Settings</span>
+					</Tabs.Trigger>
 
-						<Tabs.Trigger
-							value="gauges"
-							class="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-background/50 flex items-center justify-center gap-2 rounded-md
+					<Tabs.Trigger
+						value="gauges"
+						class="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-background/50 flex items-center justify-center gap-2 rounded-md
 				text-sm
 				font-medium transition-all
 				data-[state=active]:shadow-sm"
-						>
-							<Gauge class="h-4 w-4" />
-							<span>Gauges</span>
-							<Badge variant="secondary" class="ml-1 text-xs">
-								{$form.num_gauges || 0}
-							</Badge>
-						</Tabs.Trigger>
-					</Tabs.List>
+					>
+						<Gauge class="h-4 w-4" />
+						<span>Gauges</span>
+						<Badge variant="secondary" class="ml-1 text-xs">
+							{$form.num_gauges || 0}
+						</Badge>
+					</Tabs.Trigger>
+				</Tabs.List>
 
-					<Tabs.Content value="view" class="mt-6">
-						<Settings {form} backgrounds={data.backgrounds} />
-					</Tabs.Content>
+				<Tabs.Content value="view" class="mt-6">
+					<Settings {form} backgrounds={data.backgrounds} />
+				</Tabs.Content>
 
-					<Tabs.Content value="gauges" class="mt-6">
-						<Gauges themes={data.themes} pids={data.pids} {form} />
-					</Tabs.Content>
-				</Tabs.Root>
-			</div>
+				<Tabs.Content value="gauges" class="mt-6">
+					<Gauges themes={data.themes} pids={data.pids} {form} />
+				</Tabs.Content>
+			</Tabs.Root>
 		</div>
 	{/snippet}
 

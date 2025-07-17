@@ -37,7 +37,7 @@
 			<RecoveryBanner recovery={$recoveryStore} />
 			<Header />
 
-			<main class="container mx-auto flex-1 px-4 py-4 sm:w-full md:w-2/3">
+			<main class="container mx-auto flex-1 px-2 py-2 sm:px-4 sm:py-3">
 				{@render children()}
 			</main>
 
