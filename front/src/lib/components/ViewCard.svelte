@@ -5,6 +5,8 @@
 	import toast from 'svelte-5-french-toast';
 	import { cn } from '$lib/utils';
 	import { computeIdealTextColor } from '$lib/utils/imageProcessor';
+	import { Settings } from 'lucide-svelte';
+	import { page } from '$app/state';
 
 	let { view, index, class: className = '', pids = [] } = $props();
 
@@ -54,7 +56,7 @@
 			// Load themes independently - always attempt regardless of background status
 			try {
 				const gauges = currentGauges ?? [];
-				const themePromises = gauges.map(async (gauge: { theme: any; }) => {
+				const themePromises = gauges.map(async (gauge: { theme: any }) => {
 					const key = `${gauge.theme}`;
 					if (!theme[key] && !failedImages[key] && gauge.theme) {
 						try {
@@ -84,25 +86,32 @@
 		// Cleanup timeout on component unmount or effect re-run
 		return () => clearTimeout(timeoutId);
 	});
+
+	const showGearIcon = $derived(page.url.pathname === '/');
 </script>
 
 <div class={cn('group', className)}>
 	{#if loading}
 		<div
-			class="bg-primary-200 border-primary-200 flex h-48 sm:h-52 items-center justify-center rounded-2xl border m-1 sm:m-2"
+			class="bg-primary-200 border-primary-200 m-1 flex h-48 items-center justify-center rounded-2xl border sm:m-2 sm:h-52"
 		>
 			<Spinner />
 		</div>
 	{:else}
-		<a href="/view/{index}" class="block m-1 sm:m-2">
+		<a href="/view/{index}" class="m-1 block sm:m-2">
 			<div
-				class="hover:border-primary-500/50 relative h-48 sm:h-52 w-full overflow-hidden rounded-2xl border-2 border-transparent bg-cover shadow-md transition-all duration-500 ease-out hover:scale-[1.02] hover:shadow-xl"
+				class="hover:border-primary-500/50 relative h-48 w-full overflow-hidden rounded-2xl border-2 border-transparent bg-cover shadow-md transition-all duration-500 ease-out hover:scale-[1.02] hover:shadow-xl sm:h-52"
 				style:background-image={`url('${backgroundUrl}')`}
 			>
+				{#if showGearIcon}
+					<div class="absolute right-2 top-2 z-20">
+						<Settings class="text-white/80 transition hover:scale-110 hover:text-white" size="20" />
+					</div>
+				{/if}
 				<div class="absolute inset-0 rounded-2xl bg-black/10"></div>
 
 				<div class="relative z-10 flex h-full items-center justify-center px-2 sm:px-4">
-					<div class="flex w-full items-center justify-center gap-4 sm:gap-8 px-1 sm:px-2">
+					<div class="flex w-full items-center justify-center gap-4 px-1 sm:gap-8 sm:px-2">
 						{#each Array(3) as _, i}
 							{@const gauge = view?.gauge?.[i] ?? {}}
 							{@const isEnabled = i < view.num_gauges}
