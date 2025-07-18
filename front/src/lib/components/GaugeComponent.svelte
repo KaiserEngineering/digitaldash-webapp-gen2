@@ -24,7 +24,7 @@
 	<div class="relative flex items-center justify-center">
 		{#if themeUrl && !failed}
 			<img
-				class="aspect-square w-full min-w-[50px] max-w-[90px] object-contain transition-all duration-300 sm:min-w-[60px] sm:max-w-[100px] md:max-w-[120px] lg:max-w-[140px]"
+				class="aspect-square w-full min-w-[40px] max-w-[80px] object-contain transition-all duration-300 sm:min-w-[60px] sm:max-w-[100px] md:max-w-[120px] lg:max-w-[140px]"
 				src={themeUrl || '/placeholder.svg'}
 				alt={gauge.theme}
 				onerror={onImageError}

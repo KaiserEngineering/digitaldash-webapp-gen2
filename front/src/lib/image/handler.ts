@@ -153,8 +153,9 @@ export class ImageHandler {
 				const data = cache.get(name);
 				if (data) {
 					URL.revokeObjectURL(data.url);
-					cache.delete(name);
 				}
+				// Always delete the cache entry, even if it's null (failed image)
+				cache.delete(name);
 			} else {
 				cache.forEach((data) => URL.revokeObjectURL(data.url));
 				cache.clear();

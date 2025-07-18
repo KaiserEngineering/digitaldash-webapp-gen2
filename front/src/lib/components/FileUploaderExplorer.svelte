@@ -67,7 +67,7 @@
 				canvas.height = height;
 				ctx.drawImage(img, 0, 0, width, height);
 
-				canvas.toBlob((resizedBlob) => resolve(resizedBlob!), blob.type);
+				canvas.toBlob((resizedBlob) => resolve(resizedBlob!), 'image/png');
 			};
 
 			img.src = URL.createObjectURL(blob);
@@ -86,10 +86,11 @@
 			const resizedBlob = await resizeImage(croppedBlob, 800, 165);
 
 			// Update file with cropped version
+			const resizedUrl = URL.createObjectURL(resizedBlob);
 			file = {
 				...file,
-				url: croppedUrl,
-				rawFile: new File([resizedBlob], file.name, { type: file.type })
+				url: resizedUrl,
+				rawFile: new File([resizedBlob], file.name, { type: 'image/png' })
 			};
 		} catch (error) {
 			console.error('Error processing cropped image:', error);
@@ -103,21 +104,19 @@
 		isUploading = true;
 		try {
 			// Rename file to match slot name (don't add .png as it's handled by the API)
-			console.log('FileUploaderExplorer: uploading with slotName:', slotName);
 			const renamedFile = new File([file.rawFile], slotName, {
 				type: file.rawFile.type
 			});
-			console.log('FileUploaderExplorer: created file with name:', renamedFile.name);
 
 			await uploadCallback(renamedFile);
+			onUploaded();
 		} catch (error) {
 			console.error('Failed to upload file:', error);
+			// Don't call onUploaded on error
 		} finally {
 			removeFile();
 			isUploading = false;
 		}
-		isUploading = false;
-		onUploaded();
 	};
 
 	/** Reset file selection */
@@ -158,7 +157,7 @@
 		</div>
 	{:else}
 		<!-- File Preview -->
-		<div 
+		<div
 			class="flex items-center justify-between gap-4 rounded-lg bg-gray-100 p-4"
 			in:scale={{ duration: 300, easing: quintOut, start: 0.9 }}
 			out:fade={{ duration: 200, easing: quintOut }}
@@ -176,9 +175,12 @@
 		</div>
 
 		<!-- Crop Button -->
-		<div in:slide={{ duration: 300, easing: quintOut }} out:slide={{ duration: 200, easing: quintOut }}>
+		<div
+			in:slide={{ duration: 300, easing: quintOut }}
+			out:slide={{ duration: 200, easing: quintOut }}
+		>
 			<Button
-				class="btn flex cursor-pointer gap-2 rounded-lg bg-blue-500 px-6 py-3 font-semibold text-white shadow-md hover:bg-blue-600"
+				class="btn bg-secondary-500 hover:bg-secondary-600 flex cursor-pointer gap-2 rounded-lg px-6 py-3 font-semibold text-white shadow-md"
 				onclick={() => {
 					if (file?.rawFile) {
 						// Trigger the cropper by programmatically uploading the file
@@ -202,11 +204,14 @@
 
 	<!-- Upload Button -->
 	{#if file}
-		<div in:slide={{ duration: 400, delay: 100, easing: quintOut }} out:slide={{ duration: 200, easing: quintOut }}>
+		<div
+			in:slide={{ duration: 400, delay: 100, easing: quintOut }}
+			out:slide={{ duration: 200, easing: quintOut }}
+		>
 			<Button
-				class="btn flex cursor-pointer gap-2 rounded-lg bg-gradient-to-r
-				from-red-500 to-red-600 px-6 py-3 font-semibold text-white shadow-md
-				transition-all duration-300 ease-in-out hover:from-red-600 hover:to-red-700
+				class="btn to-primary-600 hover:from-primary-600 hover:to-primary-700 flex cursor-pointer
+				gap-2 rounded-lg bg-gradient-to-r from-primary-500 px-6 py-3 font-semibold
+				text-white shadow-md transition-all duration-300 ease-in-out
 				hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
 				onclick={handleUpload}
 				disabled={!file || isUploading}
@@ -225,8 +230,8 @@
 		<ImageCropper.Dialog>
 			<ImageCropper.Cropper cropShape="rect" aspect={800 / 165} />
 			<ImageCropper.Controls>
-				<ImageCropper.Cancel class="cursor-pointer bg-blue-200" />
-				<ImageCropper.Crop class="cursor-pointer bg-blue-200" />
+				<ImageCropper.Cancel class="cursor-pointer bg-secondary-200" />
+				<ImageCropper.Crop class="cursor-pointer bg-secondary-200" />
 			</ImageCropper.Controls>
 		</ImageCropper.Dialog>
 	</ImageCropper.Root>

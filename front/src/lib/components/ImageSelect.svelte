@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ImageHandler } from '$lib/image/handler';
-	import { ChevronDown, Check, Image as ImageIcon } from 'lucide-svelte';
+	import { Check, Image as ImageIcon } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { cn } from '$lib/utils';
 	import Spinner from './Spinner.svelte';
@@ -12,17 +12,15 @@
 		onSelect = () => {},
 		class: className = '',
 		disabled = false,
-		themes = false
+		themes = false,
+		label = ''
 	} = $props();
 
 	const imageHandler = new ImageHandler();
 
-	let isOpen = $state(false);
 	let loading = $state(true);
 	let imageUrls = $state<Record<string, string>>({});
 	let failedImages = $state<Record<string, boolean>>({});
-	let selectElement = $state<HTMLElement | null>(null);
-	let dropdownElement = $state<HTMLDivElement | null>(null);
 
 	async function loadImagePreviews() {
 		loading = true;
@@ -49,51 +47,12 @@
 	function selectOption(option: string) {
 		value = option;
 		onSelect(option);
-		isOpen = false;
-	}
-
-	function toggleDropdown() {
-		if (disabled) return;
-		isOpen = !isOpen;
-	}
-
-	function handleClickOutside(event: { target: any }) {
-		if (selectElement && !selectElement.contains(event.target)) {
-			isOpen = false;
-		}
-	}
-
-	function handleKeydown(event: { key: any; preventDefault: () => void }) {
-		if (disabled) return;
-
-		switch (event.key) {
-			case 'Enter':
-			case ' ':
-				event.preventDefault();
-				toggleDropdown();
-				break;
-			case 'Escape':
-				isOpen = false;
-				break;
-			case 'ArrowDown':
-				event.preventDefault();
-				if (!isOpen) {
-					isOpen = true;
-				}
-				break;
-		}
 	}
 
 	onMount(() => {
 		if (options.length > 0) {
 			loadImagePreviews();
 		}
-
-		document.addEventListener('click', handleClickOutside);
-
-		return () => {
-			document.removeEventListener('click', handleClickOutside);
-		};
 	});
 
 	let prevOptions: string[] = $state([]);
@@ -106,111 +65,70 @@
 	});
 </script>
 
-<div bind:this={selectElement} class={cn('relative w-full', className)}>
-	<button
-		type="button"
-		class={cn(
-			'relative w-full cursor-pointer rounded-lg border bg-white px-3 py-2 text-left shadow-sm transition-colors',
-			'border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none',
-			disabled && 'cursor-not-allowed bg-gray-50 text-gray-500',
-			isOpen && 'border-blue-500 ring-1 ring-blue-500'
-		)}
-		onclick={toggleDropdown}
-		onkeydown={handleKeydown}
-		{disabled}
-		aria-haspopup="listbox"
-		aria-expanded={isOpen}
-	>
-		<div class="flex items-center justify-between">
-			<div class="flex items-center space-x-3">
-				{#if loading}
-					<div class="flex h-8 w-8 items-center justify-center rounded bg-gray-200">
-						<Spinner size="sm" />
-					</div>
-				{:else if value && imageUrls[value] && !failedImages[value]}
-					<img
-						src={imageUrls[value] || '/placeholder.svg'}
-						alt={value}
-						class="h-8 w-8 rounded border object-cover"
-						onerror={() => handleImageError(value)}
-					/>
-				{:else if value}
-					<div class="flex h-8 w-8 items-center justify-center rounded bg-gray-200">
-						<ImageIcon class="h-4 w-4 text-gray-400" />
-					</div>
-				{:else}
-					<div class="flex h-8 w-8 items-center justify-center rounded bg-gray-100">
-						<ImageIcon class="h-4 w-4 text-gray-300" />
-					</div>
-				{/if}
-
-				{#if !value}
-					<span class="block truncate text-gray-500">
-						{placeholder}
-					</span>
-				{/if}
-			</div>
-
-			<ChevronDown
-				class={cn(
-					'h-4 w-4 text-gray-400 transition-transform duration-200',
-					isOpen && 'rotate-180'
-				)}
-			/>
+<div class={cn('w-full', className)}>
+	{#if label}
+		<label class="mb-3 block text-sm font-medium text-gray-700">{label}</label>
+	{/if}
+	
+	{#if loading}
+		<div class="flex items-center justify-center py-12">
+			<Spinner />
+			<span class="ml-3 text-sm text-gray-500">Loading images...</span>
 		</div>
-	</button>
-
-	{#if isOpen}
-		<div
-			bind:this={dropdownElement}
-			class="absolute z-50 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg"
-			role="listbox"
-		>
-			<div class="max-h-60 overflow-auto py-1">
-				{#if loading}
-					<div class="flex items-center justify-center py-8">
-						<Spinner />
-						<span class="ml-2 text-sm text-gray-500">Loading images...</span>
-					</div>
-				{:else if options.length === 0}
-					<div class="px-3 py-2 text-sm text-gray-500">No images available</div>
-				{:else}
-					{#each options.filter(option => themes || !failedImages[option]) as option}
-						<button
-							type="button"
-							class={cn(
-								'relative w-full cursor-pointer px-3 py-2 text-left transition-colors',
-								'hover:bg-gray-50 focus:bg-gray-50 focus:outline-none',
-								value === option && 'bg-blue-50 text-blue-600'
-							)}
-							onclick={() => selectOption(option)}
-							role="option"
-							aria-selected={value === option}
-						>
-							<div class="flex items-center justify-between">
-								<div class="flex items-center space-x-3">
-									{#if imageUrls[option]}
-										<img
-											src={imageUrls[option] || '/placeholder.svg'}
-											alt={option}
-											class="h-10 w-10 rounded border object-cover"
-											onerror={() => handleImageError(option)}
-										/>
-									{:else}
-										<div class="flex h-10 w-10 items-center justify-center rounded bg-gray-200">
-											<ImageIcon class="h-5 w-5 text-gray-400" />
-										</div>
-									{/if}
-								</div>
-
-								{#if value === option}
-									<Check class="h-4 w-4 text-blue-600" />
-								{/if}
+	{:else if options.length === 0}
+		<div class="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+			<ImageIcon class="mx-auto h-12 w-12 text-gray-400" />
+			<span class="mt-2 block text-sm text-gray-500">No images available</span>
+		</div>
+	{:else}
+		<div class={cn(
+			'grid gap-3',
+			themes 
+				? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
+				: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+		)}>
+			{#each options.filter(option => themes || !failedImages[option]) as option}
+				<button
+					type="button"
+					class={cn(
+						'group relative overflow-hidden rounded-lg border-2 transition-all duration-200',
+						'hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+						disabled && 'cursor-not-allowed opacity-50',
+						value === option
+							? 'border-blue-500 bg-blue-50 shadow-lg'
+							: 'border-gray-200 bg-white shadow-sm hover:border-gray-300 hover:shadow-md',
+						themes ? 'aspect-square' : 'aspect-[800/165]'
+					)}
+					onclick={() => selectOption(option)}
+					title={option}
+					{disabled}
+				>
+					{#if imageUrls[option] && !failedImages[option]}
+						<img
+							class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-110"
+							src={imageUrls[option]}
+							alt={option}
+							onerror={() => handleImageError(option)}
+						/>
+					{:else}
+						<div class="flex h-full w-full items-center justify-center bg-gray-100">
+							<ImageIcon class="h-8 w-8 text-gray-400" />
+						</div>
+					{/if}
+					
+					{#if value === option}
+						<div class="absolute inset-0 bg-blue-500/10">
+							<div class="absolute right-1 top-1 rounded-full bg-blue-500 p-1 shadow-sm">
+								<Check class="h-3 w-3 text-white" />
 							</div>
-						</button>
-					{/each}
-				{/if}
-			</div>
+						</div>
+					{/if}
+					
+					<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+						<span class="text-xs font-medium text-white truncate">{option}</span>
+					</div>
+				</button>
+			{/each}
 		</div>
 	{/if}
 </div>

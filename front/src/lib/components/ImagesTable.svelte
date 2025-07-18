@@ -22,40 +22,37 @@
 	let loadedImages = $state<Record<string | number, string | null>>({});
 	let loadingStates = $state<Record<string | number, boolean>>({});
 	let deletingStates = $state<Record<string | number, boolean>>({});
+	let uploadingStates = $state<Record<string | number, boolean>>({});
 
 	function handleImageError(key: string | number) {
+		// Don't mark as failed if we're currently uploading - it's just the old image failing
+		if (uploadingStates[key]) {
+			return;
+		}
 		failedImages[key] = true;
 		loadedImages[key] = null;
 		loadingStates[key] = false;
 	}
 
 	async function reloadImageSlot(imageName: string) {
-		// If currently showing an image, flip to uploader
-		if (loadedImages[imageName]) {
+		// Always try to load the image (don't toggle)
+		loadingStates[imageName] = true;
+		failedImages[imageName] = false;
+
+		try {
+			const image = await imageHandler.loadImage(imageName);
+			loadedImages[imageName] = image?.url ?? null;
+
+			if (!image?.url) {
+				failedImages[imageName] = true;
+			}
+		} catch (err) {
+			console.warn(`Failed to reload image: ${imageName}`, err);
 			failedImages[imageName] = true;
 			loadedImages[imageName] = null;
-			loadingStates[imageName] = false;
 		}
-		// If currently showing uploader, try to load the image
-		else {
-			loadingStates[imageName] = true;
-			failedImages[imageName] = false;
 
-			try {
-				const image = await imageHandler.loadImage(imageName);
-				loadedImages[imageName] = image?.url ?? null;
-
-				if (!image?.url) {
-					failedImages[imageName] = true;
-				}
-			} catch (err) {
-				console.warn(`Failed to reload image: ${imageName}`, err);
-				failedImages[imageName] = true;
-				loadedImages[imageName] = null;
-			}
-
-			loadingStates[imageName] = false;
-		}
+		loadingStates[imageName] = false;
 	}
 
 	async function handleDelete(imageName: string) {
@@ -74,9 +71,13 @@
 	}
 
 	async function handleUploadSuccess(imageName: string) {
+		uploadingStates[imageName] = true;
+		
 		toast.success(`${imageName} uploaded successfully`);
 		imageHandler.clearCache(imageName);
 		await reloadImageSlot(imageName);
+		
+		uploadingStates[imageName] = false;
 	}
 
 	onMount(() => {

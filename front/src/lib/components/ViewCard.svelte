@@ -111,7 +111,7 @@
 				<div class="absolute inset-0 rounded-2xl bg-black/10"></div>
 
 				<div class="relative z-10 flex h-full items-center justify-center px-2 sm:px-4">
-					<div class="flex w-full items-center justify-center gap-4 px-1 sm:gap-8 sm:px-2">
+					<div class="flex w-full items-center justify-center gap-2 px-1 sm:gap-8 sm:px-2">
 						{#each Array(3) as _, i}
 							{@const gauge = view?.gauge?.[i] ?? {}}
 							{@const isEnabled = i < view.num_gauges}
