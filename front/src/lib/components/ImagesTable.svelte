@@ -6,6 +6,8 @@
 	import FileUploaderExplorer from './FileUploaderExplorer.svelte';
 	import Spinner from './Spinner.svelte';
 	import toast from 'svelte-5-french-toast';
+	import { fade, scale } from 'svelte/transition';
+	import { quintOut } from 'svelte/easing';
 
 	let {
 		imageNames = [],
@@ -104,7 +106,11 @@
 						<Loader2 class="h-6 w-6 animate-spin text-gray-400" />
 					</div>
 				{:else if failedImages[imageName] || !loadedImages[imageName]}
-					<div class="relative">
+					<div 
+						class="relative"
+						in:fade={{ duration: 300, easing: quintOut }}
+						out:scale={{ duration: 200, easing: quintOut }}
+					>
 						<FileUploaderExplorer
 							uploadCallback={uploadBackground}
 							slotName={imageName}
@@ -128,6 +134,8 @@
 				{:else}
 					<div
 						class="group relative overflow-hidden rounded-lg bg-white transition-all hover:shadow-md"
+						in:scale={{ duration: 300, easing: quintOut }}
+						out:fade={{ duration: 200, easing: quintOut }}
 					>
 						<div class="m-1">
 							<img

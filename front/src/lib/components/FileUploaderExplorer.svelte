@@ -11,6 +11,8 @@
 	import toast from 'svelte-5-french-toast';
 	import Spinner from './Spinner.svelte';
 	import * as ImageCropper from '$lib/components/ui/image-cropper';
+	import { fade, scale, slide } from 'svelte/transition';
+	import { quintOut } from 'svelte/easing';
 
 	type UploadedFile = {
 		name: string;
@@ -139,6 +141,8 @@
 	{#if !file}
 		<div
 			class="relative h-[80px] overflow-hidden rounded-md border border-dashed border-gray-300 bg-gray-50"
+			in:fade={{ duration: 300, easing: quintOut }}
+			out:scale={{ duration: 200, easing: quintOut, start: 0.95 }}
 		>
 			<!-- File Drop Zone -->
 			<FileDropZone
@@ -154,7 +158,11 @@
 		</div>
 	{:else}
 		<!-- File Preview -->
-		<div class="flex items-center justify-between gap-4 rounded-lg bg-gray-100 p-4">
+		<div 
+			class="flex items-center justify-between gap-4 rounded-lg bg-gray-100 p-4"
+			in:scale={{ duration: 300, easing: quintOut, start: 0.9 }}
+			out:fade={{ duration: 200, easing: quintOut }}
+		>
 			<div class="flex items-center gap-4">
 				<img src={file.url} alt={file.name} class="h-16 w-16 rounded-lg object-cover" />
 				<div class="flex flex-col">
@@ -168,44 +176,48 @@
 		</div>
 
 		<!-- Crop Button -->
-		<Button
-			class="btn flex cursor-pointer gap-2 rounded-lg bg-blue-500 px-6 py-3 font-semibold text-white shadow-md hover:bg-blue-600"
-			onclick={() => {
-				if (file?.rawFile) {
-					// Trigger the cropper by programmatically uploading the file
-					const event = new Event('change', { bubbles: true });
-					const input = document.getElementById('crop-file-input');
-					if (input) {
-						const fileInput = input as HTMLInputElement;
-						const dataTransfer = new DataTransfer();
-						dataTransfer.items.add(file.rawFile);
-						fileInput.files = dataTransfer.files;
-						fileInput.dispatchEvent(event);
+		<div in:slide={{ duration: 300, easing: quintOut }} out:slide={{ duration: 200, easing: quintOut }}>
+			<Button
+				class="btn flex cursor-pointer gap-2 rounded-lg bg-blue-500 px-6 py-3 font-semibold text-white shadow-md hover:bg-blue-600"
+				onclick={() => {
+					if (file?.rawFile) {
+						// Trigger the cropper by programmatically uploading the file
+						const event = new Event('change', { bubbles: true });
+						const input = document.getElementById('crop-file-input');
+						if (input) {
+							const fileInput = input as HTMLInputElement;
+							const dataTransfer = new DataTransfer();
+							dataTransfer.items.add(file.rawFile);
+							fileInput.files = dataTransfer.files;
+							fileInput.dispatchEvent(event);
+						}
 					}
-				}
-			}}
-		>
-			<Edit class="mr-2 h-4 w-4" />
-			Crop Image
-		</Button>
+				}}
+			>
+				<Edit class="mr-2 h-4 w-4" />
+				Crop Image
+			</Button>
+		</div>
 	{/if}
 
 	<!-- Upload Button -->
 	{#if file}
-		<Button
-			class="btn flex cursor-pointer gap-2 rounded-lg bg-gradient-to-r
-			from-red-500 to-red-600 px-6 py-3 font-semibold text-white shadow-md
-			transition-all duration-300 ease-in-out hover:from-red-600 hover:to-red-700
-			hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-			onclick={handleUpload}
-			disabled={!file || isUploading}
-		>
-			{#if isUploading}
-				<Spinner />
-			{:else}
-				Upload File
-			{/if}
-		</Button>
+		<div in:slide={{ duration: 400, delay: 100, easing: quintOut }} out:slide={{ duration: 200, easing: quintOut }}>
+			<Button
+				class="btn flex cursor-pointer gap-2 rounded-lg bg-gradient-to-r
+				from-red-500 to-red-600 px-6 py-3 font-semibold text-white shadow-md
+				transition-all duration-300 ease-in-out hover:from-red-600 hover:to-red-700
+				hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+				onclick={handleUpload}
+				disabled={!file || isUploading}
+			>
+				{#if isUploading}
+					<Spinner />
+				{:else}
+					Upload File
+				{/if}
+			</Button>
+		</div>
 	{/if}
 
 	<!-- Cropper Dialog -->
