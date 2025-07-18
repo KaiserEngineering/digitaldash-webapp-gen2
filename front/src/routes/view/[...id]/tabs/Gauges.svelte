@@ -5,6 +5,7 @@
 	import { Gauge as GaugeIcon, ChevronDown } from 'lucide-svelte';
 	import * as Select from '$lib/components/ui/select';
 	import ImageSelect from '$lib/components/ImageSelect.svelte';
+	import PIDSelect from '$lib/components/PIDSelect.svelte';
 
 	let { themes = [], pids = [], form } = $props();
 
@@ -101,31 +102,15 @@
 				<!-- Card content that shows/hides based on expanded state -->
 				{#if isExpanded}
 					<Card.Content class="space-y-5 p-4 pt-0">
-						<!-- PID Selector - Full width on mobile -->
-						<div class="space-y-2">
-							<Label class="text-sm font-medium">PID</Label>
-							<Select.Root
-								type="single"
-								bind:value={$form.gauge[i].pid}
-								name={`pid-${i}`}
-								onValueChange={(selectedLabel) => {
-									if (selectedLabel) {
-										$form.gauge[i].pid = getPidDescByLabel(selectedLabel);
-									}
-								}}
-							>
-								<Select.Trigger class="!h-12 w-full touch-manipulation">
-									<span>{getPidLabelByDesc($form.gauge[i].pid) || 'Select PID'}</span>
-								</Select.Trigger>
-								<Select.Content position="popper">
-									{#each pids as pid (pid)}
-										<Select.Item value={pid.label} label={pid.label} class="py-3 text-base">
-											{pid.label}
-										</Select.Item>
-									{/each}
-								</Select.Content>
-							</Select.Root>
-						</div>
+						<!-- PID & Unit Selector -->
+						<PIDSelect
+							bind:pidValue={$form.gauge[i].pid}
+							bind:unitValue={$form.gauge[i].units}
+							{pids}
+							useDescription={true}
+							{getPidDescByLabel}
+							{getPidLabelByDesc}
+						/>
 
 						<!-- Theme Selector - Full width on mobile -->
 						<div class="space-y-2">

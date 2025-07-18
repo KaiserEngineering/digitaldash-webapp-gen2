@@ -13,6 +13,7 @@
 	import { zod4 } from 'sveltekit-superforms/adapters';
 	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
 	import PageCard from '@/components/PageCard.svelte';
+	import PIDSelect from '$lib/components/PIDSelect.svelte';
 	import { Switch } from '@/components/ui/switch';
 	import * as Select from '@/components/ui/select';
 
@@ -62,25 +63,16 @@
 						</div>
 
 						<div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-							<div class="space-y-2">
-								<Label>PID</Label>
-								<Select.Root
-									bind:value={alert.pid}
-									disabled={alert.enable !== 'Enabled'}
-									type="single"
-								>
-									<Select.Trigger class="w-full h-10">
-										<span>{alert.pid || 'Select PID'}</span>
-									</Select.Trigger>
-									<Select.Content>
-										{#each data.pids as pid}
-											<Select.Item value={pid.label} label={pid.label}>
-												{pid.label}
-											</Select.Item>
-										{/each}
-									</Select.Content>
-								</Select.Root>
-							</div>
+							<PIDSelect
+								bind:pidValue={alert.pid}
+								bind:unitValue={alert.units}
+								{pids}
+								disabled={alert.enable !== 'Enabled'}
+								pidLabel="PID"
+								unitLabel="Unit"
+								class="space-y-2"
+								key={`alert-${i}`}
+							/>
 
 							<div class="space-y-2">
 								<Label>Compare</Label>
