@@ -2,6 +2,42 @@
 
 static const char *TAG_STM_FLASH = "stm_flash";
 
+void stm32_reset(void)
+{
+    // Reset the STM32 (Inverse logic - connected to NFET)
+    gpio_set_level(CONFIG_STM32_RESET_PIN, 1);
+    ESP_LOGI(TAG_STM_FLASH, "Resetting STM32");
+
+    // Enable the STM32 boots to application code
+    gpio_set_level(CONFIG_STM32_BOOT_PIN, 0);
+    ESP_LOGI(TAG_STM_FLASH, "Resetting STM32 BOOT0");
+
+    // Wait for the STM32 to reset
+    vTaskDelay(pdMS_TO_TICKS(STM32_RESET_DELAY_MS));
+
+    // Release the STM32 from reset
+    gpio_set_level(CONFIG_STM32_RESET_PIN, 0);
+    ESP_LOGI(TAG_STM_FLASH, "Starting STM32");
+}
+
+void stm32_bootloader(void)
+{
+    // Reset the STM32 (Inverse logic - connected to NFET)
+    gpio_set_level(CONFIG_STM32_RESET_PIN, 1);
+    ESP_LOGI(TAG_STM_FLASH, "Resetting STM32");
+
+    // Enable the STM32 to boot to the bootloader
+    gpio_set_level(CONFIG_STM32_BOOT_PIN, 1);
+    ESP_LOGI(TAG_STM_FLASH, "Setting STM32 BOOT0");
+
+    // Wait for the STM32 to reset
+    vTaskDelay(pdMS_TO_TICKS(STM32_RESET_DELAY_MS));
+
+    // Release the STM32 from reset
+    gpio_set_level(CONFIG_STM32_RESET_PIN, 0);
+    ESP_LOGI(TAG_STM_FLASH, "Starting STM32");
+}
+
 esp_err_t writeTask(FILE *flash_file)
 {
     logI(TAG_STM_FLASH, "%s", "Write Task");

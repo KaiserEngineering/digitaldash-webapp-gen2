@@ -3,6 +3,19 @@
 
 #include "stm_pro_mode.h"
 
+// Delay in milliseconds to hold STM32 in reset
+#define STM32_RESET_DELAY_MS 25
+
+/**
+ * @brief Reset STM32 and boot into application mode (BOOT0 = 0)
+ */
+void stm32_reset(void);
+
+/**
+ * @brief Reset STM32 and boot into system bootloader (BOOT0 = 1)
+ */
+void stm32_bootloader(void);
+
 /**
  * @brief Write the code into the flash memory of STM32Fxx
  * 

@@ -4,6 +4,7 @@
 #include "esp_log.h"
 #include "lib_ke_protocol.h"
 #include <sys/param.h>
+#include "stm_flash.h"
 
 static const char *TAG = "ConfigHandler";
 
@@ -87,6 +88,10 @@ esp_err_t config_patch_handler(httpd_req_t *req)
     // Now save to STM
     Generate_TX_Message(get_stm32_comm(), KE_CONFIG_SEND, 0);
     KE_wait_for_response(get_stm32_comm(), 5000);
+
+    // Brute force hot-reload. This can be done better
+    vTaskDelay(pdMS_TO_TICKS(250));
+    stm32_reset();
 
     // Send HTTP response - always return success since we got this far
     httpd_resp_set_type(req, "application/json");

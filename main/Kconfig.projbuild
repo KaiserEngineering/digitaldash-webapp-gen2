@@ -70,6 +70,18 @@ menu "Digital Dash Webapp Configuration"
             default 10
             help
                 ESP32 RX pin connected to STM32 RX
+
+        config STM32_RESET_PIN
+            int "STM32 Reset Pin"
+            default 2
+            help
+                ESP32 pin connected to STM32 reset pin
+
+        config STM32_BOOT_PIN
+            int "STM32 Boot Pin"
+            default 8
+            help
+                ESP32 pin connected to STM32 boot pin
     endmenu
 
     menu "WiFi AP"

@@ -51,9 +51,6 @@
 #define UI_VER_RES    200
 
 #define CAN_STBY_GPIO GPIO_NUM_40
-#define STM32_RESET_PIN GPIO_NUM_2
-#define STM32_BOOT_PIN GPIO_NUM_8
-#define STM32_RESET_DELAY_MS 25
 
 #define I2C_MASTER_PORT I2C_NUM_0
 #define ENABLE_I2C_TEST_TX 0
@@ -89,7 +86,7 @@ KE_PACKET_MANAGER stm32_comm;
 void gpio_init(void)
 {
     gpio_config_t io_conf = {
-        .pin_bit_mask = (1ULL << CAN_STBY_GPIO) | (1ULL << STM32_RESET_PIN) | (1ULL << STM32_BOOT_PIN),
+        .pin_bit_mask = (1ULL << CAN_STBY_GPIO) | (1ULL << CONFIG_STM32_RESET_PIN) | (1ULL << CONFIG_STM32_BOOT_PIN),
         .mode = GPIO_MODE_OUTPUT,
         .pull_up_en = GPIO_PULLUP_DISABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
@@ -97,41 +94,7 @@ void gpio_init(void)
     gpio_config(&io_conf);
 }
 
-void stm32_reset(void)
-{
-    // Reset the STM32 (Inverse logic - connected to NFET)
-    gpio_set_level(STM32_RESET_PIN, 1);
-    ESP_LOGI(TAG, "Resetting STM32");
 
-    // Enable the STM32 boots to application code
-    gpio_set_level(STM32_BOOT_PIN, 0);
-    ESP_LOGI(TAG, "Resetting STM32 BOOT0");
-
-    // Wait for the STM32 to reset
-    vTaskDelay(pdMS_TO_TICKS(STM32_RESET_DELAY_MS));
-
-    // Release the STM32 from reset
-    gpio_set_level(STM32_RESET_PIN, 0);
-    ESP_LOGI(TAG, "Starting STM32");
-}
-
-void stm32_bootloader(void)
-{
-    // Reset the STM32 (Inverse logic - connected to NFET)
-    gpio_set_level(STM32_RESET_PIN, 1);
-    ESP_LOGI(TAG, "Resetting STM32");
-
-    // Enable the STM32 to boot to the bootloader
-    gpio_set_level(STM32_BOOT_PIN, 1);
-    ESP_LOGI(TAG, "Setting STM32 BOOT0");
-
-    // Wait for the STM32 to reset
-    vTaskDelay(pdMS_TO_TICKS(STM32_RESET_DELAY_MS));
-
-    // Release the STM32 from reset
-    gpio_set_level(STM32_RESET_PIN, 0);
-    ESP_LOGI(TAG, "Starting STM32");
-}
 
 void i2c_master_init()
 {
