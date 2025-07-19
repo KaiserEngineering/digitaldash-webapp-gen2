@@ -30,11 +30,13 @@ jobs:
       # Install dependencies and build frontend
       - name: Install and Build Frontend
         working-directory: front
-        env:
-          EMBEDDED_BUILD: true
         run: |
           yarn install --frozen-lockfile
+          # Temporarily rename api folder to exclude it from build
+          mv src/routes/api src/routes/api.disabled || true
           yarn build
+          # Restore api folder
+          mv src/routes/api.disabled src/routes/api || true
 
       # Copy web app build to ESP-IDF components for embedding
       - name: Prepare Web App for Embedding

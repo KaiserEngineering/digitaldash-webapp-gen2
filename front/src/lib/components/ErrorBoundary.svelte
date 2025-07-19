@@ -12,8 +12,8 @@
 		onRetry?: () => void;
 	}
 
-	let { 
-		error = null, 
+	let {
+		error = null,
 		title = 'Something went wrong',
 		showRetry = true,
 		showHome = true,
@@ -81,30 +81,31 @@
 {#if error}
 	<Alert class="mb-4 {styleConfig.borderColor} {styleConfig.bgColor}">
 		<div class="flex items-start justify-between">
-			<div class="flex items-start gap-3 flex-1">
+			<div class="flex flex-1 items-start gap-3">
 				<div class="h-3 w-3 rounded-full {styleConfig.iconColor} mt-1"></div>
 				<div class="flex-1">
-					<AlertDescription class="{styleConfig.textColor}">
-						<span class="font-semibold block">{title}</span>
+					<AlertDescription class={styleConfig.textColor}>
+						<span class="block font-semibold">{title}</span>
 						<span class="text-sm">{errorMessage}</span>
-						
+
 						{#if errorDetails}
 							<details class="mt-2">
 								<summary class="cursor-pointer text-xs {styleConfig.textColor} hover:opacity-80">
 									Technical details
 								</summary>
-								<pre class="mt-1 text-xs {styleConfig.textColor} bg-white bg-opacity-50 p-2 rounded border overflow-auto max-h-32">{errorDetails}</pre>
+								<pre
+									class="mt-1 text-xs {styleConfig.textColor} bg-opacity-50 max-h-32 overflow-auto rounded border bg-white p-2">{errorDetails}</pre>
 							</details>
 						{/if}
 					</AlertDescription>
 				</div>
 			</div>
-			
+
 			<div class="flex items-center gap-2">
 				<Badge class="{styleConfig.badgeColor} text-xs">
 					{styleConfig.badge}
 				</Badge>
-				
+
 				<div class="flex gap-1">
 					{#if showRetry}
 						<button
@@ -116,7 +117,7 @@
 							Retry
 						</button>
 					{/if}
-					
+
 					{#if showHome}
 						<a
 							href="/"

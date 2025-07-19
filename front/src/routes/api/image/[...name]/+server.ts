@@ -19,7 +19,7 @@ const validSlots = [
 	'User12',
 	'User13',
 	'User14',
-	'User15',
+	'User15'
 ];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 

@@ -14,7 +14,7 @@
 		return pidLabel; // Just return the label as-is
 	}
 
-	// Helper function - no longer needed since we store labels directly  
+	// Helper function - no longer needed since we store labels directly
 	function getPidDescByLabel(pidLabel: string): string {
 		return pidLabel; // Just return the label as-is
 	}
@@ -40,7 +40,7 @@
 <Tabs.Content value="gauges" class="focus:outline-none">
 	<div class="space-y-4">
 		<!-- Mobile-optimized number selector -->
-		<div class="bg-background sticky top-0 z-10 pb-2 pt-1">
+		<div class="bg-background sticky top-0 z-10 pt-1 pb-2">
 			<div class="bg-muted/50 flex items-center justify-between rounded-lg p-3 backdrop-blur-sm">
 				<Label class="text-sm font-medium">Number of Gauges</Label>
 				<Select.Root

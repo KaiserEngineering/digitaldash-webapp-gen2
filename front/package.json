@@ -65,6 +65,7 @@
 		"pako": "^2.1.0",
 		"svelte-5-french-toast": "^2.0.4",
 		"sveltekit-superforms": "^2.27.1",
+		"yaml": "^2.4.2",
 		"yarn": "^1.22.22",
 		"zod": "^4.0.5"
 	},

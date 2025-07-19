@@ -69,7 +69,7 @@
 	{#if label}
 		<label class="mb-3 block text-sm font-medium text-gray-700">{label}</label>
 	{/if}
-	
+
 	{#if loading}
 		<div class="flex items-center justify-center py-12">
 			<Spinner />
@@ -81,18 +81,20 @@
 			<span class="mt-2 block text-sm text-gray-500">No images available</span>
 		</div>
 	{:else}
-		<div class={cn(
-			'grid gap-3 max-h-96 overflow-y-auto',
-			themes 
-				? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
-				: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-		)}>
-			{#each options.filter(option => themes || !failedImages[option]) as option}
+		<div
+			class={cn(
+				'grid max-h-96 gap-3 overflow-y-auto',
+				themes
+					? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
+					: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+			)}
+		>
+			{#each options.filter((option) => themes || !failedImages[option]) as option}
 				<button
 					type="button"
 					class={cn(
 						'group relative overflow-hidden rounded-lg border-2 transition-all duration-200',
-						'hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+						'hover:scale-105 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none',
 						disabled && 'cursor-not-allowed opacity-50',
 						value === option
 							? 'border-blue-500 bg-blue-50 shadow-lg'
@@ -115,17 +117,19 @@
 							<ImageIcon class="h-8 w-8 text-gray-400" />
 						</div>
 					{/if}
-					
+
 					{#if value === option}
 						<div class="absolute inset-0 bg-blue-500/10">
-							<div class="absolute right-1 top-1 rounded-full bg-blue-500 p-1 shadow-sm">
+							<div class="absolute top-1 right-1 rounded-full bg-blue-500 p-1 shadow-sm">
 								<Check class="h-3 w-3 text-white" />
 							</div>
 						</div>
 					{/if}
-					
-					<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-						<span class="text-xs font-medium text-white truncate">{option}</span>
+
+					<div
+						class="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/60 to-transparent p-2"
+					>
+						<span class="truncate text-xs font-medium text-white">{option}</span>
 					</div>
 				</button>
 			{/each}

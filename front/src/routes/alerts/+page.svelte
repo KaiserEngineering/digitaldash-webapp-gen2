@@ -101,7 +101,7 @@
 
 						<!-- Card content that shows/hides based on expanded state -->
 						{#if isExpanded}
-							<div 
+							<div
 								class="grid grid-cols-1 gap-4 p-4 pt-0 md:grid-cols-2"
 								in:slide={{ duration: 300, easing: quintOut }}
 								out:slide={{ duration: 200, easing: quintOut }}

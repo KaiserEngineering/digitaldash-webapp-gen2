@@ -6,7 +6,7 @@ import { recoveryStore } from '$lib/stores/recoveryMode';
 
 export const load = async ({ fetch, url }) => {
 	const issues: string[] = [];
-	
+
 	// Debug trigger via URL: ?debug=recovery
 	if (url.searchParams.get('debug') === 'recovery') {
 		issues.push('Debug mode: Simulated device connection failure');

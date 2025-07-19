@@ -78,7 +78,7 @@
 		<div class="py-8 text-center text-sm text-gray-500">No backgrounds available</div>
 	{:else}
 		<div class="flex flex-col gap-3">
-			{#each options.filter(option => !failedImages[option]) as option}
+			{#each options.filter((option) => !failedImages[option]) as option}
 				<button
 					type="button"
 					class={cn(
@@ -114,7 +114,7 @@
 						{/if}
 
 						{#if value === option}
-							<div class="absolute right-2 top-2 rounded-full bg-blue-500 p-1">
+							<div class="absolute top-2 right-2 rounded-full bg-blue-500 p-1">
 								<Check class="h-3 w-3 text-white" />
 							</div>
 						{/if}

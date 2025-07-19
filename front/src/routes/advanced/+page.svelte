@@ -23,11 +23,13 @@
 			const parsed = JSON.parse(configJson);
 			jsonError = null;
 			isValidJson = true;
-			
+
 			// Validate against schema
 			const result = DigitalDashSchema.safeParse(parsed);
 			if (!result.success) {
-				const errors = result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
+				const errors = result.error.errors
+					.map((e) => `${e.path.join('.')}: ${e.message}`)
+					.join(', ');
 				validationError = `Schema validation failed: ${errors}`;
 			} else {
 				validationError = null;
@@ -53,7 +55,7 @@
 
 			try {
 				const parsedConfig = JSON.parse(configJson);
-				
+
 				await withRetry(
 					async () => {
 						const success = await updateFullConfig((config) => {
@@ -119,21 +121,21 @@
 					{/if}
 				</div>
 			</div>
-			
+
 			<Textarea
 				id="config-json"
 				rows={20}
 				bind:value={configJson}
-				class="bg-muted/50 min-h-[400px] w-full resize-y font-mono text-sm {
-					jsonError ? 'border-red-300 focus:border-red-500' : 
-					validationError ? 'border-yellow-300 focus:border-yellow-500' : 
-					'border-green-300 focus:border-green-500'
-				}"
+				class="bg-muted/50 min-h-[400px] w-full resize-y font-mono text-sm {jsonError
+					? 'border-red-300 focus:border-red-500'
+					: validationError
+						? 'border-yellow-300 focus:border-yellow-500'
+						: 'border-green-300 focus:border-green-500'}"
 			/>
 
 			<!-- Error display -->
 			{#if jsonError}
-				<ErrorBoundary 
+				<ErrorBoundary
 					error={jsonError}
 					title="JSON Syntax Error"
 					variant="error"
@@ -141,7 +143,7 @@
 					showHome={false}
 				/>
 			{:else if validationError}
-				<ErrorBoundary 
+				<ErrorBoundary
 					error={validationError}
 					title="Configuration Validation Error"
 					variant="warning"
@@ -152,9 +154,9 @@
 
 			<!-- Action buttons -->
 			<div class="flex gap-2">
-				<Button 
-					type="button" 
-					variant="outline" 
+				<Button
+					type="button"
+					variant="outline"
 					onclick={formatJson}
 					disabled={!isValidJson}
 					class="flex items-center gap-2"
@@ -162,9 +164,9 @@
 					<FileText class="h-4 w-4" />
 					Format JSON
 				</Button>
-				<Button 
-					type="button" 
-					variant="outline" 
+				<Button
+					type="button"
+					variant="outline"
 					onclick={resetConfig}
 					class="flex items-center gap-2"
 				>
@@ -175,9 +177,9 @@
 	{/snippet}
 
 	{#snippet footerContent()}
-		<Button 
-			type="submit" 
-			disabled={$submitting || !isValidJson || !!validationError} 
+		<Button
+			type="submit"
+			disabled={$submitting || !isValidJson || !!validationError}
 			class="flex items-center gap-2"
 		>
 			{#if $submitting}

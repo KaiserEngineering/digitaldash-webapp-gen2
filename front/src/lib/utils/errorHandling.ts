@@ -52,26 +52,23 @@ export class ServerError extends Error implements AppError {
  * Parse and classify errors from API responses
  */
 export function parseApiError(error: unknown): AppError {
-	if (error instanceof NetworkError || error instanceof ValidationError || error instanceof ServerError) {
+	if (
+		error instanceof NetworkError ||
+		error instanceof ValidationError ||
+		error instanceof ServerError
+	) {
 		return error;
 	}
 
 	if (error instanceof Error) {
 		// Check if it's a fetch error
 		if (error.message.includes('fetch') || error.message.includes('network')) {
-			return new NetworkError(
-				'Unable to connect to DigitalDash device',
-				undefined,
-				error.message
-			);
+			return new NetworkError('Unable to connect to DigitalDash device', undefined, error.message);
 		}
 
 		// Check if it's a validation error
 		if (error.message.includes('schema') || error.message.includes('validation')) {
-			return new ValidationError(
-				'Invalid data received from device',
-				error.message
-			);
+			return new ValidationError('Invalid data received from device', error.message);
 		}
 
 		// Generic error
@@ -112,28 +109,27 @@ export function parseApiError(error: unknown): AppError {
 /**
  * Handle errors with appropriate user feedback
  */
-export function handleError(error: unknown, options: {
-	showToast?: boolean;
-	fallbackMessage?: string;
-	context?: string;
-} = {}) {
-	const {
-		showToast = true,
-		fallbackMessage = 'Something went wrong',
-		context = ''
-	} = options;
+export function handleError(
+	error: unknown,
+	options: {
+		showToast?: boolean;
+		fallbackMessage?: string;
+		context?: string;
+	} = {}
+) {
+	const { showToast = true, fallbackMessage = 'Something went wrong', context = '' } = options;
 
 	const appError = parseApiError(error);
-	
+
 	console.error(`Error ${context ? `in ${context}` : ''}:`, appError);
 
 	if (showToast) {
 		const message = appError.message || fallbackMessage;
 		const toastMessage = context ? `${context}: ${message}` : message;
-		
+
 		switch (appError.type) {
 			case 'network':
-				toast.error(toastMessage, { 
+				toast.error(toastMessage, {
 					duration: 5000,
 					icon: '🔌'
 				});
@@ -172,12 +168,7 @@ export async function withRetry<T>(
 		onRetry?: (attempt: number, error: unknown) => void;
 	} = {}
 ): Promise<T> {
-	const {
-		maxRetries = 3,
-		delay = 1000,
-		backoff = true,
-		onRetry
-	} = options;
+	const { maxRetries = 3, delay = 1000, backoff = true, onRetry } = options;
 
 	let lastError: unknown;
 
@@ -186,7 +177,7 @@ export async function withRetry<T>(
 			return await operation();
 		} catch (error) {
 			lastError = error;
-			
+
 			if (attempt === maxRetries) {
 				break;
 			}
@@ -201,7 +192,7 @@ export async function withRetry<T>(
 			}
 
 			const waitTime = backoff ? delay * Math.pow(2, attempt - 1) : delay;
-			await new Promise(resolve => setTimeout(resolve, waitTime));
+			await new Promise((resolve) => setTimeout(resolve, waitTime));
 		}
 	}
 

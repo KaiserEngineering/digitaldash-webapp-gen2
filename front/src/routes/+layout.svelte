@@ -20,14 +20,14 @@
 <div class="soft flex h-screen flex-col">
 	{#await Promise.all([data.config, data.options, data.pids])}
 		<!-- Enhanced loading screen -->
-		<LoadingState 
+		<LoadingState
 			title="Loading Digital Dash"
 			subtitle="Connecting to your device and loading configuration..."
 		/>
 	{:then}
 		<!-- App layout after data is ready -->
 		<div class="soft flex h-screen flex-col">
-			<Toaster 
+			<Toaster
 				position="top-right"
 				toastOptions={{
 					duration: 4000,
@@ -46,31 +46,31 @@
 	{:catch err}
 		<!-- Enhanced error screen -->
 		<div class="flex h-screen flex-col">
-			<div class="flex-1 flex items-center justify-center p-4">
-				<div class="max-w-2xl w-full">
-					<ErrorBoundary 
+			<div class="flex flex-1 items-center justify-center p-4">
+				<div class="w-full max-w-2xl">
+					<ErrorBoundary
 						error={parseApiError(err)}
 						title="Failed to load Digital Dash"
 						variant="network"
 						onRetry={handleMainErrorRetry}
 						showHome={false}
 					/>
-					
+
 					<div class="mt-6 text-center">
-						<p class="text-sm text-gray-500 mb-4">
+						<p class="mb-4 text-sm text-gray-500">
 							Make sure your DigitalDash device is powered on and connected to the network.
 						</p>
-						
+
 						<div class="flex justify-center gap-3">
 							<button
 								onclick={handleMainErrorRetry}
-								class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+								class="rounded-md bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
 							>
 								Try Again
 							</button>
 							<a
 								href="/firmware"
-								class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+								class="rounded-md bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
 							>
 								Update Firmware
 							</a>

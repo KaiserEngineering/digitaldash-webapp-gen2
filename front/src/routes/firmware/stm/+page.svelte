@@ -19,7 +19,6 @@
 	let flashStatus: 'idle' | 'uploading' | 'flashing' | 'success' | 'error' = $state('idle');
 	let flashMessage = $state('');
 
-
 	async function loadFiles() {
 		filesStatus = 'loading';
 		try {
@@ -61,7 +60,7 @@
 			const formData = new FormData();
 			formData.append('file', file);
 			formData.append('filename', 'digitaldash-firmware-gen2-stm32u5g.bin');
-			
+
 			const uploadRes = await fetch('/api/spiffs', {
 				method: 'POST',
 				body: formData
@@ -84,11 +83,10 @@
 
 			flashStatus = 'success';
 			flashMessage = 'Digital Dash updated successfully!';
-			
+
 			// Reload file list and clear input
 			await loadFiles();
 			fileInput.value = '';
-
 		} catch (err) {
 			flashStatus = 'error';
 			flashMessage = err.message || 'An error occurred during firmware update';
@@ -164,9 +162,9 @@
 						</p>
 					</div>
 				{:else if flashStatus === 'uploading' || flashStatus === 'flashing'}
-					<div class="bg-blue-50 border-blue-200 rounded-lg border p-4">
-						<p class="text-blue-800 flex items-center gap-3 font-medium">
-							<Loader2 class="text-blue-600 h-5 w-5 animate-spin" />
+					<div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
+						<p class="flex items-center gap-3 font-medium text-blue-800">
+							<Loader2 class="h-5 w-5 animate-spin text-blue-600" />
 							{flashMessage}
 						</p>
 					</div>
@@ -183,10 +181,8 @@
 				</CardTitle>
 			</CardHeader>
 			<CardContent class="space-y-6 p-6">
-
 				<!-- Files List Section -->
 				<div class="space-y-4">
-
 					<div class="min-h-[120px] rounded-lg border border-slate-200 bg-slate-50">
 						{#if filesStatus === 'loading'}
 							<div class="flex items-center justify-center gap-3 py-8 text-slate-500">
@@ -206,19 +202,23 @@
 							<div class="divide-y divide-slate-200">
 								{#each files as file, index}
 									<div
-										class="p-4 transition-colors duration-150 hover:bg-white {index === 0 ? 'rounded-t-lg' : ''} {index === files.length - 1 ? 'rounded-b-lg' : ''}"
+										class="p-4 transition-colors duration-150 hover:bg-white {index === 0
+											? 'rounded-t-lg'
+											: ''} {index === files.length - 1 ? 'rounded-b-lg' : ''}"
 									>
 										<div class="flex items-start gap-4">
 											<div
-												class="bg-secondary-100 flex h-12 w-12 items-center justify-center rounded-lg flex-shrink-0"
+												class="bg-secondary-100 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg"
 											>
 												<FileText class="text-secondary-600 h-6 w-6" />
 											</div>
-											<div class="flex-grow min-w-0">
-												<h5 class="font-medium text-slate-800 truncate">
+											<div class="min-w-0 flex-grow">
+												<h5 class="truncate font-medium text-slate-800">
 													{file.name || file}
 												</h5>
-												<div class="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm text-slate-600">
+												<div
+													class="mt-2 grid grid-cols-1 gap-2 text-sm text-slate-600 sm:grid-cols-3"
+												>
 													{#if file.size}
 														<div class="flex items-center gap-1">
 															<span class="font-medium">Size:</span>

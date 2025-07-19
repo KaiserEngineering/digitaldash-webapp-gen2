@@ -56,12 +56,12 @@ export const ViewSchema = z.object({
 		.union([z.enum(['Enable', 'Disable', 'Enabled', 'Disabled']), z.boolean()])
 		.transform((val) => {
 			if (typeof val === 'boolean') return val ? 'Enabled' : 'Disabled';
-			return (val === 'Enable' || val === 'Enabled') ? 'Enabled' : 'Disabled';
+			return val === 'Enable' || val === 'Enabled' ? 'Enabled' : 'Disabled';
 		})
-		.default("Enabled"),
+		.default('Enabled'),
 	num_gauges: z.number().int(),
 	background: z.string(),
-	gauge: z.array(GaugeSchema).max(GAUGES_PER_VIEW),
+	gauge: z.array(GaugeSchema).max(GAUGES_PER_VIEW)
 });
 
 /**
@@ -79,9 +79,9 @@ export const AlertSchema = z.object({
 		.union([z.enum(['Enable', 'Disable', 'Enabled', 'Disabled']), z.boolean()])
 		.transform((val) => {
 			if (typeof val === 'boolean') return val ? 'Enabled' : 'Disabled';
-			return (val === 'Enable' || val === 'Enabled') ? 'Enabled' : 'Disabled';
+			return val === 'Enable' || val === 'Enabled' ? 'Enabled' : 'Disabled';
 		})
-		.default("Enabled"),
+		.default('Enabled'),
 	pid: PIDRef,
 	units: z.string().default('None'),
 	compare: CompareEnum,
@@ -105,9 +105,9 @@ export const DynamicSchema = z.object({
 		.union([z.enum(['Enable', 'Disable', 'Enabled', 'Disabled']), z.boolean()])
 		.transform((val) => {
 			if (typeof val === 'boolean') return val ? 'Enabled' : 'Disabled';
-			return (val === 'Enable' || val === 'Enabled') ? 'Enabled' : 'Disabled';
+			return val === 'Enable' || val === 'Enabled' ? 'Enabled' : 'Disabled';
 		})
-		.default("Enabled"),
+		.default('Enabled'),
 	pid: PIDRef,
 	units: z.string().default('None'),
 	compare: CompareEnum,

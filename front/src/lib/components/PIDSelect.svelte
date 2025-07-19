@@ -93,12 +93,7 @@
 	<!-- PID Selector -->
 	<div class="space-y-2">
 		<Label class="text-sm font-medium">{pidLabel}</Label>
-		<Select.Root
-			type="single"
-			bind:value={pidValue}
-			onValueChange={handlePidChange}
-			{disabled}
-		>
+		<Select.Root type="single" bind:value={pidValue} onValueChange={handlePidChange} {disabled}>
 			<Select.Trigger class="!h-12 w-full touch-manipulation">
 				<span>
 					{pidValue || pidPlaceholder}
@@ -120,7 +115,12 @@
 		{#if selectedPidData && selectedPidData.units.length > 0}
 			<div class="space-y-2">
 				<Label class="text-sm font-medium">{unitLabel}</Label>
-				<Select.Root type="single" bind:value={unitValue} onValueChange={handleUnitChange} {disabled}>
+				<Select.Root
+					type="single"
+					bind:value={unitValue}
+					onValueChange={handleUnitChange}
+					{disabled}
+				>
 					<Select.Trigger class="!h-12 w-full touch-manipulation">
 						<span>{unitValue || unitPlaceholder}</span>
 					</Select.Trigger>

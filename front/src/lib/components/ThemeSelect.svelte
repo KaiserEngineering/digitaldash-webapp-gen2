@@ -78,15 +78,13 @@
 		<div class="py-8 text-center text-sm text-gray-500">No themes available</div>
 	{:else}
 		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-			{#each options.filter(option => !failedImages[option]) as option}
+			{#each options.filter((option) => !failedImages[option]) as option}
 				<button
 					type="button"
 					class={cn(
 						'group relative flex aspect-square w-full flex-col items-center justify-center rounded-lg border-2 bg-white p-2 transition-all duration-200',
 						'hover:border-blue-300 hover:shadow-md focus:border-blue-500 focus:shadow-md focus:outline-none',
-						value === option
-							? 'border-blue-500 bg-blue-50 shadow-md'
-							: 'border-gray-200',
+						value === option ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200',
 						disabled && 'cursor-not-allowed opacity-50'
 					)}
 					onclick={() => selectOption(option)}
@@ -107,7 +105,7 @@
 					{/if}
 
 					{#if value === option}
-						<div class="absolute -right-1 -top-1 rounded-full bg-blue-500 p-1">
+						<div class="absolute -top-1 -right-1 rounded-full bg-blue-500 p-1">
 							<Check class="h-3 w-3 text-white" />
 						</div>
 					{/if}

@@ -59,7 +59,7 @@
 
 <header class="bg-background border-border border-b">
 	<div class="container mx-auto px-2 sm:px-4">
-		<Card class="border-0 bg-transparent shadow-none gap-2 py-2 sm:gap-4 sm:py-4">
+		<Card class="gap-2 border-0 bg-transparent py-2 shadow-none sm:gap-4 sm:py-4">
 			<CardHeader class="pb-2 sm:pb-4">
 				<div class="flex items-center justify-between">
 					<div class="flex items-center">

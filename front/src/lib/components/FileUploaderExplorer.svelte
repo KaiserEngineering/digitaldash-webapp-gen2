@@ -209,8 +209,8 @@
 			out:slide={{ duration: 200, easing: quintOut }}
 		>
 			<Button
-				class="btn to-primary-600 hover:from-primary-600 hover:to-primary-700 flex cursor-pointer
-				gap-2 rounded-lg bg-gradient-to-r from-primary-500 px-6 py-3 font-semibold
+				class="btn to-primary-600 hover:from-primary-600 hover:to-primary-700 from-primary-500 flex
+				cursor-pointer gap-2 rounded-lg bg-gradient-to-r px-6 py-3 font-semibold
 				text-white shadow-md transition-all duration-300 ease-in-out
 				hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
 				onclick={handleUpload}
@@ -230,8 +230,8 @@
 		<ImageCropper.Dialog>
 			<ImageCropper.Cropper cropShape="rect" aspect={800 / 165} />
 			<ImageCropper.Controls>
-				<ImageCropper.Cancel class="cursor-pointer bg-secondary-200" />
-				<ImageCropper.Crop class="cursor-pointer bg-secondary-200" />
+				<ImageCropper.Cancel class="bg-secondary-200 cursor-pointer" />
+				<ImageCropper.Crop class="bg-secondary-200 cursor-pointer" />
 			</ImageCropper.Controls>
 		</ImageCropper.Dialog>
 	</ImageCropper.Root>

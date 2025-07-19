@@ -104,7 +104,7 @@
 				style:background-image={`url('${backgroundUrl}')`}
 			>
 				{#if showGearIcon}
-					<div class="absolute right-2 top-2 z-20">
+					<div class="absolute top-2 right-2 z-20">
 						<Settings class="text-white/80 transition hover:scale-110 hover:text-white" size="20" />
 					</div>
 				{/if}

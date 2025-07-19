@@ -45,7 +45,7 @@
 </script>
 
 {#if recovery.isRecoveryMode}
-	<Alert class="border-red-200 bg-red-50 p-3 flex flex-col">	
+	<Alert class="flex flex-col border-red-200 bg-red-50 p-3">
 		<!-- Technical details toggle -->
 		{#if recovery.issues.length > 0}
 			<div class="mb-1 sm:mb-2 sm:ml-4">
@@ -65,7 +65,7 @@
 					<div class="mt-1 rounded bg-red-100 p-2 text-xs">
 						<ul class="space-y-1">
 							{#each recovery.issues as issue}
-								<li class="break-words leading-snug text-red-800">• {issue}</li>
+								<li class="leading-snug break-words text-red-800">• {issue}</li>
 							{/each}
 						</ul>
 					</div>

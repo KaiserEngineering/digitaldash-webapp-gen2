@@ -8,7 +8,11 @@
 	const slotNames = data.slotNames || [];
 </script>
 
-<PageCard title="Backgrounds" description="Upload custom background images for your dashboard. Drag & drop or click empty slots to upload. Maximum size: 2MB. Supported format: PNG." icon={ImageIcon}>
+<PageCard
+	title="Backgrounds"
+	description="Upload custom background images for your dashboard. Drag & drop or click empty slots to upload. Maximum size: 2MB. Supported format: PNG."
+	icon={ImageIcon}
+>
 	{#snippet children()}
 		<div class="flex flex-col items-center justify-center">
 			<ImagesTable imageNames={slotNames} deleteCallback={deleteBackground} {uploadBackground} />

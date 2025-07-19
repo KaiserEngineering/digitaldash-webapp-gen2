@@ -213,9 +213,7 @@
 				</div>
 			{:else}
 				<div class="flex flex-col gap-0.5 text-center">
-					<span class="text-muted-foreground text-sm">
-						Click to upload
-					</span>
+					<span class="text-muted-foreground text-sm"> Click to upload </span>
 				</div>
 			{/if}
 		</div>

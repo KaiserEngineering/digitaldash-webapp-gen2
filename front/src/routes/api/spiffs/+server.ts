@@ -8,11 +8,16 @@ export const prerender = false;
 // This will be replaced by the real C webserver implementation
 export async function GET() {
 	// Simulate processing time
-	await new Promise(resolve => setTimeout(resolve, 500));
-	
+	await new Promise((resolve) => setTimeout(resolve, 500));
+
 	// Try to get real file information
-	const filePath = join(process.cwd(), 'static', 'spiffs', 'digitaldash-firmware-gen2-stm32u5g.bin');
-	
+	const filePath = join(
+		process.cwd(),
+		'static',
+		'spiffs',
+		'digitaldash-firmware-gen2-stm32u5g.bin'
+	);
+
 	try {
 		if (existsSync(filePath)) {
 			const stats = statSync(filePath);
@@ -51,7 +56,7 @@ export async function GET() {
 }
 
 // Dummy API endpoint for SPIFFS file upload
-// This will be replaced by the real C webserver implementation  
+// This will be replaced by the real C webserver implementation
 export async function POST({ request }) {
 	const formData = await request.formData();
 	const file = formData.get('file') as File;
@@ -77,8 +82,8 @@ export async function POST({ request }) {
 	}
 
 	// Simulate upload processing time
-	await new Promise(resolve => setTimeout(resolve, 1000));
-	
+	await new Promise((resolve) => setTimeout(resolve, 1000));
+
 	// Mock successful upload response
 	return json({
 		success: true,
@@ -92,14 +97,14 @@ export async function POST({ request }) {
 // This will be replaced by the real C webserver implementation
 export async function DELETE({ url }) {
 	const filename = url.searchParams.get('filename');
-	
+
 	if (!filename) {
 		throw error(400, 'Filename parameter required');
 	}
 
 	// Simulate delete processing time
-	await new Promise(resolve => setTimeout(resolve, 300));
-	
+	await new Promise((resolve) => setTimeout(resolve, 300));
+
 	// Mock successful delete response
 	return json({
 		success: true,

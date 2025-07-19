@@ -104,66 +104,66 @@
 
 						<!-- Card content that shows/hides based on expanded state -->
 						{#if isExpanded}
-							<div 
+							<div
 								class="grid grid-cols-1 gap-4 p-4 pt-0 md:grid-cols-2"
 								in:slide={{ duration: 300, easing: quintOut }}
 								out:slide={{ duration: 200, easing: quintOut }}
 							>
-							<PIDSelect
-								bind:pidValue={rule.pid}
-								bind:unitValue={rule.units}
-								{pids}
-								disabled={rule.enable !== 'Enabled'}
-								pidLabel="PID"
-								unitLabel="Unit"
-								class="space-y-2"
-								key={`rule-${i}`}
-							/>
-
-							<div class="space-y-2">
-								<Label>Compare</Label>
-								<Select.Root
-									bind:value={rule.compare}
+								<PIDSelect
+									bind:pidValue={rule.pid}
+									bind:unitValue={rule.units}
+									{pids}
 									disabled={rule.enable !== 'Enabled'}
-									type="single"
-								>
-									<Select.Trigger class="w-full h-10">
-										<span>{rule.compare || 'Select Compare'}</span>
-									</Select.Trigger>
-									<Select.Content>
-										{#each compareOps as op}
-											<Select.Item value={op} label={op}>
-												{op}
-											</Select.Item>
-										{/each}
-									</Select.Content>
-								</Select.Root>
-							</div>
+									pidLabel="PID"
+									unitLabel="Unit"
+									class="space-y-2"
+									key={`rule-${i}`}
+								/>
 
-							<div class="space-y-2">
-								<Label>Threshold</Label>
-								<Input type="number" bind:value={rule.threshold} disabled={!rule.enable} />
-							</div>
+								<div class="space-y-2">
+									<Label>Compare</Label>
+									<Select.Root
+										bind:value={rule.compare}
+										disabled={rule.enable !== 'Enabled'}
+										type="single"
+									>
+										<Select.Trigger class="h-10 w-full">
+											<span>{rule.compare || 'Select Compare'}</span>
+										</Select.Trigger>
+										<Select.Content>
+											{#each compareOps as op}
+												<Select.Item value={op} label={op}>
+													{op}
+												</Select.Item>
+											{/each}
+										</Select.Content>
+									</Select.Root>
+								</div>
 
-							<div class="space-y-2">
-								<Label>Priority</Label>
-								<Select.Root
-									bind:value={rule.priority}
-									disabled={rule.enable !== 'Enabled'}
-									type="single"
-								>
-									<Select.Trigger class="w-full h-10">
-										<span>{rule.priority || 'Select Priority'}</span>
-									</Select.Trigger>
-									<Select.Content>
-										{#each priorities as p}
-											<Select.Item value={p} label={p}>
-												{p}
-											</Select.Item>
-										{/each}
-									</Select.Content>
-								</Select.Root>
-							</div>
+								<div class="space-y-2">
+									<Label>Threshold</Label>
+									<Input type="number" bind:value={rule.threshold} disabled={!rule.enable} />
+								</div>
+
+								<div class="space-y-2">
+									<Label>Priority</Label>
+									<Select.Root
+										bind:value={rule.priority}
+										disabled={rule.enable !== 'Enabled'}
+										type="single"
+									>
+										<Select.Trigger class="h-10 w-full">
+											<span>{rule.priority || 'Select Priority'}</span>
+										</Select.Trigger>
+										<Select.Content>
+											{#each priorities as p}
+												<Select.Item value={p} label={p}>
+													{p}
+												</Select.Item>
+											{/each}
+										</Select.Content>
+									</Select.Root>
+								</div>
 
 								<div class="flex items-center gap-2">
 									<Switch
