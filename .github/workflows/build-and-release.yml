@@ -38,11 +38,7 @@ jobs:
       - name: Prepare Web App for Embedding
         run: |
           # Copy built web app to components/web_server/static
-          cp -r front/build/* components/web_server/static/
-          
-          # Also copy to a separate artifact directory
-          mkdir -p artifacts/webapp
-          cp -r front/build/* artifacts/webapp/
+          cp -r front/build/index.html components/web_server/static/
   
       # Build with ESP-IDF
       - name: Build with ESP-IDF
@@ -94,7 +90,6 @@ jobs:
           files: |
             artifacts/firmware/*.bin
             artifacts/stm32/*.bin
-            artifacts/webapp/**
           body_path: latest_changelog.md
           name: "Digital Dash Release ${{ github.ref_name }}"
         env:
@@ -115,9 +110,3 @@ jobs:
           path: artifacts/stm32/
           retention-days: 30
 
-      - name: Upload Web App Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: webapp-${{ github.ref_name }}
-          path: artifacts/webapp/
-          retention-days: 30
