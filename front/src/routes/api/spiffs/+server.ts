@@ -1,23 +1,53 @@
 import { json, error } from '@sveltejs/kit';
+import { existsSync, statSync } from 'fs';
+import { join } from 'path';
 
 export const prerender = false;
 
-// Dummy API endpoint for SPIFFS file listing
+// API endpoint for SPIFFS file listing
 // This will be replaced by the real C webserver implementation
 export async function GET() {
 	// Simulate processing time
 	await new Promise(resolve => setTimeout(resolve, 500));
 	
-	// Mock file list response
-	return json({
-		success: true,
-		files: [
-			{
-				name: 'digitaldash-firmware-gen2-stm32u5g.bin',
-				size: 524288
-			}
-		]
-	});
+	// Try to get real file information
+	const filePath = join(process.cwd(), 'static', 'spiffs', 'digitaldash-firmware-gen2-stm32u5g.bin');
+	
+	try {
+		if (existsSync(filePath)) {
+			const stats = statSync(filePath);
+			return json({
+				success: true,
+				files: [
+					{
+						name: 'digitaldash-firmware-gen2-stm32u5g.bin',
+						size: stats.size,
+						lastModified: stats.mtime.toISOString(),
+						type: 'Binary firmware file'
+					}
+				]
+			});
+		} else {
+			// File doesn't exist, return empty list
+			return json({
+				success: true,
+				files: []
+			});
+		}
+	} catch (err) {
+		// Fallback to mock data if file access fails
+		return json({
+			success: true,
+			files: [
+				{
+					name: 'digitaldash-firmware-gen2-stm32u5g.bin',
+					size: 524288,
+					lastModified: new Date().toISOString(),
+					type: 'Binary firmware file'
+				}
+			]
+		});
+	}
 }
 
 // Dummy API endpoint for SPIFFS file upload
