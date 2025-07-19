@@ -37,7 +37,7 @@ jobs:
           yarn build
           # Restore api folder
           mv src/routes/api.disabled src/routes/api || true
-
+a
       # Copy web app build to ESP-IDF components for embedding
       - name: Prepare Web App for Embedding
         run: |
@@ -56,17 +56,12 @@ jobs:
       - name: Prepare Firmware Artifacts
         run: |
           mkdir -p artifacts/firmware
-          
-          # Copy main firmware binary
-          cp build/*.bin artifacts/firmware/ 2>/dev/null || echo "No .bin files found"
-          
-          # Copy partition table and other important files
-          cp build/partition_table/partition-table.bin artifacts/firmware/ 2>/dev/null || echo "No partition table found"
-          cp build/bootloader/bootloader.bin artifacts/firmware/ 2>/dev/null || echo "No bootloader found"
 
-          # List all created artifacts
+          # Copy only the KE_DigitalDash_Webapp.bin binary
+          cp build/KE_DigitalDash_Webapp.bin artifacts/firmware/ 2>/dev/null || echo "No firmware binary found"
+
           echo "Created artifacts:"
-          find artifacts -type f -name "*.bin" -o -name "*.html" -o -name "*.js" -o -name "*.css" | head -20
+          ls -lh artifacts/firmware/
 
       # Extract changelog for release notes
       - name: Extract Latest Changelog Entry
