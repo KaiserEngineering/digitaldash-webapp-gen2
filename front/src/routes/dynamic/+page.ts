@@ -9,8 +9,16 @@ export const load: PageLoad = async ({ parent }) => {
 	const pids = await parentData.pids;
 	const options = await parentData.options;
 
+	const initialDynamic = config?.dynamic || [];
+
+	// Add index to dynamic rules if not present (for stable component keys)
+	const dynamicWithIndex = initialDynamic.map((rule, index) => ({
+		...rule,
+		index: rule.index ?? index
+	}));
+
 	const dynamicConfig = {
-		items: config?.dynamic || []
+		items: dynamicWithIndex
 	};
 
 	const form = await superValidate(dynamicConfig, zod4(DynamicFormSchema));

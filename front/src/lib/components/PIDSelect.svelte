@@ -15,10 +15,6 @@
 		onPidChange = () => {},
 		onUnitChange = () => {},
 		class: className = '',
-		// For gauge mode, we need to convert between label and description
-		useDescription = false,
-		getPidDescByLabel = (label: string) => label,
-		getPidLabelByDesc = (desc: string) => desc,
 		key = ''
 	}: {
 		pidValue?: string;
@@ -32,27 +28,23 @@
 		onPidChange?: (pid: string) => void;
 		onUnitChange?: (unit: string) => void;
 		class?: string;
-		useDescription?: boolean;
-		getPidDescByLabel?: (label: string) => string;
-		getPidLabelByDesc?: (desc: string) => string;
 		key?: string;
 	} = $props();
 
 	function handlePidChange(selectedValue: string | undefined) {
 		if (selectedValue) {
-			if (useDescription) {
-				pidValue = getPidDescByLabel(selectedValue);
-			} else {
-				pidValue = selectedValue;
-			}
-			
-			// Find the new PID data - selectedValue is always a label from the UI
-			const pidData = pids.find(p => p.label === selectedValue);
-			
-			// Check if current unit is valid for the new PID
+			pidValue = selectedValue;
+
+			// Find the new PID data by label
+			const pidData = pids.find((p) => p.label === selectedValue);
+
+			// Keep current unit if valid for new PID, otherwise reset to first unit
 			if (pidData && pidData.units.length > 0) {
-				// If current unit is not in the new PID's units, reset to first unit
-				if (!unitValue || !pidData.units.includes(unitValue)) {
+				// If current unit is valid for the new PID, keep it
+				if (unitValue && pidData.units.includes(unitValue)) {
+					// Keep current unit - no change needed
+				} else {
+					// Reset to first unit if current unit is invalid or empty
 					unitValue = pidData.units[0];
 				}
 				onUnitChange(unitValue);
@@ -61,7 +53,7 @@
 				unitValue = '';
 				onUnitChange('');
 			}
-			
+
 			onPidChange(pidValue);
 		}
 	}
@@ -69,10 +61,8 @@
 	function handleUnitChange(selectedValue: string | undefined) {
 		if (selectedValue) {
 			// Get current PID data to validate unit selection
-			const currentPidData = pids.find(p => 
-				useDescription ? p.desc === pidValue : p.label === pidValue
-			);
-			
+			const currentPidData = pids.find((p) => p.label === pidValue);
+
 			// Only allow valid units for the current PID
 			if (currentPidData && currentPidData.units.includes(selectedValue)) {
 				unitValue = selectedValue;
@@ -90,9 +80,7 @@
 	// Auto-select first unit for existing PIDs without units
 	$effect(() => {
 		if (pidValue && !unitValue) {
-			const pidData = pids.find(p => 
-				useDescription ? p.desc === pidValue : p.label === pidValue
-			);
+			const pidData = pids.find((p) => p.label === pidValue);
 			if (pidData && pidData.units.length > 0) {
 				unitValue = pidData.units[0];
 				onUnitChange(unitValue);
@@ -107,16 +95,16 @@
 		<Label class="text-sm font-medium">{pidLabel}</Label>
 		<Select.Root
 			type="single"
-			value={useDescription ? getPidLabelByDesc(pidValue) : pidValue}
+			bind:value={pidValue}
 			onValueChange={handlePidChange}
 			{disabled}
 		>
 			<Select.Trigger class="!h-12 w-full touch-manipulation">
 				<span>
-					{useDescription ? getPidLabelByDesc(pidValue) || pidPlaceholder : pidValue || pidPlaceholder}
+					{pidValue || pidPlaceholder}
 				</span>
 			</Select.Trigger>
-			<Select.Content position="popper">
+			<Select.Content>
 				{#each pids as pid (pid)}
 					<Select.Item value={pid.label} label={pid.label} class="py-3 text-base">
 						{pid.label}
@@ -128,22 +116,15 @@
 
 	<!-- Unit Selector - Shows only when PID is selected and has units -->
 	{#if pidValue}
-		{@const selectedPidData = pids.find(p => 
-			useDescription ? p.desc === pidValue : p.label === pidValue
-		)}
+		{@const selectedPidData = pids.find((p) => p.label === pidValue)}
 		{#if selectedPidData && selectedPidData.units.length > 0}
 			<div class="space-y-2">
 				<Label class="text-sm font-medium">{unitLabel}</Label>
-				<Select.Root
-					type="single"
-					value={unitValue}
-					onValueChange={handleUnitChange}
-					{disabled}
-				>
+				<Select.Root type="single" bind:value={unitValue} onValueChange={handleUnitChange} {disabled}>
 					<Select.Trigger class="!h-12 w-full touch-manipulation">
 						<span>{unitValue || unitPlaceholder}</span>
 					</Select.Trigger>
-					<Select.Content position="popper">
+					<Select.Content>
 						{#each selectedPidData.units as unit (unit)}
 							<Select.Item value={unit} label={unit} class="py-3 text-base">
 								{unit}

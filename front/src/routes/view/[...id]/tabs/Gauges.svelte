@@ -103,7 +103,6 @@
 							bind:pidValue={$form.gauge[i].pid}
 							bind:unitValue={$form.gauge[i].units}
 							{pids}
-							useDescription={false}
 						/>
 
 						<!-- Theme Selector - Full width on mobile -->

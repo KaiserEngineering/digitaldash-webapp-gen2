@@ -11,7 +11,13 @@ export const load: PageLoad = async ({ parent }) => {
 
 	const initialAlerts = config?.alert ?? [];
 
-	const form = await superValidate({ items: initialAlerts }, zod4(AlertsFormSchema));
+	// Add index to alerts if not present (for stable component keys)
+	const alertsWithIndex = initialAlerts.map((alert, index) => ({
+		...alert,
+		index: alert.index ?? index
+	}));
+
+	const form = await superValidate({ items: alertsWithIndex }, zod4(AlertsFormSchema));
 
 	return { form, pids, options };
 };

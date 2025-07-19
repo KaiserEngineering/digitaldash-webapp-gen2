@@ -86,7 +86,8 @@ export const AlertSchema = z.object({
 	units: z.string().default('None'),
 	compare: CompareEnum,
 	threshold: z.number().nullable(),
-	message: z.string().max(ALERT_MESSAGE_LEN)
+	message: z.string().max(ALERT_MESSAGE_LEN),
+	index: z.number().optional() // Optional index for client-side use
 });
 
 /**

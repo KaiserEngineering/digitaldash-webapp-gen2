@@ -11,7 +11,7 @@
 	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
 	import PageCard from '@/components/PageCard.svelte';
 	import PIDSelect from '$lib/components/PIDSelect.svelte';
-	import { Settings } from 'lucide-svelte';
+	import { Settings, ChevronDown } from 'lucide-svelte';
 	import { Motion } from 'motion-start';
 	import { slide } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
@@ -20,6 +20,20 @@
 	let { data } = $props();
 	const pids = data.pids || [];
 	const options = data.options || {};
+
+	// Track which rule cards are expanded (independent expand/collapse)
+	let expandedRules = $state<Set<number>>(new Set());
+
+	// Toggle expanded state for a rule card
+	function toggleRuleExpand(index: number) {
+		const newExpanded = new Set(expandedRules);
+		if (newExpanded.has(index)) {
+			newExpanded.delete(index);
+		} else {
+			newExpanded.add(index);
+		}
+		expandedRules = newExpanded;
+	}
 
 	const { form, submitting, enhance } = superForm(data.form, {
 		dataType: 'json',
@@ -43,7 +57,8 @@
 
 <PageCard title="Dynamic Rules" description="Define dynamic gauge rules." icon={Settings} {enhance}>
 	{#snippet children()}
-		{#each $form.items as rule, i (i)}
+		{#each $form.items as rule, i (rule.index ?? i)}
+			{@const isExpanded = expandedRules.has(i)}
 			<div
 				in:slide={{ duration: 200, easing: quintOut }}
 				out:slide={{ duration: 200, easing: quintOut }}
@@ -51,22 +66,49 @@
 			>
 				<Motion.div key={i} class="overflow-hidden">
 					<div
-						class={`relative rounded-xl border p-5 transition duration-200 ${
+						class={`relative rounded-xl border transition duration-200 ${
 							rule.enable === 'Enabled'
-								? 'border-primary-100 bg-primary-50 hover:-translate-y-1 hover:shadow-md'
+								? 'border-primary-100 bg-primary-50 hover:shadow-md'
 								: 'border-gray-200 bg-gray-50 opacity-60'
 						}`}
 					>
-						<div class="text-primary-700 flex items-center gap-2 border-b pb-4">
-							<div
-								class="bg-primary-100 flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold"
-							>
-								{i + 1}
+						<!-- Touchable header that expands/collapses the card -->
+						<button
+							type="button"
+							class="w-full text-left"
+							onclick={() => toggleRuleExpand(i)}
+							aria-expanded={isExpanded}
+						>
+							<div class="text-primary-700 flex items-center justify-between border-b p-4">
+								<div class="flex items-center gap-3">
+									<div
+										class="bg-primary-100 flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold"
+									>
+										{i + 1}
+									</div>
+									<div>
+										<h4 class="font-semibold">Rule #{i + 1}</h4>
+										<p class="text-xs text-gray-600">
+											{rule.pid || 'No PID selected'}
+											{#if rule.priority}• {rule.priority}{/if}
+											{#if rule.enable === 'Enabled'}• Enabled{:else}• Disabled{/if}
+										</p>
+									</div>
+								</div>
+								<ChevronDown
+									class="h-5 w-5 transition-transform duration-200"
+									style={isExpanded ? 'transform: rotate(180deg)' : ''}
+								/>
 							</div>
-							<span class="font-semibold">Rule #{i + 1}</span>
-						</div>
+						</button>
 
-						<div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+						<!-- Card content that shows/hides based on expanded state -->
+						{#if isExpanded}
+							<div 
+								class="grid grid-cols-1 gap-4 p-4 pt-0 md:grid-cols-2"
+								in:slide={{ duration: 300, easing: quintOut }}
+								out:slide={{ duration: 200, easing: quintOut }}
+							>
 							<PIDSelect
 								bind:pidValue={rule.pid}
 								bind:unitValue={rule.units}
@@ -123,14 +165,15 @@
 								</Select.Root>
 							</div>
 
-							<div class="flex items-center gap-2">
-								<Switch
-									checked={rule.enable === 'Enabled'}
-									onCheckedChange={(checked) => (rule.enable = checked ? 'Enabled' : 'Disabled')}
-								/>
-								<Label>Enabled</Label>
+								<div class="flex items-center gap-2">
+									<Switch
+										checked={rule.enable === 'Enabled'}
+										onCheckedChange={(checked) => (rule.enable = checked ? 'Enabled' : 'Disabled')}
+									/>
+									<Label>Enabled</Label>
+								</div>
 							</div>
-						</div>
+						{/if}
 					</div>
 				</Motion.div>
 			</div>
