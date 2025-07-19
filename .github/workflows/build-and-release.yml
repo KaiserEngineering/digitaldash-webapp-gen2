@@ -59,11 +59,7 @@ jobs:
           # Copy partition table and other important files
           cp build/partition_table/partition-table.bin artifacts/firmware/ 2>/dev/null || echo "No partition table found"
           cp build/bootloader/bootloader.bin artifacts/firmware/ 2>/dev/null || echo "No bootloader found"
-          
-          # Create STM32 firmware binary for SPIFFS upload
-          mkdir -p artifacts/stm32
-          cp spiffs/digitaldash-firmware-gen2-stm32u5g.bin artifacts/stm32/ 2>/dev/null || echo "No STM32 firmware found"
-          
+
           # List all created artifacts
           echo "Created artifacts:"
           find artifacts -type f -name "*.bin" -o -name "*.html" -o -name "*.js" -o -name "*.css" | head -20
@@ -80,7 +76,6 @@ jobs:
             echo "## Release $(echo $GITHUB_REF | sed 's/refs\/tags\///')" > latest_changelog.md
             echo "- ESP32-S3 firmware build" >> latest_changelog.md
             echo "- Web application build" >> latest_changelog.md
-            echo "- STM32 firmware for Digital Dash" >> latest_changelog.md
           fi
 
       # Create a release and upload artifacts
@@ -89,7 +84,6 @@ jobs:
         with:
           files: |
             artifacts/firmware/*.bin
-            artifacts/stm32/*.bin
           body_path: latest_changelog.md
           name: "Digital Dash Release ${{ github.ref_name }}"
         env:
@@ -102,11 +96,3 @@ jobs:
           name: esp32-firmware-${{ github.ref_name }}
           path: artifacts/firmware/
           retention-days: 30
-
-      - name: Upload STM32 Firmware Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: stm32-firmware-${{ github.ref_name }}
-          path: artifacts/stm32/
-          retention-days: 30
-
