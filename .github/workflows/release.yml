@@ -23,7 +23,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 23.2.0 # Specify the Node.js version
+          node-version: 24 # Specify the Node.js version
           check-latest: true   # Ensures the latest patch of the specified version is used
 
       # Install dependencies and build frontend
