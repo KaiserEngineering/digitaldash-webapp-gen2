@@ -30,6 +30,8 @@ jobs:
       # Install dependencies and build frontend
       - name: Install and Build Frontend
         working-directory: front
+        env:
+          EMBEDDED_BUILD: true
         run: |
           yarn install --frozen-lockfile
           yarn build
@@ -44,7 +46,7 @@ jobs:
       - name: Build with ESP-IDF
         uses: espressif/esp-idf-ci-action@v1
         with:
-          esp_idf_version: v5.2.3 # Specify the ESP-IDF version
+          esp_idf_version: v5.3.1# Specify the ESP-IDF version
           target: esp32s3         # Specify the ESP-IDF target
           path: './'              # Set the project path (current directory)
 
