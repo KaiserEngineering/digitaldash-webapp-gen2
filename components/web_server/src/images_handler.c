@@ -26,6 +26,7 @@
  */
 
 #include "images_handler.h"
+#include "file_handler.h"
 #include "esp_err.h"
 #include "esp_http_server.h"
 #include "esp_log.h"
@@ -99,54 +100,51 @@ esp_err_t list_images(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "GET request received: %s", req->uri);
 
-    DIR *dir = opendir(IMAGE_DIR);
-    if (!dir)
+    file_list_t *file_list = NULL;
+    esp_err_t err = file_handler_list_files(IMAGE_DIR, &file_list);
+    if (err != ESP_OK || !file_list)
     {
-        ESP_LOGE(TAG, "Failed to open images directory: %s", IMAGE_DIR);
+        ESP_LOGE(TAG, "Failed to list files in directory: %s", IMAGE_DIR);
         return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to open images directory");
     }
 
     char response[MAX_RESPONSE_SIZE] = "{";
     size_t len = 1;
-    struct dirent *entry;
-    struct stat st;
-    char filepath[MAX_PATH_SIZE];
     int file_count = 0;
 
-    while ((entry = readdir(dir)) != NULL && file_count < MAX_FILES)
+    for (size_t i = 0; i < file_list->count && file_count < MAX_FILES; i++)
     {
-        if (entry->d_type == DT_DIR)
+        file_info_t *info = &file_list->files[i];
+
+        if (info->is_directory)
         {
             continue;
         }
 
         const char *mime_type;
-        if (is_image_file(entry->d_name, &mime_type))
+        if (is_image_file(info->name, &mime_type))
         {
-            snprintf(filepath, sizeof(filepath), "%s/%.*s", IMAGE_DIR, (int)(sizeof(filepath) - strlen(IMAGE_DIR) - 2), entry->d_name);
-            if (stat(filepath, &st) == 0)
+            // Check if we have enough space for the next entry
+            if (len + 256 >= MAX_RESPONSE_SIZE - 2)
             {
-                // Check if we have enough space for the next entry
-                if (len + 256 >= MAX_RESPONSE_SIZE - 2)
-                {
-                    ESP_LOGW(TAG, "Response buffer nearly full, truncating file list");
-                    break;
-                }
-
-                if (file_count > 0)
-                {
-                    response[len++] = ',';
-                }
-
-                len += snprintf(response + len, MAX_RESPONSE_SIZE - len,
-                                "\"%s\": {\"url\": \"/api/image/%s\", \"size\": %lld, \"type\": \"%s\", \"lastModified\": %lld}",
-                                entry->d_name, entry->d_name, (long long)st.st_size, mime_type, (long long)st.st_mtime);
-
-                file_count++;
+                ESP_LOGW(TAG, "Response buffer nearly full, truncating file list");
+                break;
             }
+
+            if (file_count > 0)
+            {
+                response[len++] = ',';
+            }
+
+            len += snprintf(response + len, MAX_RESPONSE_SIZE - len,
+                            "\"%s\": {\"url\": \"/api/image/%s\", \"size\": %lld, \"type\": \"%s\", \"lastModified\": %lld}",
+                            info->name, info->name, (long long)info->size, mime_type, (long long)info->last_modified);
+
+            file_count++;
         }
     }
-    closedir(dir);
+
+    file_handler_free_list(file_list);
 
     response[len++] = '}';
     response[len] = '\0';
@@ -179,7 +177,7 @@ esp_err_t get_image(httpd_req_t *req)
     char filepath[MAX_PATH_SIZE];
     snprintf(filepath, sizeof(filepath), "%s/%s", IMAGE_DIR, image_name);
 
-    FILE *file = fopen(filepath, "rb");
+    FILE *file = file_handler_open_read(filepath);
     if (!file)
     {
         ESP_LOGE(TAG, "File not found: %s", filepath);
@@ -192,7 +190,7 @@ esp_err_t get_image(httpd_req_t *req)
     if (err != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to set Content-Type header");
-        fclose(file);
+        file_handler_close(file);
         return err;
     }
 
@@ -207,14 +205,14 @@ esp_err_t get_image(httpd_req_t *req)
         if (ret != ESP_OK)
         {
             ESP_LOGE(TAG, "Client disconnected or error sending chunk");
-            fclose(file);
+            file_handler_close(file);
             return ret;
         }
         total_bytes_sent += read_bytes;
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 
-    fclose(file);
+    file_handler_close(file);
     ESP_LOGI(TAG, "Total bytes sent: %d", total_bytes_sent);
     return httpd_resp_send_chunk(req, NULL, 0);
 }
@@ -252,7 +250,7 @@ esp_err_t image_upload_handler(httpd_req_t *req)
 
     ESP_LOGI(TAG, "Uploading file: %s (Content-Type: %s)", filepath, content_type);
 
-    FILE *file = fopen(filepath, "wb");
+    FILE *file = file_handler_open_write(filepath);
     if (!file)
     {
         ESP_LOGE(TAG, "Failed to open file for writing: %s, errno: %d", filepath, errno);
@@ -270,8 +268,8 @@ esp_err_t image_upload_handler(httpd_req_t *req)
         if (received <= 0)
         {
             ESP_LOGE(TAG, "Error receiving file data");
-            fclose(file);
-            unlink(filepath);
+            file_handler_close(file);
+            file_handler_delete(filepath);
             return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File upload failed");
         }
 
@@ -279,15 +277,15 @@ esp_err_t image_upload_handler(httpd_req_t *req)
         if (written != received)
         {
             ESP_LOGE(TAG, "Error writing file data");
-            fclose(file);
-            unlink(filepath);
+            file_handler_close(file);
+            file_handler_delete(filepath);
             return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File write failed");
         }
 
         remaining -= received;
         total_received += received;
     }
-    fclose(file);
+    file_handler_close(file);
 
     ESP_LOGI(TAG, "File uploaded successfully: %s (%d bytes)", filepath, total_received);
 
@@ -321,18 +319,18 @@ esp_err_t image_delete_handler(httpd_req_t *req)
     snprintf(filepath, sizeof(filepath), "%s/%s", IMAGE_DIR, decoded_filename);
 
     // Check if file exists
-    struct stat st;
-    if (stat(filepath, &st) != 0)
+    bool exists;
+    esp_err_t err = file_handler_exists(filepath, &exists);
+    if (err != ESP_OK || !exists)
     {
         ESP_LOGW(TAG, "File not found: %s", filepath);
         return httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File not found");
     }
 
     // Delete the file
-    if (unlink(filepath) == 0)
+    err = file_handler_delete(filepath);
+    if (err == ESP_OK)
     {
-        ESP_LOGI(TAG, "File deleted successfully: %s", filepath);
-
         httpd_resp_set_type(req, "application/json");
         char response[256];
         snprintf(response, sizeof(response),
@@ -341,7 +339,7 @@ esp_err_t image_delete_handler(httpd_req_t *req)
     }
     else
     {
-        ESP_LOGE(TAG, "Failed to delete file: %s, errno: %d", filepath, errno);
+        ESP_LOGE(TAG, "Failed to delete file: %s", filepath);
         return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to delete file");
     }
 }

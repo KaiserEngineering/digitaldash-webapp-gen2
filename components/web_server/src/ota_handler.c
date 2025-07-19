@@ -85,6 +85,31 @@ esp_err_t web_update_post_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+/* STM32 firmware flashing function */
+void flash_stm32_firmware(const char *firmware_path)
+{
+    ESP_LOGI(TAG, "Starting STM32 firmware flash: %s", firmware_path);
+
+    // Switch UART to bootloader mode
+    uart_init_for_stm32_bootloader();
+    ESP_LOGI(TAG, "UART initialized for STM32 bootloader");
+
+    // Put STM32 in bootloader mode
+    stm32_bootloader();
+    ESP_LOGI(TAG, "STM32 set to bootloader mode");
+
+    // Flash the firmware using existing function
+    esp_err_t result = flashSTM(firmware_path);
+    if (result == ESP_OK) {
+        ESP_LOGI(TAG, "STM32 firmware flashed successfully");
+    } else {
+        ESP_LOGE(TAG, "STM32 firmware flash failed");
+    }
+
+    // Reset STM32 to run new firmware
+    stm32_reset();
+    ESP_LOGI(TAG, "STM32 reset to run new firmware");
+}
 
 // Add STM firmware update handler
 esp_err_t stm_update_post_handler(httpd_req_t *req)

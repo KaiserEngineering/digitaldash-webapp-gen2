@@ -16,7 +16,9 @@
 	let filesStatus: 'idle' | 'loading' | 'success' | 'error' = $state('idle');
 	let files: any[] = $state([]);
 	let fileInput: HTMLInputElement | undefined = $state();
-	let flashStatus: 'idle' | 'uploading' | 'flashing' | 'success' | 'error' = $state('idle');
+	let uploadStatus: 'idle' | 'uploading' | 'success' | 'error' = $state('idle');
+	let flashStatus: 'idle' | 'flashing' | 'success' | 'error' = $state('idle');
+	let uploadMessage = $state('');
 	let flashMessage = $state('');
 
 	async function loadFiles() {
@@ -47,16 +49,15 @@
 		}
 	}
 
-	async function browseAndFlashFirmware() {
+	async function uploadFirmware() {
 		if (!fileInput) return;
 		const file = fileInput.files?.[0];
 		if (!file) return;
 
-		flashStatus = 'uploading';
-		flashMessage = 'Uploading firmware file...';
+		uploadStatus = 'uploading';
+		uploadMessage = 'Uploading firmware file...';
 
 		try {
-			// Step 1: Upload file to SPIFFS with correct name
 			const formData = new FormData();
 			formData.append('file', file);
 			formData.append('filename', 'digitaldash-firmware-gen2-stm32u5g.bin');
@@ -68,10 +69,23 @@
 			const uploadData = await uploadRes.json();
 			if (!uploadRes.ok) throw new Error(uploadData.message || 'File upload failed');
 
-			// Step 2: Flash the firmware
-			flashStatus = 'flashing';
-			flashMessage = 'Flashing firmware to STM32...';
+			uploadStatus = 'success';
+			uploadMessage = 'Firmware file uploaded successfully!';
 
+			// Reload file list and clear input
+			await loadFiles();
+			fileInput.value = '';
+		} catch (err) {
+			uploadStatus = 'error';
+			uploadMessage = err.message || 'An error occurred during firmware upload';
+		}
+	}
+
+	async function flashFirmware() {
+		flashStatus = 'flashing';
+		flashMessage = 'Flashing firmware to Digital Dash...';
+
+		try {
 			const flashRes = await fetch('/api/firmware/stm', {
 				method: 'POST',
 				headers: {
@@ -84,12 +98,11 @@
 			flashStatus = 'success';
 			flashMessage = 'Digital Dash updated successfully!';
 
-			// Reload file list and clear input
+			// Reload file list
 			await loadFiles();
-			fileInput.value = '';
 		} catch (err) {
 			flashStatus = 'error';
-			flashMessage = err.message || 'An error occurred during firmware update';
+			flashMessage = err.message || 'An error occurred during firmware flashing';
 		}
 	}
 
@@ -127,47 +140,87 @@
 					type="file"
 					accept=".bin"
 					class="hidden"
-					onchange={browseAndFlashFirmware}
+					onchange={uploadFirmware}
 				/>
 
+				<!-- Upload Button -->
 				<Button
 					onclick={browseFirmware}
-					disabled={flashStatus === 'uploading' || flashStatus === 'flashing'}
-					class="from-secondary-600 to-secondary-700 hover:from-secondary-700 hover:to-secondary-800 h-12 w-full bg-gradient-to-r text-lg font-semibold text-white shadow-md transition-all duration-200 hover:shadow-lg"
+					disabled={uploadStatus === 'uploading' || flashStatus === 'flashing'}
+					class="from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 h-12 w-full bg-gradient-to-r text-lg font-semibold text-white shadow-md transition-all duration-200 hover:shadow-lg"
 				>
-					{#if flashStatus === 'uploading'}
+					{#if uploadStatus === 'uploading'}
 						<Loader2 class="mr-3 h-5 w-5 animate-spin" />
 						Uploading Firmware...
-					{:else if flashStatus === 'flashing'}
-						<Loader2 class="mr-3 h-5 w-5 animate-spin" />
-						Flashing Firmware...
 					{:else}
 						<Upload class="mr-3 h-5 w-5" />
-						Browse & Flash Digital Dash
+						Upload Firmware File
 					{/if}
 				</Button>
 
-				{#if flashStatus === 'success'}
-					<div class="bg-primary-50 border-primary-200 rounded-lg border p-4">
-						<p class="text-primary-800 flex items-center gap-3 font-medium">
-							<CheckCircle class="text-primary-600 h-5 w-5" />
-							{flashMessage}
+				<!-- Upload Status -->
+				{#if uploadStatus === 'success'}
+					<div class="bg-green-50 border-green-200 rounded-lg border p-4">
+						<p class="text-green-800 flex items-center gap-3 font-medium">
+							<CheckCircle class="text-green-600 h-5 w-5" />
+							{uploadMessage}
 						</p>
 					</div>
-				{:else if flashStatus === 'error'}
+				{:else if uploadStatus === 'error'}
 					<div class="rounded-lg border border-red-200 bg-red-50 p-4">
 						<p class="flex items-center gap-3 font-medium text-red-800">
 							<AlertTriangle class="h-5 w-5 text-red-600" />
-							{flashMessage}
+							{uploadMessage}
 						</p>
 					</div>
-				{:else if flashStatus === 'uploading' || flashStatus === 'flashing'}
+				{:else if uploadStatus === 'uploading'}
 					<div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
 						<p class="flex items-center gap-3 font-medium text-blue-800">
 							<Loader2 class="h-5 w-5 animate-spin text-blue-600" />
-							{flashMessage}
+							{uploadMessage}
 						</p>
 					</div>
+				{/if}
+
+				<!-- Flash Button - only show when firmware file exists -->
+				{#if files.some(f => f.name === 'digitaldash-firmware-gen2-stm32u5g.bin')}
+					<Button
+						onclick={flashFirmware}
+						disabled={uploadStatus === 'uploading' || flashStatus === 'flashing'}
+						class="from-secondary-600 to-secondary-700 hover:from-secondary-700 hover:to-secondary-800 h-12 w-full bg-gradient-to-r text-lg font-semibold text-white shadow-md transition-all duration-200 hover:shadow-lg"
+					>
+						{#if flashStatus === 'flashing'}
+							<Loader2 class="mr-3 h-5 w-5 animate-spin" />
+							Flashing Digital Dash...
+						{:else}
+							<Zap class="mr-3 h-5 w-5" />
+							Flash to Digital Dash
+						{/if}
+					</Button>
+
+					<!-- Flash Status -->
+					{#if flashStatus === 'success'}
+						<div class="bg-primary-50 border-primary-200 rounded-lg border p-4">
+							<p class="text-primary-800 flex items-center gap-3 font-medium">
+								<CheckCircle class="text-primary-600 h-5 w-5" />
+								{flashMessage}
+							</p>
+						</div>
+					{:else if flashStatus === 'error'}
+						<div class="rounded-lg border border-red-200 bg-red-50 p-4">
+							<p class="flex items-center gap-3 font-medium text-red-800">
+								<AlertTriangle class="h-5 w-5 text-red-600" />
+								{flashMessage}
+							</p>
+						</div>
+					{:else if flashStatus === 'flashing'}
+						<div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
+							<p class="flex items-center gap-3 font-medium text-blue-800">
+								<Loader2 class="h-5 w-5 animate-spin text-blue-600" />
+								{flashMessage}
+							</p>
+						</div>
+					{/if}
 				{/if}
 			</CardContent>
 		</Card>

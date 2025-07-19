@@ -35,6 +35,7 @@
 #include "web_server.h"
 #include "wifi_ap.h"
 #include "spiffs_init.h"
+#include "ota_handler.h"
 #include "esp_wifi.h"
 #include <esp_flash_partitions.h>
 #include "esp_ota_ops.h"
@@ -261,15 +262,6 @@ void spi_master_transmit_payload(void)
     ESP_ERROR_CHECK(spi_device_transmit(spi, &t));
 }
 
-void flash_stm32_firmware(const char *bin_filename)
-{
-    // If this causes a stack overflow increase ESP_MAIN_TASK_STACK_SIZE in menuconfig
-    ESP_LOGI(TAG, "Starting flashing procedure...");
-    uart_init_for_stm32_bootloader();
-    flashSTM(bin_filename);
-    endConn();
-    uart_init(&stm32_comm);
-}
 
 int stm32_tx(const uint8_t *data, uint32_t len)
 {
