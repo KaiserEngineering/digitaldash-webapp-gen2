@@ -2,6 +2,7 @@ import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 const isDev = process.env.NODE_ENV === 'development';
+const isEmbedded = process.env.EMBEDDED_BUILD === 'true';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -28,10 +29,12 @@ const config = {
 			'$local/*': './src/local/*'
 		},
 
-		// Exclude API routes in production
-		files: {
-			routes: isDev ? 'src/routes' : 'src/routes/!(api)'
-		}
+		// Exclude API routes only for embedded builds
+		...(isEmbedded && {
+			files: {
+				routes: 'src/routes/!(api)/**'
+			}
+		})
 	}
 };
 
