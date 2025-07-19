@@ -85,14 +85,13 @@ esp_err_t web_update_post_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+
 // Add STM firmware update handler
 esp_err_t stm_update_post_handler(httpd_req_t *req)
 {
     flash_stm32_firmware("digitaldash-firmware-gen2-stm32u5g.bin");
     httpd_resp_set_type(req, "application/json");
-    httpd_resp_sendstr(req, "{\"message\": \"STM32 firmware update complete, rebooting now!\"}");
-    vTaskDelay(500 / portTICK_PERIOD_MS);
-    esp_restart();
+    httpd_resp_sendstr(req, "{\"message\": \"STM32 firmware update complete!\"}");
     return ESP_OK;
 }
 
