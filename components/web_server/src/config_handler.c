@@ -58,6 +58,10 @@ esp_err_t config_options_handler(httpd_req_t *req)
 
 esp_err_t config_get_handler(httpd_req_t *req)
 {
+    memset(json_data_input, 0, JSON_BUF_SIZE);
+    Generate_TX_Message(get_stm32_comm(), KE_CONFIG_REQUEST, 0);
+    KE_wait_for_response(get_stm32_comm(), 5000);
+
     ESP_LOGI(TAG, "GET /api/config requested");
     if (json_data_input[0] == '\0')
     {
