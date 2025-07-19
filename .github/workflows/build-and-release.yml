@@ -31,9 +31,9 @@ jobs:
       - name: Install and Build Frontend
         working-directory: front
         run: |
-          npm install
-          npm run build
-          
+          yarn install --frozen-lockfile
+          yarn build
+
       # Copy web app build to ESP-IDF components for embedding
       - name: Prepare Web App for Embedding
         run: |
