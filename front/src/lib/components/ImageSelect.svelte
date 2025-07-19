@@ -82,7 +82,7 @@
 		</div>
 	{:else}
 		<div class={cn(
-			'grid gap-3',
+			'grid gap-3 max-h-96 overflow-y-auto',
 			themes 
 				? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
 				: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'

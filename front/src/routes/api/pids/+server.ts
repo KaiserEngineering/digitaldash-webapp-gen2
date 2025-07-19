@@ -12,7 +12,7 @@ export const GET = async () => {
 		},
 		{
 			desc: 'Calculated engine load',
-			label: 'Load',
+			label: 'Engine Load',
 			units: ['Percent'],
 			min: [0],
 			max: [100],
@@ -60,7 +60,7 @@ export const GET = async () => {
 		},
 		{
 			desc: 'Fuel Pressure',
-			label: 'Fuel',
+			label: 'Fuel Pressure',
 			units: ['kPa', 'psi'],
 			min: [0, 0],
 			max: [765, 110],
@@ -125,7 +125,7 @@ export const GET = async () => {
 		},
 		{
 			desc: 'Fuel Rail Pressure relative to manifold vacuum',
-			label: 'Fuel',
+			label: 'Fuel Rail',
 			units: ['kPa', 'psi'],
 			min: [0, 0],
 			max: [5177, 750],
@@ -182,7 +182,7 @@ export const GET = async () => {
 		},
 		{
 			desc: 'Manifold Absolute Pressure Sensor Voltage 1',
-			label: 'MAP',
+			label: 'MAP Voltage',
 			units: ['Volts'],
 			min: [0],
 			max: [5],
@@ -221,14 +221,6 @@ export const GET = async () => {
 			decimals: [1]
 		},
 		{
-			desc: 'Intake air temperature',
-			label: 'IAT',
-			units: ['Celsius', 'Fahrenheit'],
-			min: [-40, -40],
-			max: [200, 400],
-			decimals: [0, 1]
-		},
-		{
 			desc: 'Charge air temperature',
 			label: 'CAT',
 			units: ['Celsius', 'Fahrenheit'],
@@ -262,7 +254,7 @@ export const GET = async () => {
 		},
 		{
 			desc: 'Engine load percentage',
-			label: 'Load',
+			label: 'Load Percent',
 			units: ['Percent'],
 			min: [0],
 			max: [100],
@@ -327,7 +319,7 @@ export const GET = async () => {
 		},
 		{
 			desc: 'Cruise Control OFF button Toggle',
-			label: 'OFF Button',
+			label: 'OFF Toggle',
 			units: ['None'],
 			min: [0],
 			max: [1],
@@ -366,8 +358,8 @@ export const GET = async () => {
 			decimals: [0]
 		},
 		{
-			desc: 'Turbocharger compressor inlet pressure',
-			label: 'Boost',
+			desc: 'Turbocharger compressor inlet pressure with vacuum range',
+			label: 'Boost/Vacuum',
 			units: ['kPa', 'psi'],
 			min: [-82, -12],
 			max: [170, 24],

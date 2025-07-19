@@ -68,8 +68,22 @@
 
 	function handleUnitChange(selectedValue: string | undefined) {
 		if (selectedValue) {
-			unitValue = selectedValue;
-			onUnitChange(unitValue);
+			// Get current PID data to validate unit selection
+			const currentPidData = pids.find(p => 
+				useDescription ? p.desc === pidValue : p.label === pidValue
+			);
+			
+			// Only allow valid units for the current PID
+			if (currentPidData && currentPidData.units.includes(selectedValue)) {
+				unitValue = selectedValue;
+				onUnitChange(unitValue);
+			} else {
+				// Invalid unit selected, reset to first valid unit
+				if (currentPidData && currentPidData.units.length > 0) {
+					unitValue = currentPidData.units[0];
+					onUnitChange(unitValue);
+				}
+			}
 		}
 	}
 

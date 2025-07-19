@@ -9,18 +9,14 @@
 
 	let { themes = [], pids = [], form } = $props();
 
-	// Helper function to find PID label by desc (since config stores desc but we want to show label)
-	function getPidLabelByDesc(pidDesc: string): string {
-		if (!pidDesc) return '';
-		const pid = pids.find((p) => p.desc === pidDesc);
-		return pid ? pid.label : pidDesc; // Fallback to desc if not found
+	// Helper function - no longer needed since we store labels directly
+	function getPidLabelByDesc(pidLabel: string): string {
+		return pidLabel; // Just return the label as-is
 	}
 
-	// Helper function to find PID desc by label (for form selection)
+	// Helper function - no longer needed since we store labels directly  
 	function getPidDescByLabel(pidLabel: string): string {
-		if (!pidLabel) return '';
-		const pid = pids.find((p) => p.label === pidLabel);
-		return pid ? pid.desc : pidLabel; // Fallback to label if not found
+		return pidLabel; // Just return the label as-is
 	}
 
 	// Track which gauge card is expanded (for mobile accordion behavior)
@@ -87,7 +83,7 @@
 							<div>
 								<h4 class="text-foreground font-medium">Gauge {i + 1}</h4>
 								<p class="text-muted-foreground text-xs">
-									{getPidLabelByDesc(gauge.pid) || 'No PID selected'}
+									{gauge.pid || 'No PID selected'}
 									{#if gauge.theme}• {gauge.theme}{/if}
 								</p>
 							</div>
@@ -107,9 +103,7 @@
 							bind:pidValue={$form.gauge[i].pid}
 							bind:unitValue={$form.gauge[i].units}
 							{pids}
-							useDescription={true}
-							{getPidDescByLabel}
-							{getPidLabelByDesc}
+							useDescription={false}
 						/>
 
 						<!-- Theme Selector - Full width on mobile -->

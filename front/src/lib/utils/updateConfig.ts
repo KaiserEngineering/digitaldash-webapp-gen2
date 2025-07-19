@@ -1,5 +1,6 @@
 // src/lib/utils/updateConfig.ts
 import { configStore } from '$lib/stores/configStore';
+import { clearOptionsCache } from '$lib/stores/optionsCache';
 import { get } from 'svelte/store';
 import type { DigitalDash } from '$schemas/digitaldash';
 
@@ -42,6 +43,10 @@ export async function updateConfig(
 
 		// Update the store with the new config
 		configStore.setConfig(configCopy);
+		
+		// Clear options cache to ensure fresh data on next load
+		clearOptionsCache();
+		
 		return true;
 	} catch (error) {
 		throw error;
