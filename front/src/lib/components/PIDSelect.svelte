@@ -118,7 +118,7 @@
 
 	<!-- Enhanced Unit Selector -->
 	{#if pidValue}
-		{@const selectedPidData = pids.find((p) => p.label === pidValue)}
+		{@const selectedPidData = pids.find((p) => p.desc === pidValue)}
 		{#if selectedPidData && selectedPidData.units.length > 0}
 			<div class="space-y-3">
 				<Label class="text-sm font-semibold text-slate-700">{unitLabel}</Label>
