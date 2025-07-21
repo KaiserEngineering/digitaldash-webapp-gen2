@@ -8,7 +8,7 @@ idf_component_register(SRCS
     "src/pids_handler.c"
     "src/file_handler.c"
     INCLUDE_DIRS "include" "../../main"
-    PRIV_REQUIRES esp_http_server esp_wifi nvs_flash mdns app_update spiffs lib_ke_protocol stm_flash
+    PRIV_REQUIRES esp_http_server esp_wifi nvs_flash mdns app_update spiffs lib_ke_protocol stm_flash stm_gpio
     EMBED_FILES
     "static/index.html"
     "static/favicon.png"

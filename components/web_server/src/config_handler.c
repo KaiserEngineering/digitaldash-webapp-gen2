@@ -5,6 +5,7 @@
 #include "lib_ke_protocol.h"
 #include <sys/param.h>
 #include "stm_flash.h"
+#include "stm_gpio.h"
 
 static const char *TAG = "ConfigHandler";
 
@@ -95,6 +96,7 @@ esp_err_t config_patch_handler(httpd_req_t *req)
 
     // Brute force hot-reload. This can be done better
     vTaskDelay(pdMS_TO_TICKS(250));
+    stm_gpio_splash_disable(true);
     stm32_reset();
 
     // Send HTTP response - always return success since we got this far

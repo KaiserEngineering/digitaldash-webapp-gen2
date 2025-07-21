@@ -82,6 +82,12 @@ menu "Digital Dash Webapp Configuration"
             default 8
             help
                 ESP32 pin connected to STM32 boot pin
+
+        config STM32_SPLASH_EN_PIN
+            int "STM32 Splash Enable Pin"
+            default 15
+            help
+                ESP32 pin connected to STM32 GPIO splash enable pin
     endmenu
 
     menu "WiFi AP"

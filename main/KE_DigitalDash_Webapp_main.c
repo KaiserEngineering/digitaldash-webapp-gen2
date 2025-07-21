@@ -87,15 +87,17 @@ KE_PACKET_MANAGER stm32_comm;
 void gpio_init(void)
 {
     gpio_config_t io_conf = {
-        .pin_bit_mask = (1ULL << CAN_STBY_GPIO) | (1ULL << CONFIG_STM32_RESET_PIN) | (1ULL << CONFIG_STM32_BOOT_PIN),
+        .pin_bit_mask = (1ULL << CAN_STBY_GPIO) |
+                        (1ULL << CONFIG_STM32_RESET_PIN) |
+                        (1ULL << CONFIG_STM32_BOOT_PIN) |
+                        (1ULL << CONFIG_STM32_SPLASH_EN_PIN),
         .mode = GPIO_MODE_OUTPUT,
         .pull_up_en = GPIO_PULLUP_DISABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .intr_type = GPIO_INTR_DISABLE};
+        .intr_type = GPIO_INTR_DISABLE
+    };
     gpio_config(&io_conf);
 }
-
-
 
 void i2c_master_init()
 {
