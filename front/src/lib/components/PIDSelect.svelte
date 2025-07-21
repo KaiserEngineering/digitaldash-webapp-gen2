@@ -67,15 +67,8 @@
 		}
 	}
 
-	$effect(() => {
-		if (pidValue && !unitValue) {
-			const pidData = pids.find((p) => p.desc === pidValue);
-			if (pidData && pidData.units.length > 0) {
-				unitValue = pidData.units[0];
-				onUnitChange(unitValue);
-			}
-		}
-	});
+	const selectedPidData = $derived(pids.find((p) => p.desc === pidValue));
+	const availableUnits = $derived(selectedPidData?.units || []);
 </script>
 
 <div class={`grid grid-cols-1 gap-4 md:grid-cols-2 ${className}`}>
@@ -117,41 +110,36 @@
 	</div>
 
 	<!-- Enhanced Unit Selector -->
-	{#if pidValue}
-		{@const selectedPidData = pids.find((p) => p.desc === pidValue)}
-		{#if selectedPidData && selectedPidData.units.length > 0}
-			<div class="space-y-3">
-				<Label class="text-sm font-semibold text-slate-700">{unitLabel}</Label>
-				<Select.Root
-					type="single"
-					bind:value={unitValue}
-					onValueChange={handleUnitChange}
-					{disabled}
-				>
-					<Select.Trigger
-						class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
-							disabled
-								? 'border-slate-100 bg-slate-50 text-slate-400'
-								: 'border-slate-200 bg-white hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
-						}`}
+	<div class="space-y-3">
+		<Label class="text-sm font-semibold text-slate-700">{unitLabel}</Label>
+		<Select.Root
+			type="single"
+			bind:value={unitValue}
+			onValueChange={handleUnitChange}
+			disabled={disabled || availableUnits.length === 0}
+		>
+			<Select.Trigger
+				class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
+					disabled || availableUnits.length === 0
+						? 'border-slate-100 bg-slate-50 text-slate-400'
+						: 'border-slate-200 bg-white hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
+				}`}
+			>
+				<span class={unitValue ? 'text-slate-800' : 'text-slate-400'}>
+					{unitValue || unitPlaceholder}
+				</span>
+			</Select.Trigger>
+			<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
+				{#each availableUnits as unit (unit)}
+					<Select.Item
+						value={unit}
+						label={unit}
+						class="rounded-lg py-3 text-base hover:bg-emerald-50"
 					>
-						<span class={unitValue ? 'text-slate-800' : 'text-slate-400'}>
-							{unitValue || unitPlaceholder}
-						</span>
-					</Select.Trigger>
-					<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
-						{#each selectedPidData.units as unit (unit)}
-							<Select.Item
-								value={unit}
-								label={unit}
-								class="rounded-lg py-3 text-base hover:bg-emerald-50"
-							>
-								{unit}
-							</Select.Item>
-						{/each}
-					</Select.Content>
-				</Select.Root>
-			</div>
-		{/if}
-	{/if}
+						{unit}
+					</Select.Item>
+				{/each}
+			</Select.Content>
+		</Select.Root>
+	</div>
 </div>
