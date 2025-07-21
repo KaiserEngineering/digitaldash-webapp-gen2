@@ -34,41 +34,31 @@
 	function handlePidChange(selectedValue: string | undefined) {
 		if (selectedValue) {
 			pidValue = selectedValue;
-
-			// Find the new PID data by label
 			const pidData = pids.find((p) => p.label === selectedValue);
 
-			// Keep current unit if valid for new PID, otherwise reset to first unit
 			if (pidData && pidData.units.length > 0) {
-				// If current unit is valid for the new PID, keep it
 				if (unitValue && pidData.units.includes(unitValue)) {
-					// Keep current unit - no change needed
+					// Keep current unit
 				} else {
-					// Reset to first unit if current unit is invalid or empty
 					unitValue = pidData.units[0];
 				}
 				onUnitChange(unitValue);
 			} else {
-				// No units available for this PID, clear the unit
 				unitValue = '';
 				onUnitChange('');
 			}
-
 			onPidChange(pidValue);
 		}
 	}
 
 	function handleUnitChange(selectedValue: string | undefined) {
 		if (selectedValue) {
-			// Get current PID data to validate unit selection
 			const currentPidData = pids.find((p) => p.label === pidValue);
 
-			// Only allow valid units for the current PID
 			if (currentPidData && currentPidData.units.includes(selectedValue)) {
 				unitValue = selectedValue;
 				onUnitChange(unitValue);
 			} else {
-				// Invalid unit selected, reset to first valid unit
 				if (currentPidData && currentPidData.units.length > 0) {
 					unitValue = currentPidData.units[0];
 					onUnitChange(unitValue);
@@ -77,7 +67,6 @@
 		}
 	}
 
-	// Auto-select first unit for existing PIDs without units
 	$effect(() => {
 		if (pidValue && !unitValue) {
 			const pidData = pids.find((p) => p.label === pidValue);
@@ -89,44 +78,74 @@
 	});
 </script>
 
-<div class={`space-y-4 ${className}`}>
-	<!-- PID Selector -->
-	<div class="space-y-2">
-		<Label class="text-sm font-medium">{pidLabel}</Label>
+<div class={`grid grid-cols-1 gap-4 md:grid-cols-2 ${className}`}>
+	<!-- Enhanced PID Selector -->
+	<div class="space-y-3">
+		<Label class="text-sm font-semibold text-slate-700">{pidLabel}</Label>
 		<Select.Root type="single" bind:value={pidValue} onValueChange={handlePidChange} {disabled}>
-			<Select.Trigger class="!h-12 w-full touch-manipulation">
-				<span>
-					{pidValue || pidPlaceholder}
+			<Select.Trigger
+				class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
+					disabled
+						? 'border-slate-100 bg-slate-50 text-slate-400'
+						: 'border-slate-200 bg-white hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
+				}`}
+			>
+				<span class={pidValue ? 'text-slate-800' : 'text-slate-400'}>
+					{#if pidValue}
+						{@const selectedPid = pids.find((p) => p.label === pidValue)}
+						{selectedPid?.desc || pidValue}
+					{:else}
+						{pidPlaceholder}
+					{/if}
 				</span>
 			</Select.Trigger>
-			<Select.Content>
+			<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
 				{#each pids as pid (pid)}
-					<Select.Item value={pid.label} label={pid.label} class="py-3 text-base">
-						{pid.label}
+					<Select.Item
+						value={pid.label}
+						label={pid.desc}
+						class="rounded-lg py-3 text-base hover:bg-emerald-50"
+					>
+						<div class="flex flex-col">
+							<span class="font-medium">{pid.desc}</span>
+							<span class="text-xs text-slate-500">{pid.label}</span>
+						</div>
 					</Select.Item>
 				{/each}
 			</Select.Content>
 		</Select.Root>
 	</div>
 
-	<!-- Unit Selector - Shows only when PID is selected and has units -->
+	<!-- Enhanced Unit Selector -->
 	{#if pidValue}
 		{@const selectedPidData = pids.find((p) => p.label === pidValue)}
 		{#if selectedPidData && selectedPidData.units.length > 0}
-			<div class="space-y-2">
-				<Label class="text-sm font-medium">{unitLabel}</Label>
+			<div class="space-y-3">
+				<Label class="text-sm font-semibold text-slate-700">{unitLabel}</Label>
 				<Select.Root
 					type="single"
 					bind:value={unitValue}
 					onValueChange={handleUnitChange}
 					{disabled}
 				>
-					<Select.Trigger class="!h-12 w-full touch-manipulation">
-						<span>{unitValue || unitPlaceholder}</span>
+					<Select.Trigger
+						class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
+							disabled
+								? 'border-slate-100 bg-slate-50 text-slate-400'
+								: 'border-slate-200 bg-white hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
+						}`}
+					>
+						<span class={unitValue ? 'text-slate-800' : 'text-slate-400'}>
+							{unitValue || unitPlaceholder}
+						</span>
 					</Select.Trigger>
-					<Select.Content>
+					<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
 						{#each selectedPidData.units as unit (unit)}
-							<Select.Item value={unit} label={unit} class="py-3 text-base">
+							<Select.Item
+								value={unit}
+								label={unit}
+								class="rounded-lg py-3 text-base hover:bg-emerald-50"
+							>
 								{unit}
 							</Select.Item>
 						{/each}
