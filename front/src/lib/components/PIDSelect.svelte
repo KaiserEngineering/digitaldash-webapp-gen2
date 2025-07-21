@@ -93,7 +93,7 @@
 				<span class={pidValue ? 'text-slate-800' : 'text-slate-400'}>
 					{#if pidValue}
 						{@const selectedPid = pids.find((p) => p.desc === pidValue)}
-						{selectedPid?.label || pidValue}
+						{selectedPid?.desc || pidValue}
 					{:else}
 						{pidPlaceholder}
 					{/if}
@@ -103,11 +103,11 @@
 				{#each pids as pid (pid)}
 					<Select.Item
 						value={pid.desc}
-						label={pid.label}
+						label={pid.desc}
 						class="rounded-lg py-3 text-base hover:bg-emerald-50"
 					>
 						<div class="flex flex-col">
-							<span class="font-medium">{pid.label}</span>
+							<span class="font-medium">{pid.desc}</span>
 							<span class="text-xs text-slate-500">{pid.label}</span>
 						</div>
 					</Select.Item>
