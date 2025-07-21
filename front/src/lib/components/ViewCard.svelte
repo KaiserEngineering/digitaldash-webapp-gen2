@@ -16,6 +16,7 @@
 	let theme: Record<string, string> = $state({});
 	let failedImages: Record<string, boolean> = $state({});
 	let prevBackground: string | undefined = undefined;
+	let prevGauges: any[] | undefined = undefined;
 
 	function handleImageError(themeKey: string) {
 		failedImages = { ...failedImages, [themeKey]: true };
@@ -26,6 +27,11 @@
 
 		const currentBackground = view.background;
 		const currentGauges = view.gauge;
+		
+		// Only run if background or gauges actually changed
+		if (currentBackground === prevBackground && currentGauges === prevGauges) {
+			return;
+		}
 
 		// Debounce to prevent rapid reloads
 		const timeoutId = setTimeout(async () => {
@@ -43,13 +49,17 @@
 					// 	console.warn('Failed to compute text color, using fallback:', error);
 					// 	view.textColor = 'white';
 					// }
-					view.textColor = 'white';
+					if (view.textColor !== 'white') {
+						view.textColor = 'white';
+					}
 					prevBackground = currentBackground;
 				}
 			} catch (error) {
 				console.warn(`Failed to load background "${currentBackground}":`, error);
 				toast.error(`Failed to load background: ${(error as Error).message}`);
-				view.textColor = 'white';
+				if (view.textColor !== 'white') {
+					view.textColor = 'white';
+				}
 				// Don't set backgroundUrl to empty - keep previous or use fallback
 			}
 
@@ -81,6 +91,9 @@
 			}
 
 			loading = false;
+			
+			// Update tracking variables
+			prevGauges = currentGauges;
 		}, 300); // 300ms debounce delay
 
 		// Cleanup timeout on component unmount or effect re-run
