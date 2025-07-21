@@ -241,7 +241,7 @@
 													checked={rule?.enable === 'Enabled'}
 													onCheckedChange={(checked) =>
 														($form[key].enable = checked ? 'Enabled' : 'Disabled')}
-													class={`data-[state=checked]:bg-${priorities[i].color.split('-')[1]}-500`}
+													class={`data-[state=checked]:bg-${priorities[i].color.split('-')[1]}-500 bg-green-200 border border-green-300`}
 												/>
 											</div>
 										</div>
