@@ -6,13 +6,9 @@ import type { DigitalDash } from '$schemas/digitaldash';
 /**
  * Updates the entire config object after applying custom modifications.
  * @param mutateFn A callback that receives and mutates the config before saving
- * @param successMessage Toast message to show on success
- * @param errorMessage Toast message to show on error
  */
 export async function updateConfig(
-	mutateFn: (config: DigitalDash) => void,
-	successMessage = 'Configuration updated successfully',
-	errorMessage = 'Failed to update configuration'
+	mutateFn: (config: DigitalDash) => void
 ): Promise<{ success: boolean; config?: DigitalDash }> {
 	try {
 		const currentConfig = get(configStore);
@@ -45,6 +41,7 @@ export async function updateConfig(
 
 		return { success: true, config: configCopy };
 	} catch (error) {
+		console.error('Error updating config:', error);
 		return { success: false };
 	}
 }

@@ -10,7 +10,7 @@
 
 <div class="space-y-2 sm:space-y-4">
 	<DashboardCard>
-		{#each views as view, index}
+		{#each views as view, index (index)}
 			<ViewCard {view} {index} {pids} />
 		{/each}
 	</DashboardCard>

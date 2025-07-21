@@ -1,16 +1,7 @@
 <script lang="ts">
 	import type { PIDMetadata } from '$lib/stores/PIDsStore';
 
-	let {
-		gauge,
-		gaugeIndex,
-		themeUrl,
-		failed,
-		textColor = 'white',
-		onImageError,
-		numGauges = 1,
-		pids = []
-	} = $props();
+	let { gauge, themeUrl, failed, textColor = 'white', onImageError, pids = [] } = $props();
 
 	// Helper function to find PID label by desc (since config stores desc but we want to show label)
 	function getPidLabelByDesc(pidDesc: string): string {

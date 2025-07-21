@@ -6,7 +6,7 @@
 		size?: 'sm' | 'default' | 'lg';
 	}>();
 
-	const sizes = {
+	const sizes: Record<'sm' | 'default' | 'lg', string> = {
 		sm: 'h-4 w-4',
 		default: 'h-6 w-6',
 		lg: 'h-8 w-8'

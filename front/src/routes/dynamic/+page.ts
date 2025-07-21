@@ -16,7 +16,7 @@ export const load: PageLoad = async ({ parent }) => {
 
 	type Priority = 'high' | 'medium' | 'low';
 
-	let dynamicConfig: Record<Priority, DigitalDashDynamic> = {
+	const dynamicConfig: Record<Priority, DigitalDashDynamic> = {
 		high: {} as DigitalDashDynamic,
 		medium: {} as DigitalDashDynamic,
 		low: {} as DigitalDashDynamic

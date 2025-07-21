@@ -91,30 +91,25 @@ export class ImageHandler {
 		url: string,
 		cache: Map<string, ImageData>
 	): Promise<ImageData> {
-		try {
-			const res = await fetch(url);
-			if (!res.ok)
-				throw new Error(`Failed to load image '${name}': ${res.status} ${res.statusText}`);
+		const res = await fetch(url);
+		if (!res.ok) throw new Error(`Failed to load image '${name}': ${res.status} ${res.statusText}`);
 
-			const blob = await res.blob();
-			const objectUrl = URL.createObjectURL(blob);
-			const size = parseInt(res.headers.get('content-length') || '0', 10);
-			const lastModified = new Date(res.headers.get('last-modified') || Date.now()).getTime();
-			const contentType = res.headers.get('content-type') || 'unknown';
+		const blob = await res.blob();
+		const objectUrl = URL.createObjectURL(blob);
+		const size = parseInt(res.headers.get('content-length') || '0', 10);
+		const lastModified = new Date(res.headers.get('last-modified') || Date.now()).getTime();
+		const contentType = res.headers.get('content-type') || 'unknown';
 
-			const imageData: ImageData = {
-				name,
-				url: objectUrl,
-				size,
-				lastModified,
-				contentType
-			};
+		const imageData: ImageData = {
+			name,
+			url: objectUrl,
+			size,
+			lastModified,
+			contentType
+		};
 
-			cache.set(name, imageData);
-			return imageData;
-		} catch (err) {
-			throw err;
-		}
+		cache.set(name, imageData);
+		return imageData;
 	}
 
 	/**

@@ -23,7 +23,7 @@ export async function GET({ params, fetch }) {
 			headers: headers
 		});
 	} catch (err) {
-		console.error(`Error loading image: ${(err as any).message}`);
+		console.error(`Error loading image: ${err instanceof Error ? err.message : 'Unknown error'}`);
 		throw error(500, 'Internal server error');
 	}
 }

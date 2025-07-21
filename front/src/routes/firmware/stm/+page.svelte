@@ -1,20 +1,18 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card';
-	import {
-		CheckCircle,
-		AlertTriangle,
-		Loader2,
-		Upload,
-		HardDrive,
-		Trash2,
-		FileText,
-		Zap
-	} from 'lucide-svelte';
+	import { CheckCircle, AlertTriangle, Loader2, Upload, FileText, Zap } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 
 	let filesStatus: 'idle' | 'loading' | 'success' | 'error' = $state('idle');
-	let files: any[] = $state([]);
+	interface FirmwareFile {
+		name: string;
+		size: number;
+		lastModified: number;
+		type: string;
+	}
+
+	let files: FirmwareFile[] = $state([]);
 	let fileInput: HTMLInputElement | undefined = $state();
 	let uploadStatus: 'idle' | 'uploading' | 'success' | 'error' = $state('idle');
 	let flashStatus: 'idle' | 'flashing' | 'success' | 'error' = $state('idle');
@@ -29,23 +27,9 @@
 			if (!res.ok) throw new Error(data.message || 'Failed to load files');
 			files = data.files || [];
 			filesStatus = 'success';
-		} catch (err) {
+		} catch {
 			filesStatus = 'error';
 			files = [];
-		}
-	}
-
-	async function deleteFile(filename: string) {
-		try {
-			const res = await fetch(`/api/spiffs?filename=${encodeURIComponent(filename)}`, {
-				method: 'DELETE'
-			});
-			const data = await res.json();
-			if (!res.ok) throw new Error(data.message || 'Failed to delete file');
-			// Reload file list
-			await loadFiles();
-		} catch (err) {
-			console.error('Delete error:', err);
 		}
 	}
 
@@ -77,7 +61,8 @@
 			fileInput.value = '';
 		} catch (err) {
 			uploadStatus = 'error';
-			uploadMessage = err.message || 'An error occurred during firmware upload';
+			uploadMessage =
+				err instanceof Error ? err.message : 'An error occurred during firmware upload';
 		}
 	}
 
@@ -102,7 +87,8 @@
 			await loadFiles();
 		} catch (err) {
 			flashStatus = 'error';
-			flashMessage = err.message || 'An error occurred during firmware flashing';
+			flashMessage =
+				err instanceof Error ? err.message : 'An error occurred during firmware flashing';
 		}
 	}
 
@@ -147,7 +133,7 @@
 				<Button
 					onclick={browseFirmware}
 					disabled={uploadStatus === 'uploading' || flashStatus === 'flashing'}
-					class="from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 h-12 w-full bg-gradient-to-r text-lg font-semibold text-white shadow-md transition-all duration-200 hover:shadow-lg"
+					class="h-12 w-full bg-gradient-to-r from-blue-600 to-blue-700 text-lg font-semibold text-white shadow-md transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-lg"
 				>
 					{#if uploadStatus === 'uploading'}
 						<Loader2 class="mr-3 h-5 w-5 animate-spin" />
@@ -160,9 +146,9 @@
 
 				<!-- Upload Status -->
 				{#if uploadStatus === 'success'}
-					<div class="bg-green-50 border-green-200 rounded-lg border p-4">
-						<p class="text-green-800 flex items-center gap-3 font-medium">
-							<CheckCircle class="text-green-600 h-5 w-5" />
+					<div class="rounded-lg border border-green-200 bg-green-50 p-4">
+						<p class="flex items-center gap-3 font-medium text-green-800">
+							<CheckCircle class="h-5 w-5 text-green-600" />
 							{uploadMessage}
 						</p>
 					</div>
@@ -183,7 +169,7 @@
 				{/if}
 
 				<!-- Flash Button - only show when firmware file exists -->
-				{#if files.some(f => f.name === 'digitaldash-firmware-gen2-stm32u5g.bin')}
+				{#if files.some((f) => f.name === 'digitaldash-firmware-gen2-stm32u5g.bin')}
 					<Button
 						onclick={flashFirmware}
 						disabled={uploadStatus === 'uploading' || flashStatus === 'flashing'}
@@ -253,7 +239,7 @@
 							</div>
 						{:else}
 							<div class="divide-y divide-slate-200">
-								{#each files as file, index}
+								{#each files as file, index (file.name || index)}
 									<div
 										class="p-4 transition-colors duration-150 hover:bg-white {index === 0
 											? 'rounded-t-lg'

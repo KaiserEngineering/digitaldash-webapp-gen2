@@ -1,47 +1,11 @@
 <script lang="ts">
-	import { AlertTriangle, Upload, Smartphone, ChevronDown, ChevronRight } from 'lucide-svelte';
-	import { Alert, AlertDescription } from '$lib/components/ui/alert';
-	import { Badge } from '$lib/components/ui/badge';
+	import { Upload, Smartphone, ChevronDown, ChevronRight } from 'lucide-svelte';
+	import { Alert } from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
 
 	let { recovery } = $props();
 
 	let showDetails = $state(false);
-
-	// Determine the specific issue type for better messaging
-	let connectionStatus = $derived.by(() => {
-		const hasConfigIssue = recovery.issues.some((issue) => issue.includes('configuration'));
-		const hasConnectionIssue = recovery.issues.some(
-			(issue) => issue.includes('connect') || issue.includes('fetch')
-		);
-		const hasPIDIssue = recovery.issues.some((issue) => issue.includes('PID'));
-
-		if (hasConnectionIssue) {
-			return {
-				type: 'connection',
-				message: 'Unable to connect to DigitalDash device',
-				detail: 'Check device power and network connection'
-			};
-		} else if (hasConfigIssue) {
-			return {
-				type: 'config',
-				message: 'Device configuration invalid',
-				detail: 'Device may need firmware update or configuration reset'
-			};
-		} else if (hasPIDIssue) {
-			return {
-				type: 'pids',
-				message: 'PID definitions unavailable',
-				detail: 'Device firmware may be incompatible'
-			};
-		} else {
-			return {
-				type: 'general',
-				message: 'Device issues detected',
-				detail: 'Some features may be limited'
-			};
-		}
-	});
 </script>
 
 {#if recovery.isRecoveryMode}
@@ -64,7 +28,7 @@
 				{#if showDetails}
 					<div class="mt-1 rounded bg-red-100 p-2 text-xs">
 						<ul class="space-y-1">
-							{#each recovery.issues as issue}
+							{#each recovery.issues as issue, index (index)}
 								<li class="leading-snug break-words text-red-800">• {issue}</li>
 							{/each}
 						</ul>

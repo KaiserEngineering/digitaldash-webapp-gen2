@@ -1,6 +1,7 @@
 // src/routes/backgrounds.ts
 import { apiUrl } from '$lib/config';
-import { ImageHandler, type ImageData } from '$lib/image/handler';
+import { ImageHandler } from '$lib/image/handler';
+import type { ImageData } from '$lib/image/handler';
 import { toast } from 'svelte-5-french-toast';
 
 interface UploadResponse {
@@ -15,8 +16,6 @@ export async function uploadBackground(
 	file: File,
 	images: { [key: string]: ImageData } = {}
 ): Promise<UploadResponse> {
-	console.log('backgrounds.svelte.ts: uploading file with name:', file.name);
-	console.log('backgrounds.svelte.ts: POST URL:', `${apiUrl}/image/${file.name}`);
 	const response = await fetch(`${apiUrl}/image/${file.name}`, {
 		method: 'POST',
 		body: file,

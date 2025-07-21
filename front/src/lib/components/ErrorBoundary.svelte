@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { AlertTriangle, RefreshCw, Home, Wifi, WifiOff } from 'lucide-svelte';
+	import { AlertTriangle, RefreshCw, Home, WifiOff } from 'lucide-svelte';
 	import { Alert, AlertDescription } from '@/components/ui/alert';
 	import { Badge } from '@/components/ui/badge';
 

@@ -17,11 +17,17 @@
 	import { quintOut } from 'svelte/easing';
 	import { flip } from 'svelte/animate';
 	import { DynamicFormSchema } from './dynamicFormSchema';
+	import type { DigitalDashDynamic } from '$schemas/digitaldash';
 
 	let { data } = $props();
 
 	const pids = data.pids || [];
 	const options = data.options || {};
+
+	// Type helper function
+	function isDynamicRule(rule: unknown): rule is DigitalDashDynamic {
+		return rule !== null && typeof rule === 'object' && 'enable' in rule!;
+	}
 
 	const { form, submitting, enhance } = superForm(data.form, {
 		dataType: 'json',
@@ -33,14 +39,24 @@
 			try {
 				const result = await updateFullConfig((config) => {
 					// Convert object back to array for backend
-					const dynamicArray = Object.values(formData.data);
+					const dynamicArray = Object.values(formData.data).map((rule) => {
+						// Remove index field as it's only for frontend
+						const { index: _, ...ruleWithoutIndex } = rule as DigitalDashDynamic & {
+							index?: number;
+						};
+						return ruleWithoutIndex;
+					});
 					config.dynamic = dynamicArray;
-				}, 'Dynamic rules saved!');
+				});
 
 				if (result.success && result.config) {
-					Object.assign($form, result.config.dynamic);
-					// Cancel the default form submission and handle manually
-			cancel();
+					// Convert returned array back to object for form
+					const dynamicObject: Record<string, DigitalDashDynamic & { index: number }> = {};
+					result.config.dynamic.forEach((rule: DigitalDashDynamic, index: number) => {
+						const priority = rule.priority?.toLowerCase() || 'low';
+						dynamicObject[priority] = { ...rule, index };
+					});
+					Object.assign($form, dynamicObject);
 					toast.success('Dynamic rules saved successfully!');
 				} else {
 					toast.error('Failed to save dynamic rules. Please try again.');
@@ -86,113 +102,120 @@
 	icon={Settings}
 	{enhance}
 >
-	{#snippet children()}
-		<div class="space-y-6">
-			{#each Object.keys($form) as key, i (key)}
-				<div
-					in:slide={{ duration: 300, easing: quintOut }}
-					out:slide={{ duration: 200, easing: quintOut }}
-					animate:flip={{ duration: 400 }}
-				>
-					<Motion.div key={i} class="overflow-hidden">
-						<Collapsible.Root>
-							<div
-								class={`group relative rounded-2xl border-2 transition-all duration-300 ${
-									$form[key]?.enable === 'Enabled'
-										? `${priorities[i].borderColor} bg-gradient-to-br ${priorities[i].bgColor} shadow-sm hover:shadow-lg`
-										: 'border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50/30 opacity-75 hover:opacity-90'
-								}`}
-							>
-								<!-- Enhanced Header -->
-								<Collapsible.Trigger class="w-full text-left">
-									<div
-										class={`flex items-center justify-between p-6 transition-all duration-200 ${
-											$form[key]?.enable === 'Enabled'
-												? priorities[i].hoverColor
-												: 'hover:bg-slate-50/50'
-										}`}
-									>
-										<div class="flex items-center gap-4">
-											<div class="flex flex-col">
-												<div class="flex items-center gap-3">
-													<h4 class="text-lg font-semibold text-slate-800">
-														{priorities[i].name}
-													</h4>
-													{#if $form[key]?.enable === 'Enabled'}
-														<CheckCircle2 class="h-4 w-4 text-emerald-500" />
-													{:else}
-														<AlertTriangle class="h-4 w-4 text-slate-400" />
-													{/if}
-												</div>
-												<div class="flex items-center gap-2 text-sm">
-													<span
-														class={`font-medium ${
-															$form[key]?.enable === 'Enabled' ? 'text-slate-700' : 'text-slate-500'
-														}`}
-													>
-														{$form[key]?.pid || 'No PID selected'}
-													</span>
-													<span class="text-slate-400">•</span>
-													<span
-														class={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-															$form[key]?.enable === 'Enabled'
-																? `bg-${priorities[i].color.split('-')[1]}-100 text-${priorities[i].color.split('-')[1]}-700`
-																: 'bg-slate-100 text-slate-600'
-														}`}
-													>
-														{$form[key]?.enable === 'Enabled' ? 'Active' : 'Inactive'}
-													</span>
-												</div>
+	<div class="space-y-6">
+		{#each Object.keys($form) as key, i (key)}
+			<div
+				in:slide={{ duration: 300, easing: quintOut }}
+				out:slide={{ duration: 200, easing: quintOut }}
+				animate:flip={{ duration: 400 }}
+			>
+				<Motion.div key={i} class="overflow-hidden">
+					<Collapsible.Root>
+						<div
+							class={`group relative rounded-2xl border-2 transition-all duration-300 ${
+								isDynamicRule($form[key]) && $form[key].enable === 'Enabled'
+									? `${priorities[i].borderColor} bg-gradient-to-br ${priorities[i].bgColor} shadow-sm hover:shadow-lg`
+									: 'border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50/30 opacity-75 hover:opacity-90'
+							}`}
+						>
+							<!-- Enhanced Header -->
+							<Collapsible.Trigger class="w-full text-left">
+								<div
+									class={`flex items-center justify-between p-6 transition-all duration-200 ${
+										isDynamicRule($form[key]) && $form[key].enable === 'Enabled'
+											? priorities[i].hoverColor
+											: 'hover:bg-slate-50/50'
+									}`}
+								>
+									<div class="flex items-center gap-4">
+										<div class="flex flex-col">
+											<div class="flex items-center gap-3">
+												<h4 class="text-lg font-semibold text-slate-800">
+													{priorities[i].name}
+												</h4>
+												{#if isDynamicRule($form[key]) && $form[key].enable === 'Enabled'}
+													<CheckCircle2 class="h-4 w-4 text-emerald-500" />
+												{:else}
+													<AlertTriangle class="h-4 w-4 text-slate-400" />
+												{/if}
+											</div>
+											<div class="flex items-center gap-2 text-sm">
+												<span
+													class={`font-medium ${
+														isDynamicRule($form[key]) && $form[key].enable === 'Enabled'
+															? 'text-slate-700'
+															: 'text-slate-500'
+													}`}
+												>
+													{isDynamicRule($form[key])
+														? $form[key].pid || 'No PID selected'
+														: 'No PID selected'}
+												</span>
+												<span class="text-slate-400">•</span>
+												<span
+													class={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+														isDynamicRule($form[key]) && $form[key].enable === 'Enabled'
+															? `bg-${priorities[i].color.split('-')[1]}-100 text-${priorities[i].color.split('-')[1]}-700`
+															: 'bg-slate-100 text-slate-600'
+													}`}
+												>
+													{isDynamicRule($form[key]) && $form[key].enable === 'Enabled'
+														? 'Active'
+														: 'Inactive'}
+												</span>
 											</div>
 										</div>
-
-										<ChevronDown
-											class="h-5 w-5 text-slate-400 transition-all duration-300 group-hover:text-slate-600 data-[state=open]:rotate-180"
-										/>
 									</div>
-								</Collapsible.Trigger>
 
-								<!-- Enhanced Content -->
-								<Collapsible.Content>
-									<div class="border-t border-slate-100 bg-white/50 p-6">
-										<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-											<!-- PID Selection -->
-											<div class="lg:col-span-2">
+									<ChevronDown
+										class="h-5 w-5 text-slate-400 transition-all duration-300 group-hover:text-slate-600 data-[state=open]:rotate-180"
+									/>
+								</div>
+							</Collapsible.Trigger>
+
+							<!-- Enhanced Content -->
+							<Collapsible.Content>
+								<div class="border-t border-slate-100 bg-white/50 p-6">
+									<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+										<!-- PID Selection -->
+										<div class="lg:col-span-2">
+											{#if isDynamicRule($form[key])}
 												<PIDSelect
 													bind:pidValue={$form[key].pid}
 													bind:unitValue={$form[key].units}
 													{pids}
-													disabled={$form[key]?.enable !== 'Enabled'}
+													disabled={$form[key].enable !== 'Enabled'}
 													pidLabel="Parameter ID"
 													unitLabel="Measurement Unit"
 													class="space-y-4"
 													key={`rule-${i}`}
 												/>
-											</div>
+											{/if}
+										</div>
 
-											<!-- Comparison Operator -->
-											<div class="space-y-3">
-												<Label class="text-sm font-semibold text-slate-700"
-													>Comparison Operator</Label
-												>
+										<!-- Comparison Operator -->
+										<div class="space-y-3">
+											<Label class="text-sm font-semibold text-slate-700">Comparison Operator</Label
+											>
+											{#if isDynamicRule($form[key])}
 												<Select.Root
 													bind:value={$form[key].compare}
-													disabled={$form[key]?.enable !== 'Enabled'}
+													disabled={$form[key].enable !== 'Enabled'}
 													type="single"
 												>
 													<Select.Trigger
 														class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
-															$form[key]?.enable === 'Enabled'
+															$form[key].enable === 'Enabled'
 																? `border-slate-200 bg-white hover:border-${priorities[i].color.split('-')[1]}-300 focus:border-${priorities[i].color.split('-')[1]}-400 focus:ring-2 focus:ring-${priorities[i].color.split('-')[1]}-100`
 																: 'border-slate-100 bg-slate-50'
 														}`}
 													>
-														<span class={$form[key]?.compare ? 'text-slate-800' : 'text-slate-400'}>
-															{$form[key]?.compare || 'Select operator'}
+														<span class={$form[key].compare ? 'text-slate-800' : 'text-slate-400'}>
+															{$form[key].compare || 'Select operator'}
 														</span>
 													</Select.Trigger>
 													<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
-														{#each compareOps as op}
+														{#each compareOps as op (op)}
 															<Select.Item
 																value={op}
 																label={op}
@@ -203,53 +226,57 @@
 														{/each}
 													</Select.Content>
 												</Select.Root>
-											</div>
+											{/if}
+										</div>
 
-											<!-- Threshold Value -->
-											<div class="space-y-3">
-												<Label class="text-sm font-semibold text-slate-700">Threshold Value</Label>
+										<!-- Threshold Value -->
+										<div class="space-y-3">
+											<Label class="text-sm font-semibold text-slate-700">Threshold Value</Label>
+											{#if isDynamicRule($form[key])}
 												<Input
 													type="number"
 													bind:value={$form[key].threshold}
 													class={`h-12 rounded-xl border-2 transition-all duration-200 ${
-														$form[key]?.enable === 'Enabled'
+														$form[key].enable === 'Enabled'
 															? `border-slate-200 bg-white hover:border-${priorities[i].color.split('-')[1]}-300 focus:border-${priorities[i].color.split('-')[1]}-400 focus:ring-2 focus:ring-${priorities[i].color.split('-')[1]}-100`
 															: 'border-slate-100 bg-slate-50'
 													}`}
-													disabled={$form[key]?.enable !== 'Enabled'}
+													disabled={$form[key].enable !== 'Enabled'}
 													placeholder="Enter threshold value"
 												/>
-											</div>
+											{/if}
+										</div>
 
-											<!-- Enable/Disable Toggle -->
-											<div
-												class="flex items-center justify-between rounded-xl bg-slate-50/50 p-4 lg:col-span-2"
-											>
-												<div class="flex flex-col">
-													<Label class="text-sm font-semibold text-slate-700">Rule Status</Label>
-													<p class="text-xs text-slate-500">
-														{$form[key]?.enable === 'Enabled'
-															? 'This rule is currently active'
-															: 'This rule is currently inactive'}
-													</p>
-												</div>
+										<!-- Enable/Disable Toggle -->
+										<div
+											class="flex items-center justify-between rounded-xl bg-slate-50/50 p-4 lg:col-span-2"
+										>
+											<div class="flex flex-col">
+												<Label class="text-sm font-semibold text-slate-700">Rule Status</Label>
+												<p class="text-xs text-slate-500">
+													{isDynamicRule($form[key]) && $form[key].enable === 'Enabled'
+														? 'This rule is currently active'
+														: 'This rule is currently inactive'}
+												</p>
+											</div>
+											{#if isDynamicRule($form[key])}
 												<Switch
-													checked={$form[key]?.enable === 'Enabled'}
+													checked={$form[key].enable === 'Enabled'}
 													onCheckedChange={(checked) =>
 														($form[key].enable = checked ? 'Enabled' : 'Disabled')}
 													class={`data-[state=checked]:bg-${priorities[i].color.split('-')[1]}-500 border border-green-300 bg-green-200`}
 												/>
-											</div>
+											{/if}
 										</div>
 									</div>
-								</Collapsible.Content>
-							</div>
-						</Collapsible.Root>
-					</Motion.div>
-				</div>
-			{/each}
-		</div>
-	{/snippet}
+								</div>
+							</Collapsible.Content>
+						</div>
+					</Collapsible.Root>
+				</Motion.div>
+			</div>
+		{/each}
+	</div>
 
 	{#snippet footerContent()}
 		<div
@@ -259,8 +286,9 @@
 				<div class="flex items-center gap-2">
 					<Zap class="h-4 w-4" />
 					<span
-						>{Object.values($form).filter((rule: any) => rule?.enable === 'Enabled').length} of 3 rules
-						active</span
+						>{Object.values($form).filter(
+							(rule) => isDynamicRule(rule) && rule.enable === 'Enabled'
+						).length} of 3 rules active</span
 					>
 				</div>
 			</div>

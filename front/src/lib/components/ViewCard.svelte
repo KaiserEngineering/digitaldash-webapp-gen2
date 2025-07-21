@@ -4,7 +4,6 @@
 	import GaugeComponent from './GaugeComponent.svelte';
 	import toast from 'svelte-5-french-toast';
 	import { cn } from '$lib/utils';
-	import { computeIdealTextColor } from '$lib/utils/imageProcessor';
 	import { Settings } from 'lucide-svelte';
 	import { page } from '$app/state';
 
@@ -16,7 +15,7 @@
 	let theme: Record<string, string> = $state({});
 	let failedImages: Record<string, boolean> = $state({});
 	let prevBackground: string | undefined = undefined;
-	let prevGauges: any[] | undefined = undefined;
+	let prevGauges: Array<{ theme: string; pid: string; units: string }> | undefined = undefined;
 
 	function handleImageError(themeKey: string) {
 		failedImages = { ...failedImages, [themeKey]: true };
@@ -27,7 +26,7 @@
 
 		const currentBackground = view.background;
 		const currentGauges = view.gauge;
-		
+
 		// Only run if background or gauges actually changed
 		if (currentBackground === prevBackground && currentGauges === prevGauges) {
 			return;
@@ -66,18 +65,20 @@
 			// Load themes independently - always attempt regardless of background status
 			try {
 				const gauges = currentGauges ?? [];
-				const themePromises = gauges.map(async (gauge: { theme: any }) => {
-					const key = `${gauge.theme}`;
-					if (!theme[key] && !failedImages[key] && gauge.theme) {
-						try {
-							const themeImageData = await imageHandler.loadTheme(key);
-							theme = { ...theme, [key]: themeImageData.url };
-						} catch (error) {
-							console.warn(`Failed to load theme "${key}":`, error);
-							failedImages = { ...failedImages, [key]: true };
+				const themePromises = gauges.map(
+					async (gauge: { theme: string; pid: string; units: string }) => {
+						const key = `${gauge.theme}`;
+						if (!theme[key] && !failedImages[key] && gauge.theme) {
+							try {
+								const themeImageData = await imageHandler.loadTheme(key);
+								theme = { ...theme, [key]: themeImageData.url };
+							} catch (error) {
+								console.warn(`Failed to load theme "${key}":`, error);
+								failedImages = { ...failedImages, [key]: true };
+							}
 						}
 					}
-				});
+				);
 
 				// Wait for all theme loads to complete
 				await Promise.allSettled(themePromises);
@@ -91,7 +92,7 @@
 			}
 
 			loading = false;
-			
+
 			// Update tracking variables
 			prevGauges = currentGauges;
 		}, 300); // 300ms debounce delay
@@ -125,18 +126,16 @@
 
 				<div class="relative z-10 flex h-full items-center justify-center px-2 sm:px-4">
 					<div class="flex w-full items-center justify-center gap-2 px-1 sm:gap-8 sm:px-2">
-						{#each Array(3) as _, i}
+						{#each [0, 1, 2] as i (i)}
 							{@const gauge = view?.gauge?.[i] ?? {}}
 							{@const isEnabled = i < view.num_gauges}
 							{#if isEnabled}
 								<div class="flex flex-col items-center justify-center px-0.5 sm:px-1">
 									<GaugeComponent
 										{gauge}
-										gaugeIndex={i}
 										themeUrl={theme[gauge.theme]}
 										failed={failedImages[gauge.theme]}
 										textColor={view.textColor}
-										numGauges={view.num_gauges}
 										{pids}
 										onImageError={() => handleImageError(gauge.theme)}
 									/>

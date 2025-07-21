@@ -39,7 +39,7 @@ export async function GET() {
 				files: []
 			});
 		}
-	} catch (err) {
+	} catch {
 		// Fallback to mock data if file access fails
 		return json({
 			success: true,

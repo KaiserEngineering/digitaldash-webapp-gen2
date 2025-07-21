@@ -7,8 +7,8 @@ import { recoveryStore } from '$lib/stores/recoveryMode';
 export const load = async ({ fetch, url }) => {
 	const issues: string[] = [];
 
-	// Debug trigger via URL: ?debug=recovery
-	if (url.searchParams.get('debug') === 'recovery') {
+	// Debug mode only available in development
+	if (import.meta.env.DEV && url.searchParams.get('debug') === 'recovery') {
 		issues.push('Debug mode: Simulated device connection failure');
 		issues.push('Failed to connect to device configuration');
 		issues.push('Failed to load PID definitions');

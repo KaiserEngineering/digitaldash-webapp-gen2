@@ -33,12 +33,23 @@
 			try {
 				const result = await updateFullConfig((config) => {
 					// Convert object back to array for backend
-					const alertsArray = Object.values(formData.data);
+					const alertsArray = Object.values(formData.data).map((alert) => {
+						// Remove index field as it's only for frontend
+						const { index: _, ...alertWithoutIndex } = alert as DigitalDashAlert & {
+							index?: number;
+						};
+						return alertWithoutIndex;
+					});
 					config.alert = alertsArray;
-				}, 'Alerts saved!');
+				});
 
 				if (result.success && result.config) {
-					Object.assign($form, result.config.alert);
+					// Convert returned array back to object for form
+					const alertsObject: Record<string, DigitalDashAlert & { index: number }> = {};
+					result.config.alert.forEach((alert: DigitalDashAlert, index: number) => {
+						alertsObject[index] = { ...alert, index };
+					});
+					Object.assign($form, alertsObject);
 					toast.success('Alerts saved successfully!');
 				} else {
 					toast.error('Failed to save alerts');
@@ -57,205 +68,203 @@
 	icon={Bell}
 	{enhance}
 >
-	{#snippet children()}
-		<div class="space-y-4">
-			{#each Object.entries($form) as [key, alertRaw], i (key)}
-				{@const alert = alertRaw as DigitalDashAlert}
-				<div
-					in:slide={{ duration: 300, easing: quintOut }}
-					out:slide={{ duration: 200, easing: quintOut }}
-					animate:flip={{ duration: 400 }}
-				>
-					<Motion.div key={i} class="overflow-hidden">
-						<Collapsible.Root>
-							<div
-								class={`group relative rounded-2xl border-2 transition-all duration-300 ${
-									alert.enable === 'Enabled'
-										? 'border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/30 shadow-sm hover:shadow-lg hover:shadow-emerald-100/50'
-										: 'border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50/30 opacity-75 hover:opacity-90'
-								}`}
-							>
-								<!-- Enhanced Header -->
-								<Collapsible.Trigger class="w-full text-left">
-									<div
-										class={`flex items-center justify-between p-6 transition-all duration-200 ${
-											alert.enable === 'Enabled' ? 'hover:bg-emerald-50/50' : 'hover:bg-slate-50/50'
-										}`}
-									>
-										<div class="flex items-center gap-4">
-											<!-- Status Indicator -->
-											<div
-												class={`flex h-12 w-12 items-center justify-center rounded-xl font-bold text-white shadow-lg transition-all duration-200 ${
+	<div class="space-y-4">
+		{#each Object.entries($form) as [key, alertRaw], i (key)}
+			{@const alert = alertRaw as DigitalDashAlert}
+			<div
+				in:slide={{ duration: 300, easing: quintOut }}
+				out:slide={{ duration: 200, easing: quintOut }}
+				animate:flip={{ duration: 400 }}
+			>
+				<Motion.div key={i} class="overflow-hidden">
+					<Collapsible.Root>
+						<div
+							class={`group relative rounded-2xl border-2 transition-all duration-300 ${
+								alert.enable === 'Enabled'
+									? 'border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/30 shadow-sm hover:shadow-lg hover:shadow-emerald-100/50'
+									: 'border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50/30 opacity-75 hover:opacity-90'
+							}`}
+						>
+							<!-- Enhanced Header -->
+							<Collapsible.Trigger class="w-full text-left">
+								<div
+									class={`flex items-center justify-between p-6 transition-all duration-200 ${
+										alert.enable === 'Enabled' ? 'hover:bg-emerald-50/50' : 'hover:bg-slate-50/50'
+									}`}
+								>
+									<div class="flex items-center gap-4">
+										<!-- Status Indicator -->
+										<div
+											class={`flex h-12 w-12 items-center justify-center rounded-xl font-bold text-white shadow-lg transition-all duration-200 ${
+												alert.enable === 'Enabled'
+													? 'bg-gradient-to-br from-emerald-500 to-emerald-600 group-hover:shadow-emerald-200'
+													: 'bg-gradient-to-br from-slate-400 to-slate-500'
+											}`}
+										>
+											{i + 1}
+										</div>
+
+										<div class="flex flex-col">
+											<div class="flex items-center gap-2">
+												<h4 class="text-lg font-semibold text-slate-800">
+													Alert #{i + 1}
+												</h4>
+												{#if alert.enable === 'Enabled'}
+													<CheckCircle2 class="h-4 w-4 text-emerald-500" />
+												{:else}
+													<AlertTriangle class="h-4 w-4 text-slate-400" />
+												{/if}
+											</div>
+											<div class="flex items-center gap-2 text-sm">
+												<span
+													class={`font-medium ${
+														alert.enable === 'Enabled' ? 'text-emerald-700' : 'text-slate-500'
+													}`}
+												>
+													{alert.pid || 'No PID selected'}
+												</span>
+												<span class="text-slate-400">•</span>
+												<span
+													class={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+														alert.enable === 'Enabled'
+															? 'bg-emerald-100 text-emerald-700'
+															: 'bg-slate-100 text-slate-600'
+													}`}
+												>
+													{alert.enable === 'Enabled' ? 'Active' : 'Inactive'}
+												</span>
+											</div>
+										</div>
+									</div>
+
+									<ChevronDown
+										class="h-5 w-5 text-slate-400 transition-all duration-300 group-hover:text-slate-600 data-[state=open]:rotate-180"
+									/>
+								</div>
+							</Collapsible.Trigger>
+
+							<!-- Enhanced Content -->
+							<Collapsible.Content>
+								<div class="border-t border-slate-100 bg-white/50 p-6">
+									<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+										<!-- PID Selection -->
+										<div class="lg:col-span-2">
+											<PIDSelect
+												bind:pidValue={$form[key].pid}
+												bind:unitValue={$form[key].units}
+												{pids}
+												disabled={alert.enable !== 'Enabled'}
+												pidLabel="Parameter ID"
+												unitLabel="Measurement Unit"
+												class="space-y-4"
+												key={`alert-${key}`}
+											/>
+										</div>
+
+										<!-- Comparison Operator -->
+										<div class="space-y-3">
+											<Label class="text-sm font-semibold text-slate-700">Comparison Operator</Label
+											>
+											<Select.Root
+												bind:value={$form[key].compare}
+												disabled={alert.enable !== 'Enabled'}
+												type="single"
+											>
+												<Select.Trigger
+													class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
+														alert.enable === 'Enabled'
+															? 'border-slate-200 bg-white hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
+															: 'border-slate-100 bg-slate-50'
+													}`}
+												>
+													<span class={alert.compare ? 'text-slate-800' : 'text-slate-400'}>
+														{alert.compare || 'Select operator'}
+													</span>
+												</Select.Trigger>
+												<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
+													{#each compareOps as op (op)}
+														<Select.Item
+															value={op}
+															label={op}
+															class="rounded-lg py-3 hover:bg-emerald-50"
+														>
+															{op}
+														</Select.Item>
+													{/each}
+												</Select.Content>
+											</Select.Root>
+										</div>
+
+										<!-- Threshold Value -->
+										<div class="space-y-3">
+											<Label class="text-sm font-semibold text-slate-700">Threshold Value</Label>
+											<Input
+												type="number"
+												bind:value={$form[key].threshold}
+												class={`h-12 rounded-xl border-2 transition-all duration-200 ${
 													alert.enable === 'Enabled'
-														? 'bg-gradient-to-br from-emerald-500 to-emerald-600 group-hover:shadow-emerald-200'
-														: 'bg-gradient-to-br from-slate-400 to-slate-500'
+														? 'border-slate-200 bg-white hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
+														: 'border-slate-100 bg-slate-50'
 												}`}
-											>
-												{i + 1}
-											</div>
+												disabled={alert.enable !== 'Enabled'}
+												placeholder="Enter threshold value"
+											/>
+										</div>
 
+										<!-- Alert Message -->
+										<div class="space-y-3 lg:col-span-2">
+											<Label class="text-sm font-semibold text-slate-700">Alert Message</Label>
+											<Input
+												type="text"
+												bind:value={$form[key].message}
+												class={`h-12 rounded-xl border-2 transition-all duration-200 ${
+													alert.enable === 'Enabled'
+														? 'border-slate-200 bg-white hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
+														: 'border-slate-100 bg-slate-50'
+												}`}
+												disabled={alert.enable !== 'Enabled'}
+												placeholder="Enter custom alert message"
+											/>
+										</div>
+
+										<!-- Enable/Disable Toggle -->
+										<div
+											class="flex items-center justify-between rounded-xl bg-slate-50/50 p-4 lg:col-span-2"
+										>
 											<div class="flex flex-col">
-												<div class="flex items-center gap-2">
-													<h4 class="text-lg font-semibold text-slate-800">
-														Alert #{i + 1}
-													</h4>
-													{#if alert.enable === 'Enabled'}
-														<CheckCircle2 class="h-4 w-4 text-emerald-500" />
-													{:else}
-														<AlertTriangle class="h-4 w-4 text-slate-400" />
-													{/if}
-												</div>
-												<div class="flex items-center gap-2 text-sm">
-													<span
-														class={`font-medium ${
-															alert.enable === 'Enabled' ? 'text-emerald-700' : 'text-slate-500'
-														}`}
-													>
-														{alert.pid || 'No PID selected'}
-													</span>
-													<span class="text-slate-400">•</span>
-													<span
-														class={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-															alert.enable === 'Enabled'
-																? 'bg-emerald-100 text-emerald-700'
-																: 'bg-slate-100 text-slate-600'
-														}`}
-													>
-														{alert.enable === 'Enabled' ? 'Active' : 'Inactive'}
-													</span>
-												</div>
+												<Label class="text-sm font-semibold text-slate-700">Alert Status</Label>
+												<p class="text-xs text-slate-500">
+													{alert.enable === 'Enabled'
+														? 'This alert is currently active'
+														: 'This alert is currently inactive'}
+												</p>
 											</div>
-										</div>
-
-										<ChevronDown
-											class="h-5 w-5 text-slate-400 transition-all duration-300 group-hover:text-slate-600 data-[state=open]:rotate-180"
-										/>
-									</div>
-								</Collapsible.Trigger>
-
-								<!-- Enhanced Content -->
-								<Collapsible.Content>
-									<div class="border-t border-slate-100 bg-white/50 p-6">
-										<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-											<!-- PID Selection -->
-											<div class="lg:col-span-2">
-												<PIDSelect
-													bind:pidValue={$form[key].pid}
-													bind:unitValue={$form[key].units}
-													{pids}
-													disabled={alert.enable !== 'Enabled'}
-													pidLabel="Parameter ID"
-													unitLabel="Measurement Unit"
-													class="space-y-4"
-													key={`alert-${key}`}
-												/>
-											</div>
-
-											<!-- Comparison Operator -->
-											<div class="space-y-3">
-												<Label class="text-sm font-semibold text-slate-700"
-													>Comparison Operator</Label
-												>
-												<Select.Root
-													bind:value={$form[key].compare}
-													disabled={alert.enable !== 'Enabled'}
-													type="single"
-												>
-													<Select.Trigger
-														class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
-															alert.enable === 'Enabled'
-																? 'border-slate-200 bg-white hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
-																: 'border-slate-100 bg-slate-50'
-														}`}
-													>
-														<span class={alert.compare ? 'text-slate-800' : 'text-slate-400'}>
-															{alert.compare || 'Select operator'}
-														</span>
-													</Select.Trigger>
-													<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
-														{#each compareOps as op}
-															<Select.Item
-																value={op}
-																label={op}
-																class="rounded-lg py-3 hover:bg-emerald-50"
-															>
-																{op}
-															</Select.Item>
-														{/each}
-													</Select.Content>
-												</Select.Root>
-											</div>
-
-											<!-- Threshold Value -->
-											<div class="space-y-3">
-												<Label class="text-sm font-semibold text-slate-700">Threshold Value</Label>
-												<Input
-													type="number"
-													bind:value={$form[key].threshold}
-													class={`h-12 rounded-xl border-2 transition-all duration-200 ${
-														alert.enable === 'Enabled'
-															? 'border-slate-200 bg-white hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
-															: 'border-slate-100 bg-slate-50'
-													}`}
-													disabled={alert.enable !== 'Enabled'}
-													placeholder="Enter threshold value"
-												/>
-											</div>
-
-											<!-- Alert Message -->
-											<div class="space-y-3 lg:col-span-2">
-												<Label class="text-sm font-semibold text-slate-700">Alert Message</Label>
-												<Input
-													type="text"
-													bind:value={$form[key].message}
-													class={`h-12 rounded-xl border-2 transition-all duration-200 ${
-														alert.enable === 'Enabled'
-															? 'border-slate-200 bg-white hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
-															: 'border-slate-100 bg-slate-50'
-													}`}
-													disabled={alert.enable !== 'Enabled'}
-													placeholder="Enter custom alert message"
-												/>
-											</div>
-
-											<!-- Enable/Disable Toggle -->
-											<div
-												class="flex items-center justify-between rounded-xl bg-slate-50/50 p-4 lg:col-span-2"
-											>
-												<div class="flex flex-col">
-													<Label class="text-sm font-semibold text-slate-700">Alert Status</Label>
-													<p class="text-xs text-slate-500">
-														{alert.enable === 'Enabled'
-															? 'This alert is currently active'
-															: 'This alert is currently inactive'}
-													</p>
-												</div>
-												<Switch
-													checked={alert.enable === 'Enabled'}
-													onCheckedChange={(checked) =>
-														($form[key].enable = checked ? 'Enabled' : 'Disabled')}
-													class="data-[state=checked]:bg-emerald-500"
-												/>
-											</div>
+											<Switch
+												checked={alert.enable === 'Enabled'}
+												onCheckedChange={(checked) =>
+													($form[key].enable = checked ? 'Enabled' : 'Disabled')}
+												class="data-[state=checked]:bg-emerald-500"
+											/>
 										</div>
 									</div>
-								</Collapsible.Content>
-							</div>
-						</Collapsible.Root>
-					</Motion.div>
-				</div>
-			{/each}
-		</div>
-	{/snippet}
+								</div>
+							</Collapsible.Content>
+						</div>
+					</Collapsible.Root>
+				</Motion.div>
+			</div>
+		{/each}
+	</div>
 
 	{#snippet footerContent()}
 		<div
 			class="mt-8 flex flex-col items-center justify-between gap-4 border-t border-slate-100 pt-6 md:flex-row"
 		>
 			<div class="text-sm text-slate-500">
-				{Object.values($form).filter((alert: any) => alert?.enable === 'Enabled').length} of {Object.keys(
-					$form
-				).length} alerts enabled
+				{Object.values($form).filter(
+					(alert) =>
+						alert && typeof alert === 'object' && 'enable' in alert && alert.enable === 'Enabled'
+				).length} of {Object.keys($form).length} alerts enabled
 			</div>
 			<Button
 				type="submit"

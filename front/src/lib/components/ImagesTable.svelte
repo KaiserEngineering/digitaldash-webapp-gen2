@@ -87,7 +87,7 @@
 			try {
 				const image = await imageHandler.loadImage(imageName);
 				loadedImages[imageName] = image?.url ?? null;
-			} catch (err) {
+			} catch {
 				failedImages[imageName] = true;
 			}
 
@@ -98,7 +98,7 @@
 
 {#if imageNames && imageNames.length > 0}
 	<div class="grid grid-cols-1">
-		{#each imageNames as imageName}
+		{#each imageNames as imageName (imageName)}
 			<div class="flex flex-col">
 				{#if loadingStates[imageName]}
 					<div

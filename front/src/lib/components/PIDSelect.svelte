@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Label } from '$lib/components/ui/label';
 	import * as Select from '$lib/components/ui/select';
-	import type { PIDMetadata } from '$lib/stores/PIDsStore';
 
 	let {
 		pidValue = $bindable(''),
@@ -14,21 +13,7 @@
 		unitPlaceholder = 'Select Unit',
 		onPidChange = () => {},
 		onUnitChange = () => {},
-		class: className = '',
-		key = ''
-	}: {
-		pidValue?: string;
-		unitValue?: string;
-		pids?: PIDMetadata[];
-		disabled?: boolean;
-		pidLabel?: string;
-		unitLabel?: string;
-		pidPlaceholder?: string;
-		unitPlaceholder?: string;
-		onPidChange?: (pid: string) => void;
-		onUnitChange?: (unit: string) => void;
-		class?: string;
-		key?: string;
+		class: className = ''
 	} = $props();
 
 	function handlePidChange(selectedValue: string | undefined) {

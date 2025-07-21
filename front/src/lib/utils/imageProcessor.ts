@@ -5,7 +5,7 @@
 
 interface PendingRequest {
 	resolve: (value: string) => void;
-	reject: (reason?: any) => void;
+	reject: (reason?: unknown) => void;
 }
 
 let worker: Worker | null = null;
@@ -34,7 +34,7 @@ function getWorker(): Worker {
 		worker.onerror = (error) => {
 			console.error('Image processor worker error:', error);
 			// Reject all pending requests
-			for (const [id, pending] of pendingRequests) {
+			for (const [, pending] of pendingRequests) {
 				pending.reject(new Error('Worker error'));
 			}
 			pendingRequests.clear();

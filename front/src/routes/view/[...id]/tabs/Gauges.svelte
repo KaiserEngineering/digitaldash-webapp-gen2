@@ -14,13 +14,13 @@
 	// Function to ensure gauge array matches num_gauges length
 	function ensureGaugeArray() {
 		if (!$form.gauge) $form.gauge = [];
-		
+
 		// Add missing gauges
 		while ($form.gauge.length < $form.num_gauges) {
 			$form.gauge.push({});
 		}
-		
-		// Remove excess gauges  
+
+		// Remove excess gauges
 		if ($form.gauge.length > $form.num_gauges) {
 			$form.gauge.length = $form.num_gauges;
 		}
@@ -44,7 +44,7 @@
 					type="single"
 					bind:value={$form.num_gauges}
 					name="num_gauges"
-					onValueChange={(e) => {
+					onValueChange={(e: string | number) => {
 						$form.num_gauges = +e;
 						ensureGaugeArray();
 					}}
@@ -53,7 +53,7 @@
 						<span>{$form.num_gauges} Gauges</span>
 					</Select.Trigger>
 					<Select.Content>
-						{#each [0, 1, 2, 3] as n}
+						{#each [0, 1, 2, 3] as n (n)}
 							<Select.Item value={n.toString()} label={`${n} Gauges`} class="py-3 text-base">
 								{n} Gauges
 							</Select.Item>
@@ -64,14 +64,16 @@
 		</div>
 
 		<!-- Mobile-optimized gauge cards with built-in collapsible -->
-		{#each Array($form.num_gauges) as _, i}
+		{#each Array($form.num_gauges).fill(0) as _, i (i)}
 			{@const gauge = $form.gauge?.[i] ?? {}}
 
 			<Collapsible.Root>
 				<Card.Root class="border-border overflow-hidden">
 					<!-- Touchable header that expands/collapses the card -->
 					<Collapsible.Trigger class="w-full">
-						<Card.Header class="flex flex-row items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+						<Card.Header
+							class="hover:bg-muted/50 flex flex-row items-center justify-between p-4 transition-colors"
+						>
 							<div class="flex items-center gap-3">
 								<div class="bg-muted rounded-lg p-2">
 									<GaugeIcon class="text-muted-foreground h-5 w-5" />
@@ -84,7 +86,9 @@
 									</p>
 								</div>
 							</div>
-							<ChevronDown class="text-muted-foreground h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
+							<ChevronDown
+								class="text-muted-foreground h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180"
+							/>
 						</Card.Header>
 					</Collapsible.Trigger>
 
@@ -105,7 +109,7 @@
 									value={$form.gauge[i].theme}
 									options={themes}
 									placeholder="Choose a theme..."
-									onSelect={(value: any) => ($form.gauge[i].theme = value)}
+									onSelect={(value: string) => ($form.gauge[i].theme = value)}
 									class="w-full"
 									themes={true}
 								/>

@@ -1,6 +1,6 @@
 // src/routes/api/config/+server.ts
 import { configStore } from '$local/server/configStore';
-import { error, json } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import { DigitalDashSchema } from '$schemas/digitaldash';
 import { deviceClient } from '$local/server/deviceClient';
 import { useDeviceApi } from '$lib/config';

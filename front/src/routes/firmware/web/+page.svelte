@@ -6,7 +6,8 @@
 	import { apiUrl } from '$lib/config';
 	import PageCard from '@/components/PageCard.svelte';
 
-	let { ver } = $props();
+	let { data } = $props();
+	const ver = data?.ver || 'Unknown';
 
 	let file: File | null = $state(null);
 	let dragActive = $state(false);
@@ -80,48 +81,46 @@
 	description={`Current Firmware Version: ${ver}`}
 	icon={UploadCloud}
 >
-	{#snippet children()}
-		<div
-			class="cursor-pointer rounded-lg border-2 border-dashed p-4 text-center transition-colors duration-200 ease-in-out"
-			class:border-primary={dragActive}
-			ondragenter={handleDrag}
-			ondragleave={handleDrag}
-			ondragover={handleDrag}
-			ondrop={handleDrop}
-			role="button"
-			tabindex="0"
-		>
-			<input
-				type="file"
-				id="otafile"
-				name="otafile"
-				class="hidden"
-				onchange={handleChange}
-				accept=".bin"
-			/>
-			<label for="otafile" class="cursor-pointer">
-				{#if file}
-					<FileSearch size={48} class="text-primary mx-auto mb-2" />
-					<p class="text-sm font-medium">{file.name}</p>
-				{:else}
-					<Upload size={48} class="mx-auto mb-2 text-gray-400" />
-					<p class="text-sm font-medium">Drag & drop a .bin file or click to browse</p>
-				{/if}
-			</label>
-		</div>
+	<div
+		class="cursor-pointer rounded-lg border-2 border-dashed p-4 text-center transition-colors duration-200 ease-in-out"
+		class:border-primary={dragActive}
+		ondragenter={handleDrag}
+		ondragleave={handleDrag}
+		ondragover={handleDrag}
+		ondrop={handleDrop}
+		role="button"
+		tabindex="0"
+	>
+		<input
+			type="file"
+			id="otafile"
+			name="otafile"
+			class="hidden"
+			onchange={handleChange}
+			accept=".bin"
+		/>
+		<label for="otafile" class="cursor-pointer">
+			{#if file}
+				<FileSearch size={48} class="text-primary mx-auto mb-2" />
+				<p class="text-sm font-medium">{file.name}</p>
+			{:else}
+				<Upload size={48} class="mx-auto mb-2 text-gray-400" />
+				<p class="text-sm font-medium">Drag & drop a .bin file or click to browse</p>
+			{/if}
+		</label>
+	</div>
 
-		{#if uploadProgress > 0 && !uploadComplete}
-			<div class="mt-4">
-				<Progress value={uploadProgress} />
-				<p class="mt-2 text-center text-sm">Uploading: {Math.floor(uploadProgress)}%</p>
-			</div>
-		{:else if uploadComplete}
-			<div class="mt-4 text-center text-green-600">
-				<CheckCircle size={24} class="mx-auto mb-2" />
-				<p class="text-sm font-medium">Upload complete! Reconnect and refresh if needed.</p>
-			</div>
-		{/if}
-	{/snippet}
+	{#if uploadProgress > 0 && !uploadComplete}
+		<div class="mt-4">
+			<Progress value={uploadProgress} />
+			<p class="mt-2 text-center text-sm">Uploading: {Math.floor(uploadProgress)}%</p>
+		</div>
+	{:else if uploadComplete}
+		<div class="mt-4 text-center text-green-600">
+			<CheckCircle size={24} class="mx-auto mb-2" />
+			<p class="text-sm font-medium">Upload complete! Reconnect and refresh if needed.</p>
+		</div>
+	{/if}
 
 	{#snippet footerContent()}
 		<Button onclick={startUpload} disabled={!file || uploadProgress > 0}>

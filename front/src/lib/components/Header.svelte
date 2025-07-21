@@ -111,7 +111,7 @@
 				<!-- Desktop Navigation -->
 				<nav class="hidden sm:block" aria-label="Main navigation">
 					<div class="bg-muted/50 border-border/30 flex gap-1 rounded-lg border p-1">
-						{#each tabs as tab}
+						{#each tabs as tab (tab.value)}
 							{@const TabIcon = tab.icon}
 							{@const isActive =
 								tab.value === ''
@@ -144,7 +144,7 @@
 											transition:slide={{ duration: 200 }}
 										>
 											<div class="p-1">
-												{#each tab.subItems as sub}
+												{#each tab.subItems as sub (sub.value)}
 													{@const isSubActive = page.url.pathname === '/' + sub.value}
 													<a
 														href={'/' + sub.value}
@@ -186,7 +186,7 @@
 						transition:slide={{ duration: 200 }}
 					>
 						<div class="bg-muted/50 border-border/30 space-y-2 rounded-lg border p-2">
-							{#each tabs as tab}
+							{#each tabs as tab (tab.value)}
 								{@const TabIcon = tab.icon}
 								{@const isActive = activeTab === tab.value}
 
@@ -212,7 +212,7 @@
 
 										{#if isMobileFirmwareExpanded}
 											<div class="ml-7 space-y-1" transition:slide={{ duration: 200 }}>
-												{#each tab.subItems as sub}
+												{#each tab.subItems as sub (sub.value)}
 													{@const isSubActive = page.url.pathname === '/' + sub.value}
 													<a
 														href={'/' + sub.value}

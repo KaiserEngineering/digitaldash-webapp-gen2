@@ -8,7 +8,6 @@
 	let {
 		value = $bindable(''),
 		options = [],
-		placeholder = 'Select an image...',
 		onSelect = () => {},
 		class: className = '',
 		disabled = false,
@@ -31,7 +30,7 @@
 					? await imageHandler.loadTheme(option)
 					: await imageHandler.loadImage(option);
 				imageUrls[option] = imageData?.url || '';
-			} catch (err) {
+			} catch {
 				failedImages[option] = true;
 			}
 		});
@@ -55,10 +54,11 @@
 		}
 	});
 
+	const shouldLoadPreviews = $derived(options.length > 0 && options !== prevOptions);
 	let prevOptions: string[] = $state([]);
 
 	$effect(() => {
-		if (options.length > 0 && JSON.stringify(prevOptions) !== JSON.stringify(options)) {
+		if (shouldLoadPreviews) {
 			prevOptions = [...options];
 			loadImagePreviews();
 		}
@@ -89,7 +89,7 @@
 					: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
 			)}
 		>
-			{#each options.filter((option) => themes || !failedImages[option]) as option}
+			{#each options.filter((option) => themes || !failedImages[option]) as option (option)}
 				<button
 					type="button"
 					class={cn(

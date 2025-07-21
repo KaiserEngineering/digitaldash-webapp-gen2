@@ -6,7 +6,7 @@ export const factoryBackgroundImages: string[] = ['flare', 'galaxy'];
 
 // Theme names are loaded dynamically from /api/options endpoint
 // This allows firmware to define what themes are available
-export const factoryThemeImames: string[] = []; // Populated at runtime from options
+export const factoryThemeImages: string[] = []; // Populated at runtime from options
 
 export const endpoints = {
 	factory: '/embedded/',

@@ -1,8 +1,25 @@
 // src/lib/server/deviceClient.ts
 
 import { DigitalDashSchema, type DigitalDash } from '$schemas/digitaldash';
+import { browser } from '$app/environment';
 
-const DEVICE_URL = 'http://192.168.4.1';
+// Default device URL - can be overridden via environment variable
+const DEFAULT_DEVICE_URL = 'http://192.168.4.1';
+
+function getDeviceUrl(): string {
+	// In browser, check for runtime configuration
+	if (browser && typeof window !== 'undefined') {
+		// Check for runtime config (could be set by deployment scripts)
+		const runtimeConfig = (window as { __DIGITALDASH_CONFIG__?: { deviceUrl?: string } })
+			.__DIGITALDASH_CONFIG__;
+		if (runtimeConfig?.deviceUrl) {
+			return runtimeConfig.deviceUrl;
+		}
+	}
+
+	// Fallback to environment variable or default
+	return import.meta.env.VITE_DEVICE_URL || DEFAULT_DEVICE_URL;
+}
 
 export const deviceClient = {
 	async getConfig(): Promise<DigitalDash | null> {
@@ -10,7 +27,7 @@ export const deviceClient = {
 			const controller = new AbortController();
 			const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
-			const res = await fetch(`${DEVICE_URL}/config`, {
+			const res = await fetch(`${getDeviceUrl()}/config`, {
 				signal: controller.signal,
 				headers: {
 					Accept: 'application/json',
@@ -78,7 +95,7 @@ export const deviceClient = {
 			const controller = new AbortController();
 			const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout for save
 
-			const res = await fetch(`${DEVICE_URL}/config`, {
+			const res = await fetch(`${getDeviceUrl()}/config`, {
 				method: 'POST',
 				signal: controller.signal,
 				headers: {

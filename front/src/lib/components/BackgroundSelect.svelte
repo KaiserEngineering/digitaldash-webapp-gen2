@@ -27,7 +27,7 @@
 			try {
 				const imageData = await imageHandler.loadImage(option);
 				imageUrls[option] = imageData?.url || '';
-			} catch (err) {
+			} catch {
 				failedImages[option] = true;
 			}
 		});
@@ -52,10 +52,11 @@
 		}
 	});
 
+	const shouldLoadPreviews = $derived(options.length > 0 && options !== prevOptions);
 	let prevOptions: string[] = $state([]);
 
 	$effect(() => {
-		if (options.length > 0 && JSON.stringify(prevOptions) !== JSON.stringify(options)) {
+		if (shouldLoadPreviews) {
 			prevOptions = [...options];
 			loadImagePreviews();
 		}
@@ -78,7 +79,7 @@
 		<div class="py-8 text-center text-sm text-gray-500">No backgrounds available</div>
 	{:else}
 		<div class="flex flex-col gap-3">
-			{#each options.filter((option) => !failedImages[option]) as option}
+			{#each options.filter((option) => !failedImages[option]) as option (option)}
 				<button
 					type="button"
 					class={cn(

@@ -58,46 +58,44 @@
 	icon={SettingsIcon}
 	{enhance}
 >
-	{#snippet children()}
-		<Tabs.Root bind:value={activeTab} class="w-full">
-			<ViewCard view={$form} index={viewId} pids={data.pids} />
+	<Tabs.Root bind:value={activeTab} class="w-full">
+		<ViewCard view={$form} index={viewId} pids={data.pids} />
 
-			<Tabs.List class="grid w-full grid-cols-2">
-				<Tabs.Trigger
-					value="view"
-					class="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-background/50 flex items-center justify-center gap-2 rounded-md
+		<Tabs.List class="grid w-full grid-cols-2">
+			<Tabs.Trigger
+				value="view"
+				class="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-background/50 flex items-center justify-center gap-2 rounded-md
 				text-sm
 				font-medium transition-all
 				data-[state=active]:shadow-sm"
-				>
-					<SettingsIcon />
-					<span>Settings</span>
-				</Tabs.Trigger>
+			>
+				<SettingsIcon />
+				<span>Settings</span>
+			</Tabs.Trigger>
 
-				<Tabs.Trigger
-					value="gauges"
-					class="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-background/50 flex items-center justify-center gap-2 rounded-md
+			<Tabs.Trigger
+				value="gauges"
+				class="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-background/50 flex items-center justify-center gap-2 rounded-md
 				text-sm
 				font-medium transition-all
 				data-[state=active]:shadow-sm"
-				>
-					<Gauge />
-					<span>Gauges</span>
-					<Badge variant="secondary" class="text-xs">
-						{$form.num_gauges || 0}
-					</Badge>
-				</Tabs.Trigger>
-			</Tabs.List>
+			>
+				<Gauge />
+				<span>Gauges</span>
+				<Badge variant="secondary" class="text-xs">
+					{$form.num_gauges || 0}
+				</Badge>
+			</Tabs.Trigger>
+		</Tabs.List>
 
-			<Tabs.Content value="view">
-				<Settings {form} backgrounds={data.backgrounds} />
-			</Tabs.Content>
+		<Tabs.Content value="view">
+			<Settings {form} backgrounds={data.backgrounds} />
+		</Tabs.Content>
 
-			<Tabs.Content value="gauges">
-				<Gauges themes={data.themes} pids={data.pids} {form} />
-			</Tabs.Content>
-		</Tabs.Root>
-	{/snippet}
+		<Tabs.Content value="gauges">
+			<Gauges themes={data.themes} pids={data.pids} {form} />
+		</Tabs.Content>
+	</Tabs.Root>
 
 	{#snippet footerContent()}
 		<div class="border-border bg-muted/30 border-t py-4">
