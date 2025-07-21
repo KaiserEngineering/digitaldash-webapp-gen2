@@ -3,16 +3,25 @@
 	import type { DigitalDashDynamic } from '$schemas/digitaldash';
 	import { zod4 } from 'sveltekit-superforms/adapters';
 	import { toast } from 'svelte-5-french-toast';
-	import { Button } from '@/components/ui/button';
-	import { Input } from '@/components/ui/input';
-	import { Label } from '@/components/ui/label';
-	import { Switch } from '@/components/ui/switch';
-	import * as Select from '@/components/ui/select';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import { Switch } from '$lib/components/ui/switch';
+	import * as Select from '$lib/components/ui/select';
 	import * as Collapsible from '$lib/components/ui/collapsible';
 	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
 	import PageCard from '@/components/PageCard.svelte';
 	import PIDSelect from '$lib/components/PIDSelect.svelte';
-	import { Settings, ChevronDown } from 'lucide-svelte';
+	import {
+		Settings,
+		ChevronDown,
+		Zap,
+		AlertTriangle,
+		CheckCircle2,
+		Crown,
+		Shield,
+		Layers
+	} from 'lucide-svelte';
 	import { Motion } from 'motion-start';
 	import { slide } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
@@ -20,6 +29,7 @@
 	import { DynamicFormSchema } from './dynamicFormSchema';
 
 	let { data } = $props();
+
 	const pids = data.pids || [];
 	const options = data.options || {};
 
@@ -34,7 +44,6 @@
 				}, 'Dynamic rules saved!');
 
 				if (result.success && result.config) {
-					// Use SuperForm's reset method to properly update form state
 					reset({ data: { items: result.config.dynamic } });
 				} else {
 					toast.error('Failed to save dynamic rules. Please try again.');
@@ -48,127 +57,304 @@
 
 	const compareOps = options.dynamic_comparison || [];
 
-	// Fixed priorities for exactly 3 rules
-	const priorities = ['High', 'Medium', 'Low'];
+	// Enhanced priorities with colors and icons
+	const priorities = [
+		{
+			name: 'High',
+			color: 'from-red-500 to-red-600',
+			bgColor: 'from-red-50 via-white to-red-50/30',
+			borderColor: 'border-red-200',
+			hoverColor: 'hover:bg-red-50/50',
+			icon: Crown,
+			description: 'Critical priority rule'
+		},
+		{
+			name: 'Medium',
+			color: 'from-amber-500 to-amber-600',
+			bgColor: 'from-amber-50 via-white to-amber-50/30',
+			borderColor: 'border-amber-200',
+			hoverColor: 'hover:bg-amber-50/50',
+			icon: Shield,
+			description: 'Standard priority rule'
+		},
+		{
+			name: 'Low',
+			color: 'from-blue-500 to-blue-600',
+			bgColor: 'from-blue-50 via-white to-blue-50/30',
+			borderColor: 'border-blue-200',
+			hoverColor: 'hover:bg-blue-50/50',
+			icon: Layers,
+			description: 'Low priority rule'
+		}
+	];
 </script>
 
-<PageCard title="Dynamic Rules" description="Define dynamic gauge rules." icon={Settings} {enhance}>
+<PageCard
+	title="Dynamic Rule Engine"
+	description="Configure intelligent gauge behavior with priority-based dynamic rules."
+	icon={Settings}
+	{enhance}
+>
 	{#snippet children()}
-		{#each { length: 3 } as _, i (i)}
-			<div
-				in:slide={{ duration: 200, easing: quintOut }}
-				out:slide={{ duration: 200, easing: quintOut }}
-				animate:flip={{ duration: 300 }}
-			>
-				<Motion.div key={i} class="overflow-hidden">
-					<Collapsible.Root>
-						<div
-							class={`relative rounded-xl border transition duration-200 ${
-								$form.items[i]?.enable === 'Enabled'
-									? 'border-primary-100 bg-primary-50 hover:shadow-md'
-									: 'border-gray-200 bg-gray-50 opacity-60'
-							}`}
-						>
-							<!-- Touchable header that expands/collapses the card -->
-							<Collapsible.Trigger class="w-full text-left">
-								<div
-									class="text-primary-700 hover:bg-primary-100/50 flex items-center justify-between border-b p-4 transition-colors"
-								>
-									<div class="flex items-center gap-3">
-										<div
-											class="bg-primary-100 flex h-10 w-10 p-2 items-center justify-center rounded-full text-xs font-semibold"
-										>
-											{priorities[i]}
+		<div class="space-y-6">
+			{#each { length: 3 } as _, i (i)}
+				<div
+					in:slide={{ duration: 300, easing: quintOut }}
+					out:slide={{ duration: 200, easing: quintOut }}
+					animate:flip={{ duration: 400 }}
+				>
+					<Motion.div key={i} class="overflow-hidden">
+						<Collapsible.Root>
+							<div
+								class={`group relative rounded-2xl border-2 transition-all duration-300 ${
+									$form.items[i]?.enable === 'Enabled'
+										? `${priorities[i].borderColor} bg-gradient-to-br ${priorities[i].bgColor} shadow-sm hover:shadow-lg`
+										: 'border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50/30 opacity-75 hover:opacity-90'
+								}`}
+							>
+								<!-- Enhanced Header -->
+								<Collapsible.Trigger class="w-full text-left">
+									{@const SvelteComponent = priorities[i].icon}
+									<div
+										class={`flex items-center justify-between p-6 transition-all duration-200 ${
+											$form.items[i]?.enable === 'Enabled'
+												? priorities[i].hoverColor
+												: 'hover:bg-slate-50/50'
+										}`}
+									>
+										<div class="flex items-center gap-4">
+											<!-- Priority Indicator -->
+											<div
+												class={`flex h-14 w-14 items-center justify-center rounded-xl font-bold text-white shadow-lg transition-all duration-200 ${
+													$form.items[i]?.enable === 'Enabled'
+														? `bg-gradient-to-br ${priorities[i].color}`
+														: 'bg-gradient-to-br from-slate-400 to-slate-500'
+												}`}
+											>
+												<SvelteComponent class="h-6 w-6" />
+											</div>
+
+											<div class="flex flex-col">
+												<div class="flex items-center gap-3">
+													<h4 class="text-lg font-semibold text-slate-800">
+														{priorities[i].name} Priority Rule
+													</h4>
+													{#if $form.items[i]?.enable === 'Enabled'}
+														<CheckCircle2 class="h-4 w-4 text-emerald-500" />
+													{:else}
+														<AlertTriangle class="h-4 w-4 text-slate-400" />
+													{/if}
+												</div>
+												<div class="flex items-center gap-2 text-sm">
+													<span
+														class={`font-medium ${
+															$form.items[i]?.enable === 'Enabled'
+																? 'text-slate-700'
+																: 'text-slate-500'
+														}`}
+													>
+														{$form.items[i]?.pid || 'No PID selected'}
+													</span>
+													<span class="text-slate-400">•</span>
+													<span
+														class={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+															$form.items[i]?.enable === 'Enabled'
+																? `bg-${priorities[i].color.split('-')[1]}-100 text-${priorities[i].color.split('-')[1]}-700`
+																: 'bg-slate-100 text-slate-600'
+														}`}
+													>
+														{$form.items[i]?.enable === 'Enabled' ? 'Active' : 'Inactive'}
+													</span>
+												</div>
+												<p class="mt-1 text-xs text-slate-500">
+													{priorities[i].description}
+												</p>
+											</div>
 										</div>
-										<div class="text-left">
-											<p class="text-xs text-gray-600">
-												{$form.items[i]?.pid || 'No PID selected'}
-												• {priorities[i]} Priority
-												{#if $form.items[i]?.enable === 'Enabled'}• Enabled{:else}• Disabled{/if}
-											</p>
-										</div>
-									</div>
-									<ChevronDown
-										class="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180"
-									/>
-								</div>
-							</Collapsible.Trigger>
 
-							<!-- Collapsible content -->
-							<Collapsible.Content>
-								<div class="grid grid-cols-1 gap-4 p-4 pt-0 md:grid-cols-2">
-									<PIDSelect
-										bind:pidValue={$form.items[i].pid}
-										bind:unitValue={$form.items[i].units}
-										{pids}
-										disabled={$form.items[i]?.enable !== 'Enabled'}
-										pidLabel="PID"
-										unitLabel="Unit"
-										class="space-y-2"
-										key={`rule-${i}`}
-									/>
-
-									<div class="space-y-2">
-										<Label>Compare</Label>
-										<Select.Root
-											bind:value={$form.items[i].compare}
-											disabled={$form.items[i]?.enable !== 'Enabled'}
-											type="single"
-										>
-											<Select.Trigger class="h-10 w-full">
-												<span>{$form.items[i]?.compare || 'Select Compare'}</span>
-											</Select.Trigger>
-											<Select.Content>
-												{#each compareOps as op}
-													<Select.Item value={op} label={op}>
-														{op}
-													</Select.Item>
-												{/each}
-											</Select.Content>
-										</Select.Root>
-									</div>
-
-									<div class="space-y-2">
-										<Label>Threshold</Label>
-										<Input type="number" bind:value={$form.items[i].threshold} disabled={$form.items[i]?.enable !== 'Enabled'} />
-									</div>
-
-									<div class="space-y-2">
-										<Label>Priority</Label>
-										<div class="flex h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm">
-											<span class="font-medium text-gray-700">{priorities[i]}</span>
-											<span class="ml-2 text-xs text-gray-500">(Fixed)</span>
-										</div>
-									</div>
-
-									<div class="flex items-center gap-2">
-										<Switch
-											checked={$form.items[i]?.enable === 'Enabled'}
-											onCheckedChange={(checked) =>
-												($form.items[i].enable = checked ? 'Enabled' : 'Disabled')}
+										<ChevronDown
+											class="h-5 w-5 text-slate-400 transition-all duration-300 group-hover:text-slate-600 data-[state=open]:rotate-180"
 										/>
-										<Label>Enabled</Label>
 									</div>
-								</div>
-							</Collapsible.Content>
-						</div>
-					</Collapsible.Root>
-				</Motion.div>
-			</div>
-		{/each}
+								</Collapsible.Trigger>
+
+								<!-- Enhanced Content -->
+								<Collapsible.Content>
+									{@const SvelteComponent_1 = priorities[i].icon}
+									<div class="border-t border-slate-100 bg-white/50 p-6">
+										<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+											<!-- PID Selection -->
+											<div class="lg:col-span-2">
+												<PIDSelect
+													bind:pidValue={$form.items[i].pid}
+													bind:unitValue={$form.items[i].units}
+													{pids}
+													disabled={$form.items[i]?.enable !== 'Enabled'}
+													pidLabel="Parameter ID"
+													unitLabel="Measurement Unit"
+													class="space-y-4"
+													key={`rule-${i}`}
+												/>
+											</div>
+
+											<!-- Comparison Operator -->
+											<div class="space-y-3">
+												<Label class="text-sm font-semibold text-slate-700"
+													>Comparison Operator</Label
+												>
+												<Select.Root
+													bind:value={$form.items[i].compare}
+													disabled={$form.items[i]?.enable !== 'Enabled'}
+													type="single"
+												>
+													<Select.Trigger
+														class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
+															$form.items[i]?.enable === 'Enabled'
+																? `border-slate-200 bg-white hover:border-${priorities[i].color.split('-')[1]}-300 focus:border-${priorities[i].color.split('-')[1]}-400 focus:ring-2 focus:ring-${priorities[i].color.split('-')[1]}-100`
+																: 'border-slate-100 bg-slate-50'
+														}`}
+													>
+														<span
+															class={$form.items[i]?.compare ? 'text-slate-800' : 'text-slate-400'}
+														>
+															{$form.items[i]?.compare || 'Select operator'}
+														</span>
+													</Select.Trigger>
+													<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
+														{#each compareOps as op}
+															<Select.Item
+																value={op}
+																label={op}
+																class={`rounded-lg py-3 hover:bg-${priorities[i].color.split('-')[1]}-50`}
+															>
+																{op}
+															</Select.Item>
+														{/each}
+													</Select.Content>
+												</Select.Root>
+											</div>
+
+											<!-- Threshold Value -->
+											<div class="space-y-3">
+												<Label class="text-sm font-semibold text-slate-700">Threshold Value</Label>
+												<Input
+													type="number"
+													bind:value={$form.items[i].threshold}
+													class={`h-12 rounded-xl border-2 transition-all duration-200 ${
+														$form.items[i]?.enable === 'Enabled'
+															? `border-slate-200 bg-white hover:border-${priorities[i].color.split('-')[1]}-300 focus:border-${priorities[i].color.split('-')[1]}-400 focus:ring-2 focus:ring-${priorities[i].color.split('-')[1]}-100`
+															: 'border-slate-100 bg-slate-50'
+													}`}
+													disabled={$form.items[i]?.enable !== 'Enabled'}
+													placeholder="Enter threshold value"
+												/>
+											</div>
+
+											<!-- Priority Display -->
+											<div class="space-y-3">
+												<Label class="text-sm font-semibold text-slate-700">Rule Priority</Label>
+												<div
+													class={`flex h-12 items-center justify-between rounded-xl border-2 px-4 ${
+														$form.items[i]?.enable === 'Enabled'
+															? `border-${priorities[i].color.split('-')[1]}-200 bg-gradient-to-r ${priorities[i].color.split('-')[1] === 'red' ? 'from-red-50 to-red-100' : priorities[i].color.split('-')[1] === 'amber' ? 'from-amber-50 to-amber-100' : 'from-blue-50 to-blue-100'}`
+															: 'border-slate-200 bg-slate-50'
+													}`}
+												>
+													<div class="flex items-center gap-2">
+														<SvelteComponent_1
+															class={`h-4 w-4 ${
+																$form.items[i]?.enable === 'Enabled'
+																	? `text-${priorities[i].color.split('-')[1]}-600`
+																	: 'text-slate-400'
+															}`}
+														/>
+														<span
+															class={`font-semibold ${
+																$form.items[i]?.enable === 'Enabled'
+																	? `text-${priorities[i].color.split('-')[1]}-700`
+																	: 'text-slate-500'
+															}`}
+														>
+															{priorities[i].name}
+														</span>
+													</div>
+													<span
+														class="rounded-full bg-white/50 px-2 py-1 text-xs font-medium text-slate-500"
+													>
+														Fixed
+													</span>
+												</div>
+											</div>
+
+											<!-- Enable/Disable Toggle -->
+											<div class="flex items-center justify-between rounded-xl bg-slate-50/50 p-4">
+												<div class="flex flex-col">
+													<Label class="text-sm font-semibold text-slate-700">Rule Status</Label>
+													<p class="text-xs text-slate-500">
+														{$form.items[i]?.enable === 'Enabled'
+															? 'This rule is currently active'
+															: 'This rule is currently inactive'}
+													</p>
+												</div>
+												<Switch
+													checked={$form.items[i]?.enable === 'Enabled'}
+													onCheckedChange={(checked) =>
+														($form.items[i].enable = checked ? 'Enabled' : 'Disabled')}
+													class={`data-[state=checked]:bg-${priorities[i].color.split('-')[1]}-500`}
+												/>
+											</div>
+										</div>
+									</div>
+								</Collapsible.Content>
+							</div>
+						</Collapsible.Root>
+					</Motion.div>
+				</div>
+			{/each}
+		</div>
 	{/snippet}
 
 	{#snippet footerContent()}
-		<div class="mb-6 mt-4 flex items-center justify-between">
+		<div
+			class="mt-8 flex flex-col items-center justify-between gap-4 border-t border-slate-100 pt-6 md:flex-row"
+		>
+			<div class="flex items-center gap-4 text-sm text-slate-500">
+				<div class="flex items-center gap-2">
+					<Zap class="h-4 w-4" />
+					<span
+						>{$form.items.filter((item) => item?.enable === 'Enabled').length} of 3 rules active</span
+					>
+				</div>
+				<div class="hidden items-center gap-1 md:flex">
+					{#each priorities as priority, i}
+						<div
+							class={`h-2 w-2 rounded-full ${
+								$form.items[i]?.enable === 'Enabled'
+									? `bg-${priority.color.split('-')[1]}-400`
+									: 'bg-slate-300'
+							}`}
+						></div>
+					{/each}
+				</div>
+			</div>
 			<Button
 				type="submit"
 				disabled={$submitting}
-				class="mt-6 w-full rounded-lg px-4 py-2.5 text-sm font-semibold"
+				class={`h-12 rounded-xl px-8 font-semibold shadow-lg transition-all duration-200 ${
+					$submitting
+						? 'bg-slate-400'
+						: 'bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 hover:shadow-indigo-200'
+				} text-white`}
 			>
 				{#if $submitting}
-					Saving...
+					<div class="flex items-center gap-2">
+						<div
+							class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+						></div>
+						Saving Rules...
+					</div>
 				{:else}
-					Save Rules
+					Save Dynamic Rules
 				{/if}
 			</Button>
 		</div>

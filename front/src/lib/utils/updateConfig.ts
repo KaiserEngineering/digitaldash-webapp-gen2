@@ -13,7 +13,7 @@ export async function updateConfig(
 	mutateFn: (config: DigitalDash) => void,
 	successMessage = 'Configuration updated successfully',
 	errorMessage = 'Failed to update configuration'
-): Promise<boolean> {
+): Promise<{ success: boolean; config?: DigitalDash }> {
 	try {
 		const currentConfig = get(configStore);
 		if (!currentConfig) {
@@ -43,8 +43,8 @@ export async function updateConfig(
 		// Update the store with the new config
 		configStore.setConfig(configCopy);
 
-		return true;
+		return { success: true, config: configCopy };
 	} catch (error) {
-		throw error;
+		return { success: false };
 	}
 }

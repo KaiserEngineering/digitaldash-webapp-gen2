@@ -21,6 +21,7 @@
 	const { form, enhance } = superForm(data.form, {
 		dataType: 'json',
 		SPA: true,
+		invalidateAll: false, // Prevent SvelteKit from invalidating page data
 		resetForm: false,
 		validators: zod4(ViewSchema),
 		onSubmit: async ({ cancel }) => {
@@ -29,13 +30,19 @@
 
 			isSubmitting = true;
 			try {
-				const success = await updateFullConfig((config) => {
+				const result = await updateFullConfig((config) => {
 					config.view[viewId] = { ...config.view[viewId], ...$form };
 				}, 'View settings updated successfully!');
 
-				if (!success) {
+				if (result.success && result.config) {
+					// Update the form with the saved config data
+					Object.assign($form, result.config.view[viewId]);
+				} else {
 					toast.error('Failed to save view settings. Please try again.');
 				}
+			} catch (error) {
+				console.error('Failed to save view settings:', error);
+				toast.error('Failed to save view settings. Please try again.');
 			} finally {
 				isSubmitting = false;
 			}
