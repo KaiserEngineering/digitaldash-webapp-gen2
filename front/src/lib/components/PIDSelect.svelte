@@ -34,7 +34,7 @@
 	function handlePidChange(selectedValue: string | undefined) {
 		if (selectedValue) {
 			pidValue = selectedValue;
-			const pidData = pids.find((p) => p.label === selectedValue);
+			const pidData = pids.find((p) => p.desc === selectedValue);
 
 			if (pidData && pidData.units.length > 0) {
 				if (unitValue && pidData.units.includes(unitValue)) {
@@ -53,7 +53,7 @@
 
 	function handleUnitChange(selectedValue: string | undefined) {
 		if (selectedValue) {
-			const currentPidData = pids.find((p) => p.label === pidValue);
+			const currentPidData = pids.find((p) => p.desc === pidValue);
 
 			if (currentPidData && currentPidData.units.includes(selectedValue)) {
 				unitValue = selectedValue;
@@ -69,7 +69,7 @@
 
 	$effect(() => {
 		if (pidValue && !unitValue) {
-			const pidData = pids.find((p) => p.label === pidValue);
+			const pidData = pids.find((p) => p.desc === pidValue);
 			if (pidData && pidData.units.length > 0) {
 				unitValue = pidData.units[0];
 				onUnitChange(unitValue);
@@ -92,8 +92,8 @@
 			>
 				<span class={pidValue ? 'text-slate-800' : 'text-slate-400'}>
 					{#if pidValue}
-						{@const selectedPid = pids.find((p) => p.label === pidValue)}
-						{selectedPid?.desc || pidValue}
+						{@const selectedPid = pids.find((p) => p.desc === pidValue)}
+						{selectedPid?.label || pidValue}
 					{:else}
 						{pidPlaceholder}
 					{/if}
@@ -102,12 +102,12 @@
 			<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
 				{#each pids as pid (pid)}
 					<Select.Item
-						value={pid.label}
-						label={pid.desc}
+						value={pid.desc}
+						label={pid.label}
 						class="rounded-lg py-3 text-base hover:bg-emerald-50"
 					>
 						<div class="flex flex-col">
-							<span class="font-medium">{pid.desc}</span>
+							<span class="font-medium">{pid.label}</span>
 							<span class="text-xs text-slate-500">{pid.label}</span>
 						</div>
 					</Select.Item>
