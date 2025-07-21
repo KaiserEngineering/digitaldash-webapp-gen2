@@ -225,30 +225,6 @@
 												/>
 											</div>
 
-											<!-- Priority Display -->
-											<div class="space-y-3">
-												<Label class="text-sm font-semibold text-slate-700">Rule Priority</Label>
-												<div
-													class={`flex h-12 items-center justify-between rounded-xl border-2 px-4 ${
-														rule?.enable === 'Enabled'
-															? `border-${priorities[i].color.split('-')[1]}-200 bg-gradient-to-r ${priorities[i].color.split('-')[1] === 'red' ? 'from-red-50 to-red-100' : priorities[i].color.split('-')[1] === 'amber' ? 'from-amber-50 to-amber-100' : 'from-blue-50 to-blue-100'}`
-															: 'border-slate-200 bg-slate-50'
-													}`}
-												>
-													<div class="flex items-center gap-2">
-														<span
-															class={`font-semibold ${
-																rule?.enable === 'Enabled'
-																	? `text-${priorities[i].color.split('-')[1]}-700`
-																	: 'text-slate-500'
-															}`}
-														>
-															{priorities[i].name}
-														</span>
-													</div>
-												</div>
-											</div>
-
 											<!-- Enable/Disable Toggle -->
 											<div
 												class="flex items-center justify-between rounded-xl bg-slate-50/50 p-4 lg:col-span-2"
