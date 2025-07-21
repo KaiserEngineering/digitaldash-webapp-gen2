@@ -11,13 +11,18 @@ export const load: PageLoad = async ({ parent }) => {
 
 	const initialAlerts = config?.alert ?? [];
 
-	// Add index to alerts if not present (for stable component keys)
-	const alertsWithIndex = initialAlerts.map((alert, index) => ({
-		...alert,
-		index: alert.index ?? index
-	}));
+	// Convert array to object structure (numbered alerts)
+	let alertsConfig: Record<string, any> = {};
 
-	const form = await superValidate({ items: alertsWithIndex }, zod4(AlertsFormSchema));
+	// Convert from array to object
+	initialAlerts.forEach((alert: { index: any; }, index: number) => {
+		alertsConfig[index] = {
+			...alert,
+			index: alert.index ?? index
+		};
+	});
+
+	const form = await superValidate(alertsConfig, zod4(AlertsFormSchema));
 
 	return { form, pids, options };
 };

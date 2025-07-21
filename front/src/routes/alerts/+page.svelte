@@ -17,7 +17,7 @@
 	import { Switch } from '$lib/components/ui/switch';
 	import * as Select from '$lib/components/ui/select';
 	import * as Collapsible from '$lib/components/ui/collapsible';
-	import type { DigitalDashAlert } from '$schemas/digitaldash';
+	import { type DigitalDashAlert } from '$schemas/digitaldash';
 
 	let { data } = $props();
 
@@ -29,22 +29,29 @@
 		SPA: true,
 		validators: zod4(AlertsFormSchema),
 		onUpdate: async (data) => {
-			console.log('Updated');
 			try {
 				const result = await updateFullConfig((config) => {
-					config.alert = data.form.data.items as DigitalDashAlert[];
+					// Convert object back to array for backend
+					const alertsArray = Object.values(data.form.data).map((alert, index) => ({
+						...alert,
+						index
+					}));
+					config.alert = alertsArray;
 				}, 'Alerts saved!');
 
 				if (result.success && result.config) {
-					if (result.config) {
-						form.update(
-							($form) => {
-								$form.items = result.config!.alert;
-								return $form;
-							},
-							{ taint: false }
-						);
-					}
+					form.update(
+						($form) => {
+							// Convert returned array back to object for form
+							const alertsObject: Record<string, any> = {};
+							result.config!.alert.forEach((alert: any, index: number) => {
+								alertsObject[index] = alert;
+							});
+							Object.assign($form, alertsObject);
+							return $form;
+						},
+						{ taint: false }
+					);
 					toast.success('Alerts saved successfully!');
 				} else {
 					toast.error('Failed to save alerts');
@@ -65,7 +72,8 @@
 >
 	{#snippet children()}
 		<div class="space-y-4">
-			{#each $form.items as DigitalDashAlert[] as alert, i (alert.index ?? i)}
+			{#each Object.entries($form) as [key, alertRaw], i (key)}
+				{@const alert = alertRaw as DigitalDashAlert}
 				<div
 					in:slide={{ duration: 300, easing: quintOut }}
 					out:slide={{ duration: 200, easing: quintOut }}
@@ -145,14 +153,14 @@
 											<!-- PID Selection -->
 											<div class="lg:col-span-2">
 												<PIDSelect
-													bind:pidValue={$form.items[i].pid}
-													bind:unitValue={$form.items[i].units}
+													bind:pidValue={$form[key].pid}
+													bind:unitValue={$form[key].units}
 													{pids}
 													disabled={alert.enable !== 'Enabled'}
 													pidLabel="Parameter ID"
 													unitLabel="Measurement Unit"
 													class="space-y-4"
-													key={`alert-${alert.index ?? i}`}
+													key={`alert-${key}`}
 												/>
 											</div>
 
@@ -162,7 +170,7 @@
 													>Comparison Operator</Label
 												>
 												<Select.Root
-													bind:value={alert.compare}
+													bind:value={$form[key].compare}
 													disabled={alert.enable !== 'Enabled'}
 													type="single"
 												>
@@ -196,7 +204,7 @@
 												<Label class="text-sm font-semibold text-slate-700">Threshold Value</Label>
 												<Input
 													type="number"
-													bind:value={alert.threshold}
+													bind:value={$form[key].threshold}
 													class={`h-12 rounded-xl border-2 transition-all duration-200 ${
 														alert.enable === 'Enabled'
 															? 'border-slate-200 bg-white hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
@@ -212,7 +220,7 @@
 												<Label class="text-sm font-semibold text-slate-700">Alert Message</Label>
 												<Input
 													type="text"
-													bind:value={alert.message}
+													bind:value={$form[key].message}
 													class={`h-12 rounded-xl border-2 transition-all duration-200 ${
 														alert.enable === 'Enabled'
 															? 'border-slate-200 bg-white hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
@@ -238,7 +246,7 @@
 												<Switch
 													checked={alert.enable === 'Enabled'}
 													onCheckedChange={(checked) =>
-														(alert.enable = checked ? 'Enabled' : 'Disabled')}
+														($form[key].enable = checked ? 'Enabled' : 'Disabled')}
 													class="data-[state=checked]:bg-emerald-500"
 												/>
 											</div>
@@ -258,11 +266,9 @@
 			class="mt-8 flex flex-col items-center justify-between gap-4 border-t border-slate-100 pt-6 md:flex-row"
 		>
 			<div class="text-sm text-slate-500">
-				{Array.isArray($form.items)
-					? ($form.items as DigitalDashAlert[]).filter(
-							(alert: DigitalDashAlert) => alert.enable === 'Enabled'
-						).length
-					: 0} of {Array.isArray($form.items) ? $form.items.length : 0} alerts enabled
+				{Object.values($form).filter((alert: any) => alert?.enable === 'Enabled').length} of {Object.keys(
+					$form
+				).length} alerts enabled
 			</div>
 			<Button
 				type="submit"
