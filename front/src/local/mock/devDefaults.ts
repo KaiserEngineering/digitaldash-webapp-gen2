@@ -99,6 +99,14 @@ export const devConfig: DigitalDash = {
 			units: '',
 			compare: 'Equal',
 			threshold: 0,
+			priority: 'Medium'
+		},
+		{
+			enable: 'Disabled',
+			pid: '',
+			units: '',
+			compare: 'Equal',
+			threshold: 0,
 			priority: 'Low'
 		}
 	]

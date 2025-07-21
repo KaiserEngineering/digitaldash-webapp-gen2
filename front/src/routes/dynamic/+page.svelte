@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { superForm } from 'sveltekit-superforms';
-	import { DynamicFormSchema } from './dynamicFormSchema';
+	import type { DigitalDashDynamic } from '$schemas/digitaldash';
 	import { zod4 } from 'sveltekit-superforms/adapters';
 	import { toast } from 'svelte-5-french-toast';
 	import { Button } from '@/components/ui/button';
@@ -17,23 +17,30 @@
 	import { slide } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import { flip } from 'svelte/animate';
+	import { DynamicFormSchema } from './dynamicFormSchema';
 
 	let { data } = $props();
 	const pids = data.pids || [];
 	const options = data.options || {};
 
-	// Collapsible component handles expand/collapse state internally
-
-	const { form, submitting, enhance } = superForm(data.form, {
+	const { form, submitting, enhance, reset } = superForm(data.form, {
 		dataType: 'json',
 		SPA: true,
 		validators: zod4(DynamicFormSchema),
-		onSubmit: async () => {
-			const success = await updateFullConfig((config) => {
-				config.dynamic = $form.items;
-			}, 'Dynamic rules saved!');
+		onUpdate: async ({ form }) => {
+			try {
+				const result = await updateFullConfig((config) => {
+					config.dynamic = form.data.items as DigitalDashDynamic[];
+				}, 'Dynamic rules saved!');
 
-			if (!success) {
+				if (result.success && result.config) {
+					// Use SuperForm's reset method to properly update form state
+					reset({ data: { items: result.config.dynamic } });
+				} else {
+					toast.error('Failed to save dynamic rules. Please try again.');
+				}
+			} catch (error) {
+				console.error('Failed to save dynamic rules:', error);
 				toast.error('Failed to save dynamic rules. Please try again.');
 			}
 		}
@@ -41,12 +48,13 @@
 
 	const compareOps = options.dynamic_comparison || [];
 
-	const priorities = ['Low', 'Medium', 'High'];
+	// Fixed priorities for exactly 3 rules
+	const priorities = ['High', 'Medium', 'Low'];
 </script>
 
 <PageCard title="Dynamic Rules" description="Define dynamic gauge rules." icon={Settings} {enhance}>
 	{#snippet children()}
-		{#each $form.items as rule, i (rule.index ?? i)}
+		{#each { length: 3 } as _, i (i)}
 			<div
 				in:slide={{ duration: 200, easing: quintOut }}
 				out:slide={{ duration: 200, easing: quintOut }}
@@ -56,30 +64,33 @@
 					<Collapsible.Root>
 						<div
 							class={`relative rounded-xl border transition duration-200 ${
-								rule.enable === 'Enabled'
+								$form.items[i]?.enable === 'Enabled'
 									? 'border-primary-100 bg-primary-50 hover:shadow-md'
 									: 'border-gray-200 bg-gray-50 opacity-60'
 							}`}
 						>
 							<!-- Touchable header that expands/collapses the card -->
 							<Collapsible.Trigger class="w-full text-left">
-								<div class="text-primary-700 flex items-center justify-between border-b p-4 hover:bg-primary-100/50 transition-colors">
+								<div
+									class="text-primary-700 hover:bg-primary-100/50 flex items-center justify-between border-b p-4 transition-colors"
+								>
 									<div class="flex items-center gap-3">
 										<div
-											class="bg-primary-100 flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold"
+											class="bg-primary-100 flex h-10 w-10 p-2 items-center justify-center rounded-full text-xs font-semibold"
 										>
-											{i + 1}
+											{priorities[i]}
 										</div>
 										<div class="text-left">
-											<h4 class="font-semibold">Rule #{i + 1}</h4>
 											<p class="text-xs text-gray-600">
-												{rule.pid || 'No PID selected'}
-												{#if rule.priority}• {rule.priority}{/if}
-												{#if rule.enable === 'Enabled'}• Enabled{:else}• Disabled{/if}
+												{$form.items[i]?.pid || 'No PID selected'}
+												• {priorities[i]} Priority
+												{#if $form.items[i]?.enable === 'Enabled'}• Enabled{:else}• Disabled{/if}
 											</p>
 										</div>
 									</div>
-									<ChevronDown class="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
+									<ChevronDown
+										class="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180"
+									/>
 								</div>
 							</Collapsible.Trigger>
 
@@ -87,10 +98,10 @@
 							<Collapsible.Content>
 								<div class="grid grid-cols-1 gap-4 p-4 pt-0 md:grid-cols-2">
 									<PIDSelect
-										bind:pidValue={rule.pid}
-										bind:unitValue={rule.units}
+										bind:pidValue={$form.items[i].pid}
+										bind:unitValue={$form.items[i].units}
 										{pids}
-										disabled={rule.enable !== 'Enabled'}
+										disabled={$form.items[i]?.enable !== 'Enabled'}
 										pidLabel="PID"
 										unitLabel="Unit"
 										class="space-y-2"
@@ -100,12 +111,12 @@
 									<div class="space-y-2">
 										<Label>Compare</Label>
 										<Select.Root
-											bind:value={rule.compare}
-											disabled={rule.enable !== 'Enabled'}
+											bind:value={$form.items[i].compare}
+											disabled={$form.items[i]?.enable !== 'Enabled'}
 											type="single"
 										>
 											<Select.Trigger class="h-10 w-full">
-												<span>{rule.compare || 'Select Compare'}</span>
+												<span>{$form.items[i]?.compare || 'Select Compare'}</span>
 											</Select.Trigger>
 											<Select.Content>
 												{#each compareOps as op}
@@ -119,33 +130,22 @@
 
 									<div class="space-y-2">
 										<Label>Threshold</Label>
-										<Input type="number" bind:value={rule.threshold} disabled={!rule.enable} />
+										<Input type="number" bind:value={$form.items[i].threshold} disabled={$form.items[i]?.enable !== 'Enabled'} />
 									</div>
 
 									<div class="space-y-2">
 										<Label>Priority</Label>
-										<Select.Root
-											bind:value={rule.priority}
-											disabled={rule.enable !== 'Enabled'}
-											type="single"
-										>
-											<Select.Trigger class="h-10 w-full">
-												<span>{rule.priority || 'Select Priority'}</span>
-											</Select.Trigger>
-											<Select.Content>
-												{#each priorities as p}
-													<Select.Item value={p} label={p}>
-														{p}
-													</Select.Item>
-												{/each}
-											</Select.Content>
-										</Select.Root>
+										<div class="flex h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm">
+											<span class="font-medium text-gray-700">{priorities[i]}</span>
+											<span class="ml-2 text-xs text-gray-500">(Fixed)</span>
+										</div>
 									</div>
 
 									<div class="flex items-center gap-2">
 										<Switch
-											checked={rule.enable === 'Enabled'}
-											onCheckedChange={(checked) => (rule.enable = checked ? 'Enabled' : 'Disabled')}
+											checked={$form.items[i]?.enable === 'Enabled'}
+											onCheckedChange={(checked) =>
+												($form.items[i].enable = checked ? 'Enabled' : 'Disabled')}
 										/>
 										<Label>Enabled</Label>
 									</div>
@@ -159,7 +159,7 @@
 	{/snippet}
 
 	{#snippet footerContent()}
-		<div class="mt-4 mb-6 flex items-center justify-between">
+		<div class="mb-6 mt-4 flex items-center justify-between">
 			<Button
 				type="submit"
 				disabled={$submitting}
