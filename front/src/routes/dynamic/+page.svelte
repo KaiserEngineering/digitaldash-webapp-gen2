@@ -11,16 +11,7 @@
 	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
 	import PageCard from '@/components/PageCard.svelte';
 	import PIDSelect from '$lib/components/PIDSelect.svelte';
-	import {
-		Settings,
-		ChevronDown,
-		Zap,
-		AlertTriangle,
-		CheckCircle2,
-		Crown,
-		Shield,
-		Layers
-	} from 'lucide-svelte';
+	import { Settings, ChevronDown, Zap, AlertTriangle, CheckCircle2 } from 'lucide-svelte';
 	import { Motion } from 'motion-start';
 	import { slide } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
@@ -76,24 +67,21 @@
 			color: 'from-red-500 to-red-600',
 			bgColor: 'from-red-50 via-white to-red-50/30',
 			borderColor: 'border-red-200',
-			hoverColor: 'hover:bg-red-50/50',
-			icon: Crown,
+			hoverColor: 'hover:bg-red-50/50'
 		},
 		{
 			name: 'Medium',
 			color: 'from-amber-500 to-amber-600',
 			bgColor: 'from-amber-50 via-white to-amber-50/30',
 			borderColor: 'border-amber-200',
-			hoverColor: 'hover:bg-amber-50/50',
-			icon: Shield,
+			hoverColor: 'hover:bg-amber-50/50'
 		},
 		{
 			name: 'Low',
 			color: 'from-blue-500 to-blue-600',
 			bgColor: 'from-blue-50 via-white to-blue-50/30',
 			borderColor: 'border-blue-200',
-			hoverColor: 'hover:bg-blue-50/50',
-			icon: Layers,
+			hoverColor: 'hover:bg-blue-50/50'
 		}
 	];
 </script>
@@ -123,28 +111,16 @@
 							>
 								<!-- Enhanced Header -->
 								<Collapsible.Trigger class="w-full text-left">
-									{@const SvelteComponent = priorities[i].icon}
 									<div
 										class={`flex items-center justify-between p-6 transition-all duration-200 ${
 											rule?.enable === 'Enabled' ? priorities[i].hoverColor : 'hover:bg-slate-50/50'
 										}`}
 									>
 										<div class="flex items-center gap-4">
-											<!-- Priority Indicator -->
-											<div
-												class={`flex h-14 w-14 items-center justify-center rounded-xl font-bold text-white shadow-lg transition-all duration-200 ${
-													rule?.enable === 'Enabled'
-														? `bg-gradient-to-br ${priorities[i].color}`
-														: 'bg-gradient-to-br from-slate-400 to-slate-500'
-												}`}
-											>
-												<SvelteComponent class="h-6 w-6" />
-											</div>
-
 											<div class="flex flex-col">
 												<div class="flex items-center gap-3">
 													<h4 class="text-lg font-semibold text-slate-800">
-														{priorities[i].name} Priority Rule
+														{priorities[i].name}
 													</h4>
 													{#if rule?.enable === 'Enabled'}
 														<CheckCircle2 class="h-4 w-4 text-emerald-500" />
@@ -182,7 +158,6 @@
 
 								<!-- Enhanced Content -->
 								<Collapsible.Content>
-									{@const SvelteComponent_1 = priorities[i].icon}
 									<div class="border-t border-slate-100 bg-white/50 p-6">
 										<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 											<!-- PID Selection -->
@@ -261,13 +236,6 @@
 													}`}
 												>
 													<div class="flex items-center gap-2">
-														<SvelteComponent_1
-															class={`h-4 w-4 ${
-																rule?.enable === 'Enabled'
-																	? `text-${priorities[i].color.split('-')[1]}-600`
-																	: 'text-slate-400'
-															}`}
-														/>
 														<span
 															class={`font-semibold ${
 																rule?.enable === 'Enabled'
@@ -282,7 +250,9 @@
 											</div>
 
 											<!-- Enable/Disable Toggle -->
-											<div class="flex items-center justify-between rounded-xl bg-slate-50/50 p-4 lg:col-span-2">
+											<div
+												class="flex items-center justify-between rounded-xl bg-slate-50/50 p-4 lg:col-span-2"
+											>
 												<div class="flex flex-col">
 													<Label class="text-sm font-semibold text-slate-700">Rule Status</Label>
 													<p class="text-xs text-slate-500">
@@ -317,9 +287,8 @@
 				<div class="flex items-center gap-2">
 					<Zap class="h-4 w-4" />
 					<span
-						>{Object.values($form).filter(
-							(rule: any) => rule?.enable === 'Enabled'
-						).length} of 3 rules active</span
+						>{Object.values($form).filter((rule: any) => rule?.enable === 'Enabled').length} of 3 rules
+						active</span
 					>
 				</div>
 			</div>
