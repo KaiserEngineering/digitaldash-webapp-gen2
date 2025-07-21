@@ -15,10 +15,10 @@ export const load: PageLoad = async ({ parent }) => {
 	let alertsConfig: Record<string, any> = {};
 
 	// Convert from array to object
-	initialAlerts.forEach((alert: { index: any; }, index: number) => {
+	initialAlerts.forEach((alert: { index: any }, index: number) => {
 		alertsConfig[index] = {
 			...alert,
-			index: alert.index ?? index
+			index: index
 		};
 	});
 

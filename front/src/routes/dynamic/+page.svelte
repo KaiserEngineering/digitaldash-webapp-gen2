@@ -27,26 +27,20 @@
 		dataType: 'json',
 		SPA: true,
 		validators: zod4(DynamicFormSchema),
-		onUpdate: async ({ form }) => {
-			console.log(form);
+		onUpdate: async ({ form: formData, cancel }) => {
+			cancel();
+
 			try {
 				const result = await updateFullConfig((config) => {
 					// Convert object back to array for backend
-					const dynamicArray = Object.values(form.data).map((rule, index) => ({
-						...rule,
-						index
-					}));
+					const dynamicArray = Object.values(formData.data);
 					config.dynamic = dynamicArray;
 				}, 'Dynamic rules saved!');
 
 				if (result.success && result.config) {
-					// Convert returned array back to object for form
-					const dynamicObject: Record<string, any> = {};
-					result.config.dynamic.forEach((rule: any) => {
-						const priority = rule.priority?.toLowerCase() || 'low';
-						dynamicObject[priority] = rule;
-					});
-					form.set(dynamicObject);
+					Object.assign($form, result.config.dynamic);
+					// Cancel the default form submission and handle manually
+			cancel();
 					toast.success('Dynamic rules saved successfully!');
 				} else {
 					toast.error('Failed to save dynamic rules. Please try again.');
@@ -94,7 +88,7 @@
 >
 	{#snippet children()}
 		<div class="space-y-6">
-			{#each Object.entries($form) as [key, rule], i (key)}
+			{#each Object.keys($form) as key, i (key)}
 				<div
 					in:slide={{ duration: 300, easing: quintOut }}
 					out:slide={{ duration: 200, easing: quintOut }}
@@ -104,7 +98,7 @@
 						<Collapsible.Root>
 							<div
 								class={`group relative rounded-2xl border-2 transition-all duration-300 ${
-									rule?.enable === 'Enabled'
+									$form[key]?.enable === 'Enabled'
 										? `${priorities[i].borderColor} bg-gradient-to-br ${priorities[i].bgColor} shadow-sm hover:shadow-lg`
 										: 'border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50/30 opacity-75 hover:opacity-90'
 								}`}
@@ -113,7 +107,9 @@
 								<Collapsible.Trigger class="w-full text-left">
 									<div
 										class={`flex items-center justify-between p-6 transition-all duration-200 ${
-											rule?.enable === 'Enabled' ? priorities[i].hoverColor : 'hover:bg-slate-50/50'
+											$form[key]?.enable === 'Enabled'
+												? priorities[i].hoverColor
+												: 'hover:bg-slate-50/50'
 										}`}
 									>
 										<div class="flex items-center gap-4">
@@ -122,7 +118,7 @@
 													<h4 class="text-lg font-semibold text-slate-800">
 														{priorities[i].name}
 													</h4>
-													{#if rule?.enable === 'Enabled'}
+													{#if $form[key]?.enable === 'Enabled'}
 														<CheckCircle2 class="h-4 w-4 text-emerald-500" />
 													{:else}
 														<AlertTriangle class="h-4 w-4 text-slate-400" />
@@ -131,20 +127,20 @@
 												<div class="flex items-center gap-2 text-sm">
 													<span
 														class={`font-medium ${
-															rule?.enable === 'Enabled' ? 'text-slate-700' : 'text-slate-500'
+															$form[key]?.enable === 'Enabled' ? 'text-slate-700' : 'text-slate-500'
 														}`}
 													>
-														{rule?.pid || 'No PID selected'}
+														{$form[key]?.pid || 'No PID selected'}
 													</span>
 													<span class="text-slate-400">•</span>
 													<span
 														class={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-															rule?.enable === 'Enabled'
+															$form[key]?.enable === 'Enabled'
 																? `bg-${priorities[i].color.split('-')[1]}-100 text-${priorities[i].color.split('-')[1]}-700`
 																: 'bg-slate-100 text-slate-600'
 														}`}
 													>
-														{rule?.enable === 'Enabled' ? 'Active' : 'Inactive'}
+														{$form[key]?.enable === 'Enabled' ? 'Active' : 'Inactive'}
 													</span>
 												</div>
 											</div>
@@ -166,7 +162,7 @@
 													bind:pidValue={$form[key].pid}
 													bind:unitValue={$form[key].units}
 													{pids}
-													disabled={rule?.enable !== 'Enabled'}
+													disabled={$form[key]?.enable !== 'Enabled'}
 													pidLabel="Parameter ID"
 													unitLabel="Measurement Unit"
 													class="space-y-4"
@@ -181,18 +177,18 @@
 												>
 												<Select.Root
 													bind:value={$form[key].compare}
-													disabled={rule?.enable !== 'Enabled'}
+													disabled={$form[key]?.enable !== 'Enabled'}
 													type="single"
 												>
 													<Select.Trigger
 														class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
-															rule?.enable === 'Enabled'
+															$form[key]?.enable === 'Enabled'
 																? `border-slate-200 bg-white hover:border-${priorities[i].color.split('-')[1]}-300 focus:border-${priorities[i].color.split('-')[1]}-400 focus:ring-2 focus:ring-${priorities[i].color.split('-')[1]}-100`
 																: 'border-slate-100 bg-slate-50'
 														}`}
 													>
-														<span class={rule?.compare ? 'text-slate-800' : 'text-slate-400'}>
-															{rule?.compare || 'Select operator'}
+														<span class={$form[key]?.compare ? 'text-slate-800' : 'text-slate-400'}>
+															{$form[key]?.compare || 'Select operator'}
 														</span>
 													</Select.Trigger>
 													<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
@@ -216,11 +212,11 @@
 													type="number"
 													bind:value={$form[key].threshold}
 													class={`h-12 rounded-xl border-2 transition-all duration-200 ${
-														rule?.enable === 'Enabled'
+														$form[key]?.enable === 'Enabled'
 															? `border-slate-200 bg-white hover:border-${priorities[i].color.split('-')[1]}-300 focus:border-${priorities[i].color.split('-')[1]}-400 focus:ring-2 focus:ring-${priorities[i].color.split('-')[1]}-100`
 															: 'border-slate-100 bg-slate-50'
 													}`}
-													disabled={rule?.enable !== 'Enabled'}
+													disabled={$form[key]?.enable !== 'Enabled'}
 													placeholder="Enter threshold value"
 												/>
 											</div>
@@ -232,16 +228,16 @@
 												<div class="flex flex-col">
 													<Label class="text-sm font-semibold text-slate-700">Rule Status</Label>
 													<p class="text-xs text-slate-500">
-														{rule?.enable === 'Enabled'
+														{$form[key]?.enable === 'Enabled'
 															? 'This rule is currently active'
 															: 'This rule is currently inactive'}
 													</p>
 												</div>
 												<Switch
-													checked={rule?.enable === 'Enabled'}
+													checked={$form[key]?.enable === 'Enabled'}
 													onCheckedChange={(checked) =>
 														($form[key].enable = checked ? 'Enabled' : 'Disabled')}
-													class={`data-[state=checked]:bg-${priorities[i].color.split('-')[1]}-500 bg-green-200 border border-green-300`}
+													class={`data-[state=checked]:bg-${priorities[i].color.split('-')[1]}-500 border border-green-300 bg-green-200`}
 												/>
 											</div>
 										</div>

@@ -28,30 +28,17 @@
 		dataType: 'json',
 		SPA: true,
 		validators: zod4(AlertsFormSchema),
-		onUpdate: async (data) => {
+		onUpdate: async ({ form: formData, cancel }) => {
+			cancel();
 			try {
 				const result = await updateFullConfig((config) => {
 					// Convert object back to array for backend
-					const alertsArray = Object.values(data.form.data).map((alert, index) => ({
-						...alert,
-						index
-					}));
+					const alertsArray = Object.values(formData.data);
 					config.alert = alertsArray;
 				}, 'Alerts saved!');
 
 				if (result.success && result.config) {
-					form.update(
-						($form) => {
-							// Convert returned array back to object for form
-							const alertsObject: Record<string, any> = {};
-							result.config!.alert.forEach((alert: any, index: number) => {
-								alertsObject[index] = alert;
-							});
-							Object.assign($form, alertsObject);
-							return $form;
-						},
-						{ taint: false }
-					);
+					Object.assign($form, result.config.alert);
 					toast.success('Alerts saved successfully!');
 				} else {
 					toast.error('Failed to save alerts');

@@ -5,17 +5,13 @@ import { zod4 } from 'sveltekit-superforms/adapters';
 import type { DigitalDashDynamic } from '$schemas/digitaldash';
 
 export const load: PageLoad = async ({ parent }) => {
-	const parentData = await parent();
-	const config = await parentData.config;
-	const pids = await parentData.pids;
-	const options = await parentData.options;
+	const { config, pids, options } = await parent();
 
 	const initialDynamic: DigitalDashDynamic[] = config?.dynamic || [];
 
-	// Add index to dynamic rules if not present (for stable component keys)
-	const dynamicWithIndex = initialDynamic.map((rule: DigitalDashDynamic, index: number) => ({
+	const dynamicWithIndex = initialDynamic.map((rule, i) => ({
 		...rule,
-		index: rule.index ?? index
+		index: i
 	}));
 
 	type Priority = 'high' | 'medium' | 'low';
@@ -27,10 +23,9 @@ export const load: PageLoad = async ({ parent }) => {
 	};
 
 	for (const rule of dynamicWithIndex) {
-		const key = rule.priority as Priority;
-		if (key in dynamicConfig) {
-			dynamicConfig[key] = rule;
-		}
+		const key = rule.priority?.toLowerCase() as Priority;
+
+		dynamicConfig[key] = rule;
 	}
 
 	const form = await superValidate(dynamicConfig, zod4(DynamicFormSchema));
