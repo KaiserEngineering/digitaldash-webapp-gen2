@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Card, CardTitle, CardDescription, CardContent, CardHeader } from '@/components/ui/card';
-	import { Button } from './ui/button';
+	import { Card, CardTitle, CardContent, CardHeader } from '$lib/components/ui/card';
+	import { Button } from '$lib/components/ui/button';
 	import { Image, Settings, Zap, House, Menu, X, Bell, Upload, ChevronDown } from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
 	import { page } from '$app/state';
@@ -55,194 +55,214 @@
 	}
 </script>
 
-<svelte:window on:click={handleClickOutside} />
+<svelte:window onclick={handleClickOutside} />
 
-<header class="bg-background border-border border-b">
-	<div class="container mx-auto px-2 sm:px-4">
-		<Card class="gap-2 border-0 bg-transparent py-2 shadow-none sm:gap-4 sm:py-4">
-			<CardHeader class="pb-2 sm:pb-4">
+<header
+	class="bg-background/95 border-border/40 sticky top-0 z-50 border-b shadow-sm backdrop-blur-md"
+>
+	<div class="container mx-auto px-4 lg:px-6">
+		<Card class="border-0 bg-transparent shadow-none">
+			<CardHeader>
 				<div class="flex items-center justify-between">
 					<div class="flex items-center">
-						<div>
+						<div class="relative">
+							<!-- Mobile Title -->
 							<div class="sm:hidden">
-								<a href="/" class="flex items-center">
-									<CardTitle class="text-primary-400 text-4xl font-bold">Digital Dash</CardTitle>
+								<a href="/" class="group flex items-center">
+									<CardTitle
+										class="text-primary-400 text-3xl font-bold transition-all duration-300"
+									>
+										Digital Dash
+									</CardTitle>
 								</a>
 							</div>
-
+							<!-- Desktop Title -->
 							<div class="hidden sm:block">
-								<CardTitle class="text-primary-400 text-2xl font-bold lg:text-3xl">
+								<CardTitle
+									class="from-primary-600 via-secondary-600 to-primary-800 bg-gradient-to-r bg-clip-text text-2xl font-bold text-transparent lg:text-3xl xl:text-4xl"
+								>
 									KaiserEngineering Digital Dash
 								</CardTitle>
-								<CardDescription class="text-muted-foreground text-sm">
-									Manage your Digital Dash settings and preferences
-								</CardDescription>
+								<div
+									class="from-primary-500 to-secondary-500 mt-2 h-1 w-16 rounded-full bg-gradient-to-r"
+								></div>
 							</div>
 						</div>
 					</div>
 
-					<div class="flex items-center gap-2">
+					<!-- Mobile Menu Button -->
+					<div class="flex items-center gap-2 sm:hidden">
 						<Button
 							variant="ghost"
 							size="icon"
-							class="text-primary-400 h-12 w-12 sm:hidden"
+							class="border-border/50 bg-background/50 hover:bg-accent/80 hover:border-border h-11 w-11 rounded-xl border backdrop-blur-sm transition-all duration-200"
 							onclick={toggleMobileMenu}
 							aria-label="Toggle navigation menu"
 						>
 							{#if isMobileMenuOpen}
-								<X class="!h-10 !w-10 transition-transform duration-200" />
+								<X class="h-5 w-5 rotate-90 transition-transform duration-200" />
 							{:else}
-								<Menu class="!h-10 !w-10 transition-transform duration-200" />
+								<Menu class="h-5 w-5 transition-transform duration-200" />
 							{/if}
 						</Button>
 					</div>
 				</div>
-
-				{#if isMobileMenuOpen}
-					<div transition:slide={{ duration: 200 }} class="mt-3 text-center sm:hidden">
-						<CardDescription class="text-muted-foreground text-sm">
-							Manage your settings and preferences
-						</CardDescription>
-					</div>
-				{/if}
 			</CardHeader>
 
-			<CardContent class="pt-0">
+			<CardContent>
 				<!-- Desktop Navigation -->
 				<nav class="hidden sm:block" aria-label="Main navigation">
-					<div class="bg-muted/50 border-border/30 flex gap-1 rounded-lg border p-1">
-						{#each tabs as tab (tab.value)}
-							{@const TabIcon = tab.icon}
-							{@const isActive =
-								tab.value === ''
-									? page.url.pathname === '/'
-									: page.url.pathname.startsWith('/' + tab.value)}
-
-							{#if tab.subItems}
-								<!-- Dropdown for Firmware -->
-								<div class="firmware-dropdown relative">
-									<button
-										class={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 ${
-											isActive
-												? 'bg-background text-foreground border-border/50 border shadow-sm'
-												: 'text-muted-foreground hover:text-foreground hover:bg-background/70'
-										}`}
-										onclick={toggleFirmwareDropdown}
-										aria-expanded={isFirmwareDropdownOpen}
-									>
-										<TabIcon class="h-4 w-4" />
-										<span>{tab.label}</span>
-										<ChevronDown
-											class={`h-3 w-3 transition-transform duration-200 ${isFirmwareDropdownOpen ? 'rotate-180' : ''}`}
-										/>
-									</button>
-
-									{#if isFirmwareDropdownOpen}
-										<!-- Dropdown panel -->
-										<div
-											class="bg-popover text-popover-foreground absolute left-0 z-10 mt-2 min-w-[180px] rounded-md border shadow-md"
-											transition:slide={{ duration: 200 }}
-										>
-											<div class="p-1">
-												{#each tab.subItems as sub (sub.value)}
-													{@const isSubActive = page.url.pathname === '/' + sub.value}
-													<a
-														href={'/' + sub.value}
-														class={`block rounded-sm px-3 py-2 text-sm transition-colors duration-200 ${
-															isSubActive ? 'bg-accent text-accent-foreground' : 'hover:bg-muted/50'
-														}`}
-														onclick={() => (isFirmwareDropdownOpen = false)}
-													>
-														{sub.label}
-													</a>
-												{/each}
-											</div>
-										</div>
-									{/if}
-								</div>
-							{:else}
-								<a
-									href={'/' + tab.value}
-									class={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 ${
-										isActive
-											? 'bg-background text-foreground border-border/50 border shadow-sm'
-											: 'text-muted-foreground hover:text-foreground hover:bg-background/70'
-									}`}
-									aria-current={isActive ? 'page' : undefined}
-								>
-									<TabIcon class="h-4 w-4" />
-									<span>{tab.label}</span>
-								</a>
-							{/if}
-						{/each}
-					</div>
-				</nav>
-
-				<!-- Mobile Navigation -->
-				{#if isMobileMenuOpen}
-					<nav
-						class="sm:hidden"
-						aria-label="Mobile navigation"
-						transition:slide={{ duration: 200 }}
+					<div
+						class="bg-muted/30 border-border/30 rounded-2xl border p-2 shadow-lg backdrop-blur-sm"
 					>
-						<div class="bg-muted/50 border-border/30 space-y-2 rounded-lg border p-2">
+						<div class="flex gap-1">
 							{#each tabs as tab (tab.value)}
 								{@const TabIcon = tab.icon}
-								{@const isActive = activeTab === tab.value}
+								{@const isActive =
+									tab.value === ''
+										? page.url.pathname === '/'
+										: page.url.pathname.startsWith('/' + tab.value)}
 
 								{#if tab.subItems}
-									<!-- Firmware with expandable sub-items -->
-									<div class="space-y-1">
+									<!-- Dropdown for Firmware -->
+									<div class="firmware-dropdown relative">
 										<button
-											class={`flex w-full items-center justify-between gap-2 rounded-md p-3 text-sm font-medium transition-all duration-200 ${
+											class={`group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300 ${
 												isActive
-													? 'bg-background text-foreground shadow-sm'
-													: 'text-muted-foreground hover:text-foreground hover:bg-background/70'
+													? 'bg-background text-foreground border-border/50 scale-105 border shadow-md'
+													: 'text-muted-foreground hover:text-foreground hover:bg-background/80 hover:scale-105 hover:shadow-sm'
 											}`}
-											onclick={toggleMobileFirmware}
+											onclick={toggleFirmwareDropdown}
+											aria-expanded={isFirmwareDropdownOpen}
 										>
-											<div class="flex items-center gap-2">
-												<TabIcon class="h-5 w-5" />
-												<span>{tab.label}</span>
-											</div>
+											<TabIcon
+												class="h-4 w-4 transition-transform duration-200 group-hover:scale-110"
+											/>
+											<span class="font-semibold">{tab.label}</span>
 											<ChevronDown
-												class={`h-4 w-4 transition-transform duration-200 ${isMobileFirmwareExpanded ? 'rotate-180' : ''}`}
+												class={`h-3 w-3 transition-all duration-300 ${
+													isFirmwareDropdownOpen ? 'rotate-180 scale-110' : 'group-hover:scale-110'
+												}`}
 											/>
 										</button>
 
-										{#if isMobileFirmwareExpanded}
-											<div class="ml-7 space-y-1" transition:slide={{ duration: 200 }}>
-												{#each tab.subItems as sub (sub.value)}
-													{@const isSubActive = page.url.pathname === '/' + sub.value}
-													<a
-														href={'/' + sub.value}
-														class={`block rounded-md px-3 py-2 text-sm transition-colors duration-200 ${
-															isSubActive
-																? 'bg-accent text-accent-foreground'
-																: 'text-muted-foreground hover:text-foreground hover:bg-background/70'
-														}`}
-													>
-														{sub.label}
-													</a>
-												{/each}
+										{#if isFirmwareDropdownOpen}
+											<!-- Dropdown panel -->
+											<div
+												class="border-border/50 bg-popover/95 absolute left-0 z-20 mt-2 min-w-[200px] rounded-xl border shadow-xl backdrop-blur-md"
+												transition:slide={{ duration: 250 }}
+											>
+												<div class="p-2">
+													{#each tab.subItems as sub (sub.value)}
+														{@const isSubActive = page.url.pathname === '/' + sub.value}
+														<a
+															href={'/' + sub.value}
+															class={`block rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 ${
+																isSubActive
+																	? 'bg-accent text-accent-foreground scale-105 shadow-sm'
+																	: 'hover:bg-muted/50 hover:scale-105'
+															}`}
+															onclick={() => (isFirmwareDropdownOpen = false)}
+														>
+															{sub.label}
+														</a>
+													{/each}
+												</div>
 											</div>
 										{/if}
 									</div>
 								{:else}
 									<a
 										href={'/' + tab.value}
-										class={`flex items-center gap-2 rounded-md p-3 text-sm font-medium transition-all duration-200 ${
+										class={`group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300 ${
 											isActive
-												? 'bg-background text-foreground shadow-sm'
-												: 'text-muted-foreground hover:text-foreground hover:bg-background/70'
+												? 'bg-background text-foreground border-border/50 scale-105 border shadow-md'
+												: 'text-muted-foreground hover:text-foreground hover:bg-background/80 hover:scale-105 hover:shadow-sm'
 										}`}
 										aria-current={isActive ? 'page' : undefined}
 									>
-										<TabIcon class="h-5 w-5" />
-										<span>{tab.label}</span>
+										<TabIcon
+											class="h-4 w-4 transition-transform duration-200 group-hover:scale-110"
+										/>
+										<span class="font-semibold">{tab.label}</span>
 									</a>
 								{/if}
 							{/each}
+						</div>
+					</div>
+				</nav>
+
+				<!-- Mobile Navigation -->
+				{#if isMobileMenuOpen}
+					<nav
+						class="mt-4 sm:hidden"
+						aria-label="Mobile navigation"
+						transition:slide={{ duration: 300 }}
+					>
+						<div
+							class="bg-muted/20 border-border/30 rounded-2xl border p-3 shadow-xl backdrop-blur-md"
+						>
+							<div class="space-y-2">
+								{#each tabs as tab (tab.value)}
+									{@const TabIcon = tab.icon}
+									{@const isActive = activeTab === tab.value}
+
+									{#if tab.subItems}
+										<!-- Firmware with expandable sub-items -->
+										<div class="space-y-1">
+											<button
+												class={`flex w-full items-center justify-between gap-3 rounded-xl p-4 text-sm font-medium transition-all duration-300 ${
+													isActive
+														? 'bg-background text-foreground border-border/50 border shadow-md'
+														: 'text-muted-foreground hover:text-foreground hover:bg-background/60'
+												}`}
+												onclick={toggleMobileFirmware}
+											>
+												<div class="flex items-center gap-3">
+													<TabIcon class="h-5 w-5" />
+													<span class="font-semibold">{tab.label}</span>
+												</div>
+												<ChevronDown
+													class={`h-4 w-4 transition-transform duration-300 ${
+														isMobileFirmwareExpanded ? 'rotate-180' : ''
+													}`}
+												/>
+											</button>
+
+											{#if isMobileFirmwareExpanded}
+												<div class="ml-8 space-y-1" transition:slide={{ duration: 250 }}>
+													{#each tab.subItems as sub (sub.value)}
+														{@const isSubActive = page.url.pathname === '/' + sub.value}
+														<a
+															href={'/' + sub.value}
+															class={`block rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 ${
+																isSubActive
+																	? 'bg-accent text-accent-foreground shadow-sm'
+																	: 'text-muted-foreground hover:text-foreground hover:bg-background/60'
+															}`}
+														>
+															{sub.label}
+														</a>
+													{/each}
+												</div>
+											{/if}
+										</div>
+									{:else}
+										<a
+											href={'/' + tab.value}
+											class={`flex items-center gap-3 rounded-xl p-4 text-sm font-medium transition-all duration-300 ${
+												isActive
+													? 'bg-background text-foreground border-border/50 border shadow-md'
+													: 'text-muted-foreground hover:text-foreground hover:bg-background/60'
+											}`}
+											aria-current={isActive ? 'page' : undefined}
+										>
+											<TabIcon class="h-5 w-5" />
+											<span class="font-semibold">{tab.label}</span>
+										</a>
+									{/if}
+								{/each}
+							</div>
 						</div>
 					</nav>
 				{/if}
