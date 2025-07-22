@@ -38,7 +38,7 @@ void wifi_init_softap(void)
         .ap = {
             .ssid = SSID,
             .ssid_len = strlen(SSID),
-            .channel = 2,
+            .channel = 1,
             .password = PASSWORD,
             .max_connection = 4,
             .authmode = WIFI_AUTH_WPA_WPA2_PSK},
@@ -52,6 +52,9 @@ void wifi_init_softap(void)
     esp_wifi_set_mode(WIFI_MODE_AP);
     esp_wifi_set_config(WIFI_IF_AP, &wifi_ap_config);
     esp_wifi_start();
+
+    // Disable WIFI Power Save to allow max throughput
+    esp_wifi_set_ps(WIFI_PS_NONE);
 
     ESP_LOGI(TAG, "✅ Wi-Fi AP started. SSID: %s, Password: %s", wifi_ap_config.ap.ssid, wifi_ap_config.ap.password);
     ESP_LOGI(TAG, "📡 Static IP: 192.168.4.1");

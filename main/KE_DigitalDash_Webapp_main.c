@@ -564,9 +564,6 @@ void app_main(void)
 
     //flash_stm32_firmware("digitaldash-firmware-gen2-stm32u5g.bin"); // UNCOMMENT TO FLASH FIRMWARE. DO THIS **ONCE*** AND THEN RE-UPLOAD WITH LINE **COMMENTED OUT**
 
-    // Disable WIFI Power Save to allow max throughput
-    esp_wifi_set_ps(WIFI_PS_NONE);
-
     //transfer_png_data("/spiffs/Outer_Wilds.png"); // UNCOMMENT TO UPLOAD IMAGE. DO THIS **ONCE*** AND THEN RE-UPLOAD WITH LINE **COMMENTED OUT**
 
     start_KE_tick_timer();

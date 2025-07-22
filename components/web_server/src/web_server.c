@@ -14,6 +14,7 @@
 #include "version.h"
 #include "pids_handler.h"
 #include "ota_handler.h"
+#include <lwip/sockets.h>
 
 static const char *TAG = "WebServer";
 
@@ -56,6 +57,13 @@ extern const uint8_t themes_Stock_ST_png_end[] asm("_binary_Stock_ST_png_end");
 
 extern const uint8_t themes_Bar_Aurora_png_start[] asm("_binary_Bar_Aurora_png_start");
 extern const uint8_t themes_Bar_Aurora_png_end[] asm("_binary_Bar_Aurora_png_end");
+
+esp_err_t socket_enable_nodelay(httpd_req_t *req)
+{
+    int sock = httpd_req_to_sockfd(req);
+    int flag = 1;
+    return setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(int));
+}
 
 // Embedded file mappings
 static const EmbeddedFile embedded_files[] = {
@@ -111,6 +119,9 @@ esp_err_t embedded_file_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "EMBEDDED_FILE_HANDLER: Checking for embedded file: %s", req->uri);
 
+    // Disable Nagle's algorithm to send packets immediately
+    socket_enable_nodelay(req);
+
     char decoded[128];
     const char *encoded = req->uri + strlen("/api/embedded/");
     url_decode(decoded, encoded, sizeof(decoded));
@@ -149,10 +160,10 @@ esp_err_t embedded_file_handler(httpd_req_t *req)
 
                 file_ptr += bytes_to_send;
                 bytes_remaining -= bytes_to_send;
-                if (bytes_remaining > 0)
-                {
-                    vTaskDelay(1 / portTICK_PERIOD_MS);
-                }
+                //if (bytes_remaining > 0)
+                //{
+                //    vTaskDelay(1 / portTICK_PERIOD_MS);
+                //}
             }
 
             return httpd_resp_send_chunk(req, NULL, 0);
@@ -171,6 +182,9 @@ static bool is_spa_route(const char *uri)
 esp_err_t web_request_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "WEB_REQUEST_HANDLER: Handling request: %s", req->uri);
+
+    // Disable Nagle's algorithm to send packets immediately
+    socket_enable_nodelay(req);
 
     // Redirect `/` to `/index.html`
     if (strcmp(req->uri, "/") == 0)
@@ -228,10 +242,10 @@ esp_err_t web_request_handler(httpd_req_t *req)
 
                 file_ptr += bytes_to_send;
                 bytes_remaining -= bytes_to_send;
-                if (bytes_remaining > 0)
-                {
-                    vTaskDelay(1 / portTICK_PERIOD_MS);
-                }
+               //if (bytes_remaining > 0)
+               //{
+               //    vTaskDelay(1 / portTICK_PERIOD_MS);
+               //}
             }
 
             return httpd_resp_send_chunk(req, NULL, 0);
