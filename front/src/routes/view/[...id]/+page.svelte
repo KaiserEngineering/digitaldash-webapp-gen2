@@ -100,7 +100,7 @@
 	{#snippet footerContent()}
 		<div class="border-border bg-muted/30 border-t py-4">
 			<div class="flex items-center justify-between">
-				<Button type="submit" class="flex items-center gap-2" disabled={isSubmitting}>
+				<Button type="submit" class="btn-primary h-12 rounded-xl px-8 font-semibold shadow-lg transition-all duration-200 flex items-center gap-2" disabled={isSubmitting}>
 					{#if isSubmitting}
 						<div
 							class="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"

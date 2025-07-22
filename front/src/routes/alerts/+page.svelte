@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
-	import { Bell, ChevronDown, AlertTriangle, CheckCircle2 } from 'lucide-svelte';
+	import { Bell, ChevronDown, AlertTriangle, CheckCircle2, Save } from 'lucide-svelte';
 	import { flip } from 'svelte/animate';
 	import { Motion } from 'motion-start';
 	import { Input } from '$lib/components/ui/input/index.js';
@@ -81,8 +81,8 @@
 						<div
 							class={`group relative rounded-2xl border-2 transition-all duration-300 ${
 								alert.enable === 'Enabled'
-									? 'border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/30 shadow-sm hover:shadow-lg hover:shadow-emerald-100/50'
-									: 'border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50/30 opacity-75 hover:opacity-90'
+									? 'border-emerald-200  shadow-sm hover:shadow-lg hover:shadow-emerald-100/50'
+									: 'border-slate-200  opacity-75 hover:opacity-90'
 							}`}
 						>
 							<!-- Enhanced Header -->
@@ -269,20 +269,15 @@
 			<Button
 				type="submit"
 				disabled={$submitting}
-				class={`h-12 rounded-xl px-8 font-semibold shadow-lg transition-all duration-200 ${
-					$submitting
-						? 'bg-slate-400'
-						: 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 hover:shadow-emerald-200'
-				} text-white`}
+				class="btn-primary flex h-12 items-center gap-2 rounded-xl px-8 font-semibold shadow-lg transition-all duration-200"
 			>
 				{#if $submitting}
-					<div class="flex items-center gap-2">
-						<div
-							class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
-						></div>
-						Saving Changes...
-					</div>
+					<div
+						class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+					></div>
+					Saving...
 				{:else}
+					<Save class="h-4 w-4" />
 					Save Alert Configuration
 				{/if}
 			</Button>

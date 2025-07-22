@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { Card, CardTitle, CardContent, CardHeader } from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
-	import { Image, Settings, Zap, House, Menu, X, Bell, Upload, ChevronDown } from 'lucide-svelte';
+	import { Image, Settings, Zap, House, Menu, X, Bell, Upload, ChevronDown, Moon, Sun } from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
 	import { page } from '$app/state';
+	import { theme, toggleTheme } from '$lib/stores/theme';
 
 	let isMobileMenuOpen = $state(false);
 	let isFirmwareDropdownOpen = $state(false);
@@ -78,20 +79,56 @@
 							</div>
 							<!-- Desktop Title -->
 							<div class="hidden sm:block">
-								<CardTitle
-									class="from-primary-600 via-secondary-600 to-primary-800 bg-gradient-to-r bg-clip-text text-2xl font-bold text-transparent lg:text-3xl xl:text-4xl"
-								>
-									KaiserEngineering Digital Dash
-								</CardTitle>
-								<div
-									class="from-primary-500 to-secondary-500 mt-2 h-1 w-16 rounded-full bg-gradient-to-r"
-								></div>
+								<a href="/" class="group block">
+									<CardTitle
+										class="text-primary-500 group-hover:text-primary-600 text-2xl font-bold transition-colors duration-200 lg:text-3xl xl:text-4xl"
+									>
+										KaiserEngineering Digital Dash
+									</CardTitle>
+									<div
+										class="bg-primary-500 group-hover:bg-primary-600 mt-2 h-1 w-16 rounded-full transition-colors duration-200"
+									></div>
+								</a>
 							</div>
 						</div>
 					</div>
 
-					<!-- Mobile Menu Button -->
+					<!-- Desktop Actions -->
+					<div class="hidden items-center gap-2 sm:flex">
+						<!-- Dark Mode Toggle -->
+						<Button
+							variant="ghost"
+							size="icon"
+							class="text-primary-400 h-10 w-10 transition-all duration-200 hover:scale-110"
+							onclick={toggleTheme}
+							aria-label="Toggle dark mode"
+						>
+							{#if $theme === 'dark'}
+								<Sun class="h-5 w-5 transition-transform duration-200" />
+							{:else}
+								<Moon class="h-5 w-5 transition-transform duration-200" />
+							{/if}
+						</Button>
+					</div>
+
+					<!-- Mobile Actions -->
 					<div class="flex items-center gap-2 sm:hidden">
+						<!-- Dark Mode Toggle -->
+						<Button
+							variant="ghost"
+							size="icon"
+							class="text-primary-400 h-10 w-10 transition-all duration-200"
+							onclick={toggleTheme}
+							aria-label="Toggle dark mode"
+						>
+							{#if $theme === 'dark'}
+								<Sun class="h-4 w-4 transition-transform duration-200" />
+							{:else}
+								<Moon class="h-4 w-4 transition-transform duration-200" />
+							{/if}
+						</Button>
+						
+						<!-- Mobile Menu Button -->
 						<Button
 							variant="ghost"
 							size="icon"

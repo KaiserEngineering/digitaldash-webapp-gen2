@@ -11,7 +11,7 @@
 	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
 	import PageCard from '@/components/PageCard.svelte';
 	import PIDSelect from '$lib/components/PIDSelect.svelte';
-	import { Settings, ChevronDown, Zap, AlertTriangle, CheckCircle2 } from 'lucide-svelte';
+	import { Settings, ChevronDown, Zap, AlertTriangle, CheckCircle2, Save } from 'lucide-svelte';
 	import { Motion } from 'motion-start';
 	import { slide } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
@@ -295,20 +295,15 @@
 			<Button
 				type="submit"
 				disabled={$submitting}
-				class={`h-12 rounded-xl px-8 font-semibold shadow-lg transition-all duration-200 ${
-					$submitting
-						? 'bg-slate-400'
-						: 'bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 hover:shadow-indigo-200'
-				} text-white`}
+				class="btn-primary h-12 rounded-xl px-8 font-semibold shadow-lg transition-all duration-200 flex items-center gap-2"
 			>
 				{#if $submitting}
-					<div class="flex items-center gap-2">
-						<div
-							class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
-						></div>
-						Saving Rules...
-					</div>
+					<div
+						class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+					></div>
+					Saving...
 				{:else}
+					<Save class="h-4 w-4" />
 					Save Dynamic Rules
 				{/if}
 			</Button>

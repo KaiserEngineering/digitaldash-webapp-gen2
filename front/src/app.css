@@ -13,67 +13,146 @@
 
 @layer theme {
 	@theme {
-		/* Primary (Red) — from logo */
+		/* Primary (Red) — your main brand color */
 		--color-primary-50: oklch(0.97 0.03 27);
 		--color-primary-100: oklch(0.93 0.05 27);
 		--color-primary-200: oklch(0.87 0.09 27);
 		--color-primary-300: oklch(0.78 0.13 27);
-		--color-primary-400: oklch(0.5832 0.1998 29.23);
-		--color-primary-500: oklch(0.6 0.25 27); /* bold red */
+		--color-primary-400: oklch(0.67 0.18 27);
+		--color-primary-500: oklch(0.6 0.25 27); /* Main red */
 		--color-primary-600: oklch(0.5 0.25 27);
 		--color-primary-700: oklch(0.4 0.22 27);
 		--color-primary-800: oklch(0.3 0.18 27);
 		--color-primary-900: oklch(0.2 0.12 27);
 
-		--color-secondary-50: oklch(0.97 0.03 250);
-		--color-secondary-100: oklch(0.93 0.05 250);
-		--color-secondary-200: oklch(0.87 0.09 250);
-		--color-secondary-300: oklch(0.78 0.13 250);
-		--color-secondary-400: oklch(0.7 0.18 250);
-		--color-secondary-500: oklch(0.6 0.25 250);
-		--color-secondary-600: oklch(0.5 0.25 250);
-		--color-secondary-700: oklch(0.4 0.22 250);
-		--color-secondary-800: oklch(0.3 0.18 250);
-		--color-secondary-900: oklch(0.2 0.12 250);
+		/* Secondary (Warm Gray) — complements red */
+		--color-secondary-50: oklch(0.98 0.005 20);
+		--color-secondary-100: oklch(0.94 0.01 20);
+		--color-secondary-200: oklch(0.88 0.015 20);
+		--color-secondary-300: oklch(0.8 0.02 20);
+		--color-secondary-400: oklch(0.7 0.025 20);
+		--color-secondary-500: oklch(0.6 0.03 20);
+		--color-secondary-600: oklch(0.5 0.025 20);
+		--color-secondary-700: oklch(0.4 0.02 20);
+		--color-secondary-800: oklch(0.3 0.015 20);
+		--color-secondary-900: oklch(0.2 0.01 20);
 
-		/* Semantic colors */
+		/* Accent (Amber) — for highlights and actions */
+		--color-accent-50: oklch(0.97 0.03 60);
+		--color-accent-100: oklch(0.93 0.06 60);
+		--color-accent-200: oklch(0.87 0.12 60);
+		--color-accent-300: oklch(0.8 0.18 60);
+		--color-accent-400: oklch(0.7 0.22 60);
+		--color-accent-500: oklch(0.65 0.25 60); /* Amber accent */
+		--color-accent-600: oklch(0.55 0.25 60);
+		--color-accent-700: oklch(0.45 0.22 60);
+		--color-accent-800: oklch(0.35 0.18 60);
+		--color-accent-900: oklch(0.25 0.12 60);
+
+		/* Unified semantic colors using the new palette */
 		--color-background: oklch(1 0 0);
-		--color-foreground: oklch(0.09 0 0);
+		--color-foreground: var(--color-secondary-900);
 		--color-card: oklch(1 0 0);
-		--color-card-foreground: oklch(0.09 0 0);
+		--color-card-foreground: var(--color-secondary-900);
 		--color-popover: oklch(1 0 0);
-		--color-popover-foreground: oklch(0.09 0 0);
-		--color-muted: oklch(0.96 0 0);
-		--color-muted-foreground: oklch(0.45 0 0);
-		--color-accent: oklch(0.96 0 0);
-		--color-accent-foreground: oklch(0.09 0 0);
-		--color-border: oklch(0.9 0 0);
-		--color-input: oklch(0.9 0 0);
-		--color-ring: oklch(0.6 0.25 27);
+		--color-popover-foreground: var(--color-secondary-900);
+		--color-muted: var(--color-secondary-50);
+		--color-muted-foreground: var(--color-secondary-500);
+		--color-accent: var(--color-accent-100);
+		--color-accent-foreground: var(--color-secondary-900);
+		--color-border: var(--color-secondary-200);
+		--color-input: var(--color-secondary-50);
+		--color-ring: var(--color-primary-500);
 
-		--color-destructive: oklch(0.577 0.245 27.325);
-		--color-destructive-foreground: oklch(0.985 0 0);
+		/* Status colors using harmonious palette */
+		--color-destructive: var(--color-primary-600);
+		--color-destructive-foreground: oklch(0.98 0 0);
 
-		--color-success-500: oklch(0.6 0.25 120); /* Green */
-		--color-success-600: oklch(0.5 0.25 120);
-		--color-success-700: oklch(0.4 0.22 120); /* Darker Green */
+		/* Success colors (green family) */
+		--color-success: oklch(0.6 0.15 140);
+		--color-success-foreground: oklch(0.98 0 0);
+		--color-success-500: oklch(0.6 0.15 140);
+		--color-success-600: oklch(0.5 0.15 140);
+		--color-success-700: oklch(0.4 0.12 140);
 
-		--color-warning-500: oklch(0.6 0.25 60); /* Yellow */
-		--color-warning-600: oklch(0.5 0.25 60);
-		--color-warning-700: oklch(0.4 0.22 60); /* Darker Yellow */
+		/* Warning colors (using amber accent) */
+		--color-warning: var(--color-accent-500);
+		--color-warning-foreground: var(--color-secondary-900);
+		--color-warning-500: var(--color-accent-500);
+		--color-warning-600: var(--color-accent-600);
+		--color-warning-700: var(--color-accent-700);
 
-		--color-error-500: oklch(0.6 0.25 0); /* Red */
-		--color-error-600: oklch(0.5 0.25 0);
-		--color-error-700: oklch(0.4 0.22 0); /* Darker Red */
+		/* Error colors (using primary red) */
+		--color-error-500: var(--color-primary-600);
+		--color-error-600: var(--color-primary-700);
+		--color-error-700: var(--color-primary-800);
 
-		--text-primary: oklch(0.6 0.25 27); /* Primary text color */
-		--text-secondary: oklch(0.5 0.25 27); /* Secondary text color */
+		--color-info: var(--color-secondary-600);
+		--color-info-foreground: oklch(0.98 0 0);
 
-		--color-background-soft: oklch(0.4941 0.2245 323);
-		--color-background-muted: oklch(0.4941 0.2245 323);
+		/* Background variations using warm grays */
+		--color-background-soft: var(--color-secondary-50);
+		--color-background-muted: var(--color-secondary-100);
 
 		--radius: 0.5rem;
 	}
+}
+
+:root.dark {
+	color-scheme: dark;
+}
+
+/* Dark mode using unified warm color system */
+:root.dark,
+.dark {
+	/* Standard dark backgrounds - gray-800 equivalent */
+	--color-background: oklch(0.09 0 0) !important;           /* gray-900 equivalent */
+	--color-foreground: oklch(0.98 0 0) !important;           /* white text */
+	--color-card: oklch(0.15 0 0) !important;                 /* gray-800 equivalent */
+	--color-card-foreground: oklch(0.98 0 0) !important;
+	--color-popover: oklch(0.15 0 0) !important;
+	--color-popover-foreground: oklch(0.98 0 0) !important;
+	
+	/* Muted areas - standard grays */
+	--color-muted: oklch(0.2 0 0) !important;                 /* gray-700 equivalent */
+	--color-muted-foreground: oklch(0.65 0 0) !important;     /* gray-400 equivalent */
+	--color-accent: oklch(0.2 0 0) !important;                /* gray-700 for accents */
+	--color-accent-foreground: oklch(0.98 0 0) !important;
+	
+	/* Borders and inputs - standard grays */
+	--color-border: oklch(0.25 0 0) !important;               /* gray-600 equivalent */
+	--color-input: oklch(0.18 0 0) !important;                /* gray-750 equivalent */
+	--color-ring: var(--color-primary-500) !important;        /* Keep red ring */
+
+	/* Unified status colors for dark mode */
+	--color-destructive: oklch(0.7 0.22 27) !important;       /* Lighter red for dark */
+	--color-destructive-foreground: oklch(0.09 0 0) !important;
+
+	/* Success colors for dark mode */
+	--color-success: oklch(0.65 0.15 140) !important;         /* Green for dark */
+	--color-success-foreground: oklch(0.09 0 0) !important;
+	--color-success-500: oklch(0.65 0.15 140) !important;
+	--color-success-600: oklch(0.55 0.15 140) !important;
+	--color-success-700: oklch(0.45 0.12 140) !important;
+
+	/* Warning colors for dark mode */
+	--color-warning: oklch(0.7 0.22 60) !important;           /* Amber for dark */
+	--color-warning-foreground: oklch(0.09 0 0) !important;
+	--color-warning-500: oklch(0.7 0.22 60) !important;
+	--color-warning-600: oklch(0.6 0.22 60) !important;
+	--color-warning-700: oklch(0.5 0.18 60) !important;
+
+	/* Error colors for dark mode */
+	--color-error-500: oklch(0.7 0.22 27) !important;         /* Lighter red for dark */
+	--color-error-600: oklch(0.6 0.22 27) !important;
+	--color-error-700: oklch(0.5 0.18 27) !important;
+
+	--color-info: oklch(0.65 0 0) !important;                 /* Gray info color */
+	--color-info-foreground: oklch(0.98 0 0) !important;
+
+	/* Background variations - standard grays */
+	--color-background-soft: oklch(0.12 0 0) !important;      /* gray-850 */
+	--color-background-muted: oklch(0.17 0 0) !important;     /* gray-750 */
 }
 
 @layer base {
@@ -146,7 +225,7 @@
 	}
 
 	.card-elevated {
-		@apply from-background to-background-soft rounded-lg border-0 bg-gradient-to-br shadow-lg;
+		@apply bg-background-soft rounded-lg border-0 shadow-lg;
 	}
 
 	/* Input Components */
@@ -186,24 +265,82 @@
 
 @layer utilities {
 	/* Background Utilities */
-	.bg-gradient-primary {
-		background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-700));
+	.bg-primary-500 {
+		background-color: var(--color-primary-500);
 	}
 
-	.bg-gradient-secondary {
-		background: linear-gradient(135deg, var(--color-secondary-100), var(--color-secondary-300));
+	.bg-primary-600 {
+		background-color: var(--color-primary-600);
 	}
 
-	.bg-gradient-soft {
-		background: linear-gradient(135deg, var(--color-background), var(--color-background-soft));
+	.bg-primary-700 {
+		background-color: var(--color-primary-700);
 	}
 
-	.bg-gradient-muted {
-		background: linear-gradient(
-			135deg,
-			var(--color-background-soft),
-			var(--color-background-muted)
-		);
+	.bg-secondary-100 {
+		background-color: var(--color-secondary-100);
+	}
+
+	.bg-secondary-200 {
+		background-color: var(--color-secondary-200);
+	}
+
+	.bg-secondary-300 {
+		background-color: var(--color-secondary-300);
+	}
+
+	.bg-secondary-500 {
+		background-color: var(--color-secondary-500);
+	}
+
+	.bg-secondary-900 {
+		background-color: var(--color-secondary-900);
+	}
+
+	/* Hover states */
+	.hover\:bg-primary-600:hover {
+		background-color: var(--color-primary-600);
+	}
+
+	.hover\:bg-secondary-200:hover {
+		background-color: var(--color-secondary-200);
+	}
+
+	.hover\:bg-success-600:hover {
+		background-color: var(--color-success-600);
+	}
+
+	.hover\:bg-warning-600:hover {
+		background-color: var(--color-warning-600);
+	}
+
+	.hover\:bg-error-600:hover {
+		background-color: var(--color-error-600);
+	}
+
+	/* Active states */
+	.active\:bg-primary-700:active {
+		background-color: var(--color-primary-700);
+	}
+
+	.active\:bg-secondary-300:active {
+		background-color: var(--color-secondary-300);
+	}
+
+	.active\:bg-success-700:active {
+		background-color: var(--color-success-700);
+	}
+
+	.active\:bg-warning-700:active {
+		background-color: var(--color-warning-700);
+	}
+
+	.bg-soft {
+		background: var(--color-background-soft);
+	}
+
+	.bg-muted-solid {
+		background: var(--color-background-muted);
 	}
 
 	/* Glass effect */
@@ -219,7 +356,7 @@
 		border: 1px solid color-mix(in oklab, var(--color-primary-500) 20%, transparent);
 	}
 
-	/* Text Color Utilities */
+	/* Text Color Utilities - work in both light and dark */
 	.text-primary {
 		color: var(--color-primary-500);
 	}
@@ -230,6 +367,22 @@
 
 	.text-primary-dark {
 		color: var(--color-primary-600);
+	}
+
+	.text-foreground {
+		color: var(--color-foreground);
+	}
+
+	.text-muted-foreground {
+		color: var(--color-muted-foreground);
+	}
+
+	.text-secondary-900 {
+		color: var(--color-secondary-900);
+	}
+
+	.text-secondary-500 {
+		color: var(--color-secondary-500);
 	}
 
 	.text-success {
@@ -244,6 +397,23 @@
 		color: var(--color-error-500);
 	}
 
+	/* Standard Tailwind-like text colors for dark mode */
+	.text-white {
+		color: oklch(1 0 0);
+	}
+
+	.text-gray-400 {
+		color: var(--color-muted-foreground);
+	}
+
+	.text-gray-800 {
+		color: oklch(0.15 0 0);
+	}
+
+	.text-gray-900 {
+		color: oklch(0.09 0 0);
+	}
+
 	.text-muted {
 		color: var(--color-muted-foreground);
 	}
@@ -252,19 +422,13 @@
 		color: color-mix(in oklab, var(--color-foreground) 70%, transparent);
 	}
 
-	/* Gradient Text */
-	.text-gradient-primary {
-		background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-700));
-		background-clip: text;
-		-webkit-background-clip: text;
-		color: transparent;
+	/* Solid Text Colors */
+	.text-primary-solid {
+		color: var(--color-primary-500);
 	}
 
-	.text-gradient-secondary {
-		background: linear-gradient(135deg, var(--color-secondary-600), var(--color-secondary-800));
-		background-clip: text;
-		-webkit-background-clip: text;
-		color: transparent;
+	.text-secondary-solid {
+		color: var(--color-secondary-500);
 	}
 
 	/* Shadow Utilities */
