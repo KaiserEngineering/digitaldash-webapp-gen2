@@ -139,7 +139,7 @@
 <div class="flex w-full flex-col gap-4 rounded bg-white p-6 shadow">
 	{#if !file}
 		<div
-			class="relative h-[80px] overflow-hidden rounded-md border border-dashed border-gray-300 bg-gray-50"
+			class="border-border bg-muted relative h-[80px] overflow-hidden rounded-md border border-dashed"
 			in:fade={{ duration: 300, easing: quintOut }}
 			out:scale={{ duration: 200, easing: quintOut, start: 0.95 }}
 		>
@@ -158,7 +158,7 @@
 	{:else}
 		<!-- File Preview -->
 		<div
-			class="flex items-center justify-between gap-4 rounded-lg bg-gray-100 p-4"
+			class="bg-muted flex items-center justify-between gap-4 rounded-lg p-4"
 			in:scale={{ duration: 300, easing: quintOut, start: 0.9 }}
 			out:fade={{ duration: 200, easing: quintOut }}
 		>
@@ -166,7 +166,7 @@
 				<img src={file.url} alt={file.name} class="h-16 w-16 rounded-lg object-cover" />
 				<div class="flex flex-col">
 					<span class="font-medium">{file.name}</span>
-					<span class="text-xs text-gray-500">{displaySize(file.size)}</span>
+					<span class="text-muted-foreground text-xs">{displaySize(file.size)}</span>
 				</div>
 			</div>
 			<Button class="btn cursor-pointer" variant="outline" size="icon" onclick={removeFile}>

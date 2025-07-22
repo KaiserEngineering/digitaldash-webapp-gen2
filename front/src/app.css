@@ -102,57 +102,57 @@
 	color-scheme: dark;
 }
 
-/* Dark mode using unified warm color system */
+/* Dark mode - standard Tailwind equivalents */
 :root.dark,
 .dark {
-	/* Standard dark backgrounds - gray-800 equivalent */
-	--color-background: oklch(0.09 0 0) !important;           /* gray-900 equivalent */
-	--color-foreground: oklch(0.98 0 0) !important;           /* white text */
-	--color-card: oklch(0.15 0 0) !important;                 /* gray-800 equivalent */
-	--color-card-foreground: oklch(0.98 0 0) !important;
-	--color-popover: oklch(0.15 0 0) !important;
-	--color-popover-foreground: oklch(0.98 0 0) !important;
-	
-	/* Muted areas - standard grays */
-	--color-muted: oklch(0.2 0 0) !important;                 /* gray-700 equivalent */
-	--color-muted-foreground: oklch(0.65 0 0) !important;     /* gray-400 equivalent */
-	--color-accent: oklch(0.2 0 0) !important;                /* gray-700 for accents */
-	--color-accent-foreground: oklch(0.98 0 0) !important;
-	
-	/* Borders and inputs - standard grays */
-	--color-border: oklch(0.25 0 0) !important;               /* gray-600 equivalent */
-	--color-input: oklch(0.18 0 0) !important;                /* gray-750 equivalent */
-	--color-ring: var(--color-primary-500) !important;        /* Keep red ring */
+	/* Standard Tailwind dark mode colors */
+	--color-background: oklch(0.2398 0.0201 267.83); /* gray-950 */
+	--color-foreground: oklch(0.98 0 0); /* gray-50 */
+	--color-card: oklch(0.2398 0.0201 267.83); /* gray-950 */
+	--color-card-foreground: oklch(0.98 0 0); /* gray-50 */
+	--color-popover: oklch(0.2398 0.0201 267.83); /* gray-950 */
+	--color-popover-foreground: oklch(0.98 0 0); /* gray-50 */
 
-	/* Unified status colors for dark mode */
-	--color-destructive: oklch(0.7 0.22 27) !important;       /* Lighter red for dark */
-	--color-destructive-foreground: oklch(0.09 0 0) !important;
+	/* Muted areas */
+	--color-muted: oklch(0.14 0 0); /* gray-900 */
+	--color-muted-foreground: oklch(0.64 0 0); /* gray-400 */
+	--color-accent: oklch(0.14 0 0); /* gray-900 */
+	--color-accent-foreground: oklch(0.98 0 0); /* gray-50 */
 
-	/* Success colors for dark mode */
-	--color-success: oklch(0.65 0.15 140) !important;         /* Green for dark */
-	--color-success-foreground: oklch(0.09 0 0) !important;
-	--color-success-500: oklch(0.65 0.15 140) !important;
-	--color-success-600: oklch(0.55 0.15 140) !important;
-	--color-success-700: oklch(0.45 0.12 140) !important;
+	/* Borders and inputs */
+	--color-border: oklch(0.27 0 0); /* gray-800 */
+	--color-input: oklch(0.14 0 0); /* gray-900 */
+	--color-ring: var(--color-primary-500); /* Keep red ring */
 
-	/* Warning colors for dark mode */
-	--color-warning: oklch(0.7 0.22 60) !important;           /* Amber for dark */
-	--color-warning-foreground: oklch(0.09 0 0) !important;
-	--color-warning-500: oklch(0.7 0.22 60) !important;
-	--color-warning-600: oklch(0.6 0.22 60) !important;
-	--color-warning-700: oklch(0.5 0.18 60) !important;
+	/* Status colors for dark mode */
+	--color-destructive: oklch(0.62 0.18 15); /* red-500 equivalent */
+	--color-destructive-foreground: oklch(0.98 0 0);
 
-	/* Error colors for dark mode */
-	--color-error-500: oklch(0.7 0.22 27) !important;         /* Lighter red for dark */
-	--color-error-600: oklch(0.6 0.22 27) !important;
-	--color-error-700: oklch(0.5 0.18 27) !important;
+	/* Success colors */
+	--color-success: oklch(0.7 0.14 145); /* green-500 equivalent */
+	--color-success-foreground: oklch(0.2398 0.0201 267.83);
+	--color-success-500: oklch(0.7 0.14 145);
+	--color-success-600: oklch(0.65 0.14 145);
+	--color-success-700: oklch(0.59 0.14 145);
 
-	--color-info: oklch(0.65 0 0) !important;                 /* Gray info color */
-	--color-info-foreground: oklch(0.98 0 0) !important;
+	/* Warning colors */
+	--color-warning: oklch(0.75 0.15 85); /* yellow-500 equivalent */
+	--color-warning-foreground: oklch(0.2398 0.0201 267.83);
+	--color-warning-500: oklch(0.75 0.15 85);
+	--color-warning-600: oklch(0.7 0.15 85);
+	--color-warning-700: oklch(0.65 0.15 85);
 
-	/* Background variations - standard grays */
-	--color-background-soft: oklch(0.12 0 0) !important;      /* gray-850 */
-	--color-background-muted: oklch(0.17 0 0) !important;     /* gray-750 */
+	/* Error colors */
+	--color-error-500: oklch(0.62 0.18 15); /* red-500 equivalent */
+	--color-error-600: oklch(0.57 0.18 15);
+	--color-error-700: oklch(0.52 0.18 15);
+
+	--color-info: oklch(0.64 0 0); /* gray-400 */
+	--color-info-foreground: oklch(0.98 0 0);
+
+	/* Background variations */
+	--color-background-soft: oklch(0.14 0 0); /* gray-900 */
+	--color-background-muted: oklch(0.17 0 0); /* gray-850 */
 }
 
 @layer base {
@@ -385,6 +385,15 @@
 		color: var(--color-secondary-500);
 	}
 
+	/* Force bright text in dark mode */
+	.dark .text-secondary-900 {
+		color: oklch(0.9 0 0); /* Very bright */
+	}
+
+	.dark .text-secondary-500 {
+		color: oklch(0.85 0 0); /* Very bright */
+	}
+
 	.text-success {
 		color: var(--color-success-500);
 	}
@@ -411,7 +420,32 @@
 	}
 
 	.text-gray-900 {
-		color: oklch(0.09 0 0);
+		color: oklch(0.2398 0.0201 267.83);
+	}
+
+	/* Standard Tailwind gray utilities for proper dark mode */
+	.bg-gray-900 {
+		background-color: oklch(0.17 0 0);
+	}
+
+	.bg-gray-800 {
+		background-color: oklch(0.22 0 0);
+	}
+
+	.bg-gray-700 {
+		background-color: oklch(0.28 0 0);
+	}
+
+	.text-gray-100 {
+		color: oklch(0.95 0 0);
+	}
+
+	.text-gray-300 {
+		color: oklch(0.85 0 0);
+	}
+
+	.text-gray-400 {
+		color: oklch(0.75 0 0);
 	}
 
 	.text-muted {
@@ -537,6 +571,12 @@
 	}
 
 	.btn-link {
-		@apply text-primary underline-offset-4 hover:underline;
+		color: var(--color-primary-500);
+		text-decoration-line: underline;
+		text-underline-offset: 4px;
+	}
+
+	.btn-link:hover {
+		text-decoration-line: underline;
 	}
 }

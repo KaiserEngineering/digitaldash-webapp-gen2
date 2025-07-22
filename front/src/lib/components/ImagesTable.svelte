@@ -102,9 +102,9 @@
 			<div class="flex flex-col">
 				{#if loadingStates[imageName]}
 					<div
-						class="flex h-40 items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-100"
+						class="border-border bg-muted flex h-40 items-center justify-center rounded-lg border-2 border-dashed"
 					>
-						<Loader2 class="h-6 w-6 animate-spin text-gray-400" />
+						<Loader2 class="text-muted-foreground h-6 w-6 animate-spin" />
 					</div>
 				{:else if failedImages[imageName] || !loadedImages[imageName]}
 					<div
@@ -189,6 +189,6 @@
 {:else}
 	<div class="flex flex-col items-center justify-center py-12">
 		<Spinner />
-		<p class="mt-4 text-gray-500">Loading image slots...</p>
+		<p class="text-muted-foreground mt-4">Loading image slots...</p>
 	</div>
 {/if}

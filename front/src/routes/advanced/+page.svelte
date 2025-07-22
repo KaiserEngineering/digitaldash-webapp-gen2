@@ -182,7 +182,7 @@
 		<Button
 			type="submit"
 			disabled={$submitting || !isValidJson || !!validationError}
-			class="btn-primary h-12 rounded-xl px-8 font-semibold shadow-lg transition-all duration-200 flex items-center gap-2"
+			class="btn-primary flex h-12 items-center gap-2 rounded-xl px-8 font-semibold shadow-lg transition-all duration-200"
 		>
 			{#if $submitting}
 				<Loader2 class="h-4 w-4 animate-spin" />

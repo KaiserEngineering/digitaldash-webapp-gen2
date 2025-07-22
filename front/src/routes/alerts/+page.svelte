@@ -82,14 +82,14 @@
 							class={`group relative rounded-2xl border-2 transition-all duration-300 ${
 								alert.enable === 'Enabled'
 									? 'border-emerald-200  shadow-sm hover:shadow-lg hover:shadow-emerald-100/50'
-									: 'border-slate-200  opacity-75 hover:opacity-90'
+									: 'border-border  opacity-75 hover:opacity-90'
 							}`}
 						>
 							<!-- Enhanced Header -->
 							<Collapsible.Trigger class="w-full text-left">
 								<div
 									class={`flex items-center justify-between p-6 transition-all duration-200 ${
-										alert.enable === 'Enabled' ? 'hover:bg-emerald-50/50' : 'hover:bg-slate-50/50'
+										alert.enable === 'Enabled' ? 'hover:bg-emerald-50/50' : 'hover:bg-muted/50'
 									}`}
 								>
 									<div class="flex items-center gap-4">
@@ -106,29 +106,31 @@
 
 										<div class="flex flex-col">
 											<div class="flex items-center gap-2">
-												<h4 class="text-lg font-semibold text-slate-800">
+												<h4 class="text-foreground text-lg font-semibold">
 													Alert #{i + 1}
 												</h4>
 												{#if alert.enable === 'Enabled'}
 													<CheckCircle2 class="h-4 w-4 text-emerald-500" />
 												{:else}
-													<AlertTriangle class="h-4 w-4 text-slate-400" />
+													<AlertTriangle class="text-muted-foreground h-4 w-4" />
 												{/if}
 											</div>
 											<div class="flex items-center gap-2 text-sm">
 												<span
 													class={`font-medium ${
-														alert.enable === 'Enabled' ? 'text-emerald-700' : 'text-slate-500'
+														alert.enable === 'Enabled'
+															? 'text-emerald-700'
+															: 'text-muted-foreground'
 													}`}
 												>
 													{alert.pid || 'No PID selected'}
 												</span>
-												<span class="text-slate-400">•</span>
+												<span class="text-muted-foreground">•</span>
 												<span
 													class={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
 														alert.enable === 'Enabled'
 															? 'bg-emerald-100 text-emerald-700'
-															: 'bg-slate-100 text-slate-600'
+															: 'bg-muted text-muted-foreground'
 													}`}
 												>
 													{alert.enable === 'Enabled' ? 'Active' : 'Inactive'}
@@ -138,14 +140,14 @@
 									</div>
 
 									<ChevronDown
-										class="h-5 w-5 text-slate-400 transition-all duration-300 group-hover:text-slate-600 data-[state=open]:rotate-180"
+										class="text-muted-foreground group-hover:text-foreground h-5 w-5 transition-all duration-300 data-[state=open]:rotate-180"
 									/>
 								</div>
 							</Collapsible.Trigger>
 
 							<!-- Enhanced Content -->
 							<Collapsible.Content>
-								<div class="border-t border-slate-100 bg-white/50 p-6">
+								<div class="border-border bg-card/50 border-t p-6">
 									<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 										<!-- PID Selection -->
 										<div class="lg:col-span-2">
@@ -163,7 +165,8 @@
 
 										<!-- Comparison Operator -->
 										<div class="space-y-3">
-											<Label class="text-sm font-semibold text-slate-700">Comparison Operator</Label
+											<Label class="text-foreground text-sm font-semibold"
+												>Comparison Operator</Label
 											>
 											<Select.Root
 												bind:value={$form[key].compare}
@@ -173,15 +176,15 @@
 												<Select.Trigger
 													class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
 														alert.enable === 'Enabled'
-															? 'border-slate-200 bg-white hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
-															: 'border-slate-100 bg-slate-50'
+															? 'border-border bg-card hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
+															: 'border-border bg-muted'
 													}`}
 												>
-													<span class={alert.compare ? 'text-slate-800' : 'text-slate-400'}>
+													<span class={alert.compare ? 'text-foreground' : 'text-muted-foreground'}>
 														{alert.compare || 'Select operator'}
 													</span>
 												</Select.Trigger>
-												<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
+												<Select.Content class="border-border rounded-xl border-2 shadow-xl">
 													{#each compareOps as op (op)}
 														<Select.Item
 															value={op}
@@ -197,14 +200,14 @@
 
 										<!-- Threshold Value -->
 										<div class="space-y-3">
-											<Label class="text-sm font-semibold text-slate-700">Threshold Value</Label>
+											<Label class="text-foreground text-sm font-semibold">Threshold Value</Label>
 											<Input
 												type="number"
 												bind:value={$form[key].threshold}
 												class={`h-12 rounded-xl border-2 transition-all duration-200 ${
 													alert.enable === 'Enabled'
-														? 'border-slate-200 bg-white hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
-														: 'border-slate-100 bg-slate-50'
+														? 'border-border bg-card hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
+														: 'border-border bg-muted'
 												}`}
 												disabled={alert.enable !== 'Enabled'}
 												placeholder="Enter threshold value"
@@ -213,14 +216,14 @@
 
 										<!-- Alert Message -->
 										<div class="space-y-3 lg:col-span-2">
-											<Label class="text-sm font-semibold text-slate-700">Alert Message</Label>
+											<Label class="text-foreground text-sm font-semibold">Alert Message</Label>
 											<Input
 												type="text"
 												bind:value={$form[key].message}
 												class={`h-12 rounded-xl border-2 transition-all duration-200 ${
 													alert.enable === 'Enabled'
-														? 'border-slate-200 bg-white hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
-														: 'border-slate-100 bg-slate-50'
+														? 'border-border bg-card hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
+														: 'border-border bg-muted'
 												}`}
 												disabled={alert.enable !== 'Enabled'}
 												placeholder="Enter custom alert message"
@@ -229,11 +232,11 @@
 
 										<!-- Enable/Disable Toggle -->
 										<div
-											class="flex items-center justify-between rounded-xl bg-slate-50/50 p-4 lg:col-span-2"
+											class="bg-muted/50 flex items-center justify-between rounded-xl p-4 lg:col-span-2"
 										>
 											<div class="flex flex-col">
-												<Label class="text-sm font-semibold text-slate-700">Alert Status</Label>
-												<p class="text-xs text-slate-500">
+												<Label class="text-foreground text-sm font-semibold">Alert Status</Label>
+												<p class="text-muted-foreground text-xs">
 													{alert.enable === 'Enabled'
 														? 'This alert is currently active'
 														: 'This alert is currently inactive'}
@@ -258,9 +261,9 @@
 
 	{#snippet footerContent()}
 		<div
-			class="mt-8 flex flex-col items-center justify-between gap-4 border-t border-slate-100 pt-6 md:flex-row"
+			class="border-border mt-8 flex flex-col items-center justify-between gap-4 border-t pt-6 md:flex-row"
 		>
-			<div class="text-sm text-slate-500">
+			<div class="text-muted-foreground text-sm">
 				{Object.values($form).filter(
 					(alert) =>
 						alert && typeof alert === 'object' && 'enable' in alert && alert.enable === 'Enabled'
@@ -269,7 +272,7 @@
 			<Button
 				type="submit"
 				disabled={$submitting}
-				class="btn-primary flex h-12 items-center gap-2 rounded-xl px-8 font-semibold shadow-lg transition-all duration-200"
+				class="btn-primary flex h-12 items-center gap-2 rounded-xl px-8 font-semibold text-gray-800 shadow-lg transition-all duration-200"
 			>
 				{#if $submitting}
 					<div

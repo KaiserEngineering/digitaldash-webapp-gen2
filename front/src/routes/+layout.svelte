@@ -17,7 +17,7 @@
 	}
 </script>
 
-<div class="soft flex h-screen flex-col">
+<div class="bg-background flex h-screen flex-col">
 	{#await Promise.all([data.config, data.options, data.pids])}
 		<!-- Enhanced loading screen -->
 		<LoadingState
@@ -26,7 +26,7 @@
 		/>
 	{:then}
 		<!-- App layout after data is ready -->
-		<div class="soft flex h-screen flex-col">
+		<div class="bg-background flex h-screen flex-col">
 			<Toaster
 				position="top-right"
 				toastOptions={{
@@ -57,7 +57,7 @@
 					/>
 
 					<div class="mt-6 text-center">
-						<p class="mb-4 text-sm text-gray-500">
+						<p class="text-muted-foreground mb-4 text-sm">
 							Make sure your DigitalDash device is powered on and connected to the network.
 						</p>
 
@@ -70,7 +70,7 @@
 							</button>
 							<a
 								href="/firmware"
-								class="rounded-md bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
+								class="bg-muted text-foreground hover:bg-muted/80 rounded-md px-4 py-2 transition-colors"
 							>
 								Update Firmware
 							</a>

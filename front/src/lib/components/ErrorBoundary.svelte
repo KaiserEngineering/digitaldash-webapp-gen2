@@ -94,7 +94,7 @@
 									Technical details
 								</summary>
 								<pre
-									class="mt-1 text-xs {styleConfig.textColor} bg-opacity-50 max-h-32 overflow-auto rounded border bg-white p-2">{errorDetails}</pre>
+									class="mt-1 text-xs {styleConfig.textColor} bg-opacity-50 bg-card max-h-32 overflow-auto rounded border p-2">{errorDetails}</pre>
 							</details>
 						{/if}
 					</AlertDescription>

@@ -101,21 +101,19 @@
 	});
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+<div class="bg-background min-h-screen p-4">
 	<div class="mx-auto max-w-4xl space-y-8 pt-8">
 		<!-- Firmware Update Card -->
-		<Card class="border-0 bg-white/80 shadow-lg backdrop-blur-sm">
-			<CardHeader
-				class="from-secondary-600 to-secondary-700 rounded-t-lg bg-gradient-to-r text-white"
-			>
+		<Card class="bg-card shadow-lg">
+			<CardHeader class="bg-primary-600 rounded-t-lg text-white">
 				<CardTitle class="flex items-center gap-3 text-xl">
 					<Zap class="h-6 w-6" />
 					Flash Digital Dash
 				</CardTitle>
 			</CardHeader>
 			<CardContent class="space-y-6 p-6">
-				<div class="bg-secondary-50 border-secondary-200 rounded-lg border p-4">
-					<p class="text-secondary-800 text-sm">
+				<div class="bg-muted border-border rounded-lg border p-4">
+					<p class="text-muted-foreground text-sm">
 						Browse for a firmware file (.bin) to update your Digital Dash.
 					</p>
 				</div>
@@ -133,7 +131,7 @@
 				<Button
 					onclick={browseFirmware}
 					disabled={uploadStatus === 'uploading' || flashStatus === 'flashing'}
-					class="h-12 w-full bg-gradient-to-r from-blue-600 to-blue-700 text-lg font-semibold text-white shadow-md transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-lg"
+					class="btn-primary h-12 w-full text-lg font-semibold text-gray-800 shadow-md transition-all duration-200"
 				>
 					{#if uploadStatus === 'uploading'}
 						<Loader2 class="mr-3 h-5 w-5 animate-spin" />
@@ -146,23 +144,23 @@
 
 				<!-- Upload Status -->
 				{#if uploadStatus === 'success'}
-					<div class="rounded-lg border border-green-200 bg-green-50 p-4">
-						<p class="flex items-center gap-3 font-medium text-green-800">
-							<CheckCircle class="h-5 w-5 text-green-600" />
+					<div class="border-border bg-muted rounded-lg border p-4">
+						<p class="text-success flex items-center gap-3 font-medium">
+							<CheckCircle class="text-success h-5 w-5" />
 							{uploadMessage}
 						</p>
 					</div>
 				{:else if uploadStatus === 'error'}
-					<div class="rounded-lg border border-red-200 bg-red-50 p-4">
-						<p class="flex items-center gap-3 font-medium text-red-800">
-							<AlertTriangle class="h-5 w-5 text-red-600" />
+					<div class="border-border bg-muted rounded-lg border p-4">
+						<p class="text-error flex items-center gap-3 font-medium">
+							<AlertTriangle class="text-error h-5 w-5" />
 							{uploadMessage}
 						</p>
 					</div>
 				{:else if uploadStatus === 'uploading'}
-					<div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
-						<p class="flex items-center gap-3 font-medium text-blue-800">
-							<Loader2 class="h-5 w-5 animate-spin text-blue-600" />
+					<div class="border-border bg-muted rounded-lg border p-4">
+						<p class="text-info flex items-center gap-3 font-medium">
+							<Loader2 class="text-info h-5 w-5 animate-spin" />
 							{uploadMessage}
 						</p>
 					</div>
@@ -173,7 +171,7 @@
 					<Button
 						onclick={flashFirmware}
 						disabled={uploadStatus === 'uploading' || flashStatus === 'flashing'}
-						class="from-secondary-600 to-secondary-700 hover:from-secondary-700 hover:to-secondary-800 h-12 w-full bg-gradient-to-r text-lg font-semibold text-white shadow-md transition-all duration-200 hover:shadow-lg"
+						class="btn-primary h-12 w-full text-lg font-semibold text-gray-800 shadow-md transition-all duration-200"
 					>
 						{#if flashStatus === 'flashing'}
 							<Loader2 class="mr-3 h-5 w-5 animate-spin" />
@@ -193,16 +191,16 @@
 							</p>
 						</div>
 					{:else if flashStatus === 'error'}
-						<div class="rounded-lg border border-red-200 bg-red-50 p-4">
-							<p class="flex items-center gap-3 font-medium text-red-800">
-								<AlertTriangle class="h-5 w-5 text-red-600" />
+						<div class="border-border bg-muted rounded-lg border p-4">
+							<p class="text-error flex items-center gap-3 font-medium">
+								<AlertTriangle class="text-error h-5 w-5" />
 								{flashMessage}
 							</p>
 						</div>
 					{:else if flashStatus === 'flashing'}
-						<div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
-							<p class="flex items-center gap-3 font-medium text-blue-800">
-								<Loader2 class="h-5 w-5 animate-spin text-blue-600" />
+						<div class="border-border bg-muted rounded-lg border p-4">
+							<p class="text-info flex items-center gap-3 font-medium">
+								<Loader2 class="text-info h-5 w-5 animate-spin" />
 								{flashMessage}
 							</p>
 						</div>
@@ -212,8 +210,8 @@
 		</Card>
 
 		<!-- Current Firmware Info Card -->
-		<Card class="border-0 bg-white/80 shadow-lg backdrop-blur-sm">
-			<CardHeader class="from-primary-600 to-primary-700 rounded-t-lg bg-gradient-to-r text-white">
+		<Card class="bg-card shadow-lg">
+			<CardHeader class="bg-primary-600 rounded-t-lg text-white">
 				<CardTitle class="flex items-center gap-3 text-xl">
 					<FileText class="h-6 w-6" />
 					Current Firmware
@@ -222,41 +220,41 @@
 			<CardContent class="space-y-6 p-6">
 				<!-- Files List Section -->
 				<div class="space-y-4">
-					<div class="min-h-[120px] rounded-lg border border-slate-200 bg-slate-50">
+					<div class="border-border bg-muted min-h-[120px] rounded-lg border">
 						{#if filesStatus === 'loading'}
-							<div class="flex items-center justify-center gap-3 py-8 text-slate-500">
+							<div class="text-muted-foreground flex items-center justify-center gap-3 py-8">
 								<Loader2 class="h-5 w-5 animate-spin" />
 								<span class="font-medium">Loading files...</span>
 							</div>
 						{:else if filesStatus === 'error'}
-							<div class="flex items-center justify-center gap-3 py-8 text-red-600">
+							<div class="text-error flex items-center justify-center gap-3 py-8">
 								<AlertTriangle class="h-5 w-5" />
 								<span class="font-medium">Failed to load files</span>
 							</div>
 						{:else if files.length === 0}
-							<div class="flex items-center justify-center py-8 text-slate-500">
+							<div class="text-muted-foreground flex items-center justify-center py-8">
 								<span class="font-medium">No firmware file found</span>
 							</div>
 						{:else}
-							<div class="divide-y divide-slate-200">
+							<div class="divide-border divide-y">
 								{#each files as file, index (file.name || index)}
 									<div
-										class="p-4 transition-colors duration-150 hover:bg-white {index === 0
+										class="hover:bg-background p-4 transition-colors duration-150 {index === 0
 											? 'rounded-t-lg'
 											: ''} {index === files.length - 1 ? 'rounded-b-lg' : ''}"
 									>
 										<div class="flex items-start gap-4">
 											<div
-												class="bg-secondary-100 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg"
+												class="bg-muted flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg"
 											>
-												<FileText class="text-secondary-600 h-6 w-6" />
+												<FileText class="text-foreground h-6 w-6" />
 											</div>
 											<div class="min-w-0 flex-grow">
-												<h5 class="truncate font-medium text-slate-800">
+												<h5 class="text-foreground truncate font-medium">
 													{file.name || file}
 												</h5>
 												<div
-													class="mt-2 grid grid-cols-1 gap-2 text-sm text-slate-600 sm:grid-cols-3"
+													class="text-muted-foreground mt-2 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3"
 												>
 													{#if file.size}
 														<div class="flex items-center gap-1">

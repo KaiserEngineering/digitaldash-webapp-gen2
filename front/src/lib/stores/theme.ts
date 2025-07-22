@@ -5,8 +5,8 @@ type Theme = 'light' | 'dark';
 
 // Initialize theme from localStorage or default to light
 const defaultTheme: Theme = 'light';
-const initialTheme = browser 
-	? (localStorage.getItem('theme') as Theme) ?? defaultTheme
+const initialTheme = browser
+	? ((localStorage.getItem('theme') as Theme) ?? defaultTheme)
 	: defaultTheme;
 
 export const theme = writable<Theme>(initialTheme);
@@ -27,5 +27,5 @@ theme.subscribe((value) => {
 
 // Function to toggle theme
 export function toggleTheme() {
-	theme.update(current => current === 'light' ? 'dark' : 'light');
+	theme.update((current) => (current === 'light' ? 'dark' : 'light'));
 }

@@ -67,18 +67,18 @@
 
 <div class={cn('w-full', className)}>
 	{#if label}
-		<label class="mb-3 block text-sm font-medium text-gray-700">{label}</label>
+		<label class="text-foreground mb-3 block text-sm font-medium">{label}</label>
 	{/if}
 
 	{#if loading}
 		<div class="flex items-center justify-center py-12">
 			<Spinner />
-			<span class="ml-3 text-sm text-gray-500">Loading images...</span>
+			<span class="text-muted-foreground ml-3 text-sm">Loading images...</span>
 		</div>
 	{:else if options.length === 0}
-		<div class="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
-			<ImageIcon class="mx-auto h-12 w-12 text-gray-400" />
-			<span class="mt-2 block text-sm text-gray-500">No images available</span>
+		<div class="border-border bg-muted rounded-lg border p-8 text-center">
+			<ImageIcon class="text-muted-foreground mx-auto h-12 w-12" />
+			<span class="text-muted-foreground mt-2 block text-sm">No images available</span>
 		</div>
 	{:else}
 		<div
@@ -98,7 +98,7 @@
 						disabled && 'cursor-not-allowed opacity-50',
 						value === option
 							? 'border-blue-500 bg-blue-50 shadow-lg'
-							: 'border-gray-200 bg-white shadow-sm hover:border-gray-300 hover:shadow-md',
+							: 'border-border bg-card hover:border-border shadow-sm hover:shadow-md',
 						themes ? 'aspect-square' : 'aspect-[800/165]'
 					)}
 					onclick={() => selectOption(option)}
@@ -113,8 +113,8 @@
 							onerror={() => handleImageError(option)}
 						/>
 					{:else}
-						<div class="flex h-full w-full items-center justify-center bg-gray-100">
-							<ImageIcon class="h-8 w-8 text-gray-400" />
+						<div class="bg-muted flex h-full w-full items-center justify-center">
+							<ImageIcon class="text-muted-foreground h-8 w-8" />
 						</div>
 					{/if}
 

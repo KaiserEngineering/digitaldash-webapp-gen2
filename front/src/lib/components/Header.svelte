@@ -1,7 +1,19 @@
 <script lang="ts">
 	import { Card, CardTitle, CardContent, CardHeader } from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
-	import { Image, Settings, Zap, House, Menu, X, Bell, Upload, ChevronDown, Moon, Sun } from 'lucide-svelte';
+	import {
+		Image,
+		Settings,
+		Zap,
+		House,
+		Menu,
+		X,
+		Bell,
+		Upload,
+		ChevronDown,
+		Moon,
+		Sun
+	} from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
 	import { page } from '$app/state';
 	import { theme, toggleTheme } from '$lib/stores/theme';
@@ -81,9 +93,9 @@
 							<div class="hidden sm:block">
 								<a href="/" class="group block">
 									<CardTitle
-										class="text-primary-500 group-hover:text-primary-600 text-2xl font-bold transition-colors duration-200 lg:text-3xl xl:text-4xl"
+										class="text-primary-400 group-hover:text-primary-600 text-2xl font-bold transition-colors duration-200 lg:text-3xl xl:text-4xl"
 									>
-										KaiserEngineering Digital Dash
+										Digital Dash
 									</CardTitle>
 									<div
 										class="bg-primary-500 group-hover:bg-primary-600 mt-2 h-1 w-16 rounded-full transition-colors duration-200"
@@ -127,7 +139,7 @@
 								<Moon class="h-4 w-4 transition-transform duration-200" />
 							{/if}
 						</Button>
-						
+
 						<!-- Mobile Menu Button -->
 						<Button
 							variant="ghost"
@@ -152,7 +164,7 @@
 					<div
 						class="bg-muted/30 border-border/30 rounded-2xl border p-2 shadow-lg backdrop-blur-sm"
 					>
-						<div class="flex gap-1">
+						<div class="flex justify-center gap-1">
 							{#each tabs as tab (tab.value)}
 								{@const TabIcon = tab.icon}
 								{@const isActive =
@@ -178,7 +190,7 @@
 											<span class="font-semibold">{tab.label}</span>
 											<ChevronDown
 												class={`h-3 w-3 transition-all duration-300 ${
-													isFirmwareDropdownOpen ? 'rotate-180 scale-110' : 'group-hover:scale-110'
+													isFirmwareDropdownOpen ? 'scale-110 rotate-180' : 'group-hover:scale-110'
 												}`}
 											/>
 										</button>

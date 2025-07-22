@@ -32,7 +32,7 @@
 				<div class="flex items-center gap-3">
 					<Switch
 						class="border {$form.enable === 'Enabled'
-							? 'border-green-300 bg-green-100'
+							? 'bg-muted border-green-300'
 							: 'border-primary !bg-red-200'}"
 						id="enable"
 						name="enable"
@@ -42,8 +42,8 @@
 					<span
 						class={`rounded-full px-2 py-1 text-xs font-medium ${
 							$form.enable === 'Enabled'
-								? 'bg-green-100 text-green-700'
-								: 'bg-gray-100 text-gray-600'
+								? 'bg-muted text-success'
+								: 'bg-muted text-muted-foreground'
 						}`}
 					>
 						{$form.enable === 'Enabled' ? 'Active' : 'Inactive'}

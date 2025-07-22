@@ -20,9 +20,9 @@
 {#if variant === 'minimal'}
 	<div class="flex items-center justify-center gap-2 p-4">
 		{#if showIcon}
-			<Loader2 class="h-4 w-4 animate-spin text-gray-500" />
+			<Loader2 class="text-muted-foreground h-4 w-4 animate-spin" />
 		{/if}
-		<span class="text-sm text-gray-600">{title}</span>
+		<span class="text-muted-foreground text-sm">{title}</span>
 	</div>
 {:else if variant === 'network'}
 	<div class="flex flex-col items-center justify-center gap-3 p-8">
@@ -31,8 +31,8 @@
 			<div class="absolute -top-1 -right-1 h-3 w-3 animate-pulse rounded-full bg-blue-500"></div>
 		</div>
 		<div class="text-center">
-			<h3 class="font-medium text-gray-800">{title}</h3>
-			<p class="mt-1 text-sm text-gray-500">{subtitle}</p>
+			<h3 class="text-foreground font-medium">{title}</h3>
+			<p class="text-muted-foreground mt-1 text-sm">{subtitle}</p>
 		</div>
 	</div>
 {:else}
@@ -41,14 +41,14 @@
 		{#if showIcon}
 			<Spinner />
 		{/if}
-		<h2 class="text-xl font-semibold text-gray-800 dark:text-white">{title}</h2>
-		<p class="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>
+		<h2 class="text-foreground text-xl font-semibold">{title}</h2>
+		<p class="text-muted-foreground text-sm">{subtitle}</p>
 
 		<!-- Loading progress indicator -->
-		<div class="h-1 w-64 overflow-hidden rounded-full bg-gray-200">
+		<div class="bg-muted h-1 w-64 overflow-hidden rounded-full">
 			<div class="h-full w-1/3 animate-pulse rounded-full bg-blue-500"></div>
 		</div>
 
-		<p class="mt-2 text-xs text-gray-400">Connecting to your DigitalDash device...</p>
+		<p class="text-muted-foreground mt-2 text-xs">Connecting to your DigitalDash device...</p>
 	</div>
 {/if}

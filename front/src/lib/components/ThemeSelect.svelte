@@ -65,7 +65,7 @@
 
 <div class={cn('w-full', className)}>
 	{#if !value}
-		<div class="mb-4 text-sm font-medium text-gray-700">
+		<div class="text-foreground mb-4 text-sm font-medium">
 			{placeholder}
 		</div>
 	{/if}
@@ -73,10 +73,10 @@
 	{#if loading}
 		<div class="flex items-center justify-center py-12">
 			<Spinner />
-			<span class="ml-2 text-sm text-gray-500">Loading themes...</span>
+			<span class="text-muted-foreground ml-2 text-sm">Loading themes...</span>
 		</div>
 	{:else if options.length === 0}
-		<div class="py-8 text-center text-sm text-gray-500">No themes available</div>
+		<div class="text-muted-foreground py-8 text-center text-sm">No themes available</div>
 	{:else}
 		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
 			{#each options.filter((option) => !failedImages[option]) as option (option)}
@@ -85,7 +85,7 @@
 					class={cn(
 						'group relative flex aspect-square w-full flex-col items-center justify-center rounded-lg border-2 bg-white p-2 transition-all duration-200',
 						'hover:border-blue-300 hover:shadow-md focus:border-blue-500 focus:shadow-md focus:outline-none',
-						value === option ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200',
+						value === option ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-border',
 						disabled && 'cursor-not-allowed opacity-50'
 					)}
 					onclick={() => selectOption(option)}
@@ -100,8 +100,8 @@
 							onerror={() => handleImageError(option)}
 						/>
 					{:else}
-						<div class="flex h-full w-full items-center justify-center rounded bg-gray-100">
-							<ImageIcon class="h-8 w-8 text-gray-400" />
+						<div class="bg-muted flex h-full w-full items-center justify-center rounded">
+							<ImageIcon class="text-muted-foreground h-8 w-8" />
 						</div>
 					{/if}
 
@@ -111,7 +111,7 @@
 						</div>
 					{/if}
 
-					<div class="mt-1 truncate text-xs text-gray-600 group-hover:text-gray-800">
+					<div class="text-muted-foreground group-hover:text-foreground mt-1 truncate text-xs">
 						{option}
 					</div>
 				</button>

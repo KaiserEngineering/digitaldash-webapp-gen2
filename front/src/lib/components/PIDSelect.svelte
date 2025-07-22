@@ -59,16 +59,16 @@
 <div class={`grid grid-cols-1 gap-4 md:grid-cols-2 ${className}`}>
 	<!-- Enhanced PID Selector -->
 	<div class="space-y-3">
-		<Label class="text-sm font-semibold text-slate-700">{pidLabel}</Label>
+		<Label class="text-foreground text-sm font-semibold">{pidLabel}</Label>
 		<Select.Root type="single" bind:value={pidValue} onValueChange={handlePidChange} {disabled}>
 			<Select.Trigger
 				class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
 					disabled
-						? 'border-slate-100 bg-slate-50 text-slate-400'
-						: 'border-slate-200 bg-white hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
+						? 'border-border bg-muted text-muted-foreground'
+						: 'border-border bg-card hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
 				}`}
 			>
-				<span class={pidValue ? 'text-slate-800' : 'text-slate-400'}>
+				<span class={pidValue ? 'text-foreground' : 'text-muted-foreground'}>
 					{#if pidValue}
 						{@const selectedPid = pids.find((p) => p.desc === pidValue)}
 						{selectedPid?.desc || pidValue}
@@ -77,7 +77,7 @@
 					{/if}
 				</span>
 			</Select.Trigger>
-			<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
+			<Select.Content class="border-border rounded-xl border-2 shadow-xl">
 				{#each pids as pid (pid)}
 					<Select.Item
 						value={pid.desc}
@@ -86,7 +86,7 @@
 					>
 						<div class="flex flex-col">
 							<span class="font-medium">{pid.desc}</span>
-							<span class="text-xs text-slate-500">{pid.label}</span>
+							<span class="text-muted-foreground text-xs">{pid.label}</span>
 						</div>
 					</Select.Item>
 				{/each}
@@ -96,7 +96,7 @@
 
 	<!-- Enhanced Unit Selector -->
 	<div class="space-y-3">
-		<Label class="text-sm font-semibold text-slate-700">{unitLabel}</Label>
+		<Label class="text-foreground text-sm font-semibold">{unitLabel}</Label>
 		<Select.Root
 			type="single"
 			bind:value={unitValue}
@@ -106,15 +106,15 @@
 			<Select.Trigger
 				class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
 					disabled || availableUnits.length === 0
-						? 'border-slate-100 bg-slate-50 text-slate-400'
-						: 'border-slate-200 bg-white hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
+						? 'border-border bg-muted text-muted-foreground'
+						: 'border-border bg-card hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
 				}`}
 			>
-				<span class={unitValue ? 'text-slate-800' : 'text-slate-400'}>
+				<span class={unitValue ? 'text-foreground' : 'text-muted-foreground'}>
 					{unitValue || unitPlaceholder}
 				</span>
 			</Select.Trigger>
-			<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
+			<Select.Content class="border-border rounded-xl border-2 shadow-xl">
 				{#each availableUnits as unit (unit)}
 					<Select.Item
 						value={unit}

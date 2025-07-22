@@ -65,7 +65,7 @@
 
 <div class={cn('w-full', className)}>
 	{#if !value}
-		<div class="mb-4 text-sm font-medium text-gray-700">
+		<div class="text-foreground mb-4 text-sm font-medium">
 			{placeholder}
 		</div>
 	{/if}
@@ -73,10 +73,10 @@
 	{#if loading}
 		<div class="flex items-center justify-center py-12">
 			<Spinner />
-			<span class="ml-2 text-sm text-gray-500">Loading backgrounds...</span>
+			<span class="text-muted-foreground ml-2 text-sm">Loading backgrounds...</span>
 		</div>
 	{:else if options.length === 0}
-		<div class="py-8 text-center text-sm text-gray-500">No backgrounds available</div>
+		<div class="text-muted-foreground py-8 text-center text-sm">No backgrounds available</div>
 	{:else}
 		<div class="flex flex-col gap-3">
 			{#each options.filter((option) => !failedImages[option]) as option (option)}
@@ -95,9 +95,7 @@
 					<div
 						class={cn(
 							'relative h-16 w-full overflow-hidden rounded-lg border-2 transition-all duration-200',
-							value === option
-								? 'border-blue-500 shadow-lg'
-								: 'border-gray-200 hover:border-blue-300'
+							value === option ? 'border-blue-500 shadow-lg' : 'border-border hover:border-blue-300'
 						)}
 						style="aspect-ratio: 800/165;"
 					>
@@ -109,8 +107,8 @@
 								onerror={() => handleImageError(option)}
 							/>
 						{:else}
-							<div class="flex h-full w-full items-center justify-center bg-gray-100">
-								<ImageIcon class="h-8 w-8 text-gray-400" />
+							<div class="bg-muted flex h-full w-full items-center justify-center">
+								<ImageIcon class="text-muted-foreground h-8 w-8" />
 							</div>
 						{/if}
 
