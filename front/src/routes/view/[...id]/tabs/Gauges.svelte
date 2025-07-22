@@ -11,33 +11,25 @@
 
 	let { themes = [], pids = [], form } = $props();
 
-	// Function to ensure gauge array matches num_gauges length
-	function ensureGaugeArray() {
-		if (!$form.gauge) $form.gauge = [];
-
-		// Add missing gauges
-		while ($form.gauge.length < $form.num_gauges) {
-			$form.gauge.push({});
+	// Ensure we always have at least 3 gauge slots available
+	function ensureMinimumGauges() {
+		if (!$form.gauge) {
+			$form.gauge = [];
 		}
-
-		// Remove excess gauges
-		if ($form.gauge.length > $form.num_gauges) {
-			$form.gauge.length = $form.num_gauges;
+		// Always ensure we have exactly 3 slots, regardless of current length
+		while ($form.gauge.length < 3) {
+			$form.gauge.push({ pid: '', units: '', theme: '' });
 		}
 	}
 
-	// Initialize gauge array on mount if needed
-	onMount(() => {
-		if ($form.num_gauges > 0 && (!$form.gauge || $form.gauge.length === 0)) {
-			ensureGaugeArray();
-		}
-	});
+	// Run on mount to ensure initial state
+	onMount(ensureMinimumGauges);
 </script>
 
 <Tabs.Content value="gauges" class="focus:outline-none">
 	<div class="space-y-4">
 		<!-- Mobile-optimized number selector -->
-		<div class="bg-background sticky top-0 z-10 pt-1 pb-2">
+		<div class="bg-background sticky top-0 z-10 pb-2 pt-1">
 			<div class="bg-muted/50 flex items-center justify-between rounded-lg p-3 backdrop-blur-sm">
 				<Label class="text-sm font-medium">Number of Gauges</Label>
 				<Select.Root
@@ -46,7 +38,7 @@
 					name="num_gauges"
 					onValueChange={(e: string | number) => {
 						$form.num_gauges = +e;
-						ensureGaugeArray();
+						ensureMinimumGauges();
 					}}
 				>
 					<Select.Trigger class="!h-10 min-w-[100px] touch-manipulation">
@@ -64,9 +56,8 @@
 		</div>
 
 		<!-- Mobile-optimized gauge cards with built-in collapsible -->
-		{#each Array($form.num_gauges).fill(0) as _, i (i)}
-			{@const gauge = $form.gauge?.[i] ?? {}}
-
+		{#each { length: $form.num_gauges }, i (i)}
+			{@const gauge = $form.gauge?.[i] ?? { pid: '', units: '', theme: '' }}
 			<Collapsible.Root>
 				<Card.Root class="border-border overflow-hidden">
 					<!-- Touchable header that expands/collapses the card -->
@@ -96,24 +87,27 @@
 					<Collapsible.Content>
 						<Card.Content class="space-y-5 p-4 pt-0">
 							<!-- PID & Unit Selector -->
-							<PIDSelect
-								bind:pidValue={$form.gauge[i].pid}
-								bind:unitValue={$form.gauge[i].units}
-								{pids}
-							/>
+							{#if $form.gauge?.[i]}
+								<PIDSelect
+									bind:pidValue={$form.gauge[i].pid}
+									bind:unitValue={$form.gauge[i].units}
+									{pids}
+								/>
+							{/if}
 
 							<!-- Theme Selector - Full width on mobile -->
-							<div class="space-y-2">
-								<Label class="text-sm font-medium">Theme</Label>
-								<ImageSelect
-									value={$form.gauge[i].theme}
-									options={themes}
-									placeholder="Choose a theme..."
-									onSelect={(value: string) => ($form.gauge[i].theme = value)}
-									class="w-full"
-									themes={true}
-								/>
-							</div>
+							{#if $form.gauge?.[i]}
+								<div class="space-y-2">
+									<Label class="text-sm font-medium">Theme</Label>
+									<ImageSelect
+										value={$form.gauge[i].theme}
+										options={themes}
+										onSelect={(value: string) => ($form.gauge[i].theme = value)}
+										class="w-full"
+										themes={true}
+									/>
+								</div>
+							{/if}
 						</Card.Content>
 					</Collapsible.Content>
 				</Card.Root>
