@@ -27,6 +27,7 @@
 
 	let file = $state<UploadedFile | null>(null);
 	let isUploading = $state(false);
+	let requiresCropping = $state(false);
 
 	let tempUrl = $derived(file?.url ?? '');
 
@@ -36,6 +37,10 @@
 
 		// Remove previous file if necessary
 		if (file) removeFile();
+
+		// Check if file is larger than 2MB
+		const isLargeFile = selectedFile.size > 2 * MEGABYTE;
+		requiresCropping = isLargeFile;
 
 		// Create a preview URL
 		const previewUrl = URL.createObjectURL(selectedFile);
@@ -49,6 +54,11 @@
 			url: previewUrl,
 			rawFile: selectedFile
 		};
+
+		// If file is larger than 2MB, automatically trigger cropping
+		if (isLargeFile) {
+			setTimeout(() => triggerCropping(), 100);
+		}
 	};
 
 	/** Handle rejected file */
@@ -74,6 +84,21 @@
 		});
 	}
 
+	/** Trigger cropping programmatically */
+	function triggerCropping() {
+		if (file?.rawFile) {
+			const event = new Event('change', { bubbles: true });
+			const input = document.getElementById('crop-file-input');
+			if (input) {
+				const fileInput = input as HTMLInputElement;
+				const dataTransfer = new DataTransfer();
+				dataTransfer.items.add(file.rawFile);
+				fileInput.files = dataTransfer.files;
+				fileInput.dispatchEvent(event);
+			}
+		}
+	}
+
 	/** Handle cropping and update the file */
 	async function handleCropped(croppedUrl: string) {
 		if (!file) return;
@@ -92,6 +117,9 @@
 				url: resizedUrl,
 				rawFile: new File([resizedBlob], file.name, { type: 'image/png' })
 			};
+
+			// After cropping, the file no longer requires cropping
+			requiresCropping = false;
 		} catch (error) {
 			console.error('Error processing cropped image:', error);
 		}
@@ -125,6 +153,7 @@
 			URL.revokeObjectURL(file.url);
 			file = null;
 		}
+		requiresCropping = false;
 	}
 
 	/** Cleanup memory */
@@ -147,7 +176,7 @@
 			<FileDropZone
 				{onUpload}
 				{onFileRejected}
-				maxFileSize={2 * MEGABYTE}
+				maxFileSize={50 * MEGABYTE}
 				accept="image/*"
 				maxFiles={1}
 				fileCount={file ? 1 : 0}
@@ -167,6 +196,9 @@
 				<div class="flex flex-col">
 					<span class="font-medium">{file.name}</span>
 					<span class="text-muted-foreground text-xs">{displaySize(file.size)}</span>
+					{#if requiresCropping}
+						<span class="text-orange-600 text-xs font-medium">Cropping required (file > 2MB)</span>
+					{/if}
 				</div>
 			</div>
 			<Button class="btn cursor-pointer" variant="outline" size="icon" onclick={removeFile}>
@@ -180,24 +212,11 @@
 			out:slide={{ duration: 200, easing: quintOut }}
 		>
 			<Button
-				class="btn bg-secondary-500 hover:bg-secondary-600 flex cursor-pointer gap-2 rounded-lg px-6 py-3 font-semibold text-white shadow-md"
-				onclick={() => {
-					if (file?.rawFile) {
-						// Trigger the cropper by programmatically uploading the file
-						const event = new Event('change', { bubbles: true });
-						const input = document.getElementById('crop-file-input');
-						if (input) {
-							const fileInput = input as HTMLInputElement;
-							const dataTransfer = new DataTransfer();
-							dataTransfer.items.add(file.rawFile);
-							fileInput.files = dataTransfer.files;
-							fileInput.dispatchEvent(event);
-						}
-					}
-				}}
+				class="btn {requiresCropping ? 'bg-orange-500 hover:bg-orange-600' : 'bg-secondary-500 hover:bg-secondary-600'} flex cursor-pointer gap-2 rounded-lg px-6 py-3 font-semibold text-white shadow-md"
+				onclick={triggerCropping}
 			>
 				<Edit class="mr-2 h-4 w-4" />
-				Crop Image
+				{requiresCropping ? 'Crop Image (Required)' : 'Crop Image'}
 			</Button>
 		</div>
 	{/if}
@@ -214,10 +233,12 @@
 				text-white shadow-md transition-all duration-300 ease-in-out
 				hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
 				onclick={handleUpload}
-				disabled={!file || isUploading}
+				disabled={!file || isUploading || requiresCropping}
 			>
 				{#if isUploading}
 					<Spinner />
+				{:else if requiresCropping}
+					Crop Required Before Upload
 				{:else}
 					Upload File
 				{/if}
