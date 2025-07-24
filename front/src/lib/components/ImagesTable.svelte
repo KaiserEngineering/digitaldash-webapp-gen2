@@ -97,7 +97,7 @@
 </script>
 
 {#if imageNames && imageNames.length > 0}
-	<div class="grid grid-cols-1">
+	<div class="grid grid-cols-1 gap-6">
 		{#each imageNames as imageName (imageName)}
 			<div class="flex flex-col">
 				{#if loadingStates[imageName]}
@@ -123,22 +123,22 @@
 								<Button
 									variant="secondary"
 									size="icon"
-									class="h-8 w-8 rounded-full bg-white/90 shadow-md hover:bg-white"
+									class="bg-background/90 border-border/50 hover:bg-background h-8 w-8 rounded-full border shadow-md backdrop-blur-sm"
 									onclick={() => reloadImageSlot(imageName)}
 									disabled={loadingStates[imageName]}
 								>
-									<RefreshCw class="h-4 w-4" />
+									<RefreshCw class="text-foreground h-4 w-4" />
 								</Button>
 							</div>
 						{/if}
 					</div>
 				{:else}
 					<div
-						class="group relative overflow-hidden rounded-lg bg-white transition-all hover:shadow-md"
+						class="group bg-card border-border relative overflow-hidden rounded-lg border transition-all hover:shadow-md"
 						in:scale={{ duration: 300, easing: quintOut }}
 						out:fade={{ duration: 200, easing: quintOut }}
 					>
-						<div class="m-1">
+						<div class="m-2">
 							<img
 								src={loadedImages[imageName] || '/placeholder.svg'}
 								alt="{imageName} background"
@@ -158,11 +158,11 @@
 									<Button
 										variant="secondary"
 										size="icon"
-										class="h-8 w-8 rounded-full bg-white/90 shadow-md hover:bg-white"
+										class="bg-background/90 border-border/50 hover:bg-background h-8 w-8 rounded-full border shadow-md backdrop-blur-sm"
 										onclick={() => reloadImageSlot(imageName)}
 										disabled={loadingStates[imageName]}
 									>
-										<RefreshCw class="h-4 w-4" />
+										<RefreshCw class="text-foreground h-4 w-4" />
 									</Button>
 
 									<Button

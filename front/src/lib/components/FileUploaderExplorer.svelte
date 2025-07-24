@@ -165,10 +165,10 @@
 </script>
 
 <!-- UI Layout -->
-<div class="flex w-full flex-col gap-4 rounded bg-white p-6 shadow">
+<div class="card flex w-full flex-col gap-4 p-6">
 	{#if !file}
 		<div
-			class="border-border bg-muted relative h-[80px] overflow-hidden rounded-md border border-dashed"
+			class="border-border bg-muted/30 hover:bg-muted/50 relative h-[80px] overflow-hidden rounded-md border border-dashed transition-colors duration-200"
 			in:fade={{ duration: 300, easing: quintOut }}
 			out:scale={{ duration: 200, easing: quintOut, start: 0.95 }}
 		>
@@ -187,7 +187,7 @@
 	{:else}
 		<!-- File Preview -->
 		<div
-			class="bg-muted flex items-center justify-between gap-4 rounded-lg p-4"
+			class="bg-muted/50 border-border flex items-center justify-between gap-4 rounded-lg border p-4 backdrop-blur-sm"
 			in:scale={{ duration: 300, easing: quintOut, start: 0.9 }}
 			out:fade={{ duration: 200, easing: quintOut }}
 		>
@@ -197,7 +197,7 @@
 					<span class="font-medium">{file.name}</span>
 					<span class="text-muted-foreground text-xs">{displaySize(file.size)}</span>
 					{#if requiresCropping}
-						<span class="text-orange-600 text-xs font-medium">Cropping required (file > 2MB)</span>
+						<span class="text-xs font-medium text-orange-600">Cropping required (file > 2MB)</span>
 					{/if}
 				</div>
 			</div>
@@ -212,7 +212,9 @@
 			out:slide={{ duration: 200, easing: quintOut }}
 		>
 			<Button
-				class="btn {requiresCropping ? 'bg-orange-500 hover:bg-orange-600' : 'bg-secondary-500 hover:bg-secondary-600'} flex cursor-pointer gap-2 rounded-lg px-6 py-3 font-semibold text-white shadow-md"
+				class="btn {requiresCropping
+					? 'bg-orange-500 hover:bg-orange-600'
+					: 'bg-secondary-500 hover:bg-secondary-600'} flex cursor-pointer gap-2 rounded-lg px-6 py-3 font-semibold text-white shadow-md"
 				onclick={triggerCropping}
 			>
 				<Edit class="mr-2 h-4 w-4" />
