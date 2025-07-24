@@ -103,22 +103,16 @@ export async function GET({ params, url }) {
 		throw error(400, 'Invalid slot name');
 	}
 
-	// For Vercel deployment, serve from built static files
+	// For Vercel deployment, fetch the static file via HTTP
 	try {
-		const fs = await import('fs/promises');
-		const path = await import('path');
+		// Static files are served directly by Vercel at the root URL
+		const staticUrl = `${url.origin}/dummy-backgrounds/${base}.png`;
+		console.log(`Fetching background from: ${staticUrl}`);
+		
+		const res = await fetch(staticUrl);
 
-		// In Vercel, static files are in the same directory as the built app
-		const staticPath = path.join(process.cwd(), 'dummy-backgrounds', `${base}.png`);
-
-		try {
-			const file = await fs.readFile(staticPath);
-			return new Response(file, {
-				status: 200,
-				headers: { 'Content-Type': 'image/png' }
-			});
-		} catch (fsErr) {
-			console.error(`Failed to load background ${base}.png from ${staticPath}: ${fsErr.message}`);
+		if (!res.ok) {
+			console.log(`Background file not found, using placeholder: ${res.status} ${res.statusText}`);
 			// Fallback to placeholder if file doesn't exist
 			const placeholder = generatePlaceholderImage(base);
 			return new Response(placeholder, {
@@ -126,10 +120,13 @@ export async function GET({ params, url }) {
 				headers: { 'Content-Type': 'image/png' }
 			});
 		}
+
+		return new Response(res.body, {
+			status: res.status,
+			headers: { 'Content-Type': 'image/png' }
+		});
 	} catch (err) {
-		console.error(
-			`Error loading background image: ${err instanceof Error ? err.message : 'Unknown error'}`
-		);
+		console.error(`Error loading background image: ${err instanceof Error ? err.message : 'Unknown error'}`);
 		// Fallback to placeholder on any error
 		const placeholder = generatePlaceholderImage(base);
 		return new Response(placeholder, {

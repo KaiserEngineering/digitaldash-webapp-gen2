@@ -10,44 +10,28 @@ export async function GET({ params, fetch, url }) {
 	// Add .png extension if not present
 	const imageFile = filename.endsWith('.png') ? filename : `${filename}.png`;
 
-	// For Vercel deployment, serve from built static files
+	// For Vercel deployment, fetch the static file via HTTP
 	try {
-		const fs = await import('fs/promises');
-		const path = await import('path');
+		// Static files are served directly by Vercel at the root URL
+		const staticUrl = `${url.origin}/${imageFile}`;
+		console.log(`Fetching theme from: ${staticUrl}`);
+		
+		const res = await fetch(staticUrl);
 
-		// Try different possible locations for static files in Vercel
-		const possiblePaths = [
-			path.join(process.cwd(), imageFile),
-			path.join(process.cwd(), '.vercel', 'output', 'static', imageFile),
-			path.join(process.cwd(), '.svelte-kit', 'output', 'client', imageFile),
-			path.join('/tmp', imageFile),
-			path.join('/var/task', '.svelte-kit', 'output', 'client', imageFile)
-		];
-
-		console.log(`Looking for theme file: ${imageFile}`);
-		console.log(`Process cwd: ${process.cwd()}`);
-
-		for (const staticPath of possiblePaths) {
-			try {
-				console.log(`Trying path: ${staticPath}`);
-				const file = await fs.readFile(staticPath);
-				console.log(`Successfully loaded theme from: ${staticPath}`);
-				return new Response(file, {
-					status: 200,
-					headers: { 'Content-Type': 'image/png' }
-				});
-			} catch (fsErr) {
-				console.log(`Path ${staticPath} failed: ${fsErr.message}`);
-				continue;
-			}
+		if (!res.ok) {
+			console.error(`Failed to load theme ${imageFile}: ${res.status} ${res.statusText}`);
+			throw error(404, `Theme image not found: ${filename}`);
 		}
 
-		console.error(`Failed to load theme ${imageFile} from any of the attempted paths`);
-		throw error(404, `Theme image not found: ${filename}`);
+		const headers = new Headers();
+		headers.set('Content-Type', 'image/png');
+
+		return new Response(res.body, {
+			status: res.status,
+			headers: headers
+		});
 	} catch (err) {
-		console.error(
-			`Error loading theme image: ${err instanceof Error ? err.message : 'Unknown error'}`
-		);
+		console.error(`Error loading theme image: ${err instanceof Error ? err.message : 'Unknown error'}`);
 		throw error(500, 'Internal server error loading theme');
 	}
 }
