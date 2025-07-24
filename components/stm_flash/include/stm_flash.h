@@ -4,7 +4,7 @@
 #include "stm_pro_mode.h"
 
 // Delay in milliseconds to hold STM32 in reset
-#define STM32_RESET_DELAY_MS 25
+#define STM32_RESET_DELAY_MS 100
 
 /**
  * @brief Reset STM32 and boot into application mode (BOOT0 = 0)
