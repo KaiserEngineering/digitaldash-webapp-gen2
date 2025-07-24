@@ -42,12 +42,6 @@
 				if (backgroundUrl === '' || currentBackground !== prevBackground) {
 					const imageData = await imageHandler.loadImage(currentBackground);
 					backgroundUrl = imageData.url;
-					// try {
-					// 	view.textColor = await computeIdealTextColor(imageData.url);
-					// } catch (error) {
-					// 	console.warn('Failed to compute text color, using fallback:', error);
-					// 	view.textColor = 'white';
-					// }
 					if (view.textColor !== 'white') {
 						view.textColor = 'white';
 					}

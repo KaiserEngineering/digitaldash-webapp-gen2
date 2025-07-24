@@ -74,7 +74,7 @@
 	class="bg-background/95 border-border/40 sticky top-0 z-50 border-b shadow-sm backdrop-blur-md"
 >
 	<div class="container mx-auto px-4 lg:px-6">
-		<Card class="border-0 bg-transparent shadow-none">
+		<Card class="border-0 bg-transparent shadow-none pb-0">
 			<CardHeader>
 				<div class="flex items-center justify-between">
 					<div class="flex items-center">
