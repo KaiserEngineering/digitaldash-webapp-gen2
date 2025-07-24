@@ -24,20 +24,72 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 function generatePlaceholderImage(name: string): Buffer {
 	// Create a simple PNG placeholder (1x1 transparent pixel)
 	const png = Buffer.from([
-		0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, // PNG signature
-		0x00, 0x00, 0x00, 0x0d, // IHDR chunk length
-		0x49, 0x48, 0x44, 0x52, // IHDR
-		0x00, 0x00, 0x00, 0x01, // width: 1
-		0x00, 0x00, 0x00, 0x01, // height: 1
-		0x08, 0x06, 0x00, 0x00, 0x00, // bit depth, color type, compression, filter, interlace
-		0x1f, 0x15, 0xc4, 0x89, // CRC
-		0x00, 0x00, 0x00, 0x0a, // IDAT chunk length
-		0x49, 0x44, 0x41, 0x54, // IDAT
-		0x78, 0x9c, 0x62, 0x00, 0x00, 0x00, 0x02, 0x00, 0x01, // compressed data
-		0xe2, 0x21, 0xbc, 0x33, // CRC
-		0x00, 0x00, 0x00, 0x00, // IEND chunk length
-		0x49, 0x45, 0x4e, 0x44, // IEND
-		0xae, 0x42, 0x60, 0x82  // CRC
+		0x89,
+		0x50,
+		0x4e,
+		0x47,
+		0x0d,
+		0x0a,
+		0x1a,
+		0x0a, // PNG signature
+		0x00,
+		0x00,
+		0x00,
+		0x0d, // IHDR chunk length
+		0x49,
+		0x48,
+		0x44,
+		0x52, // IHDR
+		0x00,
+		0x00,
+		0x00,
+		0x01, // width: 1
+		0x00,
+		0x00,
+		0x00,
+		0x01, // height: 1
+		0x08,
+		0x06,
+		0x00,
+		0x00,
+		0x00, // bit depth, color type, compression, filter, interlace
+		0x1f,
+		0x15,
+		0xc4,
+		0x89, // CRC
+		0x00,
+		0x00,
+		0x00,
+		0x0a, // IDAT chunk length
+		0x49,
+		0x44,
+		0x41,
+		0x54, // IDAT
+		0x78,
+		0x9c,
+		0x62,
+		0x00,
+		0x00,
+		0x00,
+		0x02,
+		0x00,
+		0x01, // compressed data
+		0xe2,
+		0x21,
+		0xbc,
+		0x33, // CRC
+		0x00,
+		0x00,
+		0x00,
+		0x00, // IEND chunk length
+		0x49,
+		0x45,
+		0x4e,
+		0x44, // IEND
+		0xae,
+		0x42,
+		0x60,
+		0x82 // CRC
 	]);
 	return png;
 }
@@ -51,12 +103,22 @@ export async function GET({ params, url }) {
 		throw error(400, 'Invalid slot name');
 	}
 
-	// For Vercel deployment, serve the static file directly
+	// For Vercel deployment, serve from built static files
 	try {
-		const staticUrl = new URL(`/dummy-backgrounds/${base}.png`, url.origin);
-		const res = await fetch(staticUrl.toString());
-		
-		if (!res.ok) {
+		const fs = await import('fs/promises');
+		const path = await import('path');
+
+		// In Vercel, static files are in the same directory as the built app
+		const staticPath = path.join(process.cwd(), 'dummy-backgrounds', `${base}.png`);
+
+		try {
+			const file = await fs.readFile(staticPath);
+			return new Response(file, {
+				status: 200,
+				headers: { 'Content-Type': 'image/png' }
+			});
+		} catch (fsErr) {
+			console.error(`Failed to load background ${base}.png from ${staticPath}: ${fsErr.message}`);
 			// Fallback to placeholder if file doesn't exist
 			const placeholder = generatePlaceholderImage(base);
 			return new Response(placeholder, {
@@ -64,12 +126,10 @@ export async function GET({ params, url }) {
 				headers: { 'Content-Type': 'image/png' }
 			});
 		}
-
-		return new Response(res.body, {
-			status: res.status,
-			headers: { 'Content-Type': 'image/png' }
-		});
 	} catch (err) {
+		console.error(
+			`Error loading background image: ${err instanceof Error ? err.message : 'Unknown error'}`
+		);
 		// Fallback to placeholder on any error
 		const placeholder = generatePlaceholderImage(base);
 		return new Response(placeholder, {
@@ -93,7 +153,7 @@ export async function POST({ request, params }) {
 		}
 
 		const buffer = Buffer.from(await request.arrayBuffer());
-		
+
 		// Validate file size
 		if (buffer.length > MAX_FILE_SIZE) {
 			throw error(413, 'File too large. Maximum size is 10MB');

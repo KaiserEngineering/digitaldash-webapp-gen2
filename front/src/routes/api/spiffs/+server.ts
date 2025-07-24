@@ -28,7 +28,7 @@ export async function GET() {
 	try {
 		const { existsSync, statSync } = await import('fs');
 		const { join } = await import('path');
-		
+
 		const filePath = join(
 			process.cwd(),
 			'static',
@@ -104,8 +104,8 @@ export async function POST({ request }) {
 	// Mock successful upload response (works in both local and Vercel)
 	return json({
 		success: true,
-		message: isVercelDeployment 
-			? 'Demo: File upload simulated successfully' 
+		message: isVercelDeployment
+			? 'Demo: File upload simulated successfully'
 			: 'File uploaded to SPIFFS successfully',
 		filename: filename,
 		size: file.size

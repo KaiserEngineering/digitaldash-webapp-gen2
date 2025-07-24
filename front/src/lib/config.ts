@@ -10,19 +10,21 @@ export const prod = getEnv('NODE_ENV') === 'production';
 
 // Detect Vercel deployment at both build time and runtime
 export const isVercelDeployment = !!(
-	getEnv('VERCEL') || 
-	getEnv('VERCEL_ENV') || 
-	(typeof window !== 'undefined' && (
-		window.location.hostname.includes('vercel.app') ||
-		window.location.hostname.includes('vercel.live')
-	))
+	getEnv('VERCEL') ||
+	getEnv('VERCEL_ENV') ||
+	(typeof window !== 'undefined' &&
+		(window.location.hostname.includes('vercel.app') ||
+			window.location.hostname.includes('vercel.live')))
 );
 
 // For demo purposes, always use relative API URLs in production unless specifically on digitaldash.local
 export const apiUrl = (() => {
 	if (typeof window !== 'undefined') {
 		// Runtime check - if we're on vercel domains, use relative URLs
-		if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('vercel.live')) {
+		if (
+			window.location.hostname.includes('vercel.app') ||
+			window.location.hostname.includes('vercel.live')
+		) {
 			return '/api';
 		}
 		// If we're on digitaldash.local, use the device API

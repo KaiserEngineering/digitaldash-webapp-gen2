@@ -13,12 +13,12 @@ const config = {
 		adapter: isVercelBuild
 			? vercelAdapter({
 					runtime: 'nodejs20.x'
-			  })
+				})
 			: staticAdapter({
 					precompress: false,
 					strict: true,
 					fallback: 'index.html'
-			  }),
+				}),
 
 		version: {
 			pollInterval: 0
@@ -30,7 +30,7 @@ const config = {
 					output: {
 						bundleStrategy: 'inline'
 					}
-			  }),
+				}),
 
 		alias: {
 			'@/*': './src/lib/*',

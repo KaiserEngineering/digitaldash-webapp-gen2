@@ -10,25 +10,28 @@ export async function GET({ params, fetch, url }) {
 	// Add .png extension if not present
 	const imageFile = filename.endsWith('.png') ? filename : `${filename}.png`;
 
-	// For Vercel deployment, serve the static file directly
+	// For Vercel deployment, serve from built static files
 	try {
-		const staticUrl = new URL(`/${imageFile}`, url.origin);
-		const res = await fetch(staticUrl.toString());
+		const fs = await import('fs/promises');
+		const path = await import('path');
 
-		if (!res.ok) {
-			console.error(`Failed to load theme ${imageFile}: ${res.status} ${res.statusText}`);
+		// In Vercel, static files are in the same directory as the built app
+		const staticPath = path.join(process.cwd(), imageFile);
+
+		try {
+			const file = await fs.readFile(staticPath);
+			return new Response(file, {
+				status: 200,
+				headers: { 'Content-Type': 'image/png' }
+			});
+		} catch (fsErr) {
+			console.error(`Failed to load theme ${imageFile} from ${staticPath}: ${fsErr.message}`);
 			throw error(404, `Theme image not found: ${filename}`);
 		}
-
-		const headers = new Headers(res.headers);
-		headers.set('Content-Type', res.headers.get('content-type') || 'image/png');
-
-		return new Response(res.body, {
-			status: res.status,
-			headers: headers
-		});
 	} catch (err) {
-		console.error(`Error loading theme image: ${err instanceof Error ? err.message : 'Unknown error'}`);
+		console.error(
+			`Error loading theme image: ${err instanceof Error ? err.message : 'Unknown error'}`
+		);
 		throw error(500, 'Internal server error loading theme');
 	}
 }
