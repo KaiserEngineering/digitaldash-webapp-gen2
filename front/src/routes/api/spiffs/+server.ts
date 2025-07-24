@@ -1,6 +1,5 @@
 import { json, error } from '@sveltejs/kit';
-import { existsSync, statSync } from 'fs';
-import { join } from 'path';
+import { isVercelDeployment } from '$lib/config';
 
 export const prerender = false;
 
@@ -10,15 +9,33 @@ export async function GET() {
 	// Simulate processing time
 	await new Promise((resolve) => setTimeout(resolve, 500));
 
-	// Try to get real file information
-	const filePath = join(
-		process.cwd(),
-		'static',
-		'spiffs',
-		'digitaldash-firmware-gen2-stm32u5g.bin'
-	);
+	// For Vercel deployment, always return mock data
+	if (isVercelDeployment) {
+		return json({
+			success: true,
+			files: [
+				{
+					name: 'digitaldash-firmware-gen2-stm32u5g.bin',
+					size: 524288,
+					lastModified: new Date().toISOString(),
+					type: 'Demo firmware file'
+				}
+			]
+		});
+	}
 
+	// For local development, try to get real file information
 	try {
+		const { existsSync, statSync } = await import('fs');
+		const { join } = await import('path');
+		
+		const filePath = join(
+			process.cwd(),
+			'static',
+			'spiffs',
+			'digitaldash-firmware-gen2-stm32u5g.bin'
+		);
+
 		if (existsSync(filePath)) {
 			const stats = statSync(filePath);
 			return json({
@@ -84,10 +101,12 @@ export async function POST({ request }) {
 	// Simulate upload processing time
 	await new Promise((resolve) => setTimeout(resolve, 1000));
 
-	// Mock successful upload response
+	// Mock successful upload response (works in both local and Vercel)
 	return json({
 		success: true,
-		message: 'File uploaded to SPIFFS successfully',
+		message: isVercelDeployment 
+			? 'Demo: File upload simulated successfully' 
+			: 'File uploaded to SPIFFS successfully',
 		filename: filename,
 		size: file.size
 	});
@@ -105,9 +124,11 @@ export async function DELETE({ url }) {
 	// Simulate delete processing time
 	await new Promise((resolve) => setTimeout(resolve, 300));
 
-	// Mock successful delete response
+	// Mock successful delete response (works in both local and Vercel)
 	return json({
 		success: true,
-		message: `File ${filename} deleted from SPIFFS successfully`
+		message: isVercelDeployment
+			? `Demo: File ${filename} deletion simulated`
+			: `File ${filename} deleted from SPIFFS successfully`
 	});
 }
