@@ -10,12 +10,8 @@ export async function GET({ params, fetch, url }) {
 	// Add .png extension if not present
 	const imageFile = filename.endsWith('.png') ? filename : `${filename}.png`;
 
-	// Always redirect to static files for Vercel deployment
-	const redirectUrl = new URL(`/${imageFile}`, url.origin);
-	return Response.redirect(redirectUrl.toString(), 302);
-
+	// For Vercel deployment, serve the static file directly
 	try {
-		// Try to fetch the theme image from the static directory
 		const staticUrl = new URL(`/${imageFile}`, url.origin);
 		const res = await fetch(staticUrl.toString());
 
@@ -27,7 +23,6 @@ export async function GET({ params, fetch, url }) {
 		const headers = new Headers(res.headers);
 		headers.set('Content-Type', res.headers.get('content-type') || 'image/png');
 
-		// Return metadata + stream response
 		return new Response(res.body, {
 			status: res.status,
 			headers: headers

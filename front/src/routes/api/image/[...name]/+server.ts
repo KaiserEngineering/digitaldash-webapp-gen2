@@ -51,26 +51,12 @@ export async function GET({ params, url }) {
 		throw error(400, 'Invalid slot name');
 	}
 
-	// Always redirect to static files for Vercel deployment
-	const redirectUrl = new URL(`/dummy-backgrounds/${base}.png`, url.origin);
-	return Response.redirect(redirectUrl.toString(), 302);
-
-	// For local development, try to load actual files
+	// For Vercel deployment, serve the static file directly
 	try {
-		const fs = await import('fs/promises');
-		const path = await import('path');
+		const staticUrl = new URL(`/dummy-backgrounds/${base}.png`, url.origin);
+		const res = await fetch(staticUrl.toString());
 		
-		const STATIC_DIR = path.join(process.cwd(), 'static');
-		const BACKGROUND_DIR = path.join(STATIC_DIR, 'dummy-backgrounds');
-		const filePath = path.join(BACKGROUND_DIR, base + '.png');
-
-		const file = await fs.readFile(filePath);
-		return new Response(file, {
-			status: 200,
-			headers: { 'Content-Type': 'image/png' }
-		});
-	} catch (err) {
-		if (err.code === 'ENOENT') {
+		if (!res.ok) {
 			// Fallback to placeholder if file doesn't exist
 			const placeholder = generatePlaceholderImage(base);
 			return new Response(placeholder, {
@@ -78,7 +64,18 @@ export async function GET({ params, url }) {
 				headers: { 'Content-Type': 'image/png' }
 			});
 		}
-		throw error(500, 'Failed to read image');
+
+		return new Response(res.body, {
+			status: res.status,
+			headers: { 'Content-Type': 'image/png' }
+		});
+	} catch (err) {
+		// Fallback to placeholder on any error
+		const placeholder = generatePlaceholderImage(base);
+		return new Response(placeholder, {
+			status: 200,
+			headers: { 'Content-Type': 'image/png' }
+		});
 	}
 }
 
