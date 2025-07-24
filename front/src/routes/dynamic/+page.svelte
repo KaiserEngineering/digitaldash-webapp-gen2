@@ -161,9 +161,15 @@
 															: 'text-muted-foreground'
 													}`}
 												>
-													{isDynamicRule($form[key])
-														? $form[key].pid || 'No PID selected'
-														: 'No PID selected'}
+													{#if isDynamicRule($form[key])}
+														{#if priorities[i].name === 'Default'}
+															View {$form[key].view_index !== undefined ? $form[key].view_index : 'Not Set'}
+														{:else}
+															{$form[key].pid || 'No PID selected'}
+														{/if}
+													{:else}
+														{priorities[i].name === 'Default' ? 'View Not Set' : 'No PID selected'}
+													{/if}
 												</span>
 												<span class="text-muted-foreground">•</span>
 												<span
