@@ -1,9 +1,0 @@
-{
-	"buildCommand": "yarn build",
-	"framework": "sveltekit",
-	"functions": {
-		"src/routes/api/**/*.ts": {
-			"runtime": "nodejs20.x"
-		}
-	}
-}
