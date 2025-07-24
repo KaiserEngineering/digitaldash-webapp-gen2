@@ -1,24 +1,36 @@
-import adapter from '@sveltejs/adapter-static';
+import staticAdapter from '@sveltejs/adapter-static';
+import vercelAdapter from '@sveltejs/adapter-vercel';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+
+// Use Vercel adapter for Vercel builds, static adapter for normal builds
+const isVercelBuild = process.env.VERCEL || process.env.VERCEL_ENV;
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	preprocess: vitePreprocess({ script: true }),
 
 	kit: {
-		adapter: adapter({
-			precompress: false,
-			strict: true,
-			fallback: 'index.html'
-		}),
+		adapter: isVercelBuild
+			? vercelAdapter({
+					runtime: 'nodejs20.x'
+			  })
+			: staticAdapter({
+					precompress: false,
+					strict: true,
+					fallback: 'index.html'
+			  }),
 
 		version: {
 			pollInterval: 0
 		},
 
-		output: {
-			bundleStrategy: 'inline'
-		},
+		...(isVercelBuild
+			? {}
+			: {
+					output: {
+						bundleStrategy: 'inline'
+					}
+			  }),
 
 		alias: {
 			'@/*': './src/lib/*',
