@@ -97,8 +97,8 @@
 						'hover:scale-105 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none',
 						disabled && 'cursor-not-allowed opacity-50',
 						value === option
-							? 'border-ring bg-accent shadow-lg'
-							: 'border-border bg-card hover:border-border shadow-sm hover:shadow-md',
+							? 'border-ring bg-secondary-400 shadow-lg'
+							: 'border-border bg-secondary-400 hover:border-border shadow-sm hover:shadow-md',
 						themes ? 'aspect-square' : 'aspect-[800/165]'
 					)}
 					onclick={() => selectOption(option)}
