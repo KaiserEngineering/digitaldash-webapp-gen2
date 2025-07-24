@@ -104,7 +104,7 @@
 <div class="bg-background min-h-screen p-4">
 	<div class="mx-auto max-w-4xl space-y-8 pt-8">
 		<!-- Firmware Update Card -->
-		<Card class="bg-card shadow-lg">
+		<Card class="bg-card shadow-lg py-0">
 			<CardHeader class="bg-primary-600 rounded-t-lg text-white">
 				<CardTitle class="flex items-center gap-3 text-xl">
 					<Zap class="h-6 w-6" />
@@ -210,7 +210,7 @@
 		</Card>
 
 		<!-- Current Firmware Info Card -->
-		<Card class="bg-card shadow-lg">
+		<Card class="bg-card shadow-lg py-0">
 			<CardHeader class="bg-primary-600 rounded-t-lg text-white">
 				<CardTitle class="flex items-center gap-3 text-xl">
 					<FileText class="h-6 w-6" />
