@@ -1,6 +1,7 @@
 export const prod = process.env.NODE_ENV === 'production';
-export const apiUrl = prod ? 'http://digitaldash.local/api' : '/api';
-export const useDeviceApi = prod;
+export const isVercelDeployment = !!(process.env.VERCEL || process.env.VERCEL_ENV);
+export const apiUrl = prod && !isVercelDeployment ? 'http://digitaldash.local/api' : '/api';
+export const useDeviceApi = prod && !isVercelDeployment;
 
 export const factoryBackgroundImages: string[] = ['flare', 'galaxy'];
 
