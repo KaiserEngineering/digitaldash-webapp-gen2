@@ -88,14 +88,10 @@
 						<div class="mt-2 space-y-1">
 							{#each dynamic.filter((rule) => rule.enable === 'Enabled') as rule, index}
 								<div class="text-foreground/70 text-xs">
-									{rule.priority === 'Low' ? 'Default' : rule.priority || 'Unknown'}:
 									{#if rule.priority === 'Low'}
-										View #{rule.view_index !== undefined ? rule.view_index : '0'}
+										Default: View #{rule.view_index !== undefined ? rule.view_index : '0'}
 									{:else}
-										Switch to View #{rule.view_index !== undefined ? rule.view_index : '0'} when {rule.pid ||
-											'No PID'}
-										{rule.compare || ''}
-										{rule.threshold || ''}
+										{rule.priority || 'Unknown'}: Switch to View #{rule.view_index !== undefined ? rule.view_index : '0'} when {rule.pid || 'No PID'} {rule.compare || ''} {rule.threshold || ''}
 									{/if}
 								</div>
 							{/each}
