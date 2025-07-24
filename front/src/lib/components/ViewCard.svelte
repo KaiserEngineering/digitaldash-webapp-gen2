@@ -114,8 +114,8 @@
 	{:else}
 		<a href="/view/{index}" class="m-1 block">
 			<div
-				class="hover:border-primary-500/50 relative h-20 w-full overflow-hidden rounded-2xl border-2 border-transparent bg-cover shadow-md transition-all duration-500 ease-out hover:scale-[1.02] hover:shadow-xl sm:h-52"
-				style:background-image={`url('${backgroundUrl}')`}
+				class="hover:border-primary-500/50 relative h-20 w-full overflow-hidden rounded-2xl border-2 border-transparent shadow-md transition-all duration-500 ease-out hover:scale-[1.02] hover:shadow-xl sm:h-52"
+				style="background-image: url('{backgroundUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;"
 			>
 				{#if showGearIcon}
 					<div class="absolute top-2 right-2 z-20">
