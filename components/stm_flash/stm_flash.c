@@ -92,7 +92,6 @@ esp_err_t readTask(FILE *flash_file)
         }
 
         incrementLoadAddress(readAddress);
-        printf("\n");
 
         memset(block, 0xff, 256);
     }
