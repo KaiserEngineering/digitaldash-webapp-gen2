@@ -6,12 +6,7 @@
 	import { Image } from 'lucide-svelte';
 	import ImageSelect from '$lib/components/ImageSelect.svelte';
 
-	let { form, backgrounds } = $props();
-
-	let selectedBackground = $state(
-		backgrounds.find((f: string) => f.toLowerCase() === $form.background.toLowerCase()) ??
-			'Select a background'
-	);
+	let { form, backgrounds, selectedBackground = $bindable() } = $props();
 
 	const handleBackgroundSelect = (value: string) => {
 		selectedBackground = value;
@@ -59,7 +54,6 @@
 			<ImageSelect
 				bind:value={selectedBackground}
 				options={backgrounds}
-				placeholder="Choose a background image..."
 				onSelect={handleBackgroundSelect}
 				class="w-full"
 			/>

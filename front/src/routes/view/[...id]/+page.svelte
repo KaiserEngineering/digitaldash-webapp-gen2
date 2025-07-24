@@ -32,7 +32,7 @@
 			try {
 				const result = await updateFullConfig((config) => {
 					config.view[viewId] = { ...config.view[viewId], ...$form };
-				}, 'View settings updated successfully!');
+				});
 
 				if (result.success && result.config) {
 					// Update the form with the saved config data
@@ -50,6 +50,11 @@
 	});
 
 	let activeTab: 'view' | 'gauges' = $state('view');
+
+	let selectedBackground = $derived(
+		data.backgrounds.find((f: string) => f.toLowerCase() === $form.background.toLowerCase()) ??
+			'Select a background'
+	);
 </script>
 
 <PageCard
@@ -89,11 +94,11 @@
 		</Tabs.List>
 
 		<Tabs.Content value="view">
-			<Settings {form} backgrounds={data.backgrounds} />
+			<Settings {form} backgrounds={data.backgrounds} {selectedBackground} />
 		</Tabs.Content>
 
 		<Tabs.Content value="gauges">
-			<Gauges themes={data.themes} pids={data.pids} {form} />
+			<Gauges {selectedBackground} themes={data.themes} pids={data.pids} {form} />
 		</Tabs.Content>
 	</Tabs.Root>
 

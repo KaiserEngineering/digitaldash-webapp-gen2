@@ -9,7 +9,7 @@
 	import PIDSelect from '$lib/components/PIDSelect.svelte';
 	import { onMount } from 'svelte';
 
-	let { themes = [], pids = [], form } = $props();
+	let { themes = [], pids = [], form, selectedBackground = $bindable() } = $props();
 
 	// Ensure we always have at least 3 gauge slots available
 	function ensureMinimumGauges() {
@@ -105,6 +105,7 @@
 										onSelect={(value: string) => ($form.gauge[i].theme = value)}
 										class="w-full"
 										themes={true}
+										background={selectedBackground}
 									/>
 								</div>
 							{/if}
