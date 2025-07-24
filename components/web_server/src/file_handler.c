@@ -228,6 +228,12 @@ esp_err_t file_handler_close(FILE *file)
         return ESP_ERR_INVALID_ARG;
     }
 
+    if(fflush(file) != 0)
+    {
+        ESP_LOGE(TAG, "Failed to flush file, errno: %d", errno);
+        return ESP_FAIL;
+    }
+
     if (fclose(file) == 0)
     {
         return ESP_OK;
