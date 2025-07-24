@@ -83,9 +83,9 @@
 				<button
 					type="button"
 					class={cn(
-						'group relative flex aspect-square w-full flex-col items-center justify-center rounded-lg border-2 bg-white p-2 transition-all duration-200',
-						'hover:border-blue-300 hover:shadow-md focus:border-blue-500 focus:shadow-md focus:outline-none',
-						value === option ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-border',
+						'group relative flex aspect-square w-full flex-col items-center justify-center rounded-lg border-2 bg-card p-2 transition-all duration-200',
+						'hover:border-ring/50 hover:shadow-md focus:border-ring focus:shadow-md focus:outline-none',
+						value === option ? 'border-ring bg-accent shadow-md' : 'border-border',
 						disabled && 'cursor-not-allowed opacity-50'
 					)}
 					onclick={() => selectOption(option)}
@@ -106,8 +106,8 @@
 					{/if}
 
 					{#if value === option}
-						<div class="absolute -top-1 -right-1 rounded-full bg-blue-500 p-1">
-							<Check class="h-3 w-3 text-white" />
+						<div class="absolute -top-1 -right-1 rounded-full bg-ring p-1">
+							<Check class="h-3 w-3 text-primary-foreground" />
 						</div>
 					{/if}
 

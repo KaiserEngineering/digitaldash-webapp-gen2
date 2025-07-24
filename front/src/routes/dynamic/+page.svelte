@@ -155,7 +155,7 @@
 												<span
 													class={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
 														isDynamicRule($form[key]) && $form[key].enable === 'Enabled'
-															? `bg-${priorities[i].color.split('-')[1]}-100 text-${priorities[i].color.split('-')[1]}-700`
+															? 'bg-success/20 text-success border border-success/30'
 															: 'bg-muted text-muted-foreground'
 													}`}
 												>

@@ -94,10 +94,10 @@
 					type="button"
 					class={cn(
 						'group relative overflow-hidden rounded-lg border-2 transition-all duration-200',
-						'hover:scale-105 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none',
+						'hover:scale-105 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none',
 						disabled && 'cursor-not-allowed opacity-50',
 						value === option
-							? 'border-blue-500 bg-blue-50 shadow-lg'
+							? 'border-ring bg-accent shadow-lg'
 							: 'border-border bg-card hover:border-border shadow-sm hover:shadow-md',
 						themes ? 'aspect-square' : 'aspect-[800/165]'
 					)}
@@ -119,9 +119,9 @@
 					{/if}
 
 					{#if value === option}
-						<div class="absolute inset-0 bg-blue-500/10">
-							<div class="absolute top-1 right-1 rounded-full bg-blue-500 p-1 shadow-sm">
-								<Check class="h-3 w-3 text-white" />
+						<div class="absolute inset-0 bg-ring/10">
+							<div class="absolute top-1 right-1 rounded-full bg-ring p-1 shadow-sm">
+								<Check class="h-3 w-3 text-primary-foreground" />
 							</div>
 						</div>
 					{/if}
