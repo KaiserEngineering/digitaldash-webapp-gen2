@@ -53,9 +53,8 @@ export async function GET({ params, url }) {
 
 	// For Vercel deployment, redirect to static files
 	if (isVercelDeployment) {
-		// Redirect to the static file - this should work since static files are served by Vercel
-		const staticUrl = new URL(`/dummy-backgrounds/${base}.png`, url.origin);
-		return Response.redirect(staticUrl.toString(), 302);
+		// Simple redirect to the static file - let Vercel handle serving it
+		return Response.redirect(`/dummy-backgrounds/${base}.png`, 302);
 	}
 
 	// For local development, try to load actual files

@@ -1,17 +1,22 @@
 import { error } from '@sveltejs/kit';
 
-export async function GET({ params, fetch }) {
+export async function GET({ params, fetch, url }) {
 	const filename = decodeURIComponent(params?.name ?? '');
 	if (!filename) {
 		throw error(400, 'Filename is required');
 	}
 
+	// Add .png extension if not present
+	const imageFile = filename.endsWith('.png') ? filename : `${filename}.png`;
+
 	try {
-		const res = await fetch(`/${filename}`);
+		// Try to fetch the theme image from the static directory
+		const staticUrl = new URL(`/${imageFile}`, url.origin);
+		const res = await fetch(staticUrl.toString());
 
 		if (!res.ok) {
-			console.error(`Failed to load ${filename}: ${res.status} ${res.statusText}`);
-			throw error(404, 'Image not found');
+			console.error(`Failed to load theme ${imageFile}: ${res.status} ${res.statusText}`);
+			throw error(404, `Theme image not found: ${filename}`);
 		}
 
 		const headers = new Headers(res.headers);
@@ -23,7 +28,7 @@ export async function GET({ params, fetch }) {
 			headers: headers
 		});
 	} catch (err) {
-		console.error(`Error loading image: ${err instanceof Error ? err.message : 'Unknown error'}`);
-		throw error(500, 'Internal server error');
+		console.error(`Error loading theme image: ${err instanceof Error ? err.message : 'Unknown error'}`);
+		throw error(500, 'Internal server error loading theme');
 	}
 }
