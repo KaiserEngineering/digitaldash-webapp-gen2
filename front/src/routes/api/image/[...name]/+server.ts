@@ -51,11 +51,8 @@ export async function GET({ params, url }) {
 		throw error(400, 'Invalid slot name');
 	}
 
-	// For Vercel deployment, redirect to static files
-	if (isVercelDeployment) {
-		// Simple redirect to the static file - let Vercel handle serving it
-		return Response.redirect(`/dummy-backgrounds/${base}.png`, 302);
-	}
+	// Always redirect to static files for Vercel deployment
+	return Response.redirect(`/dummy-backgrounds/${base}.png`, 302);
 
 	// For local development, try to load actual files
 	try {
