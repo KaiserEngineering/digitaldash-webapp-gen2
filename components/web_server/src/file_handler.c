@@ -45,6 +45,7 @@ static const char *TAG = "FileHandler";
 #define SCRATCH_BUFSIZE (20480)
 #define MAX_FILE_SIZE (4 * 1024 * 1024)
 #define CHECK_FILE_EXTENSION(filename, ext) (strcasecmp(&filename[strlen(filename) - strlen(ext)], ext) == 0)
+#define SPIFFS_WRITE_SIZE CONFIG_SPIFFS_PAGE_SIZE
 
 // Define HTTP 413 Payload Too Large if not defined
 #ifndef HTTPD_413_PAYLOAD_TOO_LARGE
@@ -372,7 +373,7 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
 
     // Receive and write file data
     int remaining = req->content_len;
-    char buf[512];
+    char buf[SPIFFS_WRITE_SIZE];
     int total_received = 0;
 
     while (remaining > 0)
