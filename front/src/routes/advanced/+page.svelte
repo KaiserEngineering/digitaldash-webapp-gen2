@@ -12,23 +12,25 @@
 
 	let { data } = $props();
 
-	let configJson = $state(JSON.stringify(data.form, null, 2));
+	let configJson = $state(JSON.stringify(data.form.data, null, 2));
 
 	// Real-time JSON validation using derived state
-	const validationResult = $derived(() => {
+	const validationResult = $derived.by(() => {
 		try {
 			const parsed = JSON.parse(configJson);
 
 			// Validate against schema
 			const result = DigitalDashSchema.safeParse(parsed);
+
 			if (!result.success) {
 				const errors = result.error.issues
-					.map((e) => `${e.path.join('.')}: ${e.message}`)
-					.join(', ');
+					.map((e) => `${e.path.join('.')}: ${e.message} (received: ${JSON.stringify(e.received)})`)
+					.join('\n');
+
 				return {
 					jsonError: null,
 					isValidJson: true,
-					validationError: `Schema validation failed: ${errors}`
+					validationError: `Schema validation failed:\n${errors}`
 				};
 			} else {
 				return {
@@ -54,12 +56,14 @@
 		dataType: 'json',
 		SPA: true,
 		validators: zod4(DigitalDashSchema),
-		onSubmit: async () => {
+		onUpdate: async ({ form: formData, cancel }) => {
+			cancel(); // Cancel the default form submission
+
 			if (!isValidJson || validationError) {
 				handleError(new Error(jsonError || validationError || 'Invalid configuration'), {
 					context: 'Configuration validation'
 				});
-				return false;
+				return;
 			}
 
 			try {
@@ -88,7 +92,6 @@
 					context: 'Saving configuration',
 					fallbackMessage: 'Failed to save configuration'
 				});
-				return false;
 			}
 		}
 	});
@@ -106,7 +109,7 @@
 	}
 
 	function resetConfig() {
-		configJson = JSON.stringify(data.form, null, 2);
+		configJson = JSON.stringify(data.form.data, null, 2);
 	}
 </script>
 
@@ -151,13 +154,15 @@
 				showHome={false}
 			/>
 		{:else if validationError}
-			<ErrorBoundary
-				error={validationError}
-				title="Configuration Validation Error"
-				variant="warning"
-				showRetry={false}
-				showHome={false}
-			/>
+			<div
+				class="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20"
+			>
+				<h4 class="font-medium text-yellow-800 dark:text-yellow-200">
+					Configuration Validation Error
+				</h4>
+				<pre
+					class="mt-2 font-mono text-xs whitespace-pre-wrap text-yellow-700 dark:text-yellow-300">{validationError}</pre>
+			</div>
 		{/if}
 
 		<!-- Action buttons -->
