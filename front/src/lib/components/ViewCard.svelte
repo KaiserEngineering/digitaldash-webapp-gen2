@@ -107,7 +107,7 @@
 <div class={cn('group', className)}>
 	{#if loading}
 		<div
-			class="bg-primary-200 border-primary-200 m-1 flex h-48 items-center justify-center rounded-2xl border sm:m-2 sm:h-52"
+			class="bg-muted border-primary-200 m-1 flex h-48 items-center justify-center rounded-2xl border sm:m-2 sm:h-52"
 		>
 			<Spinner />
 		</div>
