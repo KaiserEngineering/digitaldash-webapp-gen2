@@ -95,7 +95,7 @@
 					<div
 						class={cn(
 							'relative h-16 w-full overflow-hidden rounded-lg border-2 transition-all duration-200',
-							value === option ? 'border-blue-500 shadow-lg' : 'border-border hover:border-blue-300'
+							value === option ? 'border-ring shadow-lg' : 'border-border hover:border-ring/50'
 						)}
 						style="aspect-ratio: 800/165;"
 					>
@@ -113,8 +113,8 @@
 						{/if}
 
 						{#if value === option}
-							<div class="absolute top-2 right-2 rounded-full bg-blue-500 p-1">
-								<Check class="h-3 w-3 text-white" />
+							<div class="absolute top-2 right-2 rounded-full bg-ring p-1">
+								<Check class="h-3 w-3 text-primary-foreground" />
 							</div>
 						{/if}
 
