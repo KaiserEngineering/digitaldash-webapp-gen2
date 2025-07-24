@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - 'v*' # Trigger on tags starting with "v"
-  workflow_dispatch: # Allow manual trigger for testing
 
 permissions:
   contents: write
