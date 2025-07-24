@@ -289,6 +289,10 @@
 																	? 'bg-accent text-accent-foreground shadow-sm'
 																	: 'text-muted-foreground hover:text-foreground hover:bg-background/60'
 															}`}
+															onclick={() => {
+																isMobileMenuOpen = false;
+																isMobileFirmwareExpanded = false;
+															}}
 														>
 															{sub.label}
 														</a>
@@ -305,6 +309,10 @@
 													: 'text-muted-foreground hover:text-foreground hover:bg-background/60'
 											}`}
 											aria-current={isActive ? 'page' : undefined}
+											onclick={() => {
+												isMobileMenuOpen = false;
+												isMobileFirmwareExpanded = false;
+											}}
 										>
 											<TabIcon class="h-5 w-5" />
 											<span class="font-semibold">{tab.label}</span>
