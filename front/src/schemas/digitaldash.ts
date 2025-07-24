@@ -108,11 +108,12 @@ export const DynamicSchema = z.object({
 			return val === 'Enable' || val === 'Enabled' ? 'Enabled' : 'Disabled';
 		})
 		.default('Enabled'),
-	pid: PIDRef,
+	pid: PIDRef.optional(),
 	units: z.string().default('None'),
-	compare: CompareEnum,
-	threshold: z.number(),
+	compare: CompareEnum.optional(),
+	threshold: z.number().optional(),
 	priority: PriorityEnum,
+	view_index: z.number().min(0).max(2).optional(),
 	index: z.number().optional()
 });
 

@@ -91,7 +91,8 @@ export const devConfig: DigitalDash = {
 			units: 'rpm',
 			compare: 'Greater Than',
 			threshold: 3000,
-			priority: 'High'
+			priority: 'High',
+			view_index: 0
 		},
 		{
 			enable: 'Disabled',
@@ -99,15 +100,17 @@ export const devConfig: DigitalDash = {
 			units: '',
 			compare: 'Equal',
 			threshold: 0,
-			priority: 'Medium'
+			priority: 'Medium',
+			view_index: 1
 		},
 		{
-			enable: 'Disabled',
+			enable: 'Enabled',
 			pid: '',
 			units: '',
 			compare: 'Equal',
 			threshold: 0,
-			priority: 'Low'
+			priority: 'Low',
+			view_index: 0
 		}
 	]
 };

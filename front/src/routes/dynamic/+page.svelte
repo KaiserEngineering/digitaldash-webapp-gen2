@@ -44,6 +44,20 @@
 						const { index: _, ...ruleWithoutIndex } = rule as DigitalDashDynamic & {
 							index?: number;
 						};
+						
+						// Ensure view_index is a number if present
+						if (ruleWithoutIndex.view_index !== undefined && ruleWithoutIndex.view_index !== null) {
+							ruleWithoutIndex.view_index = Number(ruleWithoutIndex.view_index);
+						}
+						
+						// Ensure Low priority (Default in UI) is always enabled and has required defaults
+						if (ruleWithoutIndex.priority === 'Low') {
+							ruleWithoutIndex.enable = 'Enabled';
+							// Provide default values for required fields that aren't configurable in Default UI
+							if (!ruleWithoutIndex.pid) ruleWithoutIndex.pid = '';
+							if (!ruleWithoutIndex.compare) ruleWithoutIndex.compare = 'Greater Than';
+							if (ruleWithoutIndex.threshold === undefined || ruleWithoutIndex.threshold === null) ruleWithoutIndex.threshold = 0;
+						}
 						return ruleWithoutIndex;
 					});
 					config.dynamic = dynamicArray;
@@ -87,11 +101,11 @@
 			hoverColor: 'hover:bg-amber-50/50'
 		},
 		{
-			name: 'Low',
-			color: 'from-blue-500 to-blue-600',
-			bgColor: 'from-blue-50 via-white to-blue-50/30',
-			borderColor: 'border-blue-200',
-			hoverColor: 'hover:bg-blue-50/50'
+			name: 'Default',
+			color: 'from-slate-500 to-slate-600',
+			bgColor: 'from-slate-50 via-white to-slate-50/30',
+			borderColor: 'border-slate-200',
+			hoverColor: 'hover:bg-slate-50/50'
 		}
 	];
 </script>
@@ -184,94 +198,172 @@
 											<div class="flex flex-col">
 												<Label class="text-foreground text-sm font-semibold">Rule Status</Label>
 												<p class="text-muted-foreground text-xs">
-													{isDynamicRule($form[key]) && $form[key].enable === 'Enabled'
-														? 'This rule is currently active'
-														: 'This rule is currently inactive'}
+													{priorities[i].name === 'Default'
+														? 'Default rule is always active'
+														: isDynamicRule($form[key]) && $form[key].enable === 'Enabled'
+															? 'This rule is currently active'
+															: 'This rule is currently inactive'}
 												</p>
 											</div>
-											{#if isDynamicRule($form[key])}
+											{#if isDynamicRule($form[key]) && priorities[i].name !== 'Default'}
 												<Switch
 													checked={$form[key].enable === 'Enabled'}
 													onCheckedChange={(checked) =>
 														($form[key].enable = checked ? 'Enabled' : 'Disabled')}
 													class={`data-[state=checked]:bg-${priorities[i].color.split('-')[1]}-500 border border-green-300 bg-green-200`}
 												/>
+											{:else if priorities[i].name === 'Default'}
+												<div class="text-success flex items-center gap-2 text-sm font-medium">
+													<CheckCircle2 class="h-4 w-4" />
+													Always Enabled
+												</div>
 											{/if}
 										</div>
 
-										<!-- PID Selection -->
-										<div class="lg:col-span-2">
-											{#if isDynamicRule($form[key])}
-												<PIDSelect
-													bind:pidValue={$form[key].pid}
-													bind:unitValue={$form[key].units}
-													{pids}
-													disabled={$form[key].enable !== 'Enabled'}
-													pidLabel="Parameter ID"
-													unitLabel="Measurement Unit"
-													class="space-y-4"
-												/>
-											{/if}
-										</div>
+										{#if priorities[i].name === 'Default'}
+											<!-- View Index Selection for Default -->
+											<div class="space-y-3 lg:col-span-2">
+												<Label class="text-foreground text-sm font-semibold">View Index</Label>
+												{#if isDynamicRule($form[key])}
+													<Select.Root
+														value={$form[key].view_index?.toString()}
+														onValueChange={(value) => ($form[key].view_index = value ? Number(value) : undefined)}
+														type="single"
+													>
+														<Select.Trigger
+															class="h-12 w-full rounded-xl border-2 border-border bg-card hover:border-slate-300 focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all duration-200"
+														>
+															<span class={$form[key].view_index !== undefined ? 'text-foreground' : 'text-muted-foreground'}>
+																{$form[key].view_index !== undefined ? `View ${$form[key].view_index}` : 'Select view index'}
+															</span>
+														</Select.Trigger>
+														<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
+															{#each [0, 1, 2] as index}
+																<Select.Item
+																	value={index.toString()}
+																	label={`View ${index}`}
+																	class="rounded-lg py-3 hover:bg-slate-50"
+																>
+																	View {index}
+																</Select.Item>
+															{/each}
+														</Select.Content>
+													</Select.Root>
+												{/if}
+											</div>
+										{:else}
+											<!-- PID Selection for High/Medium -->
+											<div class="lg:col-span-2">
+												{#if isDynamicRule($form[key])}
+													<PIDSelect
+														bind:pidValue={$form[key].pid}
+														bind:unitValue={$form[key].units}
+														{pids}
+														disabled={$form[key].enable !== 'Enabled'}
+														pidLabel="Parameter ID"
+														unitLabel="Measurement Unit"
+														class="space-y-4"
+													/>
+												{/if}
+											</div>
 
-										<!-- Comparison Operator -->
-										<div class="space-y-3">
-											<Label class="text-foreground text-sm font-semibold"
-												>Comparison Operator</Label
-											>
-											{#if isDynamicRule($form[key])}
-												<Select.Root
-													bind:value={$form[key].compare}
-													disabled={$form[key].enable !== 'Enabled'}
-													type="single"
+											<!-- View Index Selection for High/Medium -->
+											<div class="space-y-3 lg:col-span-2">
+												<Label class="text-foreground text-sm font-semibold">View Index</Label>
+												{#if isDynamicRule($form[key])}
+													<Select.Root
+														value={$form[key].view_index?.toString()}
+														onValueChange={(value) => ($form[key].view_index = value ? Number(value) : undefined)}
+														disabled={$form[key].enable !== 'Enabled'}
+														type="single"
+													>
+														<Select.Trigger
+															class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
+																$form[key].enable === 'Enabled'
+																	? `border-border bg-card hover:border-${priorities[i].color.split('-')[1]}-300 focus:border-${priorities[i].color.split('-')[1]}-400 focus:ring-2 focus:ring-${priorities[i].color.split('-')[1]}-100`
+																	: 'border-border bg-muted'
+															}`}
+														>
+															<span class={$form[key].view_index !== undefined ? 'text-foreground' : 'text-muted-foreground'}>
+																{$form[key].view_index !== undefined ? `View ${$form[key].view_index}` : 'Select view index'}
+															</span>
+														</Select.Trigger>
+														<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
+															{#each [0, 1, 2] as index}
+																<Select.Item
+																	value={index.toString()}
+																	label={`View ${index}`}
+																	class={`rounded-lg py-3 hover:bg-${priorities[i].color.split('-')[1]}-50`}
+																>
+																	View {index}
+																</Select.Item>
+															{/each}
+														</Select.Content>
+													</Select.Root>
+												{/if}
+											</div>
+										{/if}
+
+										{#if priorities[i].name !== 'Default'}
+											<!-- Comparison Operator -->
+											<div class="space-y-3">
+												<Label class="text-foreground text-sm font-semibold"
+													>Comparison Operator</Label
 												>
-													<Select.Trigger
-														class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
+												{#if isDynamicRule($form[key])}
+													<Select.Root
+														bind:value={$form[key].compare}
+														disabled={$form[key].enable !== 'Enabled'}
+														type="single"
+													>
+														<Select.Trigger
+															class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
+																$form[key].enable === 'Enabled'
+																	? `border-border bg-card hover:border-${priorities[i].color.split('-')[1]}-300 focus:border-${priorities[i].color.split('-')[1]}-400 focus:ring-2 focus:ring-${priorities[i].color.split('-')[1]}-100`
+																	: 'border-border bg-muted'
+															}`}
+														>
+															<span
+																class={$form[key].compare
+																	? 'text-foreground'
+																	: 'text-muted-foreground'}
+															>
+																{$form[key].compare || 'Select operator'}
+															</span>
+														</Select.Trigger>
+														<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
+															{#each compareOps as op (op)}
+																<Select.Item
+																	value={op}
+																	label={op}
+																	class={`rounded-lg py-3 hover:bg-${priorities[i].color.split('-')[1]}-50`}
+																>
+																	{op}
+																</Select.Item>
+															{/each}
+														</Select.Content>
+													</Select.Root>
+												{/if}
+											</div>
+
+											<!-- Threshold Value -->
+											<div class="space-y-3">
+												<Label class="text-foreground text-sm font-semibold">Threshold Value</Label>
+												{#if isDynamicRule($form[key])}
+													<Input
+														type="number"
+														bind:value={$form[key].threshold}
+														class={`h-12 rounded-xl border-2 transition-all duration-200 ${
 															$form[key].enable === 'Enabled'
 																? `border-border bg-card hover:border-${priorities[i].color.split('-')[1]}-300 focus:border-${priorities[i].color.split('-')[1]}-400 focus:ring-2 focus:ring-${priorities[i].color.split('-')[1]}-100`
 																: 'border-border bg-muted'
 														}`}
-													>
-														<span
-															class={$form[key].compare
-																? 'text-foreground'
-																: 'text-muted-foreground'}
-														>
-															{$form[key].compare || 'Select operator'}
-														</span>
-													</Select.Trigger>
-													<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
-														{#each compareOps as op (op)}
-															<Select.Item
-																value={op}
-																label={op}
-																class={`rounded-lg py-3 hover:bg-${priorities[i].color.split('-')[1]}-50`}
-															>
-																{op}
-															</Select.Item>
-														{/each}
-													</Select.Content>
-												</Select.Root>
-											{/if}
-										</div>
-
-										<!-- Threshold Value -->
-										<div class="space-y-3">
-											<Label class="text-foreground text-sm font-semibold">Threshold Value</Label>
-											{#if isDynamicRule($form[key])}
-												<Input
-													type="number"
-													bind:value={$form[key].threshold}
-													class={`h-12 rounded-xl border-2 transition-all duration-200 ${
-														$form[key].enable === 'Enabled'
-															? `border-border bg-card hover:border-${priorities[i].color.split('-')[1]}-300 focus:border-${priorities[i].color.split('-')[1]}-400 focus:ring-2 focus:ring-${priorities[i].color.split('-')[1]}-100`
-															: 'border-border bg-muted'
-													}`}
-													disabled={$form[key].enable !== 'Enabled'}
-													placeholder="Enter threshold value"
-												/>
-											{/if}
-										</div>
+														disabled={$form[key].enable !== 'Enabled'}
+														placeholder="Enter threshold value"
+													/>
+												{/if}
+											</div>
+										{/if}
 									</div>
 								</div>
 							</Collapsible.Content>
