@@ -149,6 +149,26 @@
 							<Collapsible.Content>
 								<div class="border-border bg-card/50 border-t p-6">
 									<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+										<!-- Enable/Disable Toggle -->
+										<div
+											class="bg-muted/50 flex items-center justify-between rounded-xl p-4 lg:col-span-2"
+										>
+											<div class="flex flex-col">
+												<Label class="text-foreground text-sm font-semibold">Alert Status</Label>
+												<p class="text-muted-foreground text-xs">
+													{alert.enable === 'Enabled'
+														? 'This alert is currently active'
+														: 'This alert is currently inactive'}
+												</p>
+											</div>
+											<Switch
+												checked={alert.enable === 'Enabled'}
+												onCheckedChange={(checked) =>
+													($form[key].enable = checked ? 'Enabled' : 'Disabled')}
+												class="data-[state=checked]:bg-${priorities[i].color.split('-')[1]}-500 border border-green-300 bg-green-200"
+											/>
+										</div>
+
 										<!-- PID Selection -->
 										<div class="lg:col-span-2">
 											<PIDSelect
@@ -227,26 +247,6 @@
 												}`}
 												disabled={alert.enable !== 'Enabled'}
 												placeholder="Enter custom alert message"
-											/>
-										</div>
-
-										<!-- Enable/Disable Toggle -->
-										<div
-											class="bg-muted/50 flex items-center justify-between rounded-xl p-4 lg:col-span-2"
-										>
-											<div class="flex flex-col">
-												<Label class="text-foreground text-sm font-semibold">Alert Status</Label>
-												<p class="text-muted-foreground text-xs">
-													{alert.enable === 'Enabled'
-														? 'This alert is currently active'
-														: 'This alert is currently inactive'}
-												</p>
-											</div>
-											<Switch
-												checked={alert.enable === 'Enabled'}
-												onCheckedChange={(checked) =>
-													($form[key].enable = checked ? 'Enabled' : 'Disabled')}
-												class="data-[state=checked]:bg-emerald-500"
 											/>
 										</div>
 									</div>

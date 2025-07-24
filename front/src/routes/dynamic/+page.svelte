@@ -155,7 +155,7 @@
 												<span
 													class={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
 														isDynamicRule($form[key]) && $form[key].enable === 'Enabled'
-															? 'bg-success/20 text-success border border-success/30'
+															? 'bg-success/20 text-success border-success/30 border'
 															: 'bg-muted text-muted-foreground'
 													}`}
 												>
@@ -177,6 +177,28 @@
 							<Collapsible.Content>
 								<div class="border-border bg-card/50 border-t p-6">
 									<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+										<!-- Enable/Disable Toggle -->
+										<div
+											class="bg-muted/50 flex items-center justify-between rounded-xl p-4 lg:col-span-2"
+										>
+											<div class="flex flex-col">
+												<Label class="text-foreground text-sm font-semibold">Rule Status</Label>
+												<p class="text-muted-foreground text-xs">
+													{isDynamicRule($form[key]) && $form[key].enable === 'Enabled'
+														? 'This rule is currently active'
+														: 'This rule is currently inactive'}
+												</p>
+											</div>
+											{#if isDynamicRule($form[key])}
+												<Switch
+													checked={$form[key].enable === 'Enabled'}
+													onCheckedChange={(checked) =>
+														($form[key].enable = checked ? 'Enabled' : 'Disabled')}
+													class={`data-[state=checked]:bg-${priorities[i].color.split('-')[1]}-500 border border-green-300 bg-green-200`}
+												/>
+											{/if}
+										</div>
+
 										<!-- PID Selection -->
 										<div class="lg:col-span-2">
 											{#if isDynamicRule($form[key])}
@@ -188,7 +210,6 @@
 													pidLabel="Parameter ID"
 													unitLabel="Measurement Unit"
 													class="space-y-4"
-													key={`rule-${i}`}
 												/>
 											{/if}
 										</div>
@@ -248,28 +269,6 @@
 													}`}
 													disabled={$form[key].enable !== 'Enabled'}
 													placeholder="Enter threshold value"
-												/>
-											{/if}
-										</div>
-
-										<!-- Enable/Disable Toggle -->
-										<div
-											class="bg-muted/50 flex items-center justify-between rounded-xl p-4 lg:col-span-2"
-										>
-											<div class="flex flex-col">
-												<Label class="text-foreground text-sm font-semibold">Rule Status</Label>
-												<p class="text-muted-foreground text-xs">
-													{isDynamicRule($form[key]) && $form[key].enable === 'Enabled'
-														? 'This rule is currently active'
-														: 'This rule is currently inactive'}
-												</p>
-											</div>
-											{#if isDynamicRule($form[key])}
-												<Switch
-													checked={$form[key].enable === 'Enabled'}
-													onCheckedChange={(checked) =>
-														($form[key].enable = checked ? 'Enabled' : 'Disabled')}
-													class={`data-[state=checked]:bg-${priorities[i].color.split('-')[1]}-500 border border-green-300 bg-green-200`}
 												/>
 											{/if}
 										</div>
