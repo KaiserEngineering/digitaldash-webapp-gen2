@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Trash2, Loader2, RefreshCw } from 'lucide-svelte';
+	import { Trash2, Loader2 } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { ImageHandler } from '$lib/image/handler';
 	import { onMount } from 'svelte';
@@ -118,19 +118,6 @@
 							onUploaded={() => handleUploadSuccess(imageName)}
 						/>
 
-						{#if editable}
-							<div class="absolute top-2 right-2 z-10 flex gap-2">
-								<Button
-									variant="secondary"
-									size="icon"
-									class="bg-background/90 border-border/50 hover:bg-background h-8 w-8 rounded-full border shadow-md backdrop-blur-sm"
-									onclick={() => reloadImageSlot(imageName)}
-									disabled={loadingStates[imageName]}
-								>
-									<RefreshCw class="text-foreground h-4 w-4" />
-								</Button>
-							</div>
-						{/if}
 					</div>
 				{:else}
 					<div
@@ -156,26 +143,16 @@
 									class="absolute top-2 right-2 flex gap-2 transition-opacity duration-200 group-hover:opacity-100 sm:opacity-0"
 								>
 									<Button
-										variant="secondary"
-										size="icon"
-										class="bg-background/90 border-border/50 hover:bg-background h-8 w-8 rounded-full border shadow-md backdrop-blur-sm"
-										onclick={() => reloadImageSlot(imageName)}
-										disabled={loadingStates[imageName]}
-									>
-										<RefreshCw class="text-foreground h-4 w-4" />
-									</Button>
-
-									<Button
 										variant="destructive"
 										size="icon"
-										class="h-8 w-8 rounded-full bg-red-500/90 shadow-md hover:bg-red-600"
+										class="h-8 w-8 rounded-full bg-destructive/90 shadow-md hover:bg-destructive"
 										onclick={() => handleDelete(imageName)}
 										disabled={deletingStates[imageName]}
 									>
 										{#if deletingStates[imageName]}
-											<Loader2 class="h-4 w-4 animate-spin" />
+											<Loader2 class="h-4 w-4 animate-spin text-destructive-foreground" />
 										{:else}
-											<Trash2 class="h-4 w-4" />
+											<Trash2 class="h-4 w-4 text-destructive-foreground" />
 										{/if}
 									</Button>
 								</div>
