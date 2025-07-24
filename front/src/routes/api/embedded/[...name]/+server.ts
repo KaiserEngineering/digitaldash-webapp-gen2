@@ -15,19 +15,35 @@ export async function GET({ params, fetch, url }) {
 		const fs = await import('fs/promises');
 		const path = await import('path');
 
-		// In Vercel, static files are in the same directory as the built app
-		const staticPath = path.join(process.cwd(), imageFile);
+		// Try different possible locations for static files in Vercel
+		const possiblePaths = [
+			path.join(process.cwd(), imageFile),
+			path.join(process.cwd(), '.vercel', 'output', 'static', imageFile),
+			path.join(process.cwd(), '.svelte-kit', 'output', 'client', imageFile),
+			path.join('/tmp', imageFile),
+			path.join('/var/task', '.svelte-kit', 'output', 'client', imageFile)
+		];
 
-		try {
-			const file = await fs.readFile(staticPath);
-			return new Response(file, {
-				status: 200,
-				headers: { 'Content-Type': 'image/png' }
-			});
-		} catch (fsErr) {
-			console.error(`Failed to load theme ${imageFile} from ${staticPath}: ${fsErr.message}`);
-			throw error(404, `Theme image not found: ${filename}`);
+		console.log(`Looking for theme file: ${imageFile}`);
+		console.log(`Process cwd: ${process.cwd()}`);
+
+		for (const staticPath of possiblePaths) {
+			try {
+				console.log(`Trying path: ${staticPath}`);
+				const file = await fs.readFile(staticPath);
+				console.log(`Successfully loaded theme from: ${staticPath}`);
+				return new Response(file, {
+					status: 200,
+					headers: { 'Content-Type': 'image/png' }
+				});
+			} catch (fsErr) {
+				console.log(`Path ${staticPath} failed: ${fsErr.message}`);
+				continue;
+			}
 		}
+
+		console.error(`Failed to load theme ${imageFile} from any of the attempted paths`);
+		throw error(404, `Theme image not found: ${filename}`);
 	} catch (err) {
 		console.error(
 			`Error loading theme image: ${err instanceof Error ? err.message : 'Unknown error'}`
