@@ -11,7 +11,8 @@ export async function GET({ params, fetch, url }) {
 	const imageFile = filename.endsWith('.png') ? filename : `${filename}.png`;
 
 	// Always redirect to static files for Vercel deployment
-	return Response.redirect(`/${imageFile}`, 302);
+	const redirectUrl = new URL(`/${imageFile}`, url.origin);
+	return Response.redirect(redirectUrl.toString(), 302);
 
 	try {
 		// Try to fetch the theme image from the static directory

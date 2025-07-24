@@ -52,7 +52,8 @@ export async function GET({ params, url }) {
 	}
 
 	// Always redirect to static files for Vercel deployment
-	return Response.redirect(`/dummy-backgrounds/${base}.png`, 302);
+	const redirectUrl = new URL(`/dummy-backgrounds/${base}.png`, url.origin);
+	return Response.redirect(redirectUrl.toString(), 302);
 
 	// For local development, try to load actual files
 	try {
