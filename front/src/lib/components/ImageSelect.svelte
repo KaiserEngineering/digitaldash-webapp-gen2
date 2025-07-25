@@ -114,12 +114,12 @@
 				<button
 					type="button"
 					class={cn(
-						'group relative overflow-hidden rounded-lg border-2 transition-all duration-200',
+						'group relative overflow-hidden rounded-lg transition-all duration-200',
 						'focus:ring-ring hover:scale-105 focus:ring-2 focus:ring-offset-2 focus:outline-none',
 						disabled && 'cursor-not-allowed opacity-50',
 						value === option
-							? 'border-ring shadow-lg'
-							: 'border-border hover:border-border shadow-sm hover:shadow-md',
+							? 'shadow-lg'
+							: 'shadow-sm hover:shadow-md',
 						themes ? 'aspect-square' : 'aspect-[800/165]'
 					)}
 					style={backgroundUrl ? `background-image: url("${backgroundUrl}"); background-size: cover; background-position: center; background-repeat: no-repeat;` : ''}
@@ -152,9 +152,9 @@
 							</div>
 						{/if}
 					{:else}
-						<!-- For backgrounds: show background image filling entire button -->
+						<!-- For backgrounds: show background image with margin -->
 						{#if imageUrls[option] && !failedImages[option]}
-							<div class="absolute inset-0 z-10">
+							<div class="absolute inset-2 z-10 rounded-md overflow-hidden">
 								<img
 									class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
 									src={imageUrls[option]}
