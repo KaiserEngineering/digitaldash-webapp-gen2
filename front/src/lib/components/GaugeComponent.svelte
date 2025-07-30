@@ -23,7 +23,7 @@
 
 			{#if gauge.pid}
 				<div
-					class="absolute left-1/2 -translate-x-1/2 translate-y-5 rounded border border-white/20 bg-black/60 px-1 py-0.5 text-xs backdrop-blur-sm"
+					class="absolute left-1/2 top-3/4 -translate-x-1/2 translate-y-1 rounded border border-white/20 bg-black/60 px-1 py-0.5 text-xs backdrop-blur-sm"
 				>
 					<span style:color={textColor} style:opacity="0.9">{getPidLabelByDesc(gauge.pid)}</span>
 				</div>

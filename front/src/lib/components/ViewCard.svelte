@@ -108,7 +108,7 @@
 	{:else}
 		<a href="/view/{index}" class="m-1 block">
 			<div
-				class={`relative h-20 w-full overflow-hidden rounded-2xl border-2 shadow-md transition-all duration-500 ease-out sm:h-52 ${
+				class={`relative h-32 w-full overflow-visible rounded-2xl border-2 shadow-md transition-all duration-500 ease-out sm:h-52 ${
 					view.enable === 'Enabled'
 						? 'border-transparent hover:border-primary-500/50 hover:scale-[1.02] hover:shadow-xl'
 						: 'border-border opacity-60 grayscale hover:opacity-80'
