@@ -77,7 +77,7 @@
 					{/if}
 				</span>
 			</Select.Trigger>
-			<Select.Content class="border-border rounded-xl border-2 shadow-xl">
+			<Select.Content class="border-border rounded-xl border-2 shadow-xl max-h-60 overscroll-contain touch-none">
 				{#each pids as pid (pid)}
 					<Select.Item
 						value={pid.desc}
@@ -114,7 +114,7 @@
 					{unitValue || unitPlaceholder}
 				</span>
 			</Select.Trigger>
-			<Select.Content class="border-border rounded-xl border-2 shadow-xl">
+			<Select.Content class="border-border rounded-xl border-2 shadow-xl max-h-60 overscroll-contain touch-none">
 				{#each availableUnits as unit (unit)}
 					<Select.Item
 						value={unit}
