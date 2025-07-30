@@ -106,7 +106,7 @@
 			class={cn(
 				'grid max-h-96 gap-3 overflow-y-auto',
 				themes
-					? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
+					? 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8'
 					: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
 			)}
 		>
