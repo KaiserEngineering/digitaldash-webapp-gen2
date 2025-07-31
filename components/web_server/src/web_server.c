@@ -79,7 +79,6 @@ static const EmbeddedFile embedded_files[] = {
     {"/api/embedded/Radial.png", themes_Radial_png_start, themes_Radial_png_end, "image/png"},
     {"/api/embedded/Stock RS.png", themes_Stock_RS_png_start, themes_Stock_RS_png_end, "image/png"},
     {"/api/embedded/Stock ST.png", themes_Stock_ST_png_start, themes_Stock_ST_png_end, "image/png"},
-    {"/api/embedded/Bar Aurora.png", themes_Bar_Aurora_png_start, themes_Bar_Aurora_png_end, "image/png"},
 };
 
 #define EMBEDDED_FILE_COUNT (sizeof(embedded_files) / sizeof(EmbeddedFile))
