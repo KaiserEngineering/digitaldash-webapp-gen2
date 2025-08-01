@@ -97,7 +97,7 @@
 							'relative h-16 w-full overflow-hidden rounded-lg border-2 transition-all duration-200',
 							value === option ? 'border-ring shadow-lg' : 'border-border hover:border-ring/50'
 						)}
-						style="aspect-ratio: 800/165;"
+						style="aspect-ratio: 1024/200;"
 					>
 						{#if imageUrls[option]}
 							<img

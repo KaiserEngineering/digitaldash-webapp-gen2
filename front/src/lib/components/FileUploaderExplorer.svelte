@@ -107,8 +107,8 @@
 			// Fetch new cropped image as Blob
 			const croppedBlob = await fetch(croppedUrl).then((res) => res.blob());
 
-			// Resize the image to 800x165
-			const resizedBlob = await resizeImage(croppedBlob, 800, 165);
+			// Resize the image to 1024x200
+			const resizedBlob = await resizeImage(croppedBlob, 1024, 200);
 
 			// Update file with cropped version
 			const resizedUrl = URL.createObjectURL(resizedBlob);
@@ -251,7 +251,7 @@
 	<!-- Cropper Dialog -->
 	<ImageCropper.Root id="crop-file-input" bind:src={tempUrl} onCropped={handleCropped}>
 		<ImageCropper.Dialog>
-			<ImageCropper.Cropper cropShape="rect" aspect={800 / 165} />
+			<ImageCropper.Cropper cropShape="rect" aspect={1024 / 200} />
 			<ImageCropper.Controls>
 				<ImageCropper.Cancel class="bg-secondary-200 cursor-pointer" />
 				<ImageCropper.Crop class="bg-secondary-200 cursor-pointer" />
