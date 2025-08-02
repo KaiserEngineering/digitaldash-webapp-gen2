@@ -120,7 +120,7 @@
 						value === option
 							? 'shadow-lg'
 							: 'shadow-sm hover:shadow-md',
-						themes ? 'aspect-square' : 'aspect-[800/165]'
+						themes ? 'aspect-square' : 'aspect-[1024/200]'
 					)}
 					style={backgroundUrl ? `background-image: url("${backgroundUrl}"); background-size: cover; background-position: center; background-repeat: no-repeat;` : ''}
 					onclick={() => selectOption(option)}
