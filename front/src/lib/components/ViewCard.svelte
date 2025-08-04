@@ -14,8 +14,6 @@
 	let backgroundUrl = $state('');
 	let theme: Record<string, string> = $state({});
 	let failedImages: Record<string, boolean> = $state({});
-	let prevBackground: string | undefined = undefined;
-	let prevGauges: Array<{ theme: string; pid: string; units: string }> | undefined = undefined;
 
 	function handleImageError(themeKey: string) {
 		failedImages = { ...failedImages, [themeKey]: true };
@@ -24,41 +22,29 @@
 	$effect(() => {
 		if (!view) return;
 
-		const currentBackground = view.background;
-		const currentGauges = view.gauge;
+		let timeoutId: number;
 
-		// Only run if background or gauges actually changed
-		if (currentBackground === prevBackground && currentGauges === prevGauges) {
-			return;
-		}
-
-		// Debounce to prevent rapid reloads
-		const timeoutId = setTimeout(async () => {
+		const loadImages = async () => {
 			loading = true;
 
-			// Load background independently - failure won't affect theme loading
+			// Load background
 			try {
-				// Only reload background if it changed
-				if (backgroundUrl === '' || currentBackground !== prevBackground) {
-					const imageData = await imageHandler.loadImage(currentBackground);
+				if (view.background) {
+					const imageData = await imageHandler.loadImage(view.background);
 					backgroundUrl = imageData.url;
 					if (view.textColor !== 'white') {
 						view.textColor = 'white';
 					}
-					prevBackground = currentBackground;
 				}
 			} catch (error) {
-				console.warn(`Failed to load background "${currentBackground}":`, error);
+				console.warn(`Failed to load background "${view.background}":`, error);
 				toast.error(`Failed to load background: ${(error as Error).message}`);
-				if (view.textColor !== 'white') {
-					view.textColor = 'white';
-				}
-				// Don't set backgroundUrl to empty - keep previous or use fallback
+				backgroundUrl = '';
 			}
 
-			// Load themes independently - always attempt regardless of background status
+			// Load themes
 			try {
-				const gauges = currentGauges ?? [];
+				const gauges = view.gauge ?? [];
 				const themePromises = gauges.map(
 					async (gauge: { theme: string; pid: string; units: string }) => {
 						const key = `${gauge.theme}`;
@@ -74,24 +60,19 @@
 					}
 				);
 
-				// Wait for all theme loads to complete
 				await Promise.allSettled(themePromises);
-
-				// Force reactive update by reassigning state objects
 				theme = { ...theme };
 				failedImages = { ...failedImages };
 			} catch (error) {
 				console.warn('Failed to load themes:', error);
-				// Don't show toast for theme errors - they're handled individually
 			}
 
 			loading = false;
+		};
 
-			// Update tracking variables
-			prevGauges = currentGauges;
-		}, 300); // 300ms debounce delay
+		// Debounce to prevent rapid reloads during rapid config changes
+		timeoutId = setTimeout(loadImages, 100);
 
-		// Cleanup timeout on component unmount or effect re-run
 		return () => clearTimeout(timeoutId);
 	});
 

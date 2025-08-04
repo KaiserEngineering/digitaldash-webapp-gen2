@@ -5,11 +5,16 @@ import { zod4 } from 'sveltekit-superforms/adapters';
 import { redirect } from '@sveltejs/kit';
 import { ViewSchema } from '$schemas/digitaldash';
 
+import { configStore } from '$lib/stores/configStore';
+import { get } from 'svelte/store';
+
 export const load: PageLoad = async ({ params, parent }) => {
 	const parentData = await parent();
 	const viewId = Number(params.id);
 
-	const config = await parentData.config;
+	// Use current config store data instead of potentially stale parent data
+	const config = get(configStore) || await parentData.config;
+
 	const options = await parentData.options;
 	const pids = await parentData.pids;
 

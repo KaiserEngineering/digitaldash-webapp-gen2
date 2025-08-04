@@ -12,6 +12,7 @@
 	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
 	import ViewCard from '@/components/ViewCard.svelte';
 	import PageCard from '@/components/PageCard.svelte';
+	import { configStore } from '$lib/stores/configStore';
 
 	let { data } = $props();
 	const viewId = data.viewId;
@@ -34,10 +35,7 @@
 					config.view[viewId] = { ...config.view[viewId], ...$form };
 				});
 
-				if (result.success && result.config) {
-					// Update the form with the saved config data
-					Object.assign($form, result.config.view[viewId]);
-				} else {
+				if (!result.success) {
 					toast.error('Failed to save view settings. Please try again.');
 				}
 			} catch (error) {
@@ -48,6 +46,7 @@
 			}
 		}
 	});
+
 
 	let activeTab: 'view' | 'gauges' = $state('view');
 
