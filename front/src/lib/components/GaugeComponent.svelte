@@ -12,24 +12,14 @@
 </script>
 
 <div class="mt-4 flex h-full flex-col items-center justify-center">
-	<div class="relative flex h-[120px] w-[120px] items-center justify-center sm:h-[140px] sm:w-[140px]">
+	<div class="relative flex h-[80px] w-[80px] items-center justify-center sm:h-[100px] sm:w-[100px]">
 		{#if themeUrl && !failed}
 			<img
-				class="absolute inset-0 aspect-square w-full object-contain transition-all duration-300"
+				class="aspect-square w-full object-contain transition-all duration-300"
 				src={themeUrl || '/placeholder.svg'}
 				alt={gauge.theme}
 				onerror={onImageError}
 			/>
-
-			{#if gauge.pid}
-				<div
-					class="absolute bottom-0 left-1/2 -translate-x-1/2 rounded border whitespace-nowrap border-white/20 bg-black/60 px-12 py-1 text-s backdrop-blur-sm"
-				>
-					<span style:color={textColor} style:opacity="0.9">
-						{getPidLabelByDesc(gauge.pid)}
-					</span>
-				</div>
-			{/if}
 		{:else}
 			<div
 				class="flex h-full w-full flex-col items-center justify-center rounded border border-white/20 bg-black/40"
@@ -41,4 +31,13 @@
 			</div>
 		{/if}
 	</div>
+	{#if gauge.pid && themeUrl && !failed}
+		<div
+			class="mt-0.5 rounded border border-white/20 bg-black/60 px-2 py-1 text-xs backdrop-blur-sm"
+		>
+			<span style:color={textColor} style:opacity="0.9" class="block truncate text-center">
+				{getPidLabelByDesc(gauge.pid)}
+			</span>
+		</div>
+	{/if}
 </div>
