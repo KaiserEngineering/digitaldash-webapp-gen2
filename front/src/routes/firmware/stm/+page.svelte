@@ -42,14 +42,14 @@
 		uploadMessage = 'Uploading firmware file...';
 
 		try {
-			const formData = new FormData();
-			formData.append('file', file);
-			formData.append('filename', 'digitaldash-firmware-gen2-stm32u5g.bin');
-
 			const uploadRes = await fetch('/api/spiffs', {
 				method: 'POST',
-				body: formData
+				headers: {
+					'Content-Type': 'application/octet-stream',
+				},
+				body: file,
 			});
+
 			const uploadData = await uploadRes.json();
 			if (!uploadRes.ok) throw new Error(uploadData.message || 'File upload failed');
 
