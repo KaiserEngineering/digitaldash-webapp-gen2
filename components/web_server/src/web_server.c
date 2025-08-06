@@ -55,8 +55,11 @@ extern const uint8_t themes_Stock_RS_png_end[] asm("_binary_Stock_RS_png_end");
 extern const uint8_t themes_Stock_ST_png_start[] asm("_binary_Stock_ST_png_start");
 extern const uint8_t themes_Stock_ST_png_end[] asm("_binary_Stock_ST_png_end");
 
-extern const uint8_t themes_Bar_Aurora_png_start[] asm("_binary_Bar_Aurora_png_start");
-extern const uint8_t themes_Bar_Aurora_png_end[] asm("_binary_Bar_Aurora_png_end");
+extern const uint8_t themes_Grump_Cat_png_start[] asm("_binary_Grumpy_Cat_png_start");
+extern const uint8_t themes_Grump_Cat_png_end[] asm("_binary_Grumpy_Cat_png_end");
+
+extern const uint8_t themes_Digital_png_start[] asm("_binary_Digital_png_start");
+extern const uint8_t themes_Digital_png_end[] asm("_binary_Digital_png_end");
 
 esp_err_t socket_enable_nodelay(httpd_req_t *req)
 {
@@ -79,6 +82,8 @@ static const EmbeddedFile embedded_files[] = {
     {"/api/embedded/Radial.png", themes_Radial_png_start, themes_Radial_png_end, "image/png"},
     {"/api/embedded/Stock RS.png", themes_Stock_RS_png_start, themes_Stock_RS_png_end, "image/png"},
     {"/api/embedded/Stock ST.png", themes_Stock_ST_png_start, themes_Stock_ST_png_end, "image/png"},
+    {"/api/embedded/Grumpy Cat.png", themes_Grump_Cat_png_start, themes_Grump_Cat_png_end, "image/png"},
+    {"/api/embedded/Digital.png", themes_Digital_png_start, themes_Digital_png_end, "image/png"}
 };
 
 #define EMBEDDED_FILE_COUNT (sizeof(embedded_files) / sizeof(EmbeddedFile))
