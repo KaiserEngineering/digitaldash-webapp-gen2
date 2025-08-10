@@ -53,30 +53,6 @@
 
 #define CAN_STBY_GPIO GPIO_NUM_40
 
-#define I2C_MASTER_PORT I2C_NUM_0
-#define ENABLE_I2C_TEST_TX 0
-#define ENABLE_SPI_TEST_TX 0
-uint32_t count = 0;
-
-#define SPI_HOST       SPI2_HOST  // HSPI or SPI2 on S3
-#define DMA_CHAN       SPI_DMA_CH_AUTO
-#define PIN_NUM_MISO   12
-#define PIN_NUM_MOSI   13
-#define PIN_NUM_CLK    14
-#define PIN_NUM_CS     -1
-#define SPI_BUFFER_SIZE    32 * 1000
-uint8_t spi_buffer[SPI_BUFFER_SIZE] = {0};
-
-spi_device_handle_t spi;
-
-#define EEPROM_READ_DELAY_MS 5
-#define EEPROM_WRITE_RETRY_COUNT 5
-#define EEPROM_WRITE_DELAY_MS 20
-#define EEPROM_ADDRESS_SIZE 2
-#define EEPROM_ENABLE 0
-
-i2c_master_dev_handle_t eeprom_handle;
-
 static const char *TAG = "Main";
 
 uint32_t background_crc = 0;
@@ -97,61 +73,6 @@ void gpio_init(void)
         .intr_type = GPIO_INTR_DISABLE
     };
     gpio_config(&io_conf);
-}
-
-void i2c_master_init()
-{
-    i2c_master_bus_config_t i2c_bus_config = {
-        .clk_source = I2C_CLK_SRC_DEFAULT,
-        .i2c_port = -1,
-        .scl_io_num = CONFIG_ESP32_STM32_SCL_IO,
-        .sda_io_num = CONFIG_ESP32_STM32_SDA_IO,
-        .flags.enable_internal_pullup = 1,
-        .glitch_ignore_cnt = 7,
-    };
-
-    i2c_master_bus_handle_t bus_handle;
-    ESP_ERROR_CHECK(i2c_new_master_bus(&i2c_bus_config, &bus_handle));
-
-    // Configure the I2C EEPROM slave device
-    i2c_device_config_t eeprom_cfg = {
-        .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-        .device_address = CONFIG_STM32_7BIT_ADDR,
-        .scl_speed_hz = 100000,
-    };
-
-    ESP_ERROR_CHECK(i2c_master_bus_add_device(bus_handle, &eeprom_cfg, &eeprom_handle));
-    ESP_LOGI(TAG, "Created I2C EEPROM slave device");
-
-    // Delay to I2C is ready
-    vTaskDelay(pdMS_TO_TICKS(EEPROM_READ_DELAY_MS));
-}
-
-void spi_master_init()
-{
-    // Configuration for the SPI bus
-    spi_bus_config_t buscfg = {
-        .mosi_io_num = PIN_NUM_MOSI,
-        .miso_io_num = PIN_NUM_MISO,
-        .sclk_io_num = PIN_NUM_CLK,
-        .quadwp_io_num = -1,
-        .quadhd_io_num = -1,
-        .max_transfer_sz = SPI_BUFFER_SIZE
-    };
-
-    // Initialize the SPI bus
-    ESP_ERROR_CHECK(spi_bus_initialize(SPI_HOST, &buscfg, DMA_CHAN));
-
-    // Device configuration
-    spi_device_interface_config_t devcfg = {
-        .clock_speed_hz = 10 * 1000 * 1000,  // 10 MHz
-        .mode = 0,
-        .spics_io_num = PIN_NUM_CS,
-        .queue_size = 1,
-        .flags = SPI_DEVICE_NO_DUMMY,
-    };
-
-    ESP_ERROR_CHECK(spi_bus_add_device(SPI_HOST, &devcfg, &spi));
 }
 
 void init_webapp_ap(void)
@@ -180,23 +101,6 @@ void init_webapp_ap(void)
 
     ESP_LOGI(TAG, "Application started successfully");
 }
-
-void spi_master_transmit_payload(void)
-{
-    // Setup SPI transaction
-    spi_transaction_t t = {
-        .length = sizeof(spi_buffer) * 8,  // In bits
-        .tx_buffer = spi_buffer
-    };
-
-    for (int i = 0; i < sizeof(spi_buffer); i++) {
-        spi_buffer[i] = i % 256;
-    }
-
-    // Transmit the buffer
-    ESP_ERROR_CHECK(spi_device_transmit(spi, &t));
-}
-
 
 int stm32_tx(const uint8_t *data, uint32_t len)
 {
@@ -275,7 +179,7 @@ bool receive_config(const char *json_str)
     strncpy(ptr, json_str, len-1);
     ptr[len - 1] = '\0'; // ensure null termination
 
-    ESP_LOGI("CONFIG", "Received JSON Config:\n%s", ptr);
+    //ESP_LOGI("CONFIG", "Received JSON Config:\n%s", ptr);
     return true;
 }
 
@@ -298,7 +202,7 @@ bool receive_option_list(const char *json_str)
     strncpy(ptr, json_str, len - 1);
     ptr[len - 1] = '\0'; // ensure null termination
 
-    ESP_LOGI("CONFIG", "Received JSON Option List:\n%s", ptr);
+    //ESP_LOGI("CONFIG", "Received JSON Option List:\n%s", ptr);
     return true;
 }
 
@@ -310,7 +214,7 @@ bool receive_pid_list(const char *json_str)
     strncpy(ptr, json_str, len - 1);
     ptr[len - 1] = '\0'; // ensure null termination
 
-    ESP_LOGI("CONFIG", "Received JSON PID List:\n%s", ptr);
+    //ESP_LOGI("CONFIG", "Received JSON PID List:\n%s", ptr);
     return true;
 }
 
@@ -471,9 +375,6 @@ void app_main(void)
     gpio_init();
     stm32_communication_init();
 
-    //i2c_master_init();
-    //spi_master_init();
-
     // Disable CAN Bus
     gpio_set_level(CAN_STBY_GPIO, 1);
 
@@ -492,13 +393,6 @@ void app_main(void)
         }
     }
 
-    //stm32_bootloader();
-    //stm32_reset();
-
-    //flash_stm32_firmware("digitaldash-firmware-gen2-stm32u5g.bin"); // UNCOMMENT TO FLASH FIRMWARE. DO THIS **ONCE*** AND THEN RE-UPLOAD WITH LINE **COMMENTED OUT**
-
-    //transfer_png_data("/spiffs/Outer_Wilds.png"); // UNCOMMENT TO UPLOAD IMAGE. DO THIS **ONCE*** AND THEN RE-UPLOAD WITH LINE **COMMENTED OUT**
-
     start_KE_tick_timer();
 
     Generate_TX_Message(&stm32_comm, KE_CONFIG_REQUEST, 0);
@@ -513,18 +407,6 @@ void app_main(void)
     {
         // Add delay to not trigger watchdog
         vTaskDelay(pdMS_TO_TICKS(1));
-        if (count > 100000)
-        {
-            //Generate_TX_Message(&stm32_comm, KE_OPTION_LIST_REQUEST, 0);
-            #if ENABLE_SPI_TEST_TX
-            spi_master_transmit_payload();
-            #endif
-            #if ENABLE_I2C_TEST_TX
-            i2c_master_transmit_payload();
-            #endif
-            count = 0;
-        }
-        count++;
         KE_Service(&stm32_comm);
     }
 }
