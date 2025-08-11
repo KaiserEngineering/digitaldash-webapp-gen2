@@ -8,7 +8,6 @@
 	interface FirmwareFile {
 		name: string;
 		size: number;
-		lastModified: number;
 		type: string;
 	}
 
@@ -260,12 +259,6 @@
 														<div class="flex items-center gap-1">
 															<span class="font-medium">Size:</span>
 															<span>{(file.size / 1024).toFixed(1)} KB</span>
-														</div>
-													{/if}
-													{#if file.lastModified}
-														<div class="flex items-center gap-1">
-															<span class="font-medium">Modified:</span>
-															<span>{new Date(file.lastModified).toLocaleDateString()}</span>
 														</div>
 													{/if}
 													{#if file.type}

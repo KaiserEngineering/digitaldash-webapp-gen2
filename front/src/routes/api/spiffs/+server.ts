@@ -27,7 +27,6 @@ export async function GET() {
 					{
 						name: 'digitaldash-firmware-gen2-stm32u5g.bin',
 						size: stats.size,
-						lastModified: stats.mtime.toISOString(),
 						type: 'Binary firmware file'
 					}
 				]
@@ -47,7 +46,6 @@ export async function GET() {
 				{
 					name: 'digitaldash-firmware-gen2-stm32u5g.bin',
 					size: 524288,
-					lastModified: new Date().toISOString(),
 					type: 'Binary firmware file'
 				}
 			]
