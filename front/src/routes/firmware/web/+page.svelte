@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { FileSearch, Upload, CheckCircle, UploadCloud } from 'lucide-svelte';
+	import { FileSearch, Upload, CircleCheck, CloudUpload } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Progress } from '$lib/components/ui/progress';
 	import toast from 'svelte-5-french-toast';
@@ -79,7 +79,7 @@
 <PageCard
 	title="Firmware Uploader"
 	description={`Current Firmware Version: ${ver}`}
-	icon={UploadCloud}
+	icon={CloudUpload}
 >
 	<div
 		class="cursor-pointer rounded-lg border-2 border-dashed p-4 text-center transition-colors duration-200 ease-in-out"
@@ -117,7 +117,7 @@
 		</div>
 	{:else if uploadComplete}
 		<div class="mt-4 text-center text-green-600">
-			<CheckCircle size={24} class="mx-auto mb-2" />
+			<CircleCheck size={24} class="mx-auto mb-2" />
 			<p class="text-sm font-medium">Upload complete! Reconnect and refresh if needed.</p>
 		</div>
 	{/if}

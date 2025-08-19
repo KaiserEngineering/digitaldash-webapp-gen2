@@ -85,10 +85,11 @@ esp_err_t web_update_post_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-/* STM32 firmware flashing function */
-void flash_stm32_firmware(const char *firmware_path)
+/* STM32 firmware flashing task function */
+void flash_stm32_firmware_task(void *pvParameter)
 {
-    ESP_LOGI(TAG, "Starting STM32 firmware flash: %s", firmware_path);
+    const char *firmware_path = (const char *)pvParameter;
+    ESP_LOGI(TAG, "Starting STM32 firmware flash task: %s", firmware_path);
 
     // Switch UART to bootloader mode
     uart_init_for_stm32_bootloader();
@@ -109,6 +110,33 @@ void flash_stm32_firmware(const char *firmware_path)
     // Reset STM32 to run new firmware
     stm32_reset();
     ESP_LOGI(TAG, "STM32 reset to run new firmware");
+
+    // Delete this task
+    vTaskDelete(NULL);
+}
+
+/* STM32 firmware flashing function */
+void flash_stm32_firmware(const char *firmware_path)
+{
+    // Create a copy of the firmware path string for the task
+    static char firmware_path_copy[64];
+    strncpy(firmware_path_copy, firmware_path, sizeof(firmware_path_copy) - 1);
+    firmware_path_copy[sizeof(firmware_path_copy) - 1] = '\0';
+
+    // Create a task to run the flash operation in background
+    BaseType_t result = xTaskCreate(
+        flash_stm32_firmware_task,          // Task function
+        "stm_flash_task",                   // Task name
+        8192,                               // Stack size
+        (void *)firmware_path_copy,         // Parameters
+        5,                                  // Priority
+        NULL                                // Task handle
+    );
+
+    if (result != pdPASS) {
+        ESP_LOGE(TAG, "Failed to create STM32 flash task");
+        set_stm_flash_error("Failed to start flash task");
+    }
 }
 
 // Add STM firmware update handler
@@ -116,8 +144,35 @@ esp_err_t stm_update_post_handler(httpd_req_t *req)
 {
     flash_stm32_firmware("digitaldash-firmware-gen2-stm32u5g.bin");
     httpd_resp_set_type(req, "application/json");
-    httpd_resp_sendstr(req, "{\"message\": \"STM32 firmware update complete!\"}");
+    httpd_resp_sendstr(req, "{\"message\": \"STM32 firmware update started\"}");
     return ESP_OK;
+}
+
+// STM flash progress handler
+esp_err_t stm_flash_progress_handler(httpd_req_t *req)
+{
+    stm_flash_progress_t* progress = get_stm_flash_progress();
+
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
+
+    char response[512];
+    if (progress->error) {
+        snprintf(response, sizeof(response),
+            "{\"percentage\": %d, \"message\": \"%s\", \"complete\": %s, \"error\": \"%s\"}",
+            progress->percentage,
+            progress->message,
+            progress->complete ? "true" : "false",
+            progress->error_message);
+    } else {
+        snprintf(response, sizeof(response),
+            "{\"percentage\": %d, \"message\": \"%s\", \"complete\": %s}",
+            progress->percentage,
+            progress->message,
+            progress->complete ? "true" : "false");
+    }
+
+    return httpd_resp_sendstr(req, response);
 }
 
 /* Register the OTA endpoint with the HTTP server */
@@ -136,6 +191,13 @@ esp_err_t register_ota_routes(httpd_handle_t server)
         .handler = stm_update_post_handler,
         .user_ctx = NULL};
     httpd_register_uri_handler(server, &stm_update_post);
+
+    httpd_uri_t stm_progress_get = {
+        .uri = "/api/flash/progress",
+        .method = HTTP_GET,
+        .handler = stm_flash_progress_handler,
+        .user_ctx = NULL};
+    httpd_register_uri_handler(server, &stm_progress_get);
 
     ESP_LOGI(TAG, "OTA routes registered successfully");
     return ESP_OK;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
-	import { Bell, ChevronDown, AlertTriangle, CheckCircle2, Save } from 'lucide-svelte';
+	import { Bell, ChevronDown, TriangleAlert, CircleCheck, Save } from 'lucide-svelte';
 	import { flip } from 'svelte/animate';
 	import { Motion } from 'motion-start';
 	import { Input } from '$lib/components/ui/input/index.js';
@@ -110,9 +110,9 @@
 													Alert #{i + 1}
 												</h4>
 												{#if alert.enable === 'Enabled'}
-													<CheckCircle2 class="h-4 w-4 text-emerald-500" />
+													<CircleCheck class="h-4 w-4 text-emerald-500" />
 												{:else}
-													<AlertTriangle class="text-muted-foreground h-4 w-4" />
+													<TriangleAlert class="text-muted-foreground h-4 w-4" />
 												{/if}
 											</div>
 											<div class="flex items-center gap-2 text-sm">

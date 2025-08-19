@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card';
-	import { CheckCircle, AlertTriangle, Loader2, Upload, FileText, Zap } from 'lucide-svelte';
-	import { onMount } from 'svelte';
+	import { Progress } from '$lib/components/ui/progress';
+	import { CircleCheck, TriangleAlert, Loader, Upload, FileText, Zap } from 'lucide-svelte';
+	import { onMount, onDestroy } from 'svelte';
+	import { apiUrl } from '$lib/config';
 
 	let filesStatus: 'idle' | 'loading' | 'success' | 'error' = $state('idle');
 	interface FirmwareFile {
@@ -17,6 +19,9 @@
 	let flashStatus: 'idle' | 'flashing' | 'success' | 'error' = $state('idle');
 	let uploadMessage = $state('');
 	let flashMessage = $state('');
+	let uploadProgress = $state(0);
+	let flashProgress = $state(0);
+	let flashPollingInterval: number | null = null;
 
 	async function loadFiles() {
 		filesStatus = 'loading';
@@ -39,25 +44,51 @@
 
 		uploadStatus = 'uploading';
 		uploadMessage = 'Uploading firmware file...';
+		uploadProgress = 0;
 
 		try {
-			const uploadRes = await fetch('/api/spiffs', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/octet-stream',
-				},
-				body: file,
-			});
+			const xhr = new XMLHttpRequest();
 
-			const uploadData = await uploadRes.json();
-			if (!uploadRes.ok) throw new Error(uploadData.message || 'File upload failed');
+			// Set up progress tracking
+			xhr.upload.onprogress = (e) => {
+				if (e.lengthComputable) {
+					uploadProgress = (e.loaded / e.total) * 100;
+					uploadMessage = `Uploading firmware file... ${Math.floor(uploadProgress)}%`;
+				}
+			};
 
-			uploadStatus = 'success';
-			uploadMessage = 'Firmware file uploaded successfully!';
+			// Set up completion handlers
+			xhr.onload = async () => {
+				if (xhr.status >= 200 && xhr.status < 300) {
+					uploadStatus = 'success';
+					uploadMessage = 'Firmware file uploaded successfully!';
+					uploadProgress = 100;
 
-			// Reload file list and clear input
-			await loadFiles();
-			fileInput.value = '';
+					// Reload file list and clear input
+					await loadFiles();
+					if (fileInput) fileInput.value = '';
+				} else {
+					uploadStatus = 'error';
+					uploadMessage = `Upload failed: ${xhr.statusText}`;
+				}
+			};
+
+			xhr.onerror = () => {
+				uploadStatus = 'error';
+				uploadMessage = 'Network error during upload';
+			};
+
+			xhr.ontimeout = () => {
+				uploadStatus = 'error';
+				uploadMessage = 'Upload timed out';
+			};
+
+			xhr.timeout = 120000; // 2 minutes
+
+			// Make the request
+			xhr.open('POST', '/api/spiffs');
+			xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+			xhr.send(file);
 		} catch (err) {
 			uploadStatus = 'error';
 			uploadMessage =
@@ -67,24 +98,69 @@
 
 	async function flashFirmware() {
 		flashStatus = 'flashing';
-		flashMessage = 'Flashing firmware to Digital Dash...';
+		flashMessage = 'Starting firmware flash...';
+		flashProgress = 0;
 
 		try {
+			// Start the flash process
 			const flashRes = await fetch('/api/firmware/stm', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				}
 			});
-			const flashData = await flashRes.json();
-			if (!flashRes.ok) throw new Error(flashData.message || 'Firmware flash failed');
 
-			flashStatus = 'success';
-			flashMessage = 'Digital Dash updated successfully!';
+			if (!flashRes.ok) {
+				const flashData = await flashRes.json();
+				throw new Error(flashData.message || 'Firmware flash failed');
+			}
 
-			// Reload file list
-			await loadFiles();
+			// Start polling for progress
+			flashPollingInterval = setInterval(async () => {
+				try {
+					const progressRes = await fetch(`${apiUrl}/flash/progress`);
+					if (progressRes.ok) {
+						const progressData = await progressRes.json();
+						flashProgress = progressData.percentage || 0;
+						flashMessage =
+							progressData.message || `Flashing firmware... ${Math.floor(flashProgress)}%`;
+
+						// Check if complete
+						if (progressData.complete === true) {
+							clearInterval(flashPollingInterval!);
+							flashPollingInterval = null;
+							flashStatus = 'success';
+							flashMessage = 'Digital Dash updated successfully!';
+							flashProgress = 100;
+							await loadFiles();
+						} else if (progressData.error) {
+							clearInterval(flashPollingInterval!);
+							flashPollingInterval = null;
+							flashStatus = 'error';
+							flashMessage = progressData.error;
+						}
+					}
+				} catch (progressErr) {
+					console.warn('Progress polling error:', progressErr);
+				}
+			}, 500); // Poll every 500ms
+
+			// Set a timeout to stop polling after 5 minutes
+			setTimeout(() => {
+				if (flashPollingInterval) {
+					clearInterval(flashPollingInterval);
+					flashPollingInterval = null;
+					if (flashStatus === 'flashing') {
+						flashStatus = 'error';
+						flashMessage = 'Flash operation timed out';
+					}
+				}
+			}, 300000); // 5 minutes
 		} catch (err) {
+			if (flashPollingInterval) {
+				clearInterval(flashPollingInterval);
+				flashPollingInterval = null;
+			}
 			flashStatus = 'error';
 			flashMessage =
 				err instanceof Error ? err.message : 'An error occurred during firmware flashing';
@@ -98,12 +174,19 @@
 	onMount(() => {
 		loadFiles();
 	});
+
+	onDestroy(() => {
+		if (flashPollingInterval) {
+			clearInterval(flashPollingInterval);
+			flashPollingInterval = null;
+		}
+	});
 </script>
 
 <div class="bg-background min-h-screen p-4">
 	<div class="mx-auto max-w-4xl space-y-8 pt-8">
 		<!-- Firmware Update Card -->
-		<Card class="bg-card shadow-lg py-0">
+		<Card class="bg-card py-0 shadow-lg">
 			<CardHeader class="bg-primary-600 rounded-t-lg text-white">
 				<CardTitle class="flex items-center gap-3 text-xl">
 					<Zap class="h-6 w-6" />
@@ -133,7 +216,7 @@
 					class="btn-primary h-12 w-full text-lg font-semibold text-gray-800 shadow-md transition-all duration-200"
 				>
 					{#if uploadStatus === 'uploading'}
-						<Loader2 class="mr-3 h-5 w-5 animate-spin" />
+						<Loader class="mr-3 h-5 w-5 animate-spin" />
 						Uploading Firmware...
 					{:else}
 						<Upload class="mr-3 h-5 w-5" />
@@ -145,22 +228,26 @@
 				{#if uploadStatus === 'success'}
 					<div class="border-border bg-muted rounded-lg border p-4">
 						<p class="text-success flex items-center gap-3 font-medium">
-							<CheckCircle class="text-success h-5 w-5" />
+							<CircleCheck class="text-success h-5 w-5" />
 							{uploadMessage}
 						</p>
 					</div>
 				{:else if uploadStatus === 'error'}
 					<div class="border-border bg-muted rounded-lg border p-4">
 						<p class="text-error flex items-center gap-3 font-medium">
-							<AlertTriangle class="text-error h-5 w-5" />
+							<TriangleAlert class="text-error h-5 w-5" />
 							{uploadMessage}
 						</p>
 					</div>
 				{:else if uploadStatus === 'uploading'}
-					<div class="border-border bg-muted rounded-lg border p-4">
+					<div class="border-border bg-muted space-y-3 rounded-lg border p-4">
 						<p class="text-info flex items-center gap-3 font-medium">
-							<Loader2 class="text-info h-5 w-5 animate-spin" />
+							<Loader class="text-info h-5 w-5 animate-spin" />
 							{uploadMessage}
+						</p>
+						<Progress value={uploadProgress} class="w-full" />
+						<p class="text-muted-foreground text-center text-sm">
+							{Math.floor(uploadProgress)}% complete
 						</p>
 					</div>
 				{/if}
@@ -173,7 +260,7 @@
 						class="btn-primary h-12 w-full text-lg font-semibold text-gray-800 shadow-md transition-all duration-200"
 					>
 						{#if flashStatus === 'flashing'}
-							<Loader2 class="mr-3 h-5 w-5 animate-spin" />
+							<Loader class="mr-3 h-5 w-5 animate-spin" />
 							Flashing Digital Dash...
 						{:else}
 							<Zap class="mr-3 h-5 w-5" />
@@ -185,22 +272,26 @@
 					{#if flashStatus === 'success'}
 						<div class="bg-primary-50 border-primary-200 rounded-lg border p-4">
 							<p class="text-primary-800 flex items-center gap-3 font-medium">
-								<CheckCircle class="text-primary-600 h-5 w-5" />
+								<CircleCheck class="text-primary-600 h-5 w-5" />
 								{flashMessage}
 							</p>
 						</div>
 					{:else if flashStatus === 'error'}
 						<div class="border-border bg-muted rounded-lg border p-4">
 							<p class="text-error flex items-center gap-3 font-medium">
-								<AlertTriangle class="text-error h-5 w-5" />
+								<TriangleAlert class="text-error h-5 w-5" />
 								{flashMessage}
 							</p>
 						</div>
 					{:else if flashStatus === 'flashing'}
-						<div class="border-border bg-muted rounded-lg border p-4">
+						<div class="border-border bg-muted space-y-3 rounded-lg border p-4">
 							<p class="text-info flex items-center gap-3 font-medium">
-								<Loader2 class="text-info h-5 w-5 animate-spin" />
+								<Loader class="text-info h-5 w-5 animate-spin" />
 								{flashMessage}
+							</p>
+							<Progress value={flashProgress} class="w-full" />
+							<p class="text-muted-foreground text-center text-sm">
+								{Math.floor(flashProgress)}% complete
 							</p>
 						</div>
 					{/if}
@@ -209,7 +300,7 @@
 		</Card>
 
 		<!-- Current Firmware Info Card -->
-		<Card class="bg-card shadow-lg py-0">
+		<Card class="bg-card py-0 shadow-lg">
 			<CardHeader class="bg-primary-600 rounded-t-lg text-white">
 				<CardTitle class="flex items-center gap-3 text-xl">
 					<FileText class="h-6 w-6" />
@@ -222,12 +313,12 @@
 					<div class="border-border bg-muted min-h-[120px] rounded-lg border">
 						{#if filesStatus === 'loading'}
 							<div class="text-muted-foreground flex items-center justify-center gap-3 py-8">
-								<Loader2 class="h-5 w-5 animate-spin" />
+								<Loader class="h-5 w-5 animate-spin" />
 								<span class="font-medium">Loading files...</span>
 							</div>
 						{:else if filesStatus === 'error'}
 							<div class="text-error flex items-center justify-center gap-3 py-8">
-								<AlertTriangle class="h-5 w-5" />
+								<TriangleAlert class="h-5 w-5" />
 								<span class="font-medium">Failed to load files</span>
 							</div>
 						{:else if files.length === 0}

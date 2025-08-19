@@ -12,7 +12,6 @@
 	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
 	import ViewCard from '@/components/ViewCard.svelte';
 	import PageCard from '@/components/PageCard.svelte';
-	import { configStore } from '$lib/stores/configStore';
 
 	let { data } = $props();
 	const viewId = data.viewId;

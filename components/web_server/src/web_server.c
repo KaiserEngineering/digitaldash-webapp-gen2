@@ -32,8 +32,8 @@ typedef struct
 } EmbeddedFile;
 
 // Embedded files
-extern const uint8_t static_index_html_start[] asm("_binary_index_html_start");
-extern const uint8_t static_index_html_end[] asm("_binary_index_html_end");
+extern const uint8_t static_index_html_gz_start[] asm("_binary_index_html_gz_start");
+extern const uint8_t static_index_html_gz_end[] asm("_binary_index_html_gz_end");
 
 // Basic web assets
 extern const uint8_t static_favicon_ico_start[] asm("_binary_favicon_ico_start");
@@ -70,8 +70,8 @@ esp_err_t socket_enable_nodelay(httpd_req_t *req)
 
 // Embedded file mappings
 static const EmbeddedFile embedded_files[] = {
-    {"/", static_index_html_start, static_index_html_end, "text/html"},
-    {"/index.html", static_index_html_start, static_index_html_end, "text/html"},
+    {"/", static_index_html_gz_start, static_index_html_gz_end, "text/html"},
+    {"/index.html", static_index_html_gz_start, static_index_html_gz_end, "text/html"},
 
     // Basic static files
     {"/favicon.png", static_favicon_png_start, static_favicon_png_end, "image/png"},
@@ -119,6 +119,43 @@ void url_decode(char *dest, const char *src, size_t max_len)
     dest[i] = '\0';
 }
 
+esp_err_t send_embedded_file(httpd_req_t *req, const EmbeddedFile *file, bool is_compressed)
+{
+    ESP_LOGI(TAG, "Serving embedded file: %s", file->path);
+
+    httpd_resp_set_hdr(req, "Cache-Control", "public, max-age=31536000, immutable");
+    httpd_resp_set_type(req, file->mime_type);
+
+    // Add gzip encoding header for compressed files
+    if (is_compressed) {
+        httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
+    }
+
+    size_t file_size = file->end - file->start;
+    ESP_LOGI(TAG, "File size: %zu bytes", file_size);
+
+    const size_t chunk_size = 4096;
+    size_t bytes_remaining = file_size;
+    const uint8_t *file_ptr = file->start;
+
+    while (bytes_remaining > 0)
+    {
+        size_t bytes_to_send = (bytes_remaining > chunk_size) ? chunk_size : bytes_remaining;
+
+        esp_err_t ret = httpd_resp_send_chunk(req, (const char *)file_ptr, bytes_to_send);
+        if (ret != ESP_OK)
+        {
+            ESP_LOGE(TAG, "File sending failed: %s", esp_err_to_name(ret));
+            return ret;
+        }
+
+        file_ptr += bytes_to_send;
+        bytes_remaining -= bytes_to_send;
+    }
+
+    return httpd_resp_send_chunk(req, NULL, 0);
+}
+
 esp_err_t embedded_file_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "EMBEDDED_FILE_HANDLER: Checking for embedded file: %s", req->uri);
@@ -139,38 +176,7 @@ esp_err_t embedded_file_handler(httpd_req_t *req)
         // Match against the decoded name (e.g. "Stock ST.png")
         if (strcmp(expected_path, embedded_files[i].path) == 0)
         {
-            ESP_LOGI(TAG, "Serving embedded file: %s", embedded_files[i].path);
-
-            httpd_resp_set_hdr(req, "Cache-Control", "public, max-age=31536000, immutable");
-            httpd_resp_set_type(req, embedded_files[i].mime_type);
-
-            size_t file_size = embedded_files[i].end - embedded_files[i].start;
-            ESP_LOGI(TAG, "File size: %zu bytes", file_size);
-
-            const size_t chunk_size = 4096;
-            size_t bytes_remaining = file_size;
-            const uint8_t *file_ptr = embedded_files[i].start;
-
-            while (bytes_remaining > 0)
-            {
-                size_t bytes_to_send = (bytes_remaining > chunk_size) ? chunk_size : bytes_remaining;
-
-                esp_err_t ret = httpd_resp_send_chunk(req, (const char *)file_ptr, bytes_to_send);
-                if (ret != ESP_OK)
-                {
-                    ESP_LOGE(TAG, "File sending failed: %s", esp_err_to_name(ret));
-                    return ret;
-                }
-
-                file_ptr += bytes_to_send;
-                bytes_remaining -= bytes_to_send;
-                //if (bytes_remaining > 0)
-                //{
-                //    vTaskDelay(1 / portTICK_PERIOD_MS);
-                //}
-            }
-
-            return httpd_resp_send_chunk(req, NULL, 0);
+            return send_embedded_file(req, &embedded_files[i], false);
         }
     }
 
@@ -193,10 +199,11 @@ esp_err_t web_request_handler(httpd_req_t *req)
     // Redirect `/` to `/index.html`
     if (strcmp(req->uri, "/") == 0)
     {
-        ESP_LOGI(TAG, "Root request received, serving /index.html");
+        ESP_LOGI(TAG, "Root request received, serving compressed /index.html");
 
         httpd_resp_set_type(req, "text/html");
-        return httpd_resp_send(req, (const char *)static_index_html_start, static_index_html_end - static_index_html_start);
+        httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
+        return httpd_resp_send(req, (const char *)static_index_html_gz_start, static_index_html_gz_end - static_index_html_gz_start);
     }
 
     // Fast favicon handling - common browser requests
@@ -221,47 +228,20 @@ esp_err_t web_request_handler(httpd_req_t *req)
     {
         if (strcmp(req->uri, embedded_files[i].path) == 0)
         {
-            ESP_LOGI(TAG, "Serving embedded file from general handler: %s", embedded_files[i].path);
-
-            httpd_resp_set_hdr(req, "Cache-Control", "public, max-age=31536000, immutable");
-            httpd_resp_set_type(req, embedded_files[i].mime_type);
-
-            size_t file_size = embedded_files[i].end - embedded_files[i].start;
-            ESP_LOGI(TAG, "File size: %zu bytes", file_size);
-
-            const size_t chunk_size = 4096;
-            size_t bytes_remaining = file_size;
-            const uint8_t *file_ptr = embedded_files[i].start;
-
-            while (bytes_remaining > 0)
-            {
-                size_t bytes_to_send = (bytes_remaining > chunk_size) ? chunk_size : bytes_remaining;
-
-                esp_err_t ret = httpd_resp_send_chunk(req, (const char *)file_ptr, bytes_to_send);
-                if (ret != ESP_OK)
-                {
-                    ESP_LOGE(TAG, "File sending failed: %s", esp_err_to_name(ret));
-                    return ret;
-                }
-
-                file_ptr += bytes_to_send;
-                bytes_remaining -= bytes_to_send;
-               //if (bytes_remaining > 0)
-               //{
-               //    vTaskDelay(1 / portTICK_PERIOD_MS);
-               //}
-            }
-
-            return httpd_resp_send_chunk(req, NULL, 0);
+            // Check if this is a compressed HTML file
+            bool is_compressed = (strcmp(embedded_files[i].path, "/") == 0 || 
+                                strcmp(embedded_files[i].path, "/index.html") == 0);
+            return send_embedded_file(req, &embedded_files[i], is_compressed);
         }
     }
 
     // Serve index.html only for likely SPA routes
     if (is_spa_route(req->uri))
     {
-        ESP_LOGW(TAG, "SPA route fallback: serving index.html for %s", req->uri);
+        ESP_LOGW(TAG, "SPA route fallback: serving compressed index.html for %s", req->uri);
         httpd_resp_set_type(req, "text/html");
-        return httpd_resp_send(req, (const char *)static_index_html_start, static_index_html_end - static_index_html_start);
+        httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
+        return httpd_resp_send(req, (const char *)static_index_html_gz_start, static_index_html_gz_end - static_index_html_gz_start);
     }
 
     // If it's a file-like path and not found earlier, return 404

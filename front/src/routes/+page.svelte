@@ -3,10 +3,9 @@
 	import ViewCard from '@/components/ViewCard.svelte';
 	import { configStore } from '$lib/stores/configStore';
 	import { pidsStore } from '$lib/stores/PIDsStore';
-	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card';
-	import { Button } from '$lib/components/ui/button';
+	import { Card, CardContent } from '$lib/components/ui/card';
 	import { Separator } from '$lib/components/ui/separator';
-	import { Bell, Zap, ChevronRight, Smartphone, Cpu, Settings } from 'lucide-svelte';
+	import { Bell, Zap, ChevronRight } from 'lucide-svelte';
 
 	const views = $derived($configStore?.view || []);
 	const pids = $derived(pidsStore.getValue());
@@ -91,7 +90,11 @@
 									{#if rule.priority === 'Low'}
 										Default: View #{rule.view_index !== undefined ? rule.view_index : '0'}
 									{:else}
-										{rule.priority || 'Unknown'}: Switch to View #{rule.view_index !== undefined ? rule.view_index : '0'} when {rule.pid || 'No PID'} {rule.compare || ''} {rule.threshold || ''}
+										{rule.priority || 'Unknown'}: Switch to View #{rule.view_index !== undefined
+											? rule.view_index
+											: '0'} when {rule.pid || 'No PID'}
+										{rule.compare || ''}
+										{rule.threshold || ''}
 									{/if}
 								</div>
 							{/each}

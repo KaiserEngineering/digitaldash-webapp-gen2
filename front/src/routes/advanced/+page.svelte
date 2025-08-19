@@ -2,7 +2,7 @@
 	import { DigitalDashSchema } from '$schemas/digitaldash';
 	import { Button } from '$lib/components/ui/button';
 	import { Textarea } from '$lib/components/ui/textarea';
-	import { Loader2, Save, FileText, CheckCircle, AlertTriangle } from 'lucide-svelte';
+	import { Loader, Save, FileText, CircleCheck, TriangleAlert } from 'lucide-svelte';
 	import { superForm } from 'sveltekit-superforms';
 	import { zod4 } from 'sveltekit-superforms/adapters';
 	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
@@ -121,12 +121,12 @@
 			<div class="flex items-center gap-2">
 				{#if isValidJson && !validationError}
 					<div class="flex items-center gap-1 text-green-600">
-						<CheckCircle class="h-4 w-4" />
+						<CircleCheck class="h-4 w-4" />
 						<span class="text-xs">Valid</span>
 					</div>
 				{:else}
 					<div class="flex items-center gap-1 text-red-600">
-						<AlertTriangle class="h-4 w-4" />
+						<TriangleAlert class="h-4 w-4" />
 						<span class="text-xs">Invalid</span>
 					</div>
 				{/if}
@@ -161,7 +161,7 @@
 					Configuration Validation Error
 				</h4>
 				<pre
-					class="mt-2 font-mono text-xs whitespace-pre-wrap text-yellow-700 dark:text-yellow-300">{validationError}</pre>
+					class="mt-2 whitespace-pre-wrap font-mono text-xs text-yellow-700 dark:text-yellow-300">{validationError}</pre>
 			</div>
 		{/if}
 
@@ -190,7 +190,7 @@
 			class="btn-primary flex h-12 items-center gap-2 rounded-xl px-8 font-semibold shadow-lg transition-all duration-200"
 		>
 			{#if $submitting}
-				<Loader2 class="h-4 w-4 animate-spin" />
+				<Loader class="h-4 w-4 animate-spin" />
 				Saving Configuration...
 			{:else}
 				<Save class="h-4 w-4" />

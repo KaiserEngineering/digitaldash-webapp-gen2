@@ -10,7 +10,7 @@ idf_component_register(SRCS
     INCLUDE_DIRS "include" "../../main"
     PRIV_REQUIRES esp_http_server esp_wifi nvs_flash mdns app_update spiffs lib_ke_protocol stm_flash stm_gpio
     EMBED_FILES
-    "static/index.html"
+    "static/index.html.gz"
     "static/favicon.png"
     "static/favicon.ico"
     "themes/Linear.png"

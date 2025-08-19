@@ -11,7 +11,7 @@
 	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
 	import PageCard from '@/components/PageCard.svelte';
 	import PIDSelect from '$lib/components/PIDSelect.svelte';
-	import { Settings, ChevronDown, Zap, AlertTriangle, CheckCircle2, Save } from 'lucide-svelte';
+	import { Settings, ChevronDown, Zap, TriangleAlert, CircleCheck, Save } from 'lucide-svelte';
 	import { Motion } from 'motion-start';
 	import { slide } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
@@ -44,19 +44,20 @@
 						const { index: _, ...ruleWithoutIndex } = rule as DigitalDashDynamic & {
 							index?: number;
 						};
-						
+
 						// Ensure view_index is a number if present
 						if (ruleWithoutIndex.view_index !== undefined && ruleWithoutIndex.view_index !== null) {
 							ruleWithoutIndex.view_index = Number(ruleWithoutIndex.view_index);
 						}
-						
+
 						// Ensure Low priority (Default in UI) is always enabled and has required defaults
 						if (ruleWithoutIndex.priority === 'Low') {
 							ruleWithoutIndex.enable = 'Enabled';
 							// Provide default values for required fields that aren't configurable in Default UI
 							if (!ruleWithoutIndex.pid) ruleWithoutIndex.pid = '';
 							if (!ruleWithoutIndex.compare) ruleWithoutIndex.compare = 'Greater Than';
-							if (ruleWithoutIndex.threshold === undefined || ruleWithoutIndex.threshold === null) ruleWithoutIndex.threshold = 0;
+							if (ruleWithoutIndex.threshold === undefined || ruleWithoutIndex.threshold === null)
+								ruleWithoutIndex.threshold = 0;
 						}
 						return ruleWithoutIndex;
 					});
@@ -148,9 +149,9 @@
 													{priorities[i].name}
 												</h4>
 												{#if isDynamicRule($form[key]) && $form[key].enable === 'Enabled'}
-													<CheckCircle2 class="h-4 w-4 text-emerald-500" />
+													<CircleCheck class="h-4 w-4 text-emerald-500" />
 												{:else}
-													<AlertTriangle class="text-muted-foreground h-4 w-4" />
+													<TriangleAlert class="text-muted-foreground h-4 w-4" />
 												{/if}
 											</div>
 											<div class="flex items-center gap-2 text-sm">
@@ -163,7 +164,9 @@
 												>
 													{#if isDynamicRule($form[key])}
 														{#if priorities[i].name === 'Default'}
-															View {$form[key].view_index !== undefined ? $form[key].view_index : 'Not Set'}
+															View {$form[key].view_index !== undefined
+																? $form[key].view_index
+																: 'Not Set'}
 														{:else}
 															{$form[key].pid || 'No PID selected'}
 														{/if}
@@ -233,14 +236,21 @@
 												{#if isDynamicRule($form[key])}
 													<Select.Root
 														value={$form[key].view_index?.toString()}
-														onValueChange={(value) => ($form[key].view_index = value ? Number(value) : undefined)}
+														onValueChange={(value) =>
+															($form[key].view_index = value ? Number(value) : undefined)}
 														type="single"
 													>
 														<Select.Trigger
-															class="h-12 w-full rounded-xl border-2 border-border bg-card hover:border-slate-300 focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all duration-200"
+															class="border-border bg-card h-12 w-full rounded-xl border-2 transition-all duration-200 hover:border-slate-300 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
 														>
-															<span class={$form[key].view_index !== undefined ? 'text-foreground' : 'text-muted-foreground'}>
-																{$form[key].view_index !== undefined ? `View ${$form[key].view_index}` : 'Select view index'}
+															<span
+																class={$form[key].view_index !== undefined
+																	? 'text-foreground'
+																	: 'text-muted-foreground'}
+															>
+																{$form[key].view_index !== undefined
+																	? `View ${$form[key].view_index}`
+																	: 'Select view index'}
 															</span>
 														</Select.Trigger>
 														<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
@@ -279,7 +289,8 @@
 												{#if isDynamicRule($form[key])}
 													<Select.Root
 														value={$form[key].view_index?.toString()}
-														onValueChange={(value) => ($form[key].view_index = value ? Number(value) : undefined)}
+														onValueChange={(value) =>
+															($form[key].view_index = value ? Number(value) : undefined)}
 														disabled={$form[key].enable !== 'Enabled'}
 														type="single"
 													>
@@ -290,8 +301,14 @@
 																	: 'border-border bg-muted'
 															}`}
 														>
-															<span class={$form[key].view_index !== undefined ? 'text-foreground' : 'text-muted-foreground'}>
-																{$form[key].view_index !== undefined ? `View ${$form[key].view_index}` : 'Select view index'}
+															<span
+																class={$form[key].view_index !== undefined
+																	? 'text-foreground'
+																	: 'text-muted-foreground'}
+															>
+																{$form[key].view_index !== undefined
+																	? `View ${$form[key].view_index}`
+																	: 'Select view index'}
 															</span>
 														</Select.Trigger>
 														<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">

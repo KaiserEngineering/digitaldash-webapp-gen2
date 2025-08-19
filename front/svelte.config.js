@@ -7,7 +7,7 @@ const config = {
 
 	kit: {
 		adapter: adapter({
-			precompress: false,
+			precompress: true,
 			strict: true,
 			fallback: 'index.html'
 		}),
