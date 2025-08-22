@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Loader2, Wifi } from 'lucide-svelte';
+	import { Loader, Wifi } from 'lucide-svelte';
 	import Spinner from '@/components/Spinner.svelte';
 
 	interface Props {
@@ -20,7 +20,7 @@
 {#if variant === 'minimal'}
 	<div class="flex items-center justify-center gap-2 p-4">
 		{#if showIcon}
-			<Loader2 class="text-muted-foreground h-4 w-4 animate-spin" />
+			<Loader class="text-muted-foreground h-4 w-4 animate-spin" />
 		{/if}
 		<span class="text-muted-foreground text-sm">{title}</span>
 	</div>

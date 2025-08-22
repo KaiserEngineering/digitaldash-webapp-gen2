@@ -97,7 +97,7 @@
 </script>
 
 {#if imageNames && imageNames.length > 0}
-	<div class="grid grid-cols-1 gap-6">
+	<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 		{#each imageNames as imageName (imageName)}
 			<div class="flex flex-col">
 				{#if loadingStates[imageName]}
@@ -112,11 +112,22 @@
 						in:fade={{ duration: 300, easing: quintOut }}
 						out:scale={{ duration: 200, easing: quintOut }}
 					>
-						<FileUploaderExplorer
-							uploadCallback={uploadBackground}
-							slotName={imageName}
-							onUploaded={() => handleUploadSuccess(imageName)}
-						/>
+						{#if uploadingStates[imageName]}
+							<div
+								class="border-border bg-muted/50 flex h-40 items-center justify-center rounded-lg border-2 border-dashed"
+							>
+								<div class="flex flex-col items-center gap-2">
+									<Loader class="text-primary h-6 w-6 animate-spin" />
+									<span class="text-muted-foreground text-sm">Uploading {imageName}...</span>
+								</div>
+							</div>
+						{:else}
+							<FileUploaderExplorer
+								uploadCallback={uploadBackground}
+								slotName={imageName}
+								onUploaded={() => handleUploadSuccess(imageName)}
+							/>
+						{/if}
 					</div>
 				{:else}
 					<div
@@ -149,7 +160,7 @@
 										disabled={deletingStates[imageName]}
 									>
 										{#if deletingStates[imageName]}
-											<Loader2 class="text-destructive-foreground h-4 w-4 animate-spin" />
+											<Loader class="text-destructive-foreground h-4 w-4 animate-spin" />
 										{:else}
 											<Trash2 class="text-destructive-foreground h-4 w-4" />
 										{/if}
