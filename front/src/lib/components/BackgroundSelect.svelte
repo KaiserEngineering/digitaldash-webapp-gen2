@@ -113,8 +113,8 @@
 						{/if}
 
 						{#if value === option}
-							<div class="absolute top-2 right-2 rounded-full bg-ring p-1">
-								<Check class="h-3 w-3 text-primary-foreground" />
+							<div class="bg-ring absolute top-2 right-2 rounded-full p-1">
+								<Check class="text-primary-foreground h-3 w-3" />
 							</div>
 						{/if}
 

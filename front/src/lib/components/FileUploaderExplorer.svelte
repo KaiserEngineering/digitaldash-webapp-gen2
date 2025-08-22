@@ -6,7 +6,7 @@
 		MEGABYTE,
 		type FileDropZoneProps
 	} from '$lib/components/ui/file-drop-zone';
-	import { X, Edit } from 'lucide-svelte';
+	import { X, Pencil } from 'lucide-svelte';
 	import { onDestroy } from 'svelte';
 	import toast from 'svelte-5-french-toast';
 	import Spinner from './Spinner.svelte';
@@ -217,7 +217,7 @@
 					: 'bg-secondary-500 hover:bg-secondary-600'} flex cursor-pointer gap-2 rounded-lg px-6 py-3 font-semibold text-white shadow-md"
 				onclick={triggerCropping}
 			>
-				<Edit class="mr-2 h-4 w-4" />
+				<Pencil class="mr-2 h-4 w-4" />
 				{requiresCropping ? 'Crop Image (Required)' : 'Crop Image'}
 			</Button>
 		</div>

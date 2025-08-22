@@ -7,22 +7,26 @@ A cutting-edge web application built with **SvelteKit 5** that provides an intui
 ## Features
 
 ### **Dashboard Customization**
+
 - **Custom Gauge Layouts**: Design multiple dashboard views with drag-and-drop gauge positioning
 - **Real-time Data Visualization**: Display live vehicle telemetry with smooth animations
 - **Theme System**: Choose from multiple pre-built themes or upload custom backgrounds
 - **Responsive Design**: Optimized for desktop, tablet, and mobile devices
 
 ### **Intelligent Monitoring**
+
 - **Smart Alerts**: Configure threshold-based warnings for critical engine parameters
 - **Dynamic Rules**: Set up conditional logic for automated responses
 - **PID Data Integration**: Direct access to your vehicle's diagnostic data streams
 
 ### **Visual Customization**
+
 - **Custom Backgrounds**: Upload and crop your own dashboard backgrounds
 - **Theme Gallery**: Pre-loaded themes including Digital, Linear, Radial, and Stock variants
 - **Dark/Light Mode**: Automatic theme switching based on user preference
 
 ### **System Management**
+
 - **Firmware Updates**: Over-the-air updates for both web interface and STM32 hardware
 - **Configuration Backup**: Export/import your dashboard configurations
 - **Recovery Mode**: Built-in recovery system for troubleshooting
@@ -30,7 +34,8 @@ A cutting-edge web application built with **SvelteKit 5** that provides an intui
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - Yarn or npm package manager
 - ESP32-S3 with Kaiser Engineering Digital Dashboard firmware
 
@@ -74,20 +79,24 @@ This project combines modern web technologies with embedded systems:
 ## Screenshots & Demo
 
 ### Main Dashboard
+
 ![Dashboard View](https://via.placeholder.com/800x400?text=Dashboard+Screenshot)
-*Real-time gauge display with customizable layouts*
+_Real-time gauge display with customizable layouts_
 
 ### Configuration Panel
+
 ![Config Panel](https://via.placeholder.com/800x400?text=Configuration+Screenshot)
-*Intuitive settings interface for alerts and dynamic rules*
+_Intuitive settings interface for alerts and dynamic rules_
 
 ### Theme Customization
+
 ![Theme Selection](https://via.placeholder.com/800x400?text=Theme+Screenshot)
-*Multiple themes and custom background support*
+_Multiple themes and custom background support_
 
 ## Development
 
 ### Project Structure
+
 ```
 src/
 ├── routes/              # SvelteKit pages and API routes
@@ -105,6 +114,7 @@ src/
 ```
 
 ### Key Technologies
+
 - **SvelteKit 5**: Modern fullstack framework
 - **TypeScript**: Type-safe development
 - **TailwindCSS**: Utility-first styling
@@ -133,11 +143,13 @@ yarn test
 ## Hardware Integration
 
 This web interface communicates with:
+
 - **ESP32-S3 microcontroller** running the main dashboard firmware
 - **STM32 co-processor** handling real-time data processing
 - **CAN bus interface** for vehicle diagnostic data (OBD-II/custom protocols)
 
 ### Supported Data Sources
+
 - Engine RPM, temperature, pressure sensors
 - Vehicle speed, acceleration, fuel consumption
 - Custom analog/digital inputs
@@ -148,6 +160,7 @@ This web interface communicates with:
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
 ### Development Setup
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes with proper TypeScript types

@@ -59,7 +59,7 @@
 		{#each { length: $form.num_gauges }, i (i)}
 			{@const gauge = $form.gauge?.[i] ?? { pid: '', units: '', theme: '' }}
 			<Collapsible.Root>
-				<Card.Root class="p-0 border-border overflow-hidden">
+				<Card.Root class="border-border overflow-hidden p-0">
 					<!-- Touchable header that expands/collapses the card -->
 					<Collapsible.Trigger class="w-full">
 						<Card.Header

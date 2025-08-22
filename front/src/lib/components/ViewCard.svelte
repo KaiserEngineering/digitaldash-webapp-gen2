@@ -91,7 +91,7 @@
 			<div
 				class={`relative h-32 w-full overflow-visible rounded-2xl border-2 shadow-md transition-all duration-500 ease-out sm:h-52 ${
 					view.enable === 'Enabled'
-						? 'border-transparent hover:border-primary-500/50 hover:scale-[1.02] hover:shadow-xl'
+						? 'hover:border-primary-500/50 border-transparent hover:scale-[1.02] hover:shadow-xl'
 						: 'border-border opacity-60 grayscale hover:opacity-80'
 				}`}
 				style="background-image: url('{backgroundUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;"
@@ -104,7 +104,9 @@
 
 				{#if view.enable !== 'Enabled'}
 					<div class="absolute top-2 left-2 z-20">
-						<div class="bg-muted/90 text-muted-foreground px-2 py-1 rounded-md text-xs font-medium border border-border/50">
+						<div
+							class="bg-muted/90 text-muted-foreground border-border/50 rounded-md border px-2 py-1 text-xs font-medium"
+						>
 							Disabled
 						</div>
 					</div>

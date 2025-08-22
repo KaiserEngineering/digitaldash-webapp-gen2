@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Trash2, Loader2 } from 'lucide-svelte';
+	import { Trash2, Loader } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { ImageHandler } from '$lib/image/handler';
 	import { onMount } from 'svelte';
@@ -104,7 +104,7 @@
 					<div
 						class="border-border bg-muted flex h-40 items-center justify-center rounded-lg border-2 border-dashed"
 					>
-						<Loader2 class="text-muted-foreground h-6 w-6 animate-spin" />
+						<Loader class="text-muted-foreground h-6 w-6 animate-spin" />
 					</div>
 				{:else if failedImages[imageName] || !loadedImages[imageName]}
 					<div
@@ -117,11 +117,10 @@
 							slotName={imageName}
 							onUploaded={() => handleUploadSuccess(imageName)}
 						/>
-
 					</div>
 				{:else}
 					<div
-						class="group bg-card border-border relative overflow-hidden rounded-lg border transition-all hover:shadow-md"
+						class="bg-card border-border group relative overflow-hidden rounded-lg border transition-all hover:shadow-md"
 						in:scale={{ duration: 300, easing: quintOut }}
 						out:fade={{ duration: 200, easing: quintOut }}
 					>
@@ -145,14 +144,14 @@
 									<Button
 										variant="destructive"
 										size="icon"
-										class="h-8 w-8 rounded-full bg-destructive/90 shadow-md hover:bg-destructive"
+										class="bg-destructive/90 hover:bg-destructive h-8 w-8 rounded-full shadow-md"
 										onclick={() => handleDelete(imageName)}
 										disabled={deletingStates[imageName]}
 									>
 										{#if deletingStates[imageName]}
-											<Loader2 class="h-4 w-4 animate-spin text-destructive-foreground" />
+											<Loader2 class="text-destructive-foreground h-4 w-4 animate-spin" />
 										{:else}
-											<Trash2 class="h-4 w-4 text-destructive-foreground" />
+											<Trash2 class="text-destructive-foreground h-4 w-4" />
 										{/if}
 									</Button>
 								</div>

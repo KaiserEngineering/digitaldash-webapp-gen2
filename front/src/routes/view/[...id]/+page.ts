@@ -13,7 +13,7 @@ export const load: PageLoad = async ({ params, parent }) => {
 	const viewId = Number(params.id);
 
 	// Use current config store data instead of potentially stale parent data
-	const config = get(configStore) || await parentData.config;
+	const config = get(configStore) || (await parentData.config);
 
 	const options = await parentData.options;
 	const pids = await parentData.pids;

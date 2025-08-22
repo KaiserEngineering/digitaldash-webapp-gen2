@@ -161,7 +161,7 @@
 					Configuration Validation Error
 				</h4>
 				<pre
-					class="mt-2 whitespace-pre-wrap font-mono text-xs text-yellow-700 dark:text-yellow-300">{validationError}</pre>
+					class="mt-2 font-mono text-xs whitespace-pre-wrap text-yellow-700 dark:text-yellow-300">{validationError}</pre>
 			</div>
 		{/if}
 

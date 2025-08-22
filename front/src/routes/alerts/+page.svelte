@@ -165,7 +165,7 @@
 												checked={alert.enable === 'Enabled'}
 												onCheckedChange={(checked) =>
 													($form[key].enable = checked ? 'Enabled' : 'Disabled')}
-												class="data-[state=checked]:bg-success data-[state=checked]:border-success/30 border border-muted bg-muted"
+												class="data-[state=checked]:bg-success data-[state=checked]:border-success/30 border-muted bg-muted border"
 											/>
 										</div>
 

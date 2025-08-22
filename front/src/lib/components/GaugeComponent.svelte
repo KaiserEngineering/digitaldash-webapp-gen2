@@ -12,7 +12,9 @@
 </script>
 
 <div class="mt-4 flex h-full flex-col items-center justify-center">
-	<div class="relative flex h-[80px] w-[80px] items-center justify-center sm:h-[100px] sm:w-[100px]">
+	<div
+		class="relative flex h-[80px] w-[80px] items-center justify-center sm:h-[100px] sm:w-[100px]"
+	>
 		{#if themeUrl && !failed}
 			<img
 				class="aspect-square w-full object-contain transition-all duration-300"

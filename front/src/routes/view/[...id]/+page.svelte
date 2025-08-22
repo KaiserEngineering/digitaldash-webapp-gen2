@@ -46,7 +46,6 @@
 		}
 	});
 
-
 	let activeTab: 'view' | 'gauges' = $state('view');
 
 	let selectedBackground = $derived(
