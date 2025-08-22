@@ -302,21 +302,42 @@ esp_err_t image_delete_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "DELETE request received: %s", req->uri);
 
-    char encoded_filename[128];
-    char query[128];
     char decoded_filename[128];
 
-    if (httpd_req_get_url_query_str(req, query, sizeof(query)) != ESP_OK ||
-        httpd_query_key_value(query, "filename", encoded_filename, sizeof(encoded_filename)) != ESP_OK)
+    // Extract filename from URI path (after /api/image/)
+    const char *prefix = "/api/image/";
+    if (strncmp(req->uri, prefix, strlen(prefix)) != 0)
+    {
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid delete request");
+    }
+
+    const char *filename_from_path = req->uri + strlen(prefix);
+    if (strlen(filename_from_path) == 0)
     {
         return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing filename parameter");
     }
 
-    url_decode(decoded_filename, encoded_filename, sizeof(decoded_filename));
+    url_decode(decoded_filename, filename_from_path, sizeof(decoded_filename));
     ESP_LOGI(TAG, "Requested DELETE for file: %s", decoded_filename);
 
+    // Add .png extension if not present
+    char filename_with_ext[132]; // 128 + 4 for ".png"
+    if (strstr(decoded_filename, ".png") == NULL)
+    {
+        if (strlen(decoded_filename) > 123) // Leave room for ".png" + null terminator
+        {
+            return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Filename too long");
+        }
+        snprintf(filename_with_ext, sizeof(filename_with_ext), "%s.png", decoded_filename);
+    }
+    else
+    {
+        strncpy(filename_with_ext, decoded_filename, sizeof(filename_with_ext) - 1);
+        filename_with_ext[sizeof(filename_with_ext) - 1] = '\0';
+    }
+
     char filepath[MAX_PATH_SIZE];
-    snprintf(filepath, sizeof(filepath), "%s/%s", IMAGE_DIR, decoded_filename);
+    snprintf(filepath, sizeof(filepath), "%s/%s", IMAGE_DIR, filename_with_ext);
 
     // Check if file exists
     bool exists;
@@ -334,7 +355,7 @@ esp_err_t image_delete_handler(httpd_req_t *req)
         httpd_resp_set_type(req, "application/json");
         char response[256];
         snprintf(response, sizeof(response),
-                 "{\"message\": \"File deleted successfully\", \"filename\": \"%s\"}", decoded_filename);
+                 "{\"message\": \"File deleted successfully\", \"filename\": \"%s\"}", filename_with_ext);
         return httpd_resp_sendstr(req, response);
     }
     else

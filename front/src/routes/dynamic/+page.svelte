@@ -223,7 +223,7 @@
 												/>
 											{:else if priorities[i].name === 'Default'}
 												<div class="text-success flex items-center gap-2 text-sm font-medium">
-													<CheckCircle2 class="h-4 w-4" />
+													<CircleCheck class="h-4 w-4" />
 													Always Enabled
 												</div>
 											{/if}
