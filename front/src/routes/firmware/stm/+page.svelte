@@ -83,7 +83,7 @@
 				uploadMessage = 'Upload timed out';
 			};
 
-			xhr.timeout = 120000; // 2 minutes
+			xhr.timeout = 360000; // 3 minutes
 
 			// Make the request
 			xhr.open('POST', '/api/spiffs');

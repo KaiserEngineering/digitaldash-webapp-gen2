@@ -67,7 +67,7 @@
 			};
 			xhr.onerror = () => toast.error('Network error.');
 			xhr.ontimeout = () => toast.error('Upload timed out.');
-			xhr.timeout = 120000;
+			xhr.timeout = 360000;  // 3 minutes
 			xhr.send(file);
 		} catch (err) {
 			console.error(err);
