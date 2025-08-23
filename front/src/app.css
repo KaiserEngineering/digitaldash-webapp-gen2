@@ -95,6 +95,12 @@
 		--color-background-muted: var(--color-secondary-100);
 
 		--radius: 0.5rem;
+
+		/* Tabs */
+		--tab-active-bg: var(--color-primary-300);
+		--tab-active-text: oklch(0.2398 0.0201 267.83);
+		--tab-inactive-text: var(--color-muted-foreground);
+		--tab-hover-bg: var(--color-background-hover, rgba(0,0,0,0.05));
 	}
 }
 
@@ -153,6 +159,12 @@
 	/* Background variations */
 	--color-background-soft: oklch(0.14 0 0); /* gray-900 */
 	--color-background-muted: oklch(0.17 0 0); /* gray-850 */
+
+	/* Tabs */
+	--tab-active-bg: var(--color-primary-600);
+	--tab-active-text: var(--color-foreground);
+	--tab-inactive-text: var(--color-muted-foreground);
+	--tab-hover-bg: var(--color-background-hover-dark, rgba(255,255,255,0.05));
 }
 
 @layer base {
