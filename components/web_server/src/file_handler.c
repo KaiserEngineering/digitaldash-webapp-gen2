@@ -349,54 +349,57 @@ static esp_err_t spiffs_list_handler(httpd_req_t *req)
 
 static esp_err_t spiffs_upload_handler(httpd_req_t *req)
 {
-    ESP_LOGI(TAG, "SPIFFS upload request: %s", req->uri);
+    ESP_LOGI(TAG, "SPIFFS upload request: %s (len=%d)", req->uri, req->content_len);
 
-    if (req->content_len > MAX_FILE_SIZE)
-    {
-        ESP_LOGW(TAG, "File too large: %zu bytes (max: %d)", req->content_len, MAX_FILE_SIZE);
+    if (req->content_len > MAX_FILE_SIZE) {
+        ESP_LOGW(TAG, "File too large: %d bytes (max: %d)", req->content_len, MAX_FILE_SIZE);
         return httpd_resp_send_err(req, HTTPD_413_PAYLOAD_TOO_LARGE, "File too large");
     }
 
-    if (req->content_len == 0)
-    {
+    if (req->content_len == 0) {
         ESP_LOGW(TAG, "No content received");
         return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "No file content");
     }
 
-    // For now, hardcode the firmware filename
     const char *filename = "digitaldash-firmware-gen2-stm32u5g.bin";
     char filepath[FILE_PATH_MAX];
     snprintf(filepath, sizeof(filepath), "/spiffs/%s", filename);
 
-    ESP_LOGI(TAG, "Uploading file: %s", filepath);
-
     FILE *file = file_handler_open_write(filepath);
-    if (!file)
-    {
+    if (!file) {
         ESP_LOGE(TAG, "Failed to open file for writing: %s", filepath);
         return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to create file");
     }
 
-    // Receive and write file data
     int remaining = req->content_len;
     char buf[SPIFFS_WRITE_SIZE];
     int total_received = 0;
 
-    while (remaining > 0)
-    {
-        int received = httpd_req_recv(req, buf, MIN(remaining, (int)sizeof(buf)));
-        if (received <= 0)
-        {
-            ESP_LOGE(TAG, "Error receiving file data");
+    while (remaining > 0) {
+        int recv_len = MIN(remaining, (int)sizeof(buf));
+        int received = httpd_req_recv(req, buf, recv_len);
+
+        if (received < 0) {
+            if (received == HTTPD_SOCK_ERR_TIMEOUT) {
+                // retry instead of failing immediately
+                ESP_LOGW(TAG, "Socket timeout, retrying...");
+                continue;
+            }
+            ESP_LOGE(TAG, "Socket error: %d", received);
             file_handler_close(file);
             file_handler_delete(filepath);
             return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File upload failed");
+        } else if (received == 0) {
+            // unexpected end of stream
+            ESP_LOGE(TAG, "Connection closed before file fully received");
+            file_handler_close(file);
+            file_handler_delete(filepath);
+            return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File upload incomplete");
         }
 
         size_t written = fwrite(buf, 1, received, file);
-        if (written != received)
-        {
-            ESP_LOGE(TAG, "Error writing file data");
+        if (written != received) {
+            ESP_LOGE(TAG, "Error writing to file (%d vs %d)", written, received);
             file_handler_close(file);
             file_handler_delete(filepath);
             return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File write failed");
@@ -405,15 +408,16 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
         remaining -= received;
         total_received += received;
     }
+
     file_handler_close(file);
 
     ESP_LOGI(TAG, "File uploaded successfully: %s (%d bytes)", filepath, total_received);
 
-    // Send success response
+    // Respond
     httpd_resp_set_type(req, "application/json");
     char response[256];
     snprintf(response, sizeof(response),
-             "{\"message\": \"File uploaded successfully\", \"filename\": \"%s\", \"size\": %d}",
+             "{\"message\":\"File uploaded successfully\",\"filename\":\"%s\",\"size\":%d}",
              filename, total_received);
     return httpd_resp_sendstr(req, response);
 }

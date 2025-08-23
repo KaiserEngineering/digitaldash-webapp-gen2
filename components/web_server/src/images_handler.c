@@ -219,64 +219,76 @@ esp_err_t get_image(httpd_req_t *req)
 
 esp_err_t image_upload_handler(httpd_req_t *req)
 {
-    ESP_LOGI(TAG, "POST request received for image upload");
+    ESP_LOGI(TAG, "POST request received for image upload (len=%d)", req->content_len);
 
-    if (req->content_len > MAX_FILE_SIZE)
-    {
-        ESP_LOGW(TAG, "File too large: %zu bytes (max: %d)", req->content_len, MAX_FILE_SIZE);
+    if (req->content_len > MAX_FILE_SIZE) {
+        ESP_LOGW(TAG, "File too large: %d bytes (max: %d)", req->content_len, MAX_FILE_SIZE);
         return httpd_resp_send_err(req, HTTPD_413_PAYLOAD_TOO_LARGE, "File too large");
     }
 
-    if (req->content_len == 0)
-    {
+    if (req->content_len == 0) {
         ESP_LOGW(TAG, "No content received");
         return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "No file content");
     }
 
-    // Get Content-Type header to determine file extension
+    // ---- Get Content-Type header ----
     char content_type[64] = {0};
     size_t content_type_len = httpd_req_get_hdr_value_len(req, "Content-Type");
-    if (content_type_len > 0 && content_type_len < sizeof(content_type))
-    {
+    if (content_type_len > 0 && content_type_len < sizeof(content_type)) {
         httpd_req_get_hdr_value_str(req, "Content-Type", content_type, sizeof(content_type));
     }
-
     const char *extension = get_extension_from_content_type(content_type);
+    if (!extension) {
+        ESP_LOGW(TAG, "Unknown Content-Type: %s, defaulting to .bin", content_type);
+        extension = ".bin";
+    }
 
-    // Extract filename from URI (after /api/image/)
+    // ---- Extract filename from URI ----
     const char *filename = req->uri + strlen("/api/image/");
+    if (filename[0] == '\0') {
+        ESP_LOGW(TAG, "No filename in URI");
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing filename");
+    }
+
     char filepath[MAX_PATH_SIZE];
     snprintf(filepath, sizeof(filepath), "%s/%s%s", IMAGE_DIR, filename, extension);
 
     ESP_LOGI(TAG, "Uploading file: %s (Content-Type: %s)", filepath, content_type);
 
     FILE *file = file_handler_open_write(filepath);
-    if (!file)
-    {
-        ESP_LOGE(TAG, "Failed to open file for writing: %s, errno: %d", filepath, errno);
+    if (!file) {
+        ESP_LOGE(TAG, "Failed to open file for writing: %s, errno=%d", filepath, errno);
         return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to create file");
     }
 
-    // Receive and write file data
+    // ---- Receive and write file data ----
     int remaining = req->content_len;
     char buf[512];
     int total_received = 0;
 
-    while (remaining > 0)
-    {
-        int received = httpd_req_recv(req, buf, MIN(remaining, (int)sizeof(buf)));
-        if (received <= 0)
-        {
-            ESP_LOGE(TAG, "Error receiving file data");
+    while (remaining > 0) {
+        int recv_len = MIN(remaining, (int)sizeof(buf));
+        int received = httpd_req_recv(req, buf, recv_len);
+
+        if (received < 0) {
+            if (received == HTTPD_SOCK_ERR_TIMEOUT) {
+                ESP_LOGW(TAG, "Socket timeout, retrying...");
+                continue; // retry instead of failing
+            }
+            ESP_LOGE(TAG, "Socket error: %d", received);
             file_handler_close(file);
             file_handler_delete(filepath);
             return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File upload failed");
+        } else if (received == 0) {
+            ESP_LOGE(TAG, "Connection closed before file fully received");
+            file_handler_close(file);
+            file_handler_delete(filepath);
+            return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Upload incomplete");
         }
 
         size_t written = fwrite(buf, 1, received, file);
-        if (written != received)
-        {
-            ESP_LOGE(TAG, "Error writing file data");
+        if (written != received) {
+            ESP_LOGE(TAG, "File write error (%d vs %d)", written, received);
             file_handler_close(file);
             file_handler_delete(filepath);
             return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File write failed");
@@ -285,18 +297,20 @@ esp_err_t image_upload_handler(httpd_req_t *req)
         remaining -= received;
         total_received += received;
     }
+
     file_handler_close(file);
 
     ESP_LOGI(TAG, "File uploaded successfully: %s (%d bytes)", filepath, total_received);
 
-    // Send success response
+    // ---- Send success response ----
     httpd_resp_set_type(req, "application/json");
     char response[256];
     snprintf(response, sizeof(response),
-             "{\"message\": \"File uploaded successfully\", \"filename\": \"%s%s\", \"size\": %d}",
+             "{\"message\":\"File uploaded successfully\",\"filename\":\"%s%s\",\"size\":%d}",
              filename, extension, total_received);
     return httpd_resp_sendstr(req, response);
 }
+
 
 esp_err_t image_delete_handler(httpd_req_t *req)
 {
