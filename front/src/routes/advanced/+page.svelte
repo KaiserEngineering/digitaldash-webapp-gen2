@@ -184,18 +184,20 @@
 	</div>
 
 	{#snippet footerContent()}
-		<Button
-			type="submit"
-			disabled={$submitting || !isValidJson || !!validationError}
-			class="btn-primary flex h-12 items-center gap-2 rounded-xl px-8 font-semibold text-gray-800 shadow-lg transition-all duration-200"
-		>
-			{#if $submitting}
-				<Loader class="h-4 w-4 animate-spin" />
-				Saving Configuration...
-			{:else}
-				<Save class="h-4 w-4" />
-				Save Configuration
-			{/if}
-		</Button>
+		<div class="border-border bg-muted/30 py-4">
+			<Button
+				type="submit"
+				disabled={$submitting || !isValidJson || !!validationError}
+				class="btn-primary flex h-12 items-center gap-2 rounded-xl px-8 font-semibold text-gray-800 shadow-lg transition-all duration-200"
+			>
+				{#if $submitting}
+					<Loader class="h-4 w-4 animate-spin" />
+					Saving Configuration...
+				{:else}
+					<Save class="h-4 w-4" />
+					Save Configuration
+				{/if}
+			</Button>
+		</div>
 	{/snippet}
 </PageCard>

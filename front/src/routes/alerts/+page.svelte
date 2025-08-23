@@ -260,9 +260,7 @@
 	</div>
 
 	{#snippet footerContent()}
-		<div
-			class="border-border mt-8 flex flex-col items-center justify-between gap-4 pt-6 md:flex-row"
-		>
+		<div class="border-border flex flex-col items-center justify-between gap-4 py-4 md:flex-row">
 			<div class="text-muted-foreground text-sm">
 				{Object.values($form).filter(
 					(alert) =>

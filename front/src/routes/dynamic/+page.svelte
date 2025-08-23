@@ -398,9 +398,7 @@
 	</div>
 
 	{#snippet footerContent()}
-		<div
-			class="border-border mt-8 flex flex-col items-center justify-between gap-4 pt-6 md:flex-row"
-		>
+		<div class="border-border flex flex-col items-center justify-between gap-4 py-4 md:flex-row">
 			<div class="text-muted-foreground flex items-center gap-4 text-sm">
 				<div class="flex items-center gap-2">
 					<Zap class="h-4 w-4" />

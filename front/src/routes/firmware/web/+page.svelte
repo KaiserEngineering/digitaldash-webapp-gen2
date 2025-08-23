@@ -123,12 +123,16 @@
 	{/if}
 
 	{#snippet footerContent()}
-		<Button onclick={startUpload} disabled={!file || uploadProgress > 0}>
-			{#if uploadProgress > 0 && !uploadComplete}
-				Uploading...
-			{:else}
-				Upload Firmware
-			{/if}
-		</Button>
+		<div class="border-border bg-muted/30 py-4">
+			<Button onclick={startUpload} disabled={!file || uploadProgress > 0}
+			class="btn-primary flex h-12 items-center gap-2 rounded-xl px-8 font-semibold text-gray-800 shadow-lg transition-all duration-200"
+			>
+				{#if uploadProgress > 0 && !uploadComplete}
+					Uploading...
+				{:else}
+					Upload Firmware
+				{/if}
+			</Button>
+		</div>
 	{/snippet}
 </PageCard>
