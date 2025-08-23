@@ -100,7 +100,7 @@
 	</Tabs.Root>
 
 	{#snippet footerContent()}
-		<div class="border-border bg-muted/30 border-t py-4">
+		<div class="border-border bg-muted/30 py-4">
 			<div class="flex items-center justify-between">
 				<Button
 					type="submit"
