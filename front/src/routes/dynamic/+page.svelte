@@ -399,7 +399,7 @@
 
 	{#snippet footerContent()}
 		<div
-			class="border-border mt-8 flex flex-col items-center justify-between gap-4 border-t pt-6 md:flex-row"
+			class="border-border mt-8 flex flex-col items-center justify-between gap-4 pt-6 md:flex-row"
 		>
 			<div class="text-muted-foreground flex items-center gap-4 text-sm">
 				<div class="flex items-center gap-2">
