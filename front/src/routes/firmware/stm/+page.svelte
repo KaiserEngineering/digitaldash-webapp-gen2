@@ -196,7 +196,7 @@
 			<CardContent class="space-y-6 p-6">
 				<div class="bg-muted border-border rounded-lg border p-4">
 					<p class="text-muted-foreground text-sm">
-						Browse for a firmware file (.bin) to update your Digital Dash.
+						Select a firmware file (.bin) to update your Digital Dash. The flashing process typically takes 5–10 minutes, depending on the file size. Do not turn off your vehicle while the update is in progress.
 					</p>
 				</div>
 
@@ -223,12 +223,6 @@
 						Upload Firmware File
 					{/if}
 				</Button>
-
-				<div class="bg-muted border-border rounded-lg border p-4">
-					<p class="text-muted-foreground text-sm">
-						The Digital Dash flashing process takes about 5–10 minutes depending on the image size. Do NOT turn off your vehicle during this process.
-					</p>
-				</div>
 
 				<!-- Upload Status -->
 				{#if uploadStatus === 'success'}
