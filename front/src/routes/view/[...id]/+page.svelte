@@ -63,10 +63,10 @@
 	<Tabs.Root bind:value={activeTab} class="w-full">
 		<ViewCard view={$form} index={viewId} pids={data.pids} />
 
-		<Tabs.List class="grid w-full grid-cols-2">
+		<Tabs.List class="h-10 grid w-full grid-cols-2">
 			<Tabs.Trigger
 				value="view"
-				class="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-background/50 flex items-center justify-center gap-2 rounded-md
+				class="data-[state=active]:bg-primary-400 data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-background/50 flex items-center justify-center gap-2 rounded-md
 				text-sm
 				font-medium transition-all
 				data-[state=active]:shadow-sm"
@@ -77,7 +77,7 @@
 
 			<Tabs.Trigger
 				value="gauges"
-				class="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-background/50 flex items-center justify-center gap-2 rounded-md
+				class="data-[state=active]:bg-primary-400 data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-background/50 flex items-center justify-center gap-2 rounded-md
 				text-sm
 				font-medium transition-all
 				data-[state=active]:shadow-sm"
