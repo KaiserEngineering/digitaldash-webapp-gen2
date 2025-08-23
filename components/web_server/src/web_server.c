@@ -21,6 +21,7 @@ static const char *TAG = "WebServer";
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + 1024)
 #define SCRATCH_BUFSIZE (20480)
 #define CHECK_FILE_EXTENSION(filename, ext) (strcasecmp(&filename[strlen(filename) - strlen(ext)], ext) == 0)
+#define EMBED_CHUNK_SIZE 65536
 
 // Define struct to map filenames to embedded binaries
 typedef struct
@@ -131,29 +132,35 @@ esp_err_t send_embedded_file(httpd_req_t *req, const EmbeddedFile *file, bool is
         httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
     }
 
-    size_t file_size = file->end - file->start;
+    const uint8_t *file_ptr = file->start;
+    size_t file_size = (size_t)(file->end - file->start);
     ESP_LOGI(TAG, "File size: %zu bytes", file_size);
 
-    const size_t chunk_size = 4096;
-    size_t bytes_remaining = file_size;
-    const uint8_t *file_ptr = file->start;
+    if (file_size < EMBED_CHUNK_SIZE) {
+        // Send whole file at once for small files
+        return httpd_resp_send(req, (const char *)file_ptr, file_size);
+    } else {
+        size_t bytes_remaining = file_size;
 
-    while (bytes_remaining > 0)
-    {
-        size_t bytes_to_send = (bytes_remaining > chunk_size) ? chunk_size : bytes_remaining;
-
-        esp_err_t ret = httpd_resp_send_chunk(req, (const char *)file_ptr, bytes_to_send);
-        if (ret != ESP_OK)
+        while (bytes_remaining > 0)
         {
-            ESP_LOGE(TAG, "File sending failed: %s", esp_err_to_name(ret));
-            return ret;
+            size_t bytes_to_send = (bytes_remaining > EMBED_CHUNK_SIZE) ? EMBED_CHUNK_SIZE : bytes_remaining;
+
+            esp_err_t ret = httpd_resp_send_chunk(req, (const char *)file_ptr, bytes_to_send);
+            if (ret != ESP_OK)
+            {
+                // Close out the response
+                httpd_resp_send_chunk(req, NULL, 0);
+                ESP_LOGE(TAG, "File sending failed: %s", esp_err_to_name(ret));
+                return ret;
+            }
+
+            file_ptr += bytes_to_send;
+            bytes_remaining -= bytes_to_send;
         }
 
-        file_ptr += bytes_to_send;
-        bytes_remaining -= bytes_to_send;
+        return httpd_resp_send_chunk(req, NULL, 0);
     }
-
-    return httpd_resp_send_chunk(req, NULL, 0);
 }
 
 esp_err_t embedded_file_handler(httpd_req_t *req)
