@@ -52,16 +52,19 @@ esp_err_t config_options_handler(httpd_req_t *req)
         return httpd_resp_send(req, "{}", HTTPD_RESP_USE_STRLEN);
     }
     
-    ESP_LOGI(TAG, "Sending options data: %s", option_list);
+    ESP_LOGD(TAG, "Sending options data: %s", option_list);
     httpd_resp_set_type(req, "application/json");
     return httpd_resp_send(req, option_list, HTTPD_RESP_USE_STRLEN);
 }
 
 esp_err_t config_get_handler(httpd_req_t *req)
 {
-    memset(json_data_input, 0, JSON_BUF_SIZE);
-    Generate_TX_Message(get_stm32_comm(), KE_CONFIG_REQUEST, 0);
-    KE_wait_for_response(get_stm32_comm(), 5000);
+    if(json_data_input[0] == '\0')
+    {
+        memset(json_data_input, '\0', JSON_BUF_SIZE);
+        Generate_TX_Message(get_stm32_comm(), KE_CONFIG_REQUEST, 0);
+        KE_wait_for_response(get_stm32_comm(), 5000);
+    }
 
     ESP_LOGI(TAG, "GET /api/config requested");
     if (json_data_input[0] == '\0')
@@ -69,7 +72,7 @@ esp_err_t config_get_handler(httpd_req_t *req)
         ESP_LOGE(TAG, "Config data is empty, please reset the MCU to initialize.");
         return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Config data not initialized");
     }
-    ESP_LOGI(TAG, "Sending config data: %s", json_data_input);
+    ESP_LOGD(TAG, "Sending config data: %s", json_data_input);
     httpd_resp_set_type(req, "application/json");
     return httpd_resp_send(req, json_data_input, HTTPD_RESP_USE_STRLEN);
 }
@@ -88,11 +91,14 @@ esp_err_t config_patch_handler(httpd_req_t *req)
     }
 
     json_data_output[received] = '\0';
-    ESP_LOGI(TAG, "Received config update: %s", json_data_output);
+    ESP_LOGD(TAG, "Received config update: %s", json_data_output);
 
     // Now save to STM
     Generate_TX_Message(get_stm32_comm(), KE_CONFIG_SEND, 0);
     KE_wait_for_response(get_stm32_comm(), 5000);
+
+    // The config has been changed, invalidate cached json input data
+    memset(json_data_input, '\0', JSON_BUF_SIZE);
 
     // Brute force hot-reload. This can be done better
     vTaskDelay(pdMS_TO_TICKS(250));
@@ -113,8 +119,26 @@ esp_err_t config_patch_handler(httpd_req_t *req)
 esp_err_t config_handler_init_buffer(void)
 {
     json_data_input = heap_caps_malloc(JSON_BUF_SIZE, MALLOC_CAP_SPIRAM);
+    if (json_data_input) {
+        memset(json_data_input, '\0', JSON_BUF_SIZE);
+    } else {
+        return ESP_FAIL;
+    }
+
     json_data_output = heap_caps_malloc(JSON_BUF_SIZE, MALLOC_CAP_SPIRAM);
+    if (json_data_output) {
+        memset(json_data_output, '\0', JSON_BUF_SIZE);
+    } else {
+        return ESP_FAIL;
+    }
+
     option_list = heap_caps_malloc(OPTION_LIST_SIZE, MALLOC_CAP_SPIRAM);
+    if (option_list) {
+        memset(option_list, '\0', OPTION_LIST_SIZE);
+    } else {
+        return ESP_FAIL;
+    }
+
     return ESP_OK;
 }
 

@@ -156,7 +156,7 @@ uint32_t send_config(char *buffer, uint32_t buffer_size)
     strncpy(buffer, ptr, buffer_size - 1);
     buffer[buffer_size - 1] = '\0'; // ensure null termination
 
-    ESP_LOGI("CONFIG", "JSON Config copied to buffer:\n%s", buffer);
+    ESP_LOGD("CONFIG", "JSON Config copied to buffer:\n%s", buffer);
     return strlen(buffer);
 }
 
@@ -179,7 +179,7 @@ bool receive_config(const char *json_str)
     strncpy(ptr, json_str, len-1);
     ptr[len - 1] = '\0'; // ensure null termination
 
-    //ESP_LOGI("CONFIG", "Received JSON Config:\n%s", ptr);
+    ESP_LOGD("CONFIG", "Received JSON Config:\n%s", ptr);
     return true;
 }
 
@@ -202,7 +202,7 @@ bool receive_option_list(const char *json_str)
     strncpy(ptr, json_str, len - 1);
     ptr[len - 1] = '\0'; // ensure null termination
 
-    //ESP_LOGI("CONFIG", "Received JSON Option List:\n%s", ptr);
+    ESP_LOGD("CONFIG", "Received JSON Option List:\n%s", ptr);
     return true;
 }
 
@@ -214,7 +214,7 @@ bool receive_pid_list(const char *json_str)
     strncpy(ptr, json_str, len - 1);
     ptr[len - 1] = '\0'; // ensure null termination
 
-    //ESP_LOGI("CONFIG", "Received JSON PID List:\n%s", ptr);
+    ESP_LOGD("CONFIG", "Received JSON PID List:\n%s", ptr);
     return true;
 }
 
@@ -321,7 +321,7 @@ void mirror_spiffs(void)
                 }
                 fclose(fp);
             } else {
-                ESP_LOGW(TAG, "File not found: %s", image_name);
+                ESP_LOGI(TAG, "File not found: %s", image_name);
             }
         } else {
             ESP_LOGI(TAG, "view_background[%d] is not a valid string", i);

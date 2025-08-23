@@ -22,7 +22,7 @@ void get_pid_list_info(char **ptr, uint32_t *max_len)
 esp_err_t get_pids_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "GET /api/pids requested");
-    ESP_LOGI(TAG, "Sending PID list: %s", pid_list);
+    ESP_LOGD(TAG, "Sending PID list: %s", pid_list);
 
     httpd_resp_set_type(req, "application/json");
     return httpd_resp_send(req, pid_list, HTTPD_RESP_USE_STRLEN);
