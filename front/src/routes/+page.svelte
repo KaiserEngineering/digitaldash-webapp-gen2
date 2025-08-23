@@ -36,7 +36,7 @@
 
 <!-- System Overview Card -->
 <Card
-	class="bg-card/80 border-0 pt-0 shadow-lg backdrop-blur-sm transition-all duration-200 hover:shadow-xl"
+	class="bg-card/80 border-0 mt-5 pt-0 shadow-lg backdrop-blur-sm transition-all duration-200 hover:shadow-xl"
 >
 	<CardContent class="space-y-4">
 		<!-- Alerts Row -->
@@ -67,8 +67,6 @@
 				<ChevronRight class="text-muted-foreground h-4 w-4" />
 			</div>
 		</a>
-
-		<Separator />
 
 		<!-- Dynamic Rules Row -->
 		<a href="/dynamic" class="block">
@@ -104,7 +102,5 @@
 				<ChevronRight class="text-muted-foreground h-4 w-4" />
 			</div>
 		</a>
-
-		<Separator />
 	</CardContent>
 </Card>
