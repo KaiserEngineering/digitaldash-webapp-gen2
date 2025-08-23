@@ -79,7 +79,7 @@ int cmdErase(void);
 int cmdExtErase(void);
 
 //Setup STM32Fxx for the 'flashing' process
-void setupSTM(void);
+int setupSTM(void);
 
 //Write data to flash memory address
 int cmdWrite(void);

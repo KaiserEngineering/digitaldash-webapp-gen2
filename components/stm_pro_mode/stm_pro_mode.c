@@ -34,15 +34,27 @@ void endConn(void)
     logI(TAG_STM_PRO, "%s", "Ending Connection");
 }
 
-void setupSTM(void)
+int setupSTM(void)
 {
     resetSTM();
-    cmdSync();
-    cmdGet();
-    cmdVersion();
-    cmdId();
-    cmdErase();
-    cmdExtErase();
+
+    if(cmdSync() == 0)
+        return 0;
+
+    if(cmdGet() == 0)
+        return 0;
+
+    if(cmdVersion() == 0)
+        return 0;
+
+    if(cmdId() == 0)
+        return 0;
+
+    // Only one needs to work
+    if((cmdErase() == 0) && (cmdExtErase() == 0))
+        return 0;
+
+    return 1;
 }
 
 int cmdSync(void)
