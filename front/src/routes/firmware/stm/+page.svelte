@@ -224,6 +224,12 @@
 					{/if}
 				</Button>
 
+				<div class="bg-muted border-border rounded-lg border p-4">
+					<p class="text-muted-foreground text-sm">
+						The Digital Dash flashing process takes about 5–10 minutes depending on the image size. Do NOT turn off your vehicle during this process.
+					</p>
+				</div>
+
 				<!-- Upload Status -->
 				{#if uploadStatus === 'success'}
 					<div class="border-border bg-muted rounded-lg border p-4">
