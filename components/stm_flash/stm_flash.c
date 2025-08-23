@@ -24,6 +24,9 @@ void stm32_reset(void)
     // Release the STM32 from reset
     gpio_set_level(CONFIG_STM32_RESET_PIN, 0);
     ESP_LOGI(TAG_STM_FLASH, "Starting STM32");
+
+    // Wait for the STM32 to reset
+    vTaskDelay(pdMS_TO_TICKS(STM32_RESET_DELAY_MS));
 }
 
 void stm32_bootloader(void)
@@ -42,6 +45,9 @@ void stm32_bootloader(void)
     // Release the STM32 from reset
     gpio_set_level(CONFIG_STM32_RESET_PIN, 0);
     ESP_LOGI(TAG_STM_FLASH, "Starting STM32");
+
+    // Wait for the STM32 to reset
+    vTaskDelay(pdMS_TO_TICKS(STM32_RESET_DELAY_MS));
 }
 
 esp_err_t writeTask(FILE *flash_file)
