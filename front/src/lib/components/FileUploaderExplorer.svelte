@@ -38,27 +38,30 @@
 		// Remove previous file if necessary
 		if (file) removeFile();
 
-		// Check if file is larger than 2MB
-		const isLargeFile = selectedFile.size > 2 * MEGABYTE;
-		requiresCropping = isLargeFile;
-
-		// Create a preview URL
+		// Create preview URL
 		const previewUrl = URL.createObjectURL(selectedFile);
 
-		// Store file (but don't upload yet)
-		file = {
-			name: selectedFile.name,
-			type: selectedFile.type,
-			size: selectedFile.size,
-			uploadedAt: Date.now(),
-			url: previewUrl,
-			rawFile: selectedFile
-		};
+		// Check dimensions
+		const img = new Image();
+		img.src = previewUrl;
+		img.onload = () => {
+			const needsCropping = img.width !== 1024 || img.height !== 200;
 
-		// If file is larger than 2MB, automatically trigger cropping
-		if (isLargeFile) {
-			setTimeout(() => triggerCropping(), 100);
-		}
+			file = {
+				name: selectedFile.name,
+				type: selectedFile.type,
+				size: selectedFile.size,
+				uploadedAt: Date.now(),
+				url: previewUrl,
+				rawFile: selectedFile
+			};
+
+			requiresCropping = needsCropping;
+
+			if (needsCropping) {
+				setTimeout(() => triggerCropping(), 100);
+			}
+		};
 	};
 
 	/** Handle rejected file */
