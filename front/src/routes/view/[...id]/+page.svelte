@@ -66,10 +66,7 @@
 		<Tabs.List class="h-10 grid w-full grid-cols-2">
 			<Tabs.Trigger
 				value="view"
-				class="data-[state=active]:bg-[var(--tab-active-bg)] data-[state=active]:text-[var(--tab-active-text)] data-[state=inactive]:text-[var(--tab-inactive-text)] data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-background/50 flex items-center justify-center gap-2 rounded-md
-				text-sm
-				font-medium transition-all
-				data-[state=active]:shadow-sm"
+				class="tab-trigger"
 			>
 				<SettingsIcon />
 				<span>Settings</span>
@@ -77,10 +74,7 @@
 
 			<Tabs.Trigger
 				value="gauges"
-				class="data-[state=active]:bg-[var(--tab-active-bg)] data-[state=active]:text-[var(--tab-active-text)] data-[state=inactive]:text-[var(--tab-inactive-text)] data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-background/50 flex items-center justify-center gap-2 rounded-md
-				text-sm
-				font-medium transition-all
-				data-[state=active]:shadow-sm"
+				class="tab-trigger"
 			>
 				<Gauge />
 				<span>Gauges</span>
@@ -104,7 +98,7 @@
 			<div class="flex items-center justify-between">
 				<Button
 					type="submit"
-					class="btn-primary flex h-12 items-center gap-2 rounded-xl px-8 font-semibold text-gray-800 shadow-lg transition-all duration-200"
+					class="btn-primary flex h-12 items-center gap-2 rounded-xl px-8 font-semibold shadow-lg transition-all duration-200"
 					disabled={isSubmitting}
 				>
 					{#if isSubmitting}

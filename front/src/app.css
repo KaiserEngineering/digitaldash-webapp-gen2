@@ -12,159 +12,186 @@
 }
 
 @layer theme {
-	@theme {
-		/* Primary (Red) — your main brand color */
-		--color-primary-50: oklch(0.97 0.03 27);
-		--color-primary-100: oklch(0.93 0.05 27);
-		--color-primary-200: oklch(0.87 0.09 27);
-		--color-primary-300: oklch(0.78 0.13 27);
-		--color-primary-400: oklch(0.67 0.18 27);
-		--color-primary-500: oklch(0.6 0.25 27); /* Main red */
-		--color-primary-600: oklch(0.5 0.25 27);
-		--color-primary-700: oklch(0.4 0.22 27);
-		--color-primary-800: oklch(0.3 0.18 27);
-		--color-primary-900: oklch(0.2 0.12 27);
+  @theme {
+    /* ----------------------------------------
+       Primary (Red) — main brand color
+       ---------------------------------------- */
+    --color-primary-50: oklch(0.97 0.03 27);
+    --color-primary-100: oklch(0.93 0.05 27);
+    --color-primary-200: oklch(0.87 0.09 27);
+    --color-primary-300: oklch(0.78 0.13 27);
+    --color-primary-400: oklch(0.67 0.18 27);
+    --color-primary-500: oklch(0.6 0.25 27); /* Main red */
+    --color-primary-600: oklch(0.5 0.25 27);
+    --color-primary-700: oklch(0.4 0.22 27);
+    --color-primary-800: oklch(0.3 0.18 27);
+    --color-primary-900: oklch(0.2 0.12 27);
 
-		/* Secondary (Warm Gray) — complements red */
-		--color-secondary-50: oklch(0.98 0.005 20);
-		--color-secondary-100: oklch(0.94 0.01 20);
-		--color-secondary-200: oklch(0.88 0.015 20);
-		--color-secondary-300: oklch(0.8 0.02 20);
-		--color-secondary-400: oklch(0.7 0.025 20);
-		--color-secondary-500: oklch(0.6 0.03 20);
-		--color-secondary-600: oklch(0.5 0.025 20);
-		--color-secondary-700: oklch(0.4 0.02 20);
-		--color-secondary-800: oklch(0.3 0.015 20);
-		--color-secondary-900: oklch(0.2 0.01 20);
+    /* ----------------------------------------
+       Secondary (Warm Gray) — complements red
+       ---------------------------------------- */
+    --color-secondary-50: oklch(0.98 0.005 20);
+    --color-secondary-100: oklch(0.94 0.01 20);
+    --color-secondary-200: oklch(0.88 0.015 20);
+    --color-secondary-300: oklch(0.8 0.02 20);
+    --color-secondary-400: oklch(0.7 0.025 20);
+    --color-secondary-500: oklch(0.6 0.03 20);
+    --color-secondary-600: oklch(0.5 0.025 20);
+    --color-secondary-700: oklch(0.4 0.02 20);
+    --color-secondary-800: oklch(0.3 0.015 20);
+    --color-secondary-900: oklch(0.2 0.01 20);
 
-		/* Accent (Amber) — for highlights and actions */
-		--color-accent-50: oklch(0.97 0.03 60);
-		--color-accent-100: oklch(0.93 0.06 60);
-		--color-accent-200: oklch(0.87 0.12 60);
-		--color-accent-300: oklch(0.8 0.18 60);
-		--color-accent-400: oklch(0.7 0.22 60);
-		--color-accent-500: oklch(0.65 0.25 60); /* Amber accent */
-		--color-accent-600: oklch(0.55 0.25 60);
-		--color-accent-700: oklch(0.45 0.22 60);
-		--color-accent-800: oklch(0.35 0.18 60);
-		--color-accent-900: oklch(0.25 0.12 60);
+    /* ----------------------------------------
+       Accent (Amber) — for highlights/actions
+       ---------------------------------------- */
+    --color-accent-50: oklch(0.97 0.03 60);
+    --color-accent-100: oklch(0.93 0.06 60);
+    --color-accent-200: oklch(0.87 0.12 60);
+    --color-accent-300: oklch(0.8 0.18 60);
+    --color-accent-400: oklch(0.7 0.22 60);
+    --color-accent-500: oklch(0.65 0.25 60); /* Amber accent */
+    --color-accent-600: oklch(0.55 0.25 60);
+    --color-accent-700: oklch(0.45 0.22 60);
+    --color-accent-800: oklch(0.35 0.18 60);
+    --color-accent-900: oklch(0.25 0.12 60);
 
-		/* Unified semantic colors using the new palette */
-		--color-background: oklch(1 0 0);
-		--color-foreground: var(--color-secondary-900);
-		--color-card: oklch(1 0 0);
-		--color-card-foreground: var(--color-secondary-900);
-		--color-popover: oklch(1 0 0);
-		--color-popover-foreground: var(--color-secondary-900);
-		--color-muted: var(--color-secondary-50);
-		--color-muted-foreground: var(--color-secondary-500);
-		--color-accent: var(--color-accent-100);
-		--color-accent-foreground: var(--color-secondary-900);
-		--color-border: var(--color-secondary-200);
-		--color-input: var(--color-secondary-50);
-		--color-ring: var(--color-primary-500);
+    /* ----------------------------------------
+       Semantic Colors
+       ---------------------------------------- */
+    --color-background: oklch(1 0 0);
+    --color-foreground: var(--color-secondary-900);
+    --color-card: oklch(1 0 0);
+    --color-card-foreground: var(--color-secondary-900);
+    --color-popover: oklch(1 0 0);
+    --color-popover-foreground: var(--color-secondary-900);
+    --color-muted: var(--color-secondary-50);
+    --color-muted-foreground: var(--color-secondary-500);
+    --color-accent: var(--color-accent-100);
+    --color-accent-foreground: var(--color-secondary-900);
+    --color-border: var(--color-secondary-200);
+    --color-input: var(--color-secondary-50);
+    --color-ring: var(--color-primary-500);
 
-		/* Status colors using harmonious palette */
-		--color-destructive: var(--color-primary-600);
-		--color-destructive-foreground: oklch(0.98 0 0);
+    /* ----------------------------------------
+       Status Colors
+       ---------------------------------------- */
+    --color-destructive: var(--color-primary-600);
+    --color-destructive-foreground: oklch(0.98 0 0);
 
-		/* Success colors (green family) */
-		--color-success: oklch(0.6 0.15 140);
-		--color-success-foreground: oklch(0.98 0 0);
-		--color-success-500: oklch(0.6 0.15 140);
-		--color-success-600: oklch(0.5 0.15 140);
-		--color-success-700: oklch(0.4 0.12 140);
+    --color-success: oklch(0.6 0.15 140);
+    --color-success-foreground: oklch(0.98 0 0);
+    --color-success-500: oklch(0.6 0.15 140);
+    --color-success-600: oklch(0.5 0.15 140);
+    --color-success-700: oklch(0.4 0.12 140);
 
-		/* Warning colors (using amber accent) */
-		--color-warning: var(--color-accent-500);
-		--color-warning-foreground: var(--color-secondary-900);
-		--color-warning-500: var(--color-accent-500);
-		--color-warning-600: var(--color-accent-600);
-		--color-warning-700: var(--color-accent-700);
+    --color-warning: var(--color-accent-500);
+    --color-warning-foreground: var(--color-secondary-900);
+    --color-warning-500: var(--color-accent-500);
+    --color-warning-600: var(--color-accent-600);
+    --color-warning-700: var(--color-accent-700);
 
-		/* Error colors (using primary red) */
-		--color-error-500: var(--color-primary-600);
-		--color-error-600: var(--color-primary-700);
-		--color-error-700: var(--color-primary-800);
+    --color-error-500: var(--color-primary-600);
+    --color-error-600: var(--color-primary-700);
+    --color-error-700: var(--color-primary-800);
 
-		--color-info: var(--color-secondary-600);
-		--color-info-foreground: oklch(0.98 0 0);
+    --color-info: var(--color-secondary-600);
+    --color-info-foreground: oklch(0.98 0 0);
 
-		/* Background variations using warm grays */
-		--color-background-soft: var(--color-secondary-50);
-		--color-background-muted: var(--color-secondary-100);
+    /* ----------------------------------------
+       Background Variations
+       ---------------------------------------- */
+    --color-background-soft: var(--color-secondary-50);
+    --color-background-muted: var(--color-secondary-100);
 
-		--radius: 0.5rem;
+    /* ----------------------------------------
+       Radii
+       ---------------------------------------- */
+    --radius: 0.5rem;
 
-		/* Tabs */
-		--tab-active-bg: var(--color-primary-300);
-		--tab-active-text: oklch(0.2398 0.0201 267.83);
-		--tab-inactive-text: var(--color-muted-foreground);
-		--tab-hover-bg: var(--color-background-hover, rgba(0,0,0,0.05));
-	}
+    /* ----------------------------------------
+       Tabs
+       ---------------------------------------- */
+    --tab-active-bg: var(--color-primary-500);
+    --tab-active-text: var(--color-secondary-50);
+    --tab-inactive-text: var(--color-muted-foreground);
+    --tab-hover-bg: var(--color-background-hover, rgba(0,0,0,0.05));
+
+    /* ----------------------------------------
+       Buttons
+       ---------------------------------------- */
+    --btn-primary-bg: var(--color-primary-500);
+    --btn-primary-active-text: var(--color-secondary-50);
+    --btn-primary-hover-bg: var(--color-primary-400);
+    --btn-primary-hover-text: var(--color-secondary-50);
+
+    --btn-secondary-bg: var(--color-primary-200);
+    --btn-secondary-active-text: var(--color-secondary-600);
+    --btn-secondary-hover-bg: var(--color-primary-400);
+    --btn-secondary-hover-text: var(--color-secondary-50);
+  }
 }
 
-:root.dark {
-	color-scheme: dark;
-}
+/* ----------------------------------------
+   Dark Mode
+   ---------------------------------------- */
+:root.dark, .dark {
+  color-scheme: dark;
 
-/* Dark mode - standard Tailwind equivalents */
-:root.dark,
-.dark {
-	/* Standard Tailwind dark mode colors */
-	--color-background: oklch(0.2398 0.0201 267.83); /* gray-950 */
-	--color-foreground: oklch(0.98 0 0); /* gray-50 */
-	--color-card: oklch(0.2398 0.0201 267.83); /* gray-950 */
-	--color-card-foreground: oklch(0.98 0 0); /* gray-50 */
-	--color-popover: oklch(0.2398 0.0201 267.83); /* gray-950 */
-	--color-popover-foreground: oklch(0.98 0 0); /* gray-50 */
+  --color-background: oklch(0.2398 0.0201 267.83); /* gray-950 */
+  --color-foreground: oklch(0.98 0 0); /* gray-50 */
+  --color-card: oklch(0.2398 0.0201 267.83);
+  --color-card-foreground: oklch(0.98 0 0);
+  --color-popover: oklch(0.2398 0.0201 267.83);
+  --color-popover-foreground: oklch(0.98 0 0);
 
-	/* Muted areas */
-	--color-muted: oklch(0.14 0 0); /* gray-900 */
-	--color-muted-foreground: oklch(0.64 0 0); /* gray-400 */
-	--color-accent: oklch(0.14 0 0); /* gray-900 */
-	--color-accent-foreground: oklch(0.98 0 0); /* gray-50 */
+  --color-muted: oklch(0.14 0 0); /* gray-900 */
+  --color-muted-foreground: oklch(0.64 0 0); /* gray-400 */
+  --color-accent: oklch(0.14 0 0);
+  --color-accent-foreground: oklch(0.98 0 0);
 
-	/* Borders and inputs */
-	--color-border: oklch(0.27 0 0); /* gray-800 */
-	--color-input: oklch(0.14 0 0); /* gray-900 */
-	--color-ring: var(--color-primary-500); /* Keep red ring */
+  --color-border: oklch(0.27 0 0); /* gray-800 */
+  --color-input: oklch(0.14 0 0); /* gray-900 */
+  --color-ring: var(--color-primary-500);
 
-	/* Status colors for dark mode */
-	--color-destructive: oklch(0.62 0.18 15); /* red-500 equivalent */
-	--color-destructive-foreground: oklch(0.98 0 0);
+  --color-destructive: oklch(0.62 0.18 15);
+  --color-destructive-foreground: oklch(0.98 0 0);
 
-	/* Success colors */
-	--color-success: oklch(0.7 0.14 145); /* green-500 equivalent */
-	--color-success-foreground: oklch(0.2398 0.0201 267.83);
-	--color-success-500: oklch(0.7 0.14 145);
-	--color-success-600: oklch(0.65 0.14 145);
-	--color-success-700: oklch(0.59 0.14 145);
+  --color-success: oklch(0.7 0.14 145);
+  --color-success-foreground: oklch(0.2398 0.0201 267.83);
+  --color-success-500: oklch(0.7 0.14 145);
+  --color-success-600: oklch(0.65 0.14 145);
+  --color-success-700: oklch(0.59 0.14 145);
 
-	/* Warning colors */
-	--color-warning: oklch(0.75 0.15 85); /* yellow-500 equivalent */
-	--color-warning-foreground: oklch(0.2398 0.0201 267.83);
-	--color-warning-500: oklch(0.75 0.15 85);
-	--color-warning-600: oklch(0.7 0.15 85);
-	--color-warning-700: oklch(0.65 0.15 85);
+  --color-warning: oklch(0.75 0.15 85);
+  --color-warning-foreground: oklch(0.2398 0.0201 267.83);
+  --color-warning-500: oklch(0.75 0.15 85);
+  --color-warning-600: oklch(0.7 0.15 85);
+  --color-warning-700: oklch(0.65 0.15 85);
 
-	/* Error colors */
-	--color-error-500: oklch(0.62 0.18 15); /* red-500 equivalent */
-	--color-error-600: oklch(0.57 0.18 15);
-	--color-error-700: oklch(0.52 0.18 15);
+  --color-error-500: oklch(0.62 0.18 15);
+  --color-error-600: oklch(0.57 0.18 15);
+  --color-error-700: oklch(0.52 0.18 15);
 
-	--color-info: oklch(0.64 0 0); /* gray-400 */
-	--color-info-foreground: oklch(0.98 0 0);
+  --color-info: oklch(0.64 0 0);
+  --color-info-foreground: oklch(0.98 0 0);
 
-	/* Background variations */
-	--color-background-soft: oklch(0.14 0 0); /* gray-900 */
-	--color-background-muted: oklch(0.17 0 0); /* gray-850 */
+  --color-background-soft: oklch(0.14 0 0);
+  --color-background-muted: oklch(0.17 0 0);
 
-	/* Tabs */
-	--tab-active-bg: var(--color-primary-600);
-	--tab-active-text: var(--color-foreground);
-	--tab-inactive-text: var(--color-muted-foreground);
-	--tab-hover-bg: var(--color-background-hover-dark, rgba(255,255,255,0.05));
+  --tab-active-bg: var(--color-primary-600);
+  --tab-active-text: var(--color-secondary-50);
+  --tab-inactive-text: var(--color-muted-foreground);
+  --tab-hover-bg: var(--color-background-hover-dark, rgba(255,255,255,0.05));
+
+  --btn-primary-bg: var(--color-primary-600);
+  --btn-primary-active-text: var(--color-secondary-50);
+  --btn-primary-hover-bg: var(--color-primary-400);
+  --btn-primary-hover-text: var(--color-secondary-50);
+
+  --btn-secondary-bg: var(--color-primary-300);
+  --btn-secondary-active-text: var(--color-secondary-50);
+  --btn-secondary-hover-bg: var(--color-primary-400);
+  --btn-secondary-hover-text: var(--color-secondary-50);
 }
 
 @layer base {
@@ -177,418 +204,54 @@
 }
 
 @layer components {
-	/* Button Components */
-	.btn {
-		@apply focus-visible:ring-ring inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50;
-	}
 
-	.btn-sm {
-		@apply h-8 px-3 text-xs;
-	}
-
-	.btn-md {
-		@apply h-9 px-4 py-2;
-	}
-
-	.btn-lg {
-		@apply h-10 px-8;
-	}
-
-	.btn-xl {
-		@apply h-12 px-10 text-base;
-	}
-
-	/* Button Variants */
-	.btn-primary {
-		@apply bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-white shadow;
-	}
-
-	.btn-secondary {
-		@apply bg-secondary-100 text-secondary-900 hover:bg-secondary-200 active:bg-secondary-300 shadow-sm;
-	}
-
-	.btn-outline {
-		@apply border-input bg-background hover:bg-accent hover:text-accent-foreground border shadow-sm;
-	}
-
-	.btn-ghost {
-		@apply hover:bg-accent hover:text-accent-foreground;
-	}
-
-	.btn-destructive {
-		@apply bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm;
-	}
-
-	.btn-success {
-		@apply bg-success-500 hover:bg-success-600 active:bg-success-700 text-white shadow;
-	}
-
-	.btn-warning {
-		@apply bg-warning-500 hover:bg-warning-600 active:bg-warning-700 text-white shadow;
-	}
-
-	/* Card Components */
-	.card {
-		@apply bg-card text-card-foreground rounded-lg border shadow-sm;
-	}
-
-	.card-soft {
-		@apply bg-background-soft rounded-lg border-0 shadow-md;
-	}
-
-	.card-elevated {
-		@apply bg-background-soft rounded-lg border-0 shadow-lg;
-	}
-
-	/* Input Components */
-	.input {
-		@apply border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50;
-	}
-
-	/* Badge Components */
-	.badge {
-		@apply focus:ring-ring inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none;
-	}
-
-	.badge-primary {
-		@apply bg-primary-500 hover:bg-primary-600 border-transparent text-white shadow;
-	}
-
-	.badge-secondary {
-		@apply bg-secondary-100 text-secondary-900 hover:bg-secondary-200 border-transparent;
-	}
-
-	.badge-success {
-		@apply bg-success-500 hover:bg-success-600 border-transparent text-white;
-	}
-
-	.badge-warning {
-		@apply bg-warning-500 hover:bg-warning-600 border-transparent text-white;
-	}
-
-	.badge-error {
-		@apply bg-error-500 hover:bg-error-600 border-transparent text-white;
-	}
-
-	.badge-outline {
-		@apply border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground;
-	}
 }
 
 @layer utilities {
 	/* Background Utilities */
-	.bg-primary-500 {
-		background-color: var(--color-primary-500);
+	.btn-primary {
+		background-color: var(--btn-primary-bg);
+		color: var(--btn-primary-active-text);
+		@apply shadow hover:opacity-90 active:scale-95;
+		border: 0px solid black;
 	}
 
-	.bg-primary-600 {
-		background-color: var(--color-primary-600);
+	.btn-primary:hover {
+		background-color: var(--btn-primary-hover-bg);
+		color: var(--btn-primary-hover-text);
 	}
 
-	.bg-primary-700 {
-		background-color: var(--color-primary-700);
+	.btn-secondary {
+		background-color: var(--btn-secondary-bg);
+		color: var(--btn-secondary-active-text);
+		@apply shadow hover:opacity-90 active:scale-95;
 	}
 
-	.bg-secondary-100 {
-		background-color: var(--color-secondary-100);
+	.btn-secondary:hover {
+		background-color: var(--btn-secondary-hover-bg);
+		color: var(--btn-secondary-hover-text);
 	}
 
-	.bg-secondary-200 {
-		background-color: var(--color-secondary-200);
+	/* Tabs */
+	.tab-trigger {
+		@apply flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-all;
 	}
 
-	.bg-secondary-300 {
-		background-color: var(--color-secondary-300);
+	/* Active tab state */
+	.tab-trigger[data-state="active"] {
+		background-color: var(--tab-active-bg);
+		color: var(--tab-active-text);
+		@apply shadow-sm;
 	}
 
-	.bg-secondary-500 {
-		background-color: var(--color-secondary-500);
+	/* Inactive tab state */
+	.tab-trigger[data-state="inactive"] {
+		color: var(--tab-inactive-text);
 	}
 
-	.bg-secondary-900 {
-		background-color: var(--color-secondary-900);
-	}
-
-	/* Hover states */
-	.hover\:bg-primary-600:hover {
-		background-color: var(--color-primary-600);
-	}
-
-	.hover\:bg-secondary-200:hover {
-		background-color: var(--color-secondary-200);
-	}
-
-	.hover\:bg-success-600:hover {
-		background-color: var(--color-success-600);
-	}
-
-	.hover\:bg-warning-600:hover {
-		background-color: var(--color-warning-600);
-	}
-
-	.hover\:bg-error-600:hover {
-		background-color: var(--color-error-600);
-	}
-
-	/* Active states */
-	.active\:bg-primary-700:active {
-		background-color: var(--color-primary-700);
-	}
-
-	.active\:bg-secondary-300:active {
-		background-color: var(--color-secondary-300);
-	}
-
-	.active\:bg-success-700:active {
-		background-color: var(--color-success-700);
-	}
-
-	.active\:bg-warning-700:active {
-		background-color: var(--color-warning-700);
-	}
-
-	.bg-soft {
-		background: var(--color-background-soft);
-	}
-
-	.bg-muted-solid {
-		background: var(--color-background-muted);
-	}
-
-	/* Glass effect */
-	.bg-glass {
-		background: color-mix(in oklab, var(--color-background) 80%, transparent);
-		backdrop-filter: blur(12px);
-		border: 1px solid color-mix(in oklab, var(--color-border) 50%, transparent);
-	}
-
-	.bg-glass-primary {
-		background: color-mix(in oklab, var(--color-primary-500) 10%, transparent);
-		backdrop-filter: blur(12px);
-		border: 1px solid color-mix(in oklab, var(--color-primary-500) 20%, transparent);
-	}
-
-	/* Text Color Utilities - work in both light and dark */
-	.text-primary {
-		color: var(--color-primary-500);
-	}
-
-	.text-primary-light {
-		color: var(--color-primary-400);
-	}
-
-	.text-primary-dark {
-		color: var(--color-primary-600);
-	}
-
-	.text-foreground {
+	/* Inactive tab hover */
+	.tab-trigger[data-state="inactive"]:hover {
 		color: var(--color-foreground);
-	}
-
-	.text-muted-foreground {
-		color: var(--color-muted-foreground);
-	}
-
-	.text-secondary-900 {
-		color: var(--color-secondary-900);
-	}
-
-	.text-secondary-500 {
-		color: var(--color-secondary-500);
-	}
-
-	/* Force bright text in dark mode */
-	.dark .text-secondary-900 {
-		color: oklch(0.9 0 0); /* Very bright */
-	}
-
-	.dark .text-secondary-500 {
-		color: oklch(0.85 0 0); /* Very bright */
-	}
-
-	.text-success {
-		color: var(--color-success-500);
-	}
-
-	.text-warning {
-		color: var(--color-warning-500);
-	}
-
-	.text-error {
-		color: var(--color-error-500);
-	}
-
-	/* Standard Tailwind-like text colors for dark mode */
-	.text-white {
-		color: oklch(1 0 0);
-	}
-
-	.text-gray-400 {
-		color: var(--color-muted-foreground);
-	}
-
-	.text-gray-800 {
-		color: oklch(0.15 0 0);
-	}
-
-	.text-gray-900 {
-		color: oklch(0.2398 0.0201 267.83);
-	}
-
-	/* Standard Tailwind gray utilities for proper dark mode */
-	.bg-gray-900 {
-		background-color: oklch(0.17 0 0);
-	}
-
-	.bg-gray-800 {
-		background-color: oklch(0.22 0 0);
-	}
-
-	.bg-gray-700 {
-		background-color: oklch(0.28 0 0);
-	}
-
-	.text-gray-100 {
-		color: oklch(0.95 0 0);
-	}
-
-	.text-gray-300 {
-		color: oklch(0.85 0 0);
-	}
-
-	.text-gray-400 {
-		color: oklch(0.75 0 0);
-	}
-
-	.text-muted {
-		color: var(--color-muted-foreground);
-	}
-
-	.text-soft {
-		color: color-mix(in oklab, var(--color-foreground) 70%, transparent);
-	}
-
-	/* Solid Text Colors */
-	.text-primary-solid {
-		color: var(--color-primary-500);
-	}
-
-	.text-secondary-solid {
-		color: var(--color-secondary-500);
-	}
-
-	/* Shadow Utilities */
-	.shadow-primary {
-		box-shadow: 0 4px 14px 0 color-mix(in oklab, var(--color-primary-500) 25%, transparent);
-	}
-
-	.shadow-primary-lg {
-		box-shadow: 0 10px 25px -3px color-mix(in oklab, var(--color-primary-500) 25%, transparent);
-	}
-
-	.shadow-soft {
-		box-shadow: var(--shadow-md);
-	}
-
-	.shadow-glow {
-		box-shadow: 0 0 20px color-mix(in oklab, var(--color-primary-500) 30%, transparent);
-	}
-
-	/* Border Utilities */
-	.border-primary {
-		border-color: var(--color-primary-500);
-	}
-
-	.border-primary-light {
-		border-color: var(--color-primary-200);
-	}
-
-	.border-soft {
-		border-color: color-mix(in oklab, var(--color-border) 50%, transparent);
-	}
-
-	/* Opacity Utilities with color-mix */
-	.bg-primary\/10 {
-		background-color: color-mix(in oklab, var(--color-primary-500) 10%, transparent);
-	}
-
-	.bg-primary\/20 {
-		background-color: color-mix(in oklab, var(--color-primary-500) 20%, transparent);
-	}
-
-	.bg-primary\/30 {
-		background-color: color-mix(in oklab, var(--color-primary-500) 30%, transparent);
-	}
-
-	.bg-primary\/50 {
-		background-color: color-mix(in oklab, var(--color-primary-500) 50%, transparent);
-	}
-
-	.bg-success\/10 {
-		background-color: color-mix(in oklab, var(--color-success-500) 10%, transparent);
-	}
-
-	.bg-warning\/10 {
-		background-color: color-mix(in oklab, var(--color-warning-500) 10%, transparent);
-	}
-
-	.bg-error\/10 {
-		background-color: color-mix(in oklab, var(--color-error-500) 10%, transparent);
-	}
-
-	/* Animation Utilities */
-	.animate-glow {
-		animation: glow 2s ease-in-out infinite alternate;
-	}
-
-	@keyframes glow {
-		from {
-			box-shadow: 0 0 5px color-mix(in oklab, var(--color-primary-500) 20%, transparent);
-		}
-		to {
-			box-shadow: 0 0 20px color-mix(in oklab, var(--color-primary-500) 40%, transparent);
-		}
-	}
-
-	/* Responsive spacing */
-	.space-y-fluid > * + * {
-		margin-top: clamp(0.5rem, 2vw, 1.5rem);
-	}
-
-	.space-x-fluid > * + * {
-		margin-left: clamp(0.5rem, 2vw, 1.5rem);
-	}
-
-	/* Focus utilities */
-	.focus-ring {
-		@apply focus-visible:ring-primary-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none;
-	}
-
-	.focus-ring-inset {
-		@apply focus-visible:ring-primary-500 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset;
-	}
-
-	.text-heading {
-		@apply text-foreground text-xl font-semibold;
-	}
-	.text-subheading {
-		@apply text-muted-foreground text-lg font-medium;
-	}
-	.text-label {
-		@apply text-muted-foreground text-sm font-medium;
-	}
-
-	.skeleton {
-		@apply bg-muted animate-pulse text-transparent;
-	}
-
-	.btn-link {
-		color: var(--color-primary-500);
-		text-decoration-line: underline;
-		text-underline-offset: 4px;
-	}
-
-	.btn-link:hover {
-		text-decoration-line: underline;
+		background-color: color-mix(in oklab, var(--color-background) 50%, transparent);
 	}
 }
