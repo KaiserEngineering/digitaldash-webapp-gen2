@@ -218,6 +218,7 @@
 				class="btn {requiresCropping
 					? 'bg-orange-500 hover:bg-orange-600'
 					: 'bg-secondary-500 hover:bg-secondary-600'} flex cursor-pointer gap-2 rounded-lg px-6 py-3 font-semibold text-white shadow-md"
+				disabled={!requiresCropping}
 				onclick={triggerCropping}
 			>
 				<Pencil class="mr-2 h-4 w-4" />
