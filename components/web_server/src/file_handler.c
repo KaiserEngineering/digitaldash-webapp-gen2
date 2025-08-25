@@ -45,7 +45,7 @@ static const char *TAG = "FileHandler";
 #define SCRATCH_BUFSIZE (20480)
 #define MAX_FILE_SIZE (4 * 1024 * 1024)
 #define CHECK_FILE_EXTENSION(filename, ext) (strcasecmp(&filename[strlen(filename) - strlen(ext)], ext) == 0)
-#define SPIFFS_WRITE_SIZE CONFIG_SPIFFS_PAGE_SIZE
+#define SPIFFS_WRITE_SIZE 4096
 
 // Define HTTP 413 Payload Too Large if not defined
 #ifndef HTTPD_413_PAYLOAD_TOO_LARGE

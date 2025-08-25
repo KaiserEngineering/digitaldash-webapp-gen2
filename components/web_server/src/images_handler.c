@@ -263,7 +263,7 @@ esp_err_t image_upload_handler(httpd_req_t *req)
 
     // ---- Receive and write file data ----
     int remaining = req->content_len;
-    char buf[512];
+    char buf[4096];
     int total_received = 0;
 
     while (remaining > 0) {
