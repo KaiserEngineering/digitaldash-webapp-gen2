@@ -1,9 +1,18 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card';
-	import { CircleCheck, TriangleAlert, Loader, Upload, FileText, Zap } from 'lucide-svelte';
+	import {
+		CircleCheck,
+		TriangleAlert,
+		Loader,
+		Upload,
+		FileText,
+		Zap,
+		RotateCcw
+	} from 'lucide-svelte';
 	import { onMount, onDestroy } from 'svelte';
 	import { apiUrl } from '$lib/config';
+	import toast from 'svelte-5-french-toast';
 
 	let filesStatus: 'idle' | 'loading' | 'success' | 'error' = $state('idle');
 	interface FirmwareFile {
@@ -21,6 +30,7 @@
 	let uploadProgress = $state(0);
 	let flashProgress = $state(0);
 	let flashPollingInterval: number | null = null;
+	let resetStatus: 'idle' | 'resetting' = $state('idle');
 
 	async function loadFiles() {
 		filesStatus = 'loading';
@@ -170,6 +180,32 @@
 		fileInput?.click();
 	}
 
+	async function resetSTM32() {
+		if (resetStatus === 'resetting') return;
+
+		resetStatus = 'resetting';
+		try {
+			const response = await fetch('/api/reset', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
+
+			if (response.ok) {
+				toast.success('Digital Dash reset successfully!');
+			} else {
+				const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+				toast.error(error.error || 'Failed to reset Digital Dash');
+			}
+		} catch (err) {
+			console.error('Reset error:', err);
+			toast.error('Network error while resetting Digital Dash');
+		} finally {
+			resetStatus = 'idle';
+		}
+	}
+
 	onMount(() => {
 		loadFiles();
 	});
@@ -195,7 +231,9 @@
 			<CardContent class="space-y-6 p-6">
 				<div class="bg-muted border-border rounded-lg border p-4">
 					<p class="text-muted-foreground text-sm">
-						Select a firmware file (.bin) to update your Digital Dash. The flashing process typically takes 5–10 minutes, depending on the file size. Do not turn off your vehicle while the update is in progress.
+						Select a firmware file (.bin) to update your Digital Dash. The flashing process
+						typically takes 5–10 minutes, depending on the file size. Do not turn off your vehicle
+						while the update is in progress.
 					</p>
 				</div>
 
@@ -293,6 +331,24 @@
 						</div>
 					{/if}
 				{/if}
+
+				<!-- Reset Button -->
+				<div class="border-t border-gray-200 pt-4">
+					<Button
+						onclick={resetSTM32}
+						disabled={resetStatus === 'resetting'}
+						variant="outline"
+						class="h-10 w-full text-sm font-medium"
+					>
+						{#if resetStatus === 'resetting'}
+							<Loader class="mr-2 h-4 w-4 animate-spin" />
+							Resetting...
+						{:else}
+							<RotateCcw class="mr-2 h-4 w-4" />
+							Reset Digital Dash
+						{/if}
+					</Button>
+				</div>
 			</CardContent>
 		</Card>
 
