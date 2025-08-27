@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card';
-	import { Progress } from '$lib/components/ui/progress';
 	import { CircleCheck, TriangleAlert, Loader, Upload, FileText, Zap } from 'lucide-svelte';
 	import { onMount, onDestroy } from 'svelte';
 	import { apiUrl } from '$lib/config';
@@ -245,7 +244,6 @@
 							<Loader class="text-info h-5 w-5 animate-spin" />
 							{uploadMessage}
 						</p>
-						<Progress value={uploadProgress} class="w-full" />
 						<p class="text-muted-foreground text-center text-sm">
 							{Math.floor(uploadProgress)}% complete
 						</p>
@@ -289,7 +287,6 @@
 								<Loader class="text-info h-5 w-5 animate-spin" />
 								{flashMessage}
 							</p>
-							<Progress value={flashProgress} class="w-full" />
 							<p class="text-muted-foreground text-center text-sm">
 								{Math.floor(flashProgress)}% complete
 							</p>

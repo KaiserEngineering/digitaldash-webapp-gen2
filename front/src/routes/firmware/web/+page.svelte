@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { FileSearch, Upload, CircleCheck, CloudUpload } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
-	import { Progress } from '$lib/components/ui/progress';
 	import toast from 'svelte-5-french-toast';
 	import { apiUrl } from '$lib/config';
 	import PageCard from '@/components/PageCard.svelte';
@@ -112,7 +111,6 @@
 
 	{#if uploadProgress > 0 && !uploadComplete}
 		<div class="mt-4">
-			<Progress value={uploadProgress} />
 			<p class="mt-2 text-center text-sm">Uploading: {Math.floor(uploadProgress)}%</p>
 		</div>
 	{:else if uploadComplete}
