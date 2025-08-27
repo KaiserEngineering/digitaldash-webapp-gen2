@@ -31,6 +31,7 @@
 	let file = $state<UploadedFile | null>(null);
 	let isUploading = $state(false);
 	let requiresCropping = $state(false);
+	let isProperlyResized = $state(false);
 
 	let tempUrl = $derived(file?.url ?? '');
 
@@ -48,7 +49,9 @@
 		const img = new Image();
 		img.src = previewUrl;
 		img.onload = () => {
-			const needsCropping = img.width !== 1024 || img.height !== 200;
+			// ALL images must go through cropping to ensure 1024x200
+			const needsCropping = true;
+			const isCorrectSize = img.width === 1024 && img.height === 200;
 
 			file = {
 				name: selectedFile.name,
@@ -60,10 +63,10 @@
 			};
 
 			requiresCropping = needsCropping;
+			isProperlyResized = isCorrectSize;
 
-			if (needsCropping) {
-				setTimeout(() => triggerCropping(), 100);
-			}
+			// Always trigger cropping for consistency
+			setTimeout(() => triggerCropping(), 100);
 		};
 	};
 
@@ -124,8 +127,9 @@
 				rawFile: new File([resizedBlob], file.name, { type: 'image/png' })
 			};
 
-			// After cropping, the file no longer requires cropping
+			// After cropping, the file is properly sized and ready for upload
 			requiresCropping = false;
+			isProperlyResized = true;
 		} catch (error) {
 			console.error('Error processing cropped image:', error);
 		}
@@ -160,6 +164,7 @@
 			file = null;
 		}
 		requiresCropping = false;
+		isProperlyResized = false;
 	}
 
 	/** Cleanup memory */
@@ -203,7 +208,9 @@
 					<span class="font-medium">{file.name}</span>
 					<span class="text-muted-foreground text-xs">{displaySize(file.size)}</span>
 					{#if requiresCropping}
-						<span class="text-xs font-medium text-orange-600">Cropping required (file > 2MB)</span>
+						<span class="text-xs font-medium text-orange-600">Must be cropped to 1024x200</span>
+					{:else if isProperlyResized}
+						<span class="text-xs font-medium text-green-600">✓ Ready for upload (1024x200)</span>
 					{/if}
 				</div>
 			</div>
@@ -218,14 +225,12 @@
 			out:slide={{ duration: 200, easing: quintOut }}
 		>
 			<Button
-				class="btn {requiresCropping
-					? 'bg-orange-500 hover:bg-orange-600'
-					: 'bg-secondary-500 hover:bg-secondary-600'} flex cursor-pointer gap-2 rounded-lg px-6 py-3 font-semibold text-white shadow-md"
+				class="btn bg-orange-500 hover:bg-orange-600 flex cursor-pointer gap-2 rounded-lg px-6 py-3 font-semibold text-white shadow-md"
 				disabled={!requiresCropping}
 				onclick={triggerCropping}
 			>
 				<Pencil class="mr-2 h-4 w-4" />
-				{requiresCropping ? 'Crop Image (Required)' : 'Crop Image'}
+				Crop to 1024x200 (Required)
 			</Button>
 		</div>
 	{/if}
@@ -242,14 +247,16 @@
 				text-white shadow-md transition-all duration-300 ease-in-out
 				hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
 				onclick={handleUpload}
-				disabled={!file || isUploading || requiresCropping}
+				disabled={!file || isUploading || requiresCropping || !isProperlyResized}
 			>
 				{#if isUploading}
 					<Spinner />
 				{:else if requiresCropping}
-					Crop Required Before Upload
+					Must Crop to 1024x200 First
+				{:else if !isProperlyResized}
+					Processing...
 				{:else}
-					Upload File
+					Upload Background (1024x200)
 				{/if}
 			</Button>
 		</div>
