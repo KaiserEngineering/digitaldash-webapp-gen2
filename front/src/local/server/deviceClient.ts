@@ -128,5 +128,44 @@ export const deviceClient = {
 			}
 			return false;
 		}
+	},
+
+	async resetDevice(): Promise<boolean> {
+		try {
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+			const res = await fetch(`${getDeviceUrl()}/stm32_reset`, {
+				method: 'POST',
+				signal: controller.signal,
+				headers: {
+					'Content-Type': 'application/json',
+					Accept: 'application/json'
+				}
+			});
+
+			clearTimeout(timeoutId);
+
+			if (!res.ok) {
+				const errorText = await res.text().catch(() => 'Unknown error');
+				console.error(`Device reset error ${res.status}: ${res.statusText}`, errorText);
+				return false;
+			}
+
+			return true;
+		} catch (err) {
+			if (err instanceof Error) {
+				if (err.name === 'AbortError') {
+					console.error('Device reset request timed out after 5 seconds');
+				} else if (err.message.includes('fetch')) {
+					console.error('Network error resetting device:', err.message);
+				} else {
+					console.error('Device reset error:', err.message);
+				}
+			} else {
+				console.error('Unknown device reset error:', err);
+			}
+			return false;
+		}
 	}
 };

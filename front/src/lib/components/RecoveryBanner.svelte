@@ -1,11 +1,43 @@
 <script lang="ts">
-	import { Upload, Smartphone, ChevronDown, ChevronRight } from 'lucide-svelte';
+	import { Upload, Smartphone, ChevronDown, ChevronRight, RotateCcw } from 'lucide-svelte';
 	import { Alert } from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
+	import toast from 'svelte-5-french-toast';
 
 	let { recovery } = $props();
 
 	let showDetails = $state(false);
+	let resetting = $state(false);
+
+	async function resetDigitalDash() {
+		if (resetting) return;
+
+		resetting = true;
+		try {
+			const response = await fetch('/api/reset', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
+
+			if (response.ok) {
+				toast.success('Digital Dash reset successfully! Please wait a moment for it to restart.');
+				// Optionally reload the page after a delay to check if issues are resolved
+				setTimeout(() => {
+					window.location.reload();
+				}, 3000);
+			} else {
+				const error = await response.json();
+				toast.error(error.error || 'Failed to reset Digital Dash');
+			}
+		} catch (err) {
+			console.error('Reset error:', err);
+			toast.error('Network error while resetting Digital Dash');
+		} finally {
+			resetting = false;
+		}
+	}
 </script>
 
 {#if recovery.isRecoveryMode}
@@ -29,7 +61,7 @@
 					<div class="mt-1 rounded bg-red-100 p-2 text-xs">
 						<ul class="space-y-1">
 							{#each recovery.issues as issue, index (index)}
-								<li class="leading-snug break-words text-red-800">• {issue}</li>
+								<li class="break-words leading-snug text-red-800">• {issue}</li>
 							{/each}
 						</ul>
 					</div>
@@ -52,6 +84,17 @@
 			>
 				<Smartphone class="mr-1 h-3 w-3" />
 				DigitalDash
+			</Button>
+			<Button
+				size="sm"
+				onclick={resetDigitalDash}
+				disabled={resetting}
+				class="h-7 justify-start bg-orange-600 px-2 text-xs text-white hover:bg-orange-700 disabled:bg-orange-400"
+			>
+				<span class="mr-1 h-3 w-3" class:animate-spin={resetting}>
+					<RotateCcw class="h-3 w-3" />
+				</span>
+				{resetting ? 'Resetting...' : 'Reset Digital Dash'}
 			</Button>
 		</div>
 	</Alert>

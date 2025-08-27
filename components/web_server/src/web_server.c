@@ -14,6 +14,7 @@
 #include "version.h"
 #include "pids_handler.h"
 #include "ota_handler.h"
+#include "stm_flash.h"
 #include <lwip/sockets.h>
 
 static const char *TAG = "WebServer";
@@ -268,6 +269,26 @@ esp_err_t sveltekit_version_handler(httpd_req_t *req)
     return httpd_resp_send(req, version_json, strlen(version_json));
 }
 
+esp_err_t stm32_reset_handler(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "STM32 reset requested via HTTP");
+
+    // Set response type before calling reset (since reset will disconnect)
+    httpd_resp_set_type(req, "application/json");
+
+    // Send success response
+    const char* success_response = "{\"success\":true,\"message\":\"STM32 reset initiated\"}";
+    esp_err_t ret = httpd_resp_send(req, success_response, strlen(success_response));
+
+    // Small delay to ensure response is sent before reset
+    vTaskDelay(pdMS_TO_TICKS(100));
+
+    // Reset the STM32
+    stm32_reset();
+
+    return ret;
+}
+
 esp_err_t start_webserver()
 {
     httpd_handle_t server = NULL;
@@ -352,6 +373,13 @@ esp_err_t start_webserver()
                                            .uri = "/api/firmware-version",
                                            .method = HTTP_GET,
                                            .handler = sveltekit_version_handler,
+                                           .user_ctx = NULL});
+
+    // Register API reset endpoint
+    httpd_register_uri_handler(server, &(httpd_uri_t){
+                                           .uri = "/api/reset",
+                                           .method = HTTP_POST,
+                                           .handler = stm32_reset_handler,
                                            .user_ctx = NULL});
 
     if (register_spiffs(server) != ESP_OK)
