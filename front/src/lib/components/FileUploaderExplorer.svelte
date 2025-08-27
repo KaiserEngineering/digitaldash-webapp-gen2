@@ -25,6 +25,9 @@
 
 	let { uploadCallback, slotName, onUploaded } = $props();
 
+	// Create unique ID for this slot's cropper to avoid conflicts
+	const cropperId = `crop-file-input-${slotName}`;
+
 	let file = $state<UploadedFile | null>(null);
 	let isUploading = $state(false);
 	let requiresCropping = $state(false);
@@ -91,7 +94,7 @@
 	function triggerCropping() {
 		if (file?.rawFile) {
 			const event = new Event('change', { bubbles: true });
-			const input = document.getElementById('crop-file-input');
+			const input = document.getElementById(cropperId);
 			if (input) {
 				const fileInput = input as HTMLInputElement;
 				const dataTransfer = new DataTransfer();
@@ -253,7 +256,7 @@
 	{/if}
 
 	<!-- Cropper Dialog -->
-	<ImageCropper.Root id="crop-file-input" bind:src={tempUrl} onCropped={handleCropped}>
+	<ImageCropper.Root id={cropperId} bind:src={tempUrl} onCropped={handleCropped}>
 		<ImageCropper.Dialog>
 			<ImageCropper.Cropper cropShape="rect" aspect={1024 / 200} />
 			<ImageCropper.Controls>
