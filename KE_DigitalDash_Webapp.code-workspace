@@ -106,7 +106,9 @@
 			"typeinfo": "c",
 			"esp_heap_caps.h": "c",
 			"cstdlib": "c",
-			"config_handler.h": "c"
+			"config_handler.h": "c",
+			"ota_handler.h": "c",
+			"charconv": "c"
 		},
 		"editor.formatOnSave": false
 	}

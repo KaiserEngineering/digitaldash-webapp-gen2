@@ -344,6 +344,7 @@ void stm32_communication_init(void)
     stm32_comm.init.json_to_options = &receive_option_list;
     stm32_comm.init.json_to_pid_list = &receive_pid_list;
     stm32_comm.init.receive_rgba_crc = &recieve_crc_from_ke;
+    stm32_comm.init.binary_get_chunk = &get_binary_chunk_data;
     stm32_comm.init.firmware_version_major  = 1;  /* Major firmware version */
     stm32_comm.init.firmware_version_minor  = 0;  /* Minor firmware version */
     stm32_comm.init.firmware_version_hotfix = 0;  /* Hot fix firmware version */
@@ -402,6 +403,8 @@ void app_main(void)
     Generate_TX_Message(&stm32_comm, KE_PID_LIST_REQUEST, 0);
     KE_wait_for_response(&stm32_comm, 5000);
     mirror_spiffs();
+
+    flash_stm32_firmware("/spiffs/digitaldash-firmware-gen2-stm32u5g.bin");
 
     while (1)
     {

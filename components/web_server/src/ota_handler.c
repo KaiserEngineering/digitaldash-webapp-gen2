@@ -85,8 +85,124 @@ esp_err_t web_update_post_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-/* STM32 firmware flashing task function */
+#define BINARY_CHUNK_SIZE 4096
+static uint8_t *binary_chunk = NULL;
+static size_t current_chunk_len = 0;
+static size_t current_offset = 0;
+
+void log_flash_chunk(uint8_t *data, uint32_t size, uint32_t start_addr)
+{
+    for (uint32_t offset = 0; offset < size; offset += 16)
+    {
+        uint32_t row_addr = start_addr + offset;
+        printf("0x%08X: ", (unsigned)row_addr);
+
+        // print 16 bytes in 4 words (little-endian per word)
+        for (int word = 0; word < 4; word++)
+        {
+            uint32_t i = offset + word * 4;
+            if (i + 3 < size)
+            {
+                // swap bytes to match STM32CubeProgrammer 32-bit word view
+                printf("%02X %02X %02X %02X ", data[i+3], data[i+2], data[i+1], data[i]);
+            }
+            else
+            {
+                // handle last incomplete row
+                for (int j = 3; j >= 0; j--)
+                {
+                    if (i + j < size)
+                        printf("%02X ", data[i+j]);
+                    else
+                        printf("   "); // pad
+                }
+            }
+        }
+
+        printf("\n");
+    }
+}
+
+/* Called by KE library when it needs the current chunk data */
+uint32_t get_binary_chunk_data(char *buffer, uint32_t buffer_size)
+{
+    if (!buffer) {
+        ESP_LOGE(TAG, "Null buffer pointer");
+        return 0;
+    }
+
+    if (current_chunk_len > buffer_size) {
+        ESP_LOGE(TAG, "Binary chunk buffer too small (needed=%u, got=%u)",
+                 (unsigned)current_chunk_len, (unsigned)buffer_size);
+        return 0;
+    }
+
+    memcpy(buffer, binary_chunk, current_chunk_len);
+
+    //log_flash_chunk(binary_chunk, current_chunk_len, 0x08010000 + current_offset);
+
+    return (uint32_t)current_chunk_len;
+}
+
+/* STM32 firmware flashing using the custom bootloader */
 void flash_stm32_firmware_task(void *pvParameter)
+{
+    const char *firmware_path = (const char *)pvParameter;
+    ESP_LOGI(TAG, "Starting STM32 firmware flash task: %s", firmware_path);
+
+    // Open firmware file from SPIFFS
+    FILE *file = fopen(firmware_path, "rb");
+    if (!file) {
+        ESP_LOGE(TAG, "Failed to open firmware file: %s", firmware_path);
+        vTaskDelete(NULL);
+        return;
+    }
+
+    if (!binary_chunk) {
+        binary_chunk = (uint8_t *)malloc(BINARY_CHUNK_SIZE);
+        if (!binary_chunk) {
+            ESP_LOGE(TAG, "Failed to allocate binary_chunk buffer");
+            fclose(file);
+            vTaskDelete(NULL);
+            return;
+        }
+    }
+
+    size_t read_len = 0;
+    int chunk_num = 0;
+    bool success = true;
+
+    current_offset = 0;
+
+    while ((read_len = fread(binary_chunk, 1, BINARY_CHUNK_SIZE, file)) > 0) {
+        current_chunk_len = read_len;
+
+        ESP_LOGI(TAG, "Sending chunk %d at offset %d", chunk_num++, current_offset);
+
+        // Send chunk (KE lib will internally call get_binary_chunk_data)
+        Generate_TX_Message(get_stm32_comm(), KE_BINARY_SEND_CHUNK, &current_offset);
+
+        // Wait for ACK from STM32
+        KE_wait_for_response(get_stm32_comm(), 30000);
+
+        current_offset += read_len;
+    }
+
+    fclose(file);
+
+    if (success) {
+        ESP_LOGI(TAG, "STM32 firmware flashed successfully (%lu bytes)", (unsigned long)current_offset);
+        //stm32_reset();
+        ESP_LOGI(TAG, "STM32 reset to run new firmware");
+    } else {
+        ESP_LOGE(TAG, "STM32 firmware flash failed");
+    }
+
+    vTaskDelete(NULL);
+}
+
+/* STM32 firmware flashing using the built in bootloader */
+void flash_stm32_built_in_firmware_task(void *pvParameter)
 {
     const char *firmware_path = (const char *)pvParameter;
     ESP_LOGI(TAG, "Starting STM32 firmware flash task: %s", firmware_path);
