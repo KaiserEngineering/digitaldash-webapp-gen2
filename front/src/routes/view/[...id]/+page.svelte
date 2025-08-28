@@ -63,19 +63,13 @@
 	<Tabs.Root bind:value={activeTab} class="w-full">
 		<ViewCard view={$form} index={viewId} pids={data.pids} />
 
-		<Tabs.List class="h-10 grid w-full grid-cols-2">
-			<Tabs.Trigger
-				value="view"
-				class="tab-trigger"
-			>
+		<Tabs.List class="grid h-10 w-full grid-cols-2">
+			<Tabs.Trigger value="view" class="tab-trigger">
 				<SettingsIcon />
 				<span>Settings</span>
 			</Tabs.Trigger>
 
-			<Tabs.Trigger
-				value="gauges"
-				class="tab-trigger"
-			>
+			<Tabs.Trigger value="gauges" class="tab-trigger">
 				<Gauge />
 				<span>Gauges</span>
 				<Badge variant="secondary" class="text-xs">

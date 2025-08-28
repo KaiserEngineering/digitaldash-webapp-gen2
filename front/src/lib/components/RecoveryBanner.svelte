@@ -61,7 +61,7 @@
 					<div class="mt-1 rounded bg-red-100 p-2 text-xs">
 						<ul class="space-y-1">
 							{#each recovery.issues as issue, index (index)}
-								<li class="break-words leading-snug text-red-800">• {issue}</li>
+								<li class="leading-snug break-words text-red-800">• {issue}</li>
 							{/each}
 						</ul>
 					</div>

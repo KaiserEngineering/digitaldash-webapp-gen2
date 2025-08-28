@@ -225,7 +225,7 @@
 			out:slide={{ duration: 200, easing: quintOut }}
 		>
 			<Button
-				class="btn bg-orange-500 hover:bg-orange-600 flex cursor-pointer gap-2 rounded-lg px-6 py-3 font-semibold text-white shadow-md"
+				class="btn flex cursor-pointer gap-2 rounded-lg bg-orange-500 px-6 py-3 font-semibold text-white shadow-md hover:bg-orange-600"
 				disabled={!requiresCropping}
 				onclick={triggerCropping}
 			>

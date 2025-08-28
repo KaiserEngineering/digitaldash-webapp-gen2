@@ -72,7 +72,7 @@
 					{@const selectedPid = pids.find((p) => p.desc === pidValue)}
 					<div class="text-left">
 						<div class="font-medium">{selectedPid?.label || pidValue}</div>
-						<div class="text-xs text-muted-foreground">{selectedPid?.desc}</div>
+						<div class="text-muted-foreground text-xs">{selectedPid?.desc}</div>
 					</div>
 				{:else}
 					{pidPlaceholder}
@@ -105,12 +105,18 @@
 
 <!-- PID Selection Modal -->
 {#if showPidModal}
-	<div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm" onclick={() => (showPidModal = false)}>
-		<div class="fixed inset-x-0 top-0 z-50 h-full bg-background" onclick={(e) => e.stopPropagation()}>
+	<div
+		class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
+		onclick={() => (showPidModal = false)}
+	>
+		<div
+			class="bg-background fixed inset-x-0 top-0 z-50 h-full"
+			onclick={(e) => e.stopPropagation()}
+		>
 			<!-- Header -->
-			<div class="border-b border-border bg-background p-4 shadow-sm">
+			<div class="border-border bg-background border-b p-4 shadow-sm">
 				<div class="flex items-center justify-between">
-					<h2 class="text-lg font-semibold text-foreground">{pidLabel} Selection</h2>
+					<h2 class="text-foreground text-lg font-semibold">{pidLabel} Selection</h2>
 					<Button variant="ghost" size="icon" onclick={() => (showPidModal = false)}>
 						<X class="h-5 w-5" />
 					</Button>
@@ -118,18 +124,18 @@
 			</div>
 
 			<!-- Scrollable PID List -->
-			<div class="h-full overflow-y-auto pb-20 pt-4">
+			<div class="h-full overflow-y-auto pt-4 pb-20">
 				{#each pids as pid (pid.desc)}
 					<button
-						class="w-full border-b border-border/50 p-4 text-left transition-colors hover:bg-muted/50"
+						class="border-border/50 hover:bg-muted/50 w-full border-b p-4 text-left transition-colors"
 						onclick={() => handlePidSelect(pid.desc)}
 					>
 						<div class="flex items-center justify-between">
 							<div class="flex-1">
-								<div class="font-medium text-foreground">{pid.label}</div>
-								<div class="text-sm text-muted-foreground">{pid.desc}</div>
+								<div class="text-foreground font-medium">{pid.label}</div>
+								<div class="text-muted-foreground text-sm">{pid.desc}</div>
 								{#if pid.units.length > 0}
-									<div class="mt-1 text-xs text-muted-foreground">
+									<div class="text-muted-foreground mt-1 text-xs">
 										Units: {pid.units.join(', ')}
 									</div>
 								{/if}
@@ -147,12 +153,18 @@
 
 <!-- Unit Selection Modal -->
 {#if showUnitModal}
-	<div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm" onclick={() => (showUnitModal = false)}>
-		<div class="fixed inset-x-0 top-0 z-50 h-full bg-background" onclick={(e) => e.stopPropagation()}>
+	<div
+		class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
+		onclick={() => (showUnitModal = false)}
+	>
+		<div
+			class="bg-background fixed inset-x-0 top-0 z-50 h-full"
+			onclick={(e) => e.stopPropagation()}
+		>
 			<!-- Header -->
-			<div class="border-b border-border bg-background p-4 shadow-sm">
+			<div class="border-border bg-background border-b p-4 shadow-sm">
 				<div class="flex items-center justify-between">
-					<h2 class="text-lg font-semibold text-foreground">{unitLabel} Selection</h2>
+					<h2 class="text-foreground text-lg font-semibold">{unitLabel} Selection</h2>
 					<Button variant="ghost" size="icon" onclick={() => (showUnitModal = false)}>
 						<X class="h-5 w-5" />
 					</Button>
@@ -160,15 +172,15 @@
 			</div>
 
 			<!-- Scrollable Unit List -->
-			<div class="h-full overflow-y-auto pb-20 pt-4">
+			<div class="h-full overflow-y-auto pt-4 pb-20">
 				{#each availableUnits as unit (unit)}
 					<button
-						class="w-full border-b border-border/50 p-4 text-left transition-colors hover:bg-muted/50"
+						class="border-border/50 hover:bg-muted/50 w-full border-b p-4 text-left transition-colors"
 						onclick={() => handleUnitSelect(unit)}
 					>
 						<div class="flex items-center justify-between">
 							<div class="flex-1">
-								<div class="font-medium text-foreground">{unit}</div>
+								<div class="text-foreground font-medium">{unit}</div>
 							</div>
 							{#if unitValue === unit}
 								<Check class="h-5 w-5 text-emerald-600" />
