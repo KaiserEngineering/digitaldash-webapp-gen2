@@ -85,7 +85,7 @@ esp_err_t web_update_post_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-#define BINARY_CHUNK_SIZE 4096
+#define BINARY_CHUNK_SIZE 32768
 static uint8_t *binary_chunk = NULL;
 static size_t current_chunk_len = 0;
 static size_t current_offset = 0;
