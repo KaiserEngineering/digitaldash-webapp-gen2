@@ -404,7 +404,7 @@ void app_main(void)
     KE_wait_for_response(&stm32_comm, 5000);
     mirror_spiffs();
 
-    flash_stm32_firmware("/spiffs/digitaldash-firmware-gen2-stm32u5g.bin");
+    //flash_stm32_firmware("/spiffs/digitaldash-firmware-gen2-stm32u5g.bin");
 
     while (1)
     {
