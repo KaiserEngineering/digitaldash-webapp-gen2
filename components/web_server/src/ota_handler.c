@@ -187,7 +187,7 @@ void flash_stm32_firmware_task(void *pvParameter)
         Generate_TX_Message(get_stm32_comm(), KE_BINARY_SEND_CHUNK, &current_offset);
 
         // Wait for ACK from STM32
-        KE_wait_for_response(get_stm32_comm(), 5000);
+        KE_wait_for_response(get_stm32_comm(), 20000);
 
         current_offset += read_len;
     }
