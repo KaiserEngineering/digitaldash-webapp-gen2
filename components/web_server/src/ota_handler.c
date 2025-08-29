@@ -174,6 +174,10 @@ void flash_stm32_firmware_task(void *pvParameter)
 
     current_offset = 0;
 
+    // Enter bootloader mode
+    Generate_TX_Message(get_stm32_comm(), KE_ENTER_BOOTLOADER, NULL);
+    KE_wait_for_response(get_stm32_comm(), 5000);
+
     while ((read_len = fread(binary_chunk, 1, BINARY_CHUNK_SIZE, file)) > 0) {
         current_chunk_len = read_len;
 
@@ -183,7 +187,7 @@ void flash_stm32_firmware_task(void *pvParameter)
         Generate_TX_Message(get_stm32_comm(), KE_BINARY_SEND_CHUNK, &current_offset);
 
         // Wait for ACK from STM32
-        KE_wait_for_response(get_stm32_comm(), 30000);
+        KE_wait_for_response(get_stm32_comm(), 5000);
 
         current_offset += read_len;
     }
@@ -192,7 +196,7 @@ void flash_stm32_firmware_task(void *pvParameter)
 
     if (success) {
         ESP_LOGI(TAG, "STM32 firmware flashed successfully (%lu bytes)", (unsigned long)current_offset);
-        //stm32_reset();
+        stm32_reset();
         ESP_LOGI(TAG, "STM32 reset to run new firmware");
     } else {
         ESP_LOGE(TAG, "STM32 firmware flash failed");
