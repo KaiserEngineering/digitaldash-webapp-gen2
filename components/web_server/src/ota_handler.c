@@ -104,7 +104,7 @@ void log_flash_chunk(uint8_t *data, uint32_t size, uint32_t start_addr)
             if (i + 3 < size)
             {
                 // swap bytes to match STM32CubeProgrammer 32-bit word view
-                printf("%02X %02X %02X %02X ", data[i+3], data[i+2], data[i+1], data[i]);
+                printf("%02X %02X %02X %02X ", data[i + 3], data[i + 2], data[i + 1], data[i]);
             }
             else
             {
@@ -112,7 +112,7 @@ void log_flash_chunk(uint8_t *data, uint32_t size, uint32_t start_addr)
                 for (int j = 3; j >= 0; j--)
                 {
                     if (i + j < size)
-                        printf("%02X ", data[i+j]);
+                        printf("%02X ", data[i + j]);
                     else
                         printf("   "); // pad
                 }
@@ -126,12 +126,14 @@ void log_flash_chunk(uint8_t *data, uint32_t size, uint32_t start_addr)
 /* Called by KE library when it needs the current chunk data */
 uint32_t get_binary_chunk_data(char *buffer, uint32_t buffer_size)
 {
-    if (!buffer) {
+    if (!buffer)
+    {
         ESP_LOGE(TAG, "Null buffer pointer");
         return 0;
     }
 
-    if (current_chunk_len > buffer_size) {
+    if (current_chunk_len > buffer_size)
+    {
         ESP_LOGE(TAG, "Binary chunk buffer too small (needed=%u, got=%u)",
                  (unsigned)current_chunk_len, (unsigned)buffer_size);
         return 0;
@@ -139,7 +141,7 @@ uint32_t get_binary_chunk_data(char *buffer, uint32_t buffer_size)
 
     memcpy(buffer, binary_chunk, current_chunk_len);
 
-    //log_flash_chunk(binary_chunk, current_chunk_len, 0x08010000 + current_offset);
+    // log_flash_chunk(binary_chunk, current_chunk_len, 0x08010000 + current_offset);
 
     return (uint32_t)current_chunk_len;
 }
@@ -148,19 +150,25 @@ uint32_t get_binary_chunk_data(char *buffer, uint32_t buffer_size)
 void flash_stm32_firmware_task(void *pvParameter)
 {
     const char *firmware_path = (const char *)pvParameter;
-    ESP_LOGI(TAG, "Starting STM32 firmware flash task: %s", firmware_path);
+
+    char file_path[FILE_PATH_MAX];
+    sprintf(file_path, "%s%s", BASE_PATH, firmware_path);
+    logD(TAG, "File name: %s", file_path);
 
     // Open firmware file from SPIFFS
-    FILE *file = fopen(firmware_path, "rb");
-    if (!file) {
-        ESP_LOGE(TAG, "Failed to open firmware file: %s", firmware_path);
+    FILE *file = fopen(file_path, "rb");
+    if (!file)
+    {
+        ESP_LOGE(TAG, "Failed to open firmware file: %s", file_path);
         vTaskDelete(NULL);
         return;
     }
 
-    if (!binary_chunk) {
+    if (!binary_chunk)
+    {
         binary_chunk = (uint8_t *)malloc(BINARY_CHUNK_SIZE);
-        if (!binary_chunk) {
+        if (!binary_chunk)
+        {
             ESP_LOGE(TAG, "Failed to allocate binary_chunk buffer");
             fclose(file);
             vTaskDelete(NULL);
@@ -178,7 +186,8 @@ void flash_stm32_firmware_task(void *pvParameter)
     Generate_TX_Message(get_stm32_comm(), KE_ENTER_BOOTLOADER, NULL);
     KE_wait_for_response(get_stm32_comm(), 5000);
 
-    while ((read_len = fread(binary_chunk, 1, BINARY_CHUNK_SIZE, file)) > 0) {
+    while ((read_len = fread(binary_chunk, 1, BINARY_CHUNK_SIZE, file)) > 0)
+    {
         current_chunk_len = read_len;
 
         ESP_LOGI(TAG, "Sending chunk %d at offset %d", chunk_num++, current_offset);
@@ -194,11 +203,14 @@ void flash_stm32_firmware_task(void *pvParameter)
 
     fclose(file);
 
-    if (success) {
+    if (success)
+    {
         ESP_LOGI(TAG, "STM32 firmware flashed successfully (%lu bytes)", (unsigned long)current_offset);
         stm32_reset();
         ESP_LOGI(TAG, "STM32 reset to run new firmware");
-    } else {
+    }
+    else
+    {
         ESP_LOGE(TAG, "STM32 firmware flash failed");
     }
 
@@ -221,9 +233,12 @@ void flash_stm32_built_in_firmware_task(void *pvParameter)
 
     // Flash the firmware using existing function
     esp_err_t result = flashSTM(firmware_path);
-    if (result == ESP_OK) {
+    if (result == ESP_OK)
+    {
         ESP_LOGI(TAG, "STM32 firmware flashed successfully");
-    } else {
+    }
+    else
+    {
         ESP_LOGE(TAG, "STM32 firmware flash failed");
     }
 
@@ -245,15 +260,16 @@ void flash_stm32_firmware(const char *firmware_path)
 
     // Create a task to run the flash operation in background
     BaseType_t result = xTaskCreate(
-        flash_stm32_firmware_task,          // Task function
-        "stm_flash_task",                   // Task name
-        8192,                               // Stack size
-        (void *)firmware_path_copy,         // Parameters
-        5,                                  // Priority
-        NULL                                // Task handle
+        flash_stm32_firmware_task,  // Task function
+        "stm_flash_task",           // Task name
+        8192,                       // Stack size
+        (void *)firmware_path_copy, // Parameters
+        5,                          // Priority
+        NULL                        // Task handle
     );
 
-    if (result != pdPASS) {
+    if (result != pdPASS)
+    {
         ESP_LOGE(TAG, "Failed to create STM32 flash task");
         set_stm_flash_error("Failed to start flash task");
     }
@@ -271,25 +287,28 @@ esp_err_t stm_update_post_handler(httpd_req_t *req)
 // STM flash progress handler
 esp_err_t stm_flash_progress_handler(httpd_req_t *req)
 {
-    stm_flash_progress_t* progress = get_stm_flash_progress();
+    stm_flash_progress_t *progress = get_stm_flash_progress();
 
     httpd_resp_set_type(req, "application/json");
     httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
 
     char response[512];
-    if (progress->error) {
+    if (progress->error)
+    {
         snprintf(response, sizeof(response),
-            "{\"percentage\": %d, \"message\": \"%s\", \"complete\": %s, \"error\": \"%s\"}",
-            progress->percentage,
-            progress->message,
-            progress->complete ? "true" : "false",
-            progress->error_message);
-    } else {
+                 "{\"percentage\": %d, \"message\": \"%s\", \"complete\": %s, \"error\": \"%s\"}",
+                 progress->percentage,
+                 progress->message,
+                 progress->complete ? "true" : "false",
+                 progress->error_message);
+    }
+    else
+    {
         snprintf(response, sizeof(response),
-            "{\"percentage\": %d, \"message\": \"%s\", \"complete\": %s}",
-            progress->percentage,
-            progress->message,
-            progress->complete ? "true" : "false");
+                 "{\"percentage\": %d, \"message\": \"%s\", \"complete\": %s}",
+                 progress->percentage,
+                 progress->message,
+                 progress->complete ? "true" : "false");
     }
 
     return httpd_resp_sendstr(req, response);
