@@ -297,8 +297,12 @@ esp_err_t start_webserver()
 
     // Configure HTTP server
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    config.max_open_sockets = 5;    // must be <= CONFIG_LWIP_MAX_SOCKETS - 3
+    config.lru_purge_enable = true; // optional: auto-drop oldest when full
+    config.recv_wait_timeout = 35;  // seconds
+    config.send_wait_timeout = 35;  // seconds
     config.stack_size = HTTPD_TASK_STACK_SIZE;
-    config.max_uri_handlers = 24;  // Increased to accommodate all routes
+    config.max_uri_handlers = 24; // Increased to accommodate all routes
     config.uri_match_fn = httpd_uri_match_wildcard;
 
     if (httpd_start(&server, &config) != ESP_OK)
