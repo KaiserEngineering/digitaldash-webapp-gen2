@@ -68,3 +68,23 @@ export async function deleteBackground(
 		throw error;
 	}
 }
+
+export async function syncBackgrounds(): Promise<void> {
+	try {
+		const response = await fetch(`${apiUrl}/sync`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+
+		if (!response.ok) {
+			throw new Error(`Sync failed: ${response.statusText}`);
+		}
+
+		toast.success('Backgrounds synced successfully');
+	} catch (error) {
+		toast.error('Failed to sync backgrounds');
+		throw error;
+	}
+}

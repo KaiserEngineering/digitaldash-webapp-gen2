@@ -167,5 +167,44 @@ export const deviceClient = {
 			}
 			return false;
 		}
+	},
+
+	async syncBackgrounds(): Promise<boolean> {
+		try {
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+			const res = await fetch(`${getDeviceUrl()}/api/sync`, {
+				method: 'POST',
+				signal: controller.signal,
+				headers: {
+					'Content-Type': 'application/json',
+					Accept: 'application/json'
+				}
+			});
+
+			clearTimeout(timeoutId);
+
+			if (!res.ok) {
+				const errorText = await res.text().catch(() => 'Unknown error');
+				console.error(`Device sync error ${res.status}: ${res.statusText}`, errorText);
+				return false;
+			}
+
+			return true;
+		} catch (err) {
+			if (err instanceof Error) {
+				if (err.name === 'AbortError') {
+					console.error('Device sync request timed out after 10 seconds');
+				} else if (err.message.includes('fetch')) {
+					console.error('Network error syncing backgrounds:', err.message);
+				} else {
+					console.error('Device sync error:', err.message);
+				}
+			} else {
+				console.error('Unknown device sync error:', err);
+			}
+			return false;
+		}
 	}
 };

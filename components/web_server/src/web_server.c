@@ -17,6 +17,9 @@
 #include "stm_flash.h"
 #include <lwip/sockets.h>
 
+// External function declaration
+extern void mirror_spiffs(void);
+
 static const char *TAG = "WebServer";
 
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + 1024)
@@ -289,6 +292,22 @@ esp_err_t stm32_reset_handler(httpd_req_t *req)
     return ret;
 }
 
+esp_err_t sync_handler(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "Background sync requested via HTTP");
+
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
+
+    // Call the mirror_spiffs function first
+    mirror_spiffs();
+
+    const char* success_response = "{\"success\":true,\"message\":\"Backgrounds synced successfully\"}";
+    esp_err_t ret = httpd_resp_send(req, success_response, strlen(success_response));
+
+    return ret;
+}
+
 esp_err_t start_webserver()
 {
     httpd_handle_t server = NULL;
@@ -390,6 +409,13 @@ esp_err_t start_webserver()
                                            .uri = "/api/reset",
                                            .method = HTTP_POST,
                                            .handler = stm32_reset_handler,
+                                           .user_ctx = NULL});
+
+    // Register API sync endpoint
+    httpd_register_uri_handler(server, &(httpd_uri_t){
+                                           .uri = "/api/sync",
+                                           .method = HTTP_POST,
+                                           .handler = sync_handler,
                                            .user_ctx = NULL});
 
     if (register_spiffs(server) != ESP_OK)
