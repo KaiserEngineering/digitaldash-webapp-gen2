@@ -299,11 +299,17 @@ esp_err_t start_webserver()
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.max_open_sockets = 5;    // must be <= CONFIG_LWIP_MAX_SOCKETS - 3
     config.lru_purge_enable = true; // optional: auto-drop oldest when full
-    config.recv_wait_timeout = 35;  // seconds
-    config.send_wait_timeout = 35;  // seconds
+    config.recv_wait_timeout = 60;  // seconds
+    config.send_wait_timeout = 60;  // seconds
     config.stack_size = HTTPD_TASK_STACK_SIZE;
     config.max_uri_handlers = 24; // Increased to accommodate all routes
     config.uri_match_fn = httpd_uri_match_wildcard;
+
+    config.backlog_conn = 8;         // allow short connection bursts
+    config.keep_alive_enable = true; // reduce reconnect churn on browsers
+    config.keep_alive_idle = 5;
+    config.keep_alive_interval = 5;
+    config.keep_alive_count = 3;
 
     if (httpd_start(&server, &config) != ESP_OK)
     {
