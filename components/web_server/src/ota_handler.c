@@ -184,7 +184,8 @@ void flash_stm32_firmware_task(void *pvParameter)
 
     // Enter bootloader mode
     Generate_TX_Message(get_stm32_comm(), KE_ENTER_BOOTLOADER, NULL);
-    KE_wait_for_response(get_stm32_comm(), 5000);
+    if (KE_wait_for_response(get_stm32_comm(), 5000) != KE_ACK)
+        return;
 
     while ((read_len = fread(binary_chunk, 1, BINARY_CHUNK_SIZE, file)) > 0)
     {
@@ -196,7 +197,8 @@ void flash_stm32_firmware_task(void *pvParameter)
         Generate_TX_Message(get_stm32_comm(), KE_BINARY_SEND_CHUNK, &current_offset);
 
         // Wait for ACK from STM32
-        KE_wait_for_response(get_stm32_comm(), 20000);
+        if (KE_wait_for_response(get_stm32_comm(), 20000) != KE_ACK)
+            break;
 
         current_offset += read_len;
     }
