@@ -184,8 +184,7 @@ void flash_stm32_firmware_task(void *pvParameter)
 
     // Enter bootloader mode
     Generate_TX_Message(get_stm32_comm(), KE_ENTER_BOOTLOADER, NULL);
-    if (KE_wait_for_response(get_stm32_comm(), 5000) != KE_ACK)
-        return;
+    KE_wait_for_response(get_stm32_comm(), 5000);
 
     while ((read_len = fread(binary_chunk, 1, BINARY_CHUNK_SIZE, file)) > 0)
     {
@@ -220,9 +219,8 @@ void flash_stm32_firmware_task(void *pvParameter)
 }
 
 /* STM32 firmware flashing using the built in bootloader */
-void flash_stm32_built_in_firmware_task(void *pvParameter)
+void flash_stm32_bootloader(const char *firmware_path)
 {
-    const char *firmware_path = (const char *)pvParameter;
     ESP_LOGI(TAG, "Starting STM32 firmware flash task: %s", firmware_path);
 
     // Switch UART to bootloader mode

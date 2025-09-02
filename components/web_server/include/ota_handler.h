@@ -59,6 +59,8 @@ esp_err_t stm_flash_progress_handler(httpd_req_t *req);
  */
 uint32_t get_binary_chunk_data(char *buffer, uint32_t buffer_size);
 
+void flash_stm32_bootloader(const char *firmware_path);
+
 #ifdef __cplusplus
 }
 #endif

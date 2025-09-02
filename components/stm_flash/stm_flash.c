@@ -65,18 +65,14 @@ esp_err_t writeTask(FILE *flash_file)
 
     if (file_size <= 0) {
         ESP_LOGE(TAG_STM_FLASH, "Invalid file size");
-        set_stm_flash_error("Invalid file size");
         return ESP_FAIL;
     }
 
     int total_blocks = (file_size + 255) / 256; // Round up for total blocks
     if(setupSTM() == 0) {
         logE(TAG_STM_FLASH, "%s", "STM32 Setup failed");
-        set_stm_flash_error("STM32 Setup failed");
         return ESP_FAIL;
     }
-
-    update_stm_flash_progress(0, "Starting firmware write to STM32");
 
     int last_logged_progress = -1; // To prevent duplicate logging
 
@@ -87,7 +83,6 @@ esp_err_t writeTask(FILE *flash_file)
         esp_err_t ret = flashPage(loadAddress, block);
         if (ret == ESP_FAIL)
         {
-            set_stm_flash_error("Failed to write block to STM32 flash");
             return ESP_FAIL;
         }
 
@@ -103,7 +98,6 @@ esp_err_t writeTask(FILE *flash_file)
             ESP_LOGI(TAG_STM_FLASH, "Write progress: %d%%", progress);
             char progress_msg[128];
             snprintf(progress_msg, sizeof(progress_msg), "Writing to flash...");
-            update_stm_flash_progress(progress, progress_msg);
             last_logged_progress = progress;
         }
 
@@ -148,9 +142,6 @@ esp_err_t flashSTM(const char *file_name)
 {
     esp_err_t err = ESP_FAIL;
 
-    // Reset progress tracking
-    reset_stm_flash_progress();
-
     char file_path[FILE_PATH_MAX];
     sprintf(file_path, "%s%s", BASE_PATH, file_name);
     logD(TAG_STM_FLASH, "File name: %s", file_path);
@@ -162,7 +153,7 @@ esp_err_t flashSTM(const char *file_name)
     FILE *flash_file = fopen(file_path, "rb");
     if (flash_file == NULL)
     {
-        set_stm_flash_error("Failed to open firmware file");
+        logI(TAG_STM_FLASH, "Failed to open firmware file", NULL);
         return ESP_FAIL;
     }
 
@@ -192,7 +183,6 @@ esp_err_t flashSTM(const char *file_name)
 
         err = ESP_OK;
         logI(TAG_STM_FLASH, "%s", "STM32 Flashed Successfully!!!");
-        set_stm_flash_complete();
     } while (0);
 
     logI(TAG_STM_FLASH, "%s", "Ending Connection");
@@ -200,12 +190,6 @@ esp_err_t flashSTM(const char *file_name)
 
     logI(TAG_STM_FLASH, "%s", "Closing file");
     fclose(flash_file);
-
-    // If we failed but didn't set an error message, set a generic one
-    if (err != ESP_OK && !flash_progress.error)
-    {
-        set_stm_flash_error("STM32 flash operation failed");
-    }
 
     return err;
 }

@@ -52,6 +52,8 @@ static const char *TAG = "ImagesHandler";
 #define HTTPD_413_PAYLOAD_TOO_LARGE 413
 #endif
 
+extern void mirror_spiffs(void);
+
 static void url_decode(char *dest, const char *src, size_t dest_size)
 {
     char a, b;
@@ -379,6 +381,16 @@ esp_err_t image_delete_handler(httpd_req_t *req)
     }
 }
 
+esp_err_t mirror_spiffs_post_handler(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "Mirror request received");
+
+    mirror_spiffs();
+
+    httpd_resp_set_type(req, "application/json");
+    return httpd_resp_sendstr(req, "{\"message\":\"Mirror started\"}");
+}
+
 esp_err_t register_images(httpd_handle_t server)
 {
     // Register URI handlers
@@ -406,11 +418,19 @@ esp_err_t register_images(httpd_handle_t server)
         .handler = image_delete_handler,
         .user_ctx = NULL};
 
+    // --- New route: trigger mirror_spiffs() ---
+    httpd_uri_t mirror_backgrounds_uri = {
+        .uri = "/api/backgrounds/mirror",
+        .method = HTTP_POST,
+        .handler = mirror_spiffs_post_handler,
+        .user_ctx = NULL};
+
     esp_err_t err;
     if ((err = httpd_register_uri_handler(server, &get_image_uri)) != ESP_OK ||
         (err = httpd_register_uri_handler(server, &list_images_uri)) != ESP_OK ||
         (err = httpd_register_uri_handler(server, &upload_image_uri)) != ESP_OK ||
-        (err = httpd_register_uri_handler(server, &delete_image_uri)) != ESP_OK)
+        (err = httpd_register_uri_handler(server, &delete_image_uri)) != ESP_OK ||
+        (err = httpd_register_uri_handler(server, &mirror_backgrounds_uri)) != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to register URI handlers: %s", esp_err_to_name(err));
         return err;

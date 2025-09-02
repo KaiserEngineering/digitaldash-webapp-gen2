@@ -396,15 +396,17 @@ void app_main(void)
 
     start_KE_tick_timer();
 
-    Generate_TX_Message(&stm32_comm, KE_CONFIG_REQUEST, 0);
-    KE_wait_for_response(&stm32_comm, 5000);
-    Generate_TX_Message(&stm32_comm, KE_OPTION_LIST_REQUEST, 0);
-    KE_wait_for_response(&stm32_comm, 5000);
-    Generate_TX_Message(&stm32_comm, KE_PID_LIST_REQUEST, 0);
-    KE_wait_for_response(&stm32_comm, 5000);
-    mirror_spiffs();
+    //flash_stm32_bootloader("STM32U5G9ZJTXQ_OSPI_Bootloader.bin");
+    //vTaskDelay(pdMS_TO_TICKS(1000));
 
-    //flash_stm32_firmware("/spiffs/digitaldash-firmware-gen2-stm32u5g.bin");
+
+    Generate_TX_Message(&stm32_comm, KE_CONFIG_REQUEST, 0);
+    KE_wait_for_response(&stm32_comm, 1000);
+    Generate_TX_Message(&stm32_comm, KE_OPTION_LIST_REQUEST, 0);
+    KE_wait_for_response(&stm32_comm, 1000);
+    Generate_TX_Message(&stm32_comm, KE_PID_LIST_REQUEST, 0);
+    KE_wait_for_response(&stm32_comm, 1000);
+    mirror_spiffs();
 
     while (1)
     {

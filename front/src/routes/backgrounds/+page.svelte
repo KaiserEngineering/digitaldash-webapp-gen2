@@ -8,9 +8,18 @@
 	const { data } = $props();
 	const slotNames = data.slotNames || [];
 
-	function handleAddBackground() {
+	async function handleAddBackground() {
 		console.log("Sync Backgrounds clicked");
-		// TODO: mirror_spiffs()
+		try {
+			const res = await fetch("/api/backgrounds/mirror", {
+				method: "POST"
+			});
+			if (!res.ok) throw new Error("Sync Backgrounds request failed");
+			const json = await res.json();
+			console.log("Mirror response:", json);
+		} catch (err) {
+			console.error("Failed to sync:", err);
+		}
 	}
 </script>
 
