@@ -25,8 +25,8 @@
 	const compareOps = data.options?.alert_comparison || [];
 
 	const { form, enhance, submitting } = superForm(data.form, {
-		dataType: 'json',
-		SPA: true,
+	dataType: 'json',
+	SPA: true,
 		validators: zod4(AlertsFormSchema),
 		onUpdate: async ({ form: formData, cancel }) => {
 			cancel();
@@ -48,14 +48,14 @@
 					const alertsObject: Record<string, DigitalDashAlert & { index: number }> = {};
 					result.config.alert.forEach((alert: DigitalDashAlert, index: number) => {
 						alertsObject[index] = { ...alert, index };
-					});
-					Object.assign($form, alertsObject);
-					toast.success('Alerts saved successfully!');
-				} else {
-					toast.error('Failed to save alerts');
-				}
-			} catch (error) {
-				console.error('Failed to save alerts:', error);
+			});
+			Object.assign($form, alertsObject);
+			toast.success('Alerts saved successfully!');
+		} else {
+			toast.error('Failed to save alerts');
+		}
+		} catch (error) {
+		console.error('Failed to save alerts:', error);
 				toast.error('Failed to save alerts');
 			}
 		}

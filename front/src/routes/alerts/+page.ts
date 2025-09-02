@@ -4,26 +4,39 @@ import { AlertsFormSchema } from './alertsFormSchema';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import type { DigitalDashAlert } from '$schemas/digitaldash';
 
+function normalizeText(s: unknown): string | unknown {
+  if (typeof s !== 'string') return s;
+  // Map smart quotes (UTF-8) and common CP-1252 fallbacks to ASCII
+  return s
+    .replace(/\u2018|\u0091/g, "'") // ‘ or CP-1252 left single
+    .replace(/\u2019|\u0092/g, "'") // ’ or CP-1252 right single
+    .replace(/\u201C|\u0093/g, '"') // “ or CP-1252 left double
+    .replace(/\u201D|\u0094/g, '"') // ” or CP-1252 right double
+    .normalize('NFC');
+}
+
+function normalizeAlert(a: DigitalDashAlert): DigitalDashAlert {
+  return {
+    ...a,
+    message: normalizeText(a.message) as string,
+  };
+}
+
 export const load: PageLoad = async ({ parent }) => {
-	const parentData = await parent();
-	const pids = await parentData.pids;
-	const config = await parentData.config;
-	const options = await parentData.options;
+  const parentData = await parent();
+  const pids = await parentData.pids;
+  const config = await parentData.config;
+  const options = await parentData.options;
 
-	const initialAlerts = config?.alert ?? [];
+  // Normalize incoming alerts (handles curly quotes & mis-encodings)
+  const initialAlerts: DigitalDashAlert[] = (config?.alert ?? []).map(normalizeAlert);
 
-	// Convert array to object structure (numbered alerts)
-	const alertsConfig: Record<string, DigitalDashAlert & { index: number }> = {};
+  // Convert array to object structure (numbered alerts)
+  const alertsConfig: Record<string, DigitalDashAlert & { index: number }> = {};
+  initialAlerts.forEach((alert, index) => {
+    alertsConfig[index] = { ...alert, index };
+  });
 
-	// Convert from array to object
-	initialAlerts.forEach((alert: DigitalDashAlert, index: number) => {
-		alertsConfig[index] = {
-			...alert,
-			index: index
-		};
-	});
-
-	const form = await superValidate(alertsConfig, zod4(AlertsFormSchema));
-
-	return { form, pids, options };
+  const form = await superValidate(alertsConfig, zod4(AlertsFormSchema));
+  return { form, pids, options };
 };
