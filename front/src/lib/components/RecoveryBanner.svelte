@@ -73,6 +73,7 @@
 		<div class="mt-1 flex w-full flex-col gap-1.5 sm:ml-4 sm:flex-row sm:gap-2">
 			<Button
 				size="sm"
+				href="/firmware/web"
 				class="h-7 justify-start bg-blue-600 px-2 text-xs text-white hover:bg-blue-700"
 			>
 				<Upload class="mr-1 h-3 w-3" />
@@ -80,6 +81,7 @@
 			</Button>
 			<Button
 				size="sm"
+				href="/firmware/stm"
 				class="h-7 justify-start bg-red-600 px-2 text-xs text-white hover:bg-red-700"
 			>
 				<Smartphone class="mr-1 h-3 w-3" />

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card';
 	import {
 		CircleCheck,
 		TriangleAlert,
@@ -13,6 +12,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { apiUrl } from '$lib/config';
 	import toast from 'svelte-5-french-toast';
+	import PageCard from '@/components/PageCard.svelte';
 
 	let filesStatus: 'idle' | 'loading' | 'success' | 'error' = $state('idle');
 	interface FirmwareFile {
@@ -218,209 +218,180 @@
 	});
 </script>
 
-<div class="bg-background min-h-screen p-4">
-	<div class="mx-auto max-w-4xl space-y-8 pt-8">
-		<!-- Firmware Update Card -->
-		<Card class="bg-card py-0 shadow-lg">
-			<CardHeader class="bg-primary-600 rounded-t-lg text-white">
-				<CardTitle class="flex items-center gap-3 text-xl">
-					<Zap class="h-6 w-6" />
-					Flash Digital Dash
-				</CardTitle>
-			</CardHeader>
-			<CardContent class="space-y-6 p-6">
-				<div class="bg-muted border-border rounded-lg border p-4">
-					<p class="text-muted-foreground text-sm">
-						Select a firmware file (.bin) to update your Digital Dash. The flashing process
-						typically takes 5–10 minutes, depending on the file size. Do not turn off your vehicle
-						while the update is in progress.
-					</p>
+<PageCard
+	title="Flash Digital Dash"
+	description="Select a firmware file (.bin) to update your Digital Dash. The flashing process typically takes 5–10 minutes, depending on the file size. Do not turn off your vehicle while the update is in progress."
+	icon={Zap}
+>
+	<!-- Hidden file input -->
+	<input bind:this={fileInput} type="file" accept=".bin" class="hidden" onchange={uploadFirmware} />
+
+	<!-- Upload Button -->
+	<Button
+		onclick={browseFirmware}
+		disabled={uploadStatus === 'uploading' || flashStatus === 'flashing'}
+		class="btn-primary h-12 w-full text-lg font-semibold shadow-md transition-all duration-200"
+	>
+		{#if uploadStatus === 'uploading'}
+			<Loader class="mr-3 h-5 w-5 animate-spin" />
+			Uploading Firmware...
+		{:else}
+			<Upload class="mr-3 h-5 w-5" />
+			Upload Firmware File
+		{/if}
+	</Button>
+
+	<!-- Upload Status -->
+	{#if uploadStatus === 'success'}
+		<div class="border-border bg-muted rounded-lg border p-4">
+			<p class="flex items-center gap-3 font-medium text-green-600">
+				<CircleCheck class="h-5 w-5 text-green-600" />
+				{uploadMessage}
+			</p>
+		</div>
+	{:else if uploadStatus === 'error'}
+		<div class="border-border bg-muted rounded-lg border p-4">
+			<p class="flex items-center gap-3 font-medium text-red-600">
+				<TriangleAlert class="h-5 w-5 text-red-600" />
+				{uploadMessage}
+			</p>
+		</div>
+	{:else if uploadStatus === 'uploading'}
+		<div class="border-border bg-muted space-y-3 rounded-lg border p-4">
+			<p class="flex items-center gap-3 font-medium text-blue-600">
+				<Loader class="h-5 w-5 animate-spin text-blue-600" />
+				{uploadMessage}
+			</p>
+			<p class="text-muted-foreground text-center text-sm">
+				{Math.floor(uploadProgress)}% complete
+			</p>
+		</div>
+	{/if}
+
+	<!-- Flash Button - only show when firmware file exists -->
+	{#if files.some((f) => f.name === 'digitaldash-firmware-gen2-stm32u5g.bin')}
+		<Button
+			onclick={flashFirmware}
+			disabled={uploadStatus === 'uploading' || flashStatus === 'flashing'}
+			class="btn-primary h-12 w-full text-lg font-semibold shadow-md transition-all duration-200"
+		>
+			{#if flashStatus === 'flashing'}
+				<Loader class="mr-3 h-5 w-5 animate-spin" />
+				Flashing Digital Dash...
+			{:else}
+				<Zap class="mr-3 h-5 w-5" />
+				Flash to Digital Dash
+			{/if}
+		</Button>
+
+		<!-- Flash Status -->
+		{#if flashStatus === 'success'}
+			<div class="rounded-lg border border-green-200 bg-green-50 p-4">
+				<p class="flex items-center gap-3 font-medium text-green-800">
+					<CircleCheck class="h-5 w-5 text-green-600" />
+					{flashMessage}
+				</p>
+			</div>
+		{:else if flashStatus === 'error'}
+			<div class="border-border bg-muted rounded-lg border p-4">
+				<p class="flex items-center gap-3 font-medium text-red-600">
+					<TriangleAlert class="h-5 w-5 text-red-600" />
+					{flashMessage}
+				</p>
+			</div>
+		{:else if flashStatus === 'flashing'}
+			<div class="border-border bg-muted space-y-3 rounded-lg border p-4">
+				<p class="flex items-center gap-3 font-medium text-blue-600">
+					<Loader class="h-5 w-5 animate-spin text-blue-600" />
+					{flashMessage}
+				</p>
+				<p class="text-muted-foreground text-center text-sm">
+					{Math.floor(flashProgress)}% complete
+				</p>
+			</div>
+		{/if}
+	{/if}
+
+	<!-- Current Firmware Files -->
+	<div class="space-y-4">
+		<h3 class="flex items-center gap-2 font-medium">
+			<FileText class="h-5 w-5" />
+			Current Firmware Files
+		</h3>
+		<div class="border-border bg-muted min-h-[120px] rounded-lg border">
+			{#if filesStatus === 'loading'}
+				<div class="text-muted-foreground flex items-center justify-center gap-3 py-8">
+					<Loader class="h-5 w-5 animate-spin" />
+					<span class="font-medium">Loading files...</span>
 				</div>
-
-				<!-- Hidden file input -->
-				<input
-					bind:this={fileInput}
-					type="file"
-					accept=".bin"
-					class="hidden"
-					onchange={uploadFirmware}
-				/>
-
-				<!-- Upload Button -->
-				<Button
-					onclick={browseFirmware}
-					disabled={uploadStatus === 'uploading' || flashStatus === 'flashing'}
-					class="btn-primary h-12 w-full text-lg font-semibold text-gray-800 shadow-md transition-all duration-200"
-				>
-					{#if uploadStatus === 'uploading'}
-						<Loader class="mr-3 h-5 w-5 animate-spin" />
-						Uploading Firmware...
-					{:else}
-						<Upload class="mr-3 h-5 w-5" />
-						Upload Firmware File
-					{/if}
-				</Button>
-
-				<!-- Upload Status -->
-				{#if uploadStatus === 'success'}
-					<div class="border-border bg-muted rounded-lg border p-4">
-						<p class="text-success flex items-center gap-3 font-medium">
-							<CircleCheck class="text-success h-5 w-5" />
-							{uploadMessage}
-						</p>
-					</div>
-				{:else if uploadStatus === 'error'}
-					<div class="border-border bg-muted rounded-lg border p-4">
-						<p class="text-error flex items-center gap-3 font-medium">
-							<TriangleAlert class="text-error h-5 w-5" />
-							{uploadMessage}
-						</p>
-					</div>
-				{:else if uploadStatus === 'uploading'}
-					<div class="border-border bg-muted space-y-3 rounded-lg border p-4">
-						<p class="text-info flex items-center gap-3 font-medium">
-							<Loader class="text-info h-5 w-5 animate-spin" />
-							{uploadMessage}
-						</p>
-						<p class="text-muted-foreground text-center text-sm">
-							{Math.floor(uploadProgress)}% complete
-						</p>
-					</div>
-				{/if}
-
-				<!-- Flash Button - only show when firmware file exists -->
-				{#if files.some((f) => f.name === 'digitaldash-firmware-gen2-stm32u5g.bin')}
-					<Button
-						onclick={flashFirmware}
-						disabled={uploadStatus === 'uploading' || flashStatus === 'flashing'}
-						class="btn-primary h-12 w-full text-lg font-semibold text-gray-800 shadow-md transition-all duration-200"
-					>
-						{#if flashStatus === 'flashing'}
-							<Loader class="mr-3 h-5 w-5 animate-spin" />
-							Flashing Digital Dash...
-						{:else}
-							<Zap class="mr-3 h-5 w-5" />
-							Flash to Digital Dash
-						{/if}
-					</Button>
-
-					<!-- Flash Status -->
-					{#if flashStatus === 'success'}
-						<div class="bg-primary-50 border-primary-200 rounded-lg border p-4">
-							<p class="text-primary-800 flex items-center gap-3 font-medium">
-								<CircleCheck class="text-primary-600 h-5 w-5" />
-								{flashMessage}
-							</p>
-						</div>
-					{:else if flashStatus === 'error'}
-						<div class="border-border bg-muted rounded-lg border p-4">
-							<p class="text-error flex items-center gap-3 font-medium">
-								<TriangleAlert class="text-error h-5 w-5" />
-								{flashMessage}
-							</p>
-						</div>
-					{:else if flashStatus === 'flashing'}
-						<div class="border-border bg-muted space-y-3 rounded-lg border p-4">
-							<p class="text-info flex items-center gap-3 font-medium">
-								<Loader class="text-info h-5 w-5 animate-spin" />
-								{flashMessage}
-							</p>
-							<p class="text-muted-foreground text-center text-sm">
-								{Math.floor(flashProgress)}% complete
-							</p>
-						</div>
-					{/if}
-				{/if}
-
-				<!-- Reset Button -->
-				<div class="border-t border-gray-200 pt-4">
-					<Button
-						onclick={resetSTM32}
-						disabled={resetStatus === 'resetting'}
-						variant="outline"
-						class="h-10 w-full text-sm font-medium"
-					>
-						{#if resetStatus === 'resetting'}
-							<Loader class="mr-2 h-4 w-4 animate-spin" />
-							Resetting...
-						{:else}
-							<RotateCcw class="mr-2 h-4 w-4" />
-							Reset Digital Dash
-						{/if}
-					</Button>
+			{:else if filesStatus === 'error'}
+				<div class="flex items-center justify-center gap-3 py-8 text-red-600">
+					<TriangleAlert class="h-5 w-5" />
+					<span class="font-medium">Failed to load files</span>
 				</div>
-			</CardContent>
-		</Card>
-
-		<!-- Current Firmware Info Card -->
-		<Card class="bg-card py-0 shadow-lg">
-			<CardHeader class="bg-primary-600 rounded-t-lg text-white">
-				<CardTitle class="flex items-center gap-3 text-xl">
-					<FileText class="h-6 w-6" />
-					Current Firmware
-				</CardTitle>
-			</CardHeader>
-			<CardContent class="space-y-6 p-6">
-				<!-- Files List Section -->
-				<div class="space-y-4">
-					<div class="border-border bg-muted min-h-[120px] rounded-lg border">
-						{#if filesStatus === 'loading'}
-							<div class="text-muted-foreground flex items-center justify-center gap-3 py-8">
-								<Loader class="h-5 w-5 animate-spin" />
-								<span class="font-medium">Loading files...</span>
-							</div>
-						{:else if filesStatus === 'error'}
-							<div class="text-error flex items-center justify-center gap-3 py-8">
-								<TriangleAlert class="h-5 w-5" />
-								<span class="font-medium">Failed to load files</span>
-							</div>
-						{:else if files.length === 0}
-							<div class="text-muted-foreground flex items-center justify-center py-8">
-								<span class="font-medium">No firmware file found</span>
-							</div>
-						{:else}
-							<div class="divide-border divide-y">
-								{#each files as file, index (file.name || index)}
+			{:else if files.length === 0}
+				<div class="text-muted-foreground flex items-center justify-center py-8">
+					<span class="font-medium">No firmware file found</span>
+				</div>
+			{:else}
+				<div class="divide-border divide-y">
+					{#each files as file, index (file.name || index)}
+						<div
+							class="hover:bg-background p-4 transition-colors duration-150 {index === 0
+								? 'rounded-t-lg'
+								: ''} {index === files.length - 1 ? 'rounded-b-lg' : ''}"
+						>
+							<div class="flex items-start gap-4">
+								<div
+									class="bg-muted flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg"
+								>
+									<FileText class="text-foreground h-6 w-6" />
+								</div>
+								<div class="min-w-0 flex-grow">
+									<h5 class="text-foreground truncate font-medium">
+										{file.name || file}
+									</h5>
 									<div
-										class="hover:bg-background p-4 transition-colors duration-150 {index === 0
-											? 'rounded-t-lg'
-											: ''} {index === files.length - 1 ? 'rounded-b-lg' : ''}"
+										class="text-muted-foreground mt-2 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3"
 									>
-										<div class="flex items-start gap-4">
-											<div
-												class="bg-muted flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg"
-											>
-												<FileText class="text-foreground h-6 w-6" />
+										{#if file.size}
+											<div class="flex items-center gap-1">
+												<span class="font-medium">Size:</span>
+												<span>{(file.size / 1024).toFixed(1)} KB</span>
 											</div>
-											<div class="min-w-0 flex-grow">
-												<h5 class="text-foreground truncate font-medium">
-													{file.name || file}
-												</h5>
-												<div
-													class="text-muted-foreground mt-2 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3"
-												>
-													{#if file.size}
-														<div class="flex items-center gap-1">
-															<span class="font-medium">Size:</span>
-															<span>{(file.size / 1024).toFixed(1)} KB</span>
-														</div>
-													{/if}
-													{#if file.type}
-														<div class="flex items-center gap-1">
-															<span class="font-medium">Type:</span>
-															<span>{file.type}</span>
-														</div>
-													{/if}
-												</div>
+										{/if}
+										{#if file.type}
+											<div class="flex items-center gap-1">
+												<span class="font-medium">Type:</span>
+												<span>{file.type}</span>
 											</div>
-										</div>
+										{/if}
 									</div>
-								{/each}
+								</div>
 							</div>
-						{/if}
-					</div>
+						</div>
+					{/each}
 				</div>
-			</CardContent>
-		</Card>
+			{/if}
+		</div>
 	</div>
-</div>
+
+	{#snippet footerContent()}
+		<div class="border-border bg-muted/30 flex justify-between gap-4 py-4">
+			<Button
+				onclick={resetSTM32}
+				disabled={resetStatus === 'resetting'}
+				variant="outline"
+				class="h-10 text-sm font-medium"
+			>
+				{#if resetStatus === 'resetting'}
+					<Loader class="mr-2 h-4 w-4 animate-spin" />
+					Resetting...
+				{:else}
+					<RotateCcw class="mr-2 h-4 w-4" />
+					Reset Digital Dash
+				{/if}
+			</Button>
+		</div>
+	{/snippet}
+</PageCard>
