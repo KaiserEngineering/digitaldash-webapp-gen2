@@ -95,7 +95,7 @@ esp_err_t config_patch_handler(httpd_req_t *req)
 
     // Now save to STM
     Generate_TX_Message(get_stm32_comm(), KE_CONFIG_SEND, 0);
-    KE_wait_for_response(get_stm32_comm(), 30000);
+    KE_wait_for_response(get_stm32_comm(), 2500);
 
     // The config has been changed, invalidate cached json input data
     memset(json_data_input, '\0', JSON_BUF_SIZE);
