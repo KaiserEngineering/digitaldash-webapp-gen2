@@ -245,9 +245,6 @@ void flash_stm32_bootloader(const char *firmware_path)
     // Reset STM32 to run new firmware
     stm32_reset();
     ESP_LOGI(TAG, "STM32 reset to run new firmware");
-
-    // Delete this task
-    vTaskDelete(NULL);
 }
 
 /* STM32 firmware flashing function */
