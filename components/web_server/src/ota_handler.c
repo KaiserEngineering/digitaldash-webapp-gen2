@@ -335,6 +335,22 @@ esp_err_t register_ota_routes(httpd_handle_t server)
         .user_ctx = NULL};
     httpd_register_uri_handler(server, &stm_progress_get);
 
+    // STM flash progress endpoint
+    httpd_uri_t stm_progress_get = {
+        .uri = "/api/flash/stm/progress",
+        .method = HTTP_GET,
+        .handler = stm_flash_progress_handler,
+        .user_ctx = NULL};
+    httpd_register_uri_handler(server, &stm_progress_get);
+
+    // Bootloader flash progress endpoint  
+    httpd_uri_t bootloader_progress_get = {
+        .uri = "/api/flash/bootloader/progress", 
+        .method = HTTP_GET,
+        .handler = bootloader_flash_progress_handler,
+        .user_ctx = NULL};
+    httpd_register_uri_handler(server, &bootloader_progress_get);
+
     ESP_LOGI(TAG, "OTA routes registered successfully");
     return ESP_OK;
 }
