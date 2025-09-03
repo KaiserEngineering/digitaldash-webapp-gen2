@@ -23,7 +23,7 @@ export async function GET() {
 	const options = {
 		view_state: ['Disabled', 'Enabled'],
 		view_background: backgroundSlots,
-		gauge_theme: ['Linear', 'Stock RS', 'Stock ST', 'Digital', 'Grumpy Cat', 'Radial'],
+		gauge_theme: ['Linear', 'Stock RS', 'Stock ST', 'Digital', 'Grumpy Cat', 'Radial', 'Arc'],
 		alert_state: ['Disabled', 'Enabled'],
 		alert_comparison: [
 			'Less Than',

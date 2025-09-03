@@ -19,6 +19,7 @@ idf_component_register(SRCS
     "themes/Stock ST.png"
     "themes/Grumpy Cat.png"
     "themes/Digital.png"
+    "themes/Arc.png"
 )
 
 set(VERSION_JSON_PATH "${CMAKE_SOURCE_DIR}/front/build/_app/version.json")
