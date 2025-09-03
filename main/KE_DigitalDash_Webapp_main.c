@@ -397,9 +397,9 @@ void app_main(void)
     start_KE_tick_timer();
 
     // Flash the STM32 bootloader
-    flash_stm32_bootloader("STM32U5G9ZJTXQ_OSPI_Bootloader.bin");
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    uart_init(&stm32_comm);
+    // flash_stm32_bootloader("STM32U5G9ZJTXQ_OSPI_Bootloader.bin");
+    // vTaskDelay(pdMS_TO_TICKS(1000));
+    // uart_init(&stm32_comm);
     // End flash the STM32 bootloader
 
 
