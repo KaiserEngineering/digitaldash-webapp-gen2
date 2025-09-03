@@ -72,7 +72,7 @@ esp_err_t config_get_handler(httpd_req_t *req)
         ESP_LOGE(TAG, "Config data is empty, please reset the MCU to initialize.");
         return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Config data not initialized");
     }
-    ESP_LOGD(TAG, "Sending config data: %s", json_data_input);
+    ESP_LOGI(TAG, "Sending config data: %s", json_data_input);
     httpd_resp_set_type(req, "application/json");
     return httpd_resp_send(req, json_data_input, HTTPD_RESP_USE_STRLEN);
 }
@@ -91,11 +91,11 @@ esp_err_t config_patch_handler(httpd_req_t *req)
     }
 
     json_data_output[received] = '\0';
-    ESP_LOGD(TAG, "Received config update: %s", json_data_output);
+    ESP_LOGI(TAG, "Received config update: %s", json_data_output);
 
     // Now save to STM
     Generate_TX_Message(get_stm32_comm(), KE_CONFIG_SEND, 0);
-    KE_wait_for_response(get_stm32_comm(), 5000);
+    KE_wait_for_response(get_stm32_comm(), 2500);
 
     // The config has been changed, invalidate cached json input data
     memset(json_data_input, '\0', JSON_BUF_SIZE);

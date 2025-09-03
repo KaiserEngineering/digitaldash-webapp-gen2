@@ -108,7 +108,8 @@
 			"cstdlib": "c",
 			"config_handler.h": "c",
 			"ota_handler.h": "c",
-			"charconv": "c"
+			"charconv": "c",
+			"ke_communicaton_protocol.h": "c"
 		},
 		"editor.formatOnSave": false
 	}
