@@ -87,6 +87,7 @@
 
 <div class={cn('w-full', className)}>
 	{#if label}
+		<!-- svelte-ignore a11y_label_has_associated_control -->
 		<label class="text-foreground mb-3 block text-sm font-medium">{label}</label>
 	{/if}
 

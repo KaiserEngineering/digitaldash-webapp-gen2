@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ImagesTable from '@/components/ImagesTable.svelte';
 	import PageCard from '@/components/PageCard.svelte';
-	import { ImageIcon, RefreshCcw, Loader2 } from 'lucide-svelte';
+	import { ImageIcon, RefreshCcw, Loader } from 'lucide-svelte';
 	import { uploadBackground, deleteBackground, syncBackgrounds } from './backgrounds.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 
@@ -44,7 +44,7 @@
 				class="btn-primary flex h-12 items-center gap-2 rounded-xl px-8 font-semibold shadow-lg transition-all duration-200"
 			>
 				{#if isSyncing}
-					<Loader2 class="h-4 w-4 animate-spin" />
+					<Loader class="h-4 w-4 animate-spin" />
 					Syncing...
 				{:else}
 					<RefreshCcw class="h-4 w-4" />

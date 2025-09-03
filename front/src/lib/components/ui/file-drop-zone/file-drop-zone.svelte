@@ -179,8 +179,8 @@
 	for={id}
 	aria-disabled={!canUploadFiles}
 	class={cn(
-		'border-border hover:bg-accent hover:border-border/75 dark:hover:bg-accent/50 flex h-48 w-full place-items-center justify-center rounded-lg border-2 border-dashed p-6 transition-all duration-200 hover:cursor-pointer hover:shadow-md aria-disabled:opacity-50 aria-disabled:hover:cursor-not-allowed',
-		className
+		'border-border hover:bg-accent hover:border-border/75 dark:hover:bg-accent/50 flex w-full place-items-center justify-center rounded-lg border-2 border-dashed p-6 transition-all duration-200 hover:cursor-pointer hover:shadow-md aria-disabled:opacity-50 aria-disabled:hover:cursor-not-allowed',
+		className || 'h-48'
 	)}
 >
 	{#if children}
