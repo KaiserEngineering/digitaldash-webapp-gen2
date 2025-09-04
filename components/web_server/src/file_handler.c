@@ -326,22 +326,60 @@ static esp_err_t spiffs_list_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "SPIFFS list request: %s", req->uri);
 
-    // Just return the firmware file info for now
-    file_info_t firmware_info;
-    const char *firmware_path = "/spiffs/digitaldash-firmware-gen2-stm32u5g.bin";
-
-    esp_err_t err = file_handler_get_file_info(firmware_path, &firmware_info);
-    if (err != ESP_OK)
+    // Open the SPIFFS directory
+    DIR *dir = opendir("/spiffs");
+    if (!dir)
     {
-        ESP_LOGW(TAG, "Firmware file not found: %s", firmware_path);
+        ESP_LOGW(TAG, "Failed to open /spiffs directory");
         httpd_resp_set_type(req, "application/json");
         return httpd_resp_sendstr(req, "{\"files\": []}");
     }
 
-    char response[512];
-    snprintf(response, sizeof(response),
-             "{\"files\": [{\"name\": \"%s\", \"size\": %zu, \"lastModified\": %lld}]}",
-             firmware_info.name, firmware_info.size, (long long)firmware_info.last_modified * 1000);
+    // Build JSON response with all .bin files using stack buffer
+    char response[2048]; // Use stack buffer to avoid heap fragmentation
+    strcpy(response, "{\"files\": [");
+    bool first_file = true;
+    struct dirent *entry;
+    size_t response_len = strlen(response);
+
+    while ((entry = readdir(dir)) != NULL)
+    {
+        // Check if file has .bin extension
+        size_t name_len = strlen(entry->d_name);
+        if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".bin") == 0)
+        {
+            // Get file info
+            char file_path[FILE_PATH_MAX];
+            snprintf(file_path, sizeof(file_path), "/spiffs/%s", entry->d_name);
+
+            file_info_t file_info;
+            if (file_handler_get_file_info(file_path, &file_info) == ESP_OK)
+            {
+                // Check if we have enough space for this entry
+                char file_json[256];
+                int entry_len = snprintf(file_json, sizeof(file_json),
+                                       "%s{\"name\": \"%s\", \"size\": %zu, \"lastModified\": %lld, \"type\": \"Binary file\"}",
+                                       first_file ? "" : ", ",
+                                       file_info.name, file_info.size, (long long)file_info.last_modified * 1000);
+
+                // Ensure we don't exceed buffer size (leave room for closing "]}")
+                if (response_len + entry_len + 3 < sizeof(response))
+                {
+                    strcat(response, file_json);
+                    response_len += entry_len;
+                    first_file = false;
+                }
+                else
+                {
+                    ESP_LOGW(TAG, "Response buffer full, truncating file list");
+                    break;
+                }
+            }
+        }
+    }
+
+    strcat(response, "]}");
+    closedir(dir);
 
     httpd_resp_set_type(req, "application/json");
     return httpd_resp_send(req, response, strlen(response));
