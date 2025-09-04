@@ -358,9 +358,9 @@ static esp_err_t spiffs_list_handler(httpd_req_t *req)
                 // Check if we have enough space for this entry
                 char file_json[256];
                 int entry_len = snprintf(file_json, sizeof(file_json),
-                                       "%s{\"name\": \"%s\", \"size\": %zu, \"lastModified\": %lld, \"type\": \"Binary file\"}",
+                                       "%s{\"name\": \"%s\", \"size\": %zu, \"type\": \"Binary file\"}",
                                        first_file ? "" : ", ",
-                                       file_info.name, file_info.size, (long long)file_info.last_modified * 1000);
+                                       file_info.name, file_info.size);
 
                 // Ensure we don't exceed buffer size (leave room for closing "]}")
                 if (response_len + entry_len + 3 < sizeof(response))
