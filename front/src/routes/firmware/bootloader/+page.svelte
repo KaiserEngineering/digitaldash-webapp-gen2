@@ -287,11 +287,11 @@
 	<!-- Flash Button - only show when bootloader file exists -->
 	{#if files.some((f) => f.name === 'STM32U5G9ZJTXQ_OSPI_Bootloader.bin')}
 		<div class="space-y-3">
-			<div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
-				<p class="text-sm text-blue-800">
+			<div class="border-border bg-muted rounded-lg border p-3">
+				<p class="text-sm font-medium">
 					<strong>Target file:</strong> STM32U5G9ZJTXQ_OSPI_Bootloader.bin
 				</p>
-				<p class="mt-1 text-xs text-blue-700">
+				<p class="text-muted-foreground mt-1 text-xs">
 					Clicking "Flash" will use this specific file from SPIFFS storage
 				</p>
 			</div>
