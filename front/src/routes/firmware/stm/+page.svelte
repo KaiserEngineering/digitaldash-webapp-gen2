@@ -291,6 +291,9 @@
 					<CircleCheck class="h-5 w-5 text-green-600" />
 					{flashMessage}
 				</p>
+				<p class="mt-2 font-bold text-orange-600">
+					Digital Dash will reboot in 30 seconds - DO NOT POWER OFF VEHICLE
+				</p>
 			</div>
 		{:else if flashStatus === 'error'}
 			<div class="border-border bg-muted rounded-lg border p-4">

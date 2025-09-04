@@ -56,9 +56,23 @@ export async function GET() {
 // Dummy API endpoint for SPIFFS file upload
 // This will be replaced by the real C webserver implementation
 export async function POST({ request }) {
-	const formData = await request.formData();
-	const file = formData.get('file') as File;
-	const filename = formData.get('filename') as string;
+	const contentType = request.headers.get('content-type');
+	let file: File | null = null;
+	let filename = '';
+
+	if (contentType?.includes('application/octet-stream')) {
+		// Handle binary upload (like from STM flash page)
+		const buffer = await request.arrayBuffer();
+		file = new File([buffer], 'digitaldash-firmware-gen2-stm32u5g.bin', {
+			type: 'application/octet-stream'
+		});
+		filename = 'digitaldash-firmware-gen2-stm32u5g.bin';
+	} else {
+		// Handle FormData upload
+		const formData = await request.formData();
+		file = formData.get('file') as File;
+		filename = formData.get('filename') as string;
+	}
 
 	if (!file) {
 		throw error(400, 'No file provided');
