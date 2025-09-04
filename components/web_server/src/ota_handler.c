@@ -155,14 +155,23 @@ void flash_stm32_firmware_task(void *pvParameter)
     sprintf(file_path, "%s%s", BASE_PATH, firmware_path);
     logD(TAG, "File name: %s", file_path);
 
+    // Reset progress tracking
+    reset_stm_flash_progress();
+
     // Open firmware file from SPIFFS
     FILE *file = fopen(file_path, "rb");
     if (!file)
     {
         ESP_LOGE(TAG, "Failed to open firmware file: %s", file_path);
+        set_stm_flash_error("Failed to open firmware file");
         vTaskDelete(NULL);
         return;
     }
+
+    // Get total file size for progress calculation
+    fseek(file, 0, SEEK_END);
+    long total_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
 
     if (!binary_chunk)
     {
@@ -170,6 +179,7 @@ void flash_stm32_firmware_task(void *pvParameter)
         if (!binary_chunk)
         {
             ESP_LOGE(TAG, "Failed to allocate binary_chunk buffer");
+            set_stm_flash_error("Memory allocation failed");
             fclose(file);
             vTaskDelete(NULL);
             return;
@@ -183,6 +193,7 @@ void flash_stm32_firmware_task(void *pvParameter)
     current_offset = 0;
 
     // Enter bootloader mode
+    update_stm_flash_progress(0, "Entering bootloader mode");
     Generate_TX_Message(get_stm32_comm(), KE_ENTER_BOOTLOADER, NULL);
     KE_wait_for_response(get_stm32_comm(), 5000);
 
@@ -192,12 +203,19 @@ void flash_stm32_firmware_task(void *pvParameter)
 
         ESP_LOGI(TAG, "Sending chunk %d at offset %d", chunk_num++, current_offset);
 
+        // Update progress before sending chunk
+        int percentage = (int)((current_offset * 100) / total_size);
+        update_stm_flash_progress(percentage, "Flashing firmware");
+
         // Send chunk (KE lib will internally call get_binary_chunk_data)
         Generate_TX_Message(get_stm32_comm(), KE_BINARY_SEND_CHUNK, &current_offset);
 
         // Wait for ACK from STM32
         if (KE_wait_for_response(get_stm32_comm(), 20000) != KE_ACK)
+        {
+            success = false;
             break;
+        }
 
         current_offset += read_len;
     }
@@ -207,12 +225,15 @@ void flash_stm32_firmware_task(void *pvParameter)
     if (success)
     {
         ESP_LOGI(TAG, "STM32 firmware flashed successfully (%lu bytes)", (unsigned long)current_offset);
+        update_stm_flash_progress(100, "Resetting STM32");
         stm32_reset();
         ESP_LOGI(TAG, "STM32 reset to run new firmware");
+        set_stm_flash_complete();
     }
     else
     {
         ESP_LOGE(TAG, "STM32 firmware flash failed");
+        set_stm_flash_error("Flash operation failed");
     }
 
     vTaskDelete(NULL);
