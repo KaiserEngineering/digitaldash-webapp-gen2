@@ -286,19 +286,30 @@
 
 	<!-- Flash Button - only show when bootloader file exists -->
 	{#if files.some((f) => f.name === 'STM32U5G9ZJTXQ_OSPI_Bootloader.bin')}
-		<Button
-			onclick={flashFirmware}
-			disabled={uploadStatus === 'uploading' || flashStatus === 'flashing'}
-			class="btn-primary h-12 w-full text-lg font-semibold shadow-md transition-all duration-200"
-		>
-			{#if flashStatus === 'flashing'}
-				<Loader class="mr-3 h-5 w-5 animate-spin" />
-				Flashing Bootloader...
-			{:else}
-				<Zap class="mr-3 h-5 w-5" />
-				Flash Bootloader to Digital Dash
-			{/if}
-		</Button>
+		<div class="space-y-3">
+			<div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
+				<p class="text-sm text-blue-800">
+					<strong>Target file:</strong> STM32U5G9ZJTXQ_OSPI_Bootloader.bin
+				</p>
+				<p class="mt-1 text-xs text-blue-700">
+					Clicking "Flash" will use this specific file from SPIFFS storage
+				</p>
+			</div>
+
+			<Button
+				onclick={flashFirmware}
+				disabled={uploadStatus === 'uploading' || flashStatus === 'flashing'}
+				class="btn-primary h-12 w-full text-lg font-semibold shadow-md transition-all duration-200"
+			>
+				{#if flashStatus === 'flashing'}
+					<Loader class="mr-3 h-5 w-5 animate-spin" />
+					Flashing Bootloader...
+				{:else}
+					<Zap class="mr-3 h-5 w-5" />
+					Flash Bootloader to Digital Dash
+				{/if}
+			</Button>
+		</div>
 
 		<!-- Flash Status -->
 		{#if flashStatus === 'success'}
@@ -335,7 +346,7 @@
 	<div class="space-y-4">
 		<h3 class="flex items-center gap-2 font-medium">
 			<FileText class="h-5 w-5" />
-			Current Bootloader Files
+			Current Spiffs .bin Files
 		</h3>
 		<div class="border-border bg-muted min-h-[120px] rounded-lg border">
 			{#if filesStatus === 'loading'}

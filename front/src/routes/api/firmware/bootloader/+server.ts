@@ -26,9 +26,6 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 		return json(data);
 	} catch (error) {
 		console.error('Bootloader flash error:', error);
-		return json(
-			{ error: 'Failed to start STM32 bootloader flash' },
-			{ status: 500 }
-		);
+		return json({ error: 'Failed to start STM32 bootloader flash' }, { status: 500 });
 	}
 };

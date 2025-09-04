@@ -97,7 +97,7 @@
 </script>
 
 {#if imageNames && imageNames.length > 0}
-	<div class="grid grid-cols-1 gap-6 justify-items-center">
+	<div class="grid grid-cols-1 justify-items-center gap-6">
 		{#each imageNames as imageName (imageName)}
 			<div class="flex flex-col items-start">
 				{#if loadingStates[imageName]}
@@ -140,7 +140,7 @@
 								src={loadedImages[imageName] || '/placeholder.svg'}
 								alt="{imageName} background"
 								loading="lazy"
-								class="w-full max-h-60 rounded-lg object-cover transition-transform duration-300 group-hover:scale-105"
+								class="max-h-60 w-full rounded-lg object-cover transition-transform duration-300 group-hover:scale-105"
 								onerror={() => handleImageError(imageName)}
 							/>
 						</div>
