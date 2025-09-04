@@ -11,11 +11,11 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 		});
 
 		console.log(`Mock: Uploading web firmware - ${file.name} (${file.size} bytes)`);
-		
-		// Simulate processing time
-		await new Promise(resolve => setTimeout(resolve, 2000));
 
-		return json({ 
+		// Simulate processing time
+		await new Promise((resolve) => setTimeout(resolve, 2000));
+
+		return json({
 			success: true,
 			message: 'Web firmware uploaded successfully',
 			size: file.size
@@ -40,9 +40,6 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 		return json(data);
 	} catch (error) {
 		console.error('Web firmware upload error:', error);
-		return json(
-			{ error: 'Failed to upload web firmware' },
-			{ status: 500 }
-		);
+		return json({ error: 'Failed to upload web firmware' }, { status: 500 });
 	}
 };

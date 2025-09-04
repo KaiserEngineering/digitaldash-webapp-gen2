@@ -16,7 +16,7 @@ export const GET: RequestHandler = async ({ fetch }) => {
 
 		const elapsed = Date.now() - mockStartTime;
 		const duration = 30000; // 30 seconds total
-		
+
 		if (elapsed < duration && !mockComplete) {
 			mockProgress = Math.min(Math.floor((elapsed / duration) * 100), 99);
 			return json({
@@ -59,7 +59,7 @@ export const GET: RequestHandler = async ({ fetch }) => {
 	} catch (error) {
 		console.error('Flash progress error:', error);
 		return json(
-			{ 
+			{
 				percentage: 0,
 				message: 'Progress unavailable',
 				complete: false,

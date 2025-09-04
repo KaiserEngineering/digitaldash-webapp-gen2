@@ -11,33 +11,47 @@ export async function GET() {
 	await new Promise((resolve) => setTimeout(resolve, 500));
 
 	// Try to get real file information
-	const filePath = join(
+	const firmwareFilePath = join(
 		process.cwd(),
 		'static',
 		'spiffs',
 		'digitaldash-firmware-gen2-stm32u5g.bin'
 	);
 
+	const bootloaderFilePath = join(
+		process.cwd(),
+		'static',
+		'spiffs',
+		'STM32U5G9ZJTXQ_OSPI_Bootloader.bin'
+	);
+
 	try {
-		if (existsSync(filePath)) {
-			const stats = statSync(filePath);
-			return json({
-				success: true,
-				files: [
-					{
-						name: 'digitaldash-firmware-gen2-stm32u5g.bin',
-						size: stats.size,
-						type: 'Binary firmware file'
-					}
-				]
-			});
-		} else {
-			// File doesn't exist, return empty list
-			return json({
-				success: true,
-				files: []
+		const files = [];
+
+		// Check for firmware file
+		if (existsSync(firmwareFilePath)) {
+			const stats = statSync(firmwareFilePath);
+			files.push({
+				name: 'digitaldash-firmware-gen2-stm32u5g.bin',
+				size: stats.size,
+				type: 'Binary firmware file'
 			});
 		}
+
+		// Check for bootloader file
+		if (existsSync(bootloaderFilePath)) {
+			const stats = statSync(bootloaderFilePath);
+			files.push({
+				name: 'STM32U5G9ZJTXQ_OSPI_Bootloader.bin',
+				size: stats.size,
+				type: 'Binary bootloader file'
+			});
+		}
+
+		return json({
+			success: true,
+			files: files
+		});
 	} catch {
 		// Fallback to mock data if file access fails
 		return json({
@@ -47,6 +61,11 @@ export async function GET() {
 					name: 'digitaldash-firmware-gen2-stm32u5g.bin',
 					size: 524288,
 					type: 'Binary firmware file'
+				},
+				{
+					name: 'STM32U5G9ZJTXQ_OSPI_Bootloader.bin',
+					size: 262144,
+					type: 'Binary bootloader file'
 				}
 			]
 		});
