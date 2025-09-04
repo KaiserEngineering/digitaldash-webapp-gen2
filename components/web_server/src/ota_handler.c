@@ -242,30 +242,41 @@ void flash_stm32_firmware_task(void *pvParameter)
 /* STM32 firmware flashing using the built in bootloader */
 void flash_stm32_bootloader(const char *firmware_path)
 {
-    ESP_LOGI(TAG, "Starting STM32 firmware flash task: %s", firmware_path);
+    ESP_LOGI(TAG, "Starting STM32 bootloader flash task: %s", firmware_path);
+
+    // Reset progress tracking
+    reset_stm_flash_progress();
+    update_stm_flash_progress(0, "Initializing bootloader mode");
 
     // Switch UART to bootloader mode
     uart_init_for_stm32_bootloader();
     ESP_LOGI(TAG, "UART initialized for STM32 bootloader");
 
     // Put STM32 in bootloader mode
+    update_stm_flash_progress(10, "Entering bootloader mode");
     stm32_bootloader();
     ESP_LOGI(TAG, "STM32 set to bootloader mode");
 
     // Flash the firmware using existing function
+    update_stm_flash_progress(20, "Flashing bootloader");
     esp_err_t result = flashSTM(firmware_path);
     if (result == ESP_OK)
     {
-        ESP_LOGI(TAG, "STM32 firmware flashed successfully");
+        ESP_LOGI(TAG, "STM32 bootloader flashed successfully");
+        update_stm_flash_progress(90, "Bootloader flash complete");
     }
     else
     {
-        ESP_LOGE(TAG, "STM32 firmware flash failed");
+        ESP_LOGE(TAG, "STM32 bootloader flash failed");
+        set_stm_flash_error("Bootloader flash failed");
+        return;
     }
 
-    // Reset STM32 to run new firmware
+    // Reset STM32 to run new bootloader
+    update_stm_flash_progress(100, "Resetting STM32");
     stm32_reset();
-    ESP_LOGI(TAG, "STM32 reset to run new firmware");
+    ESP_LOGI(TAG, "STM32 reset to run new bootloader");
+    set_stm_flash_complete();
 }
 
 /* STM32 firmware flashing function */
@@ -299,6 +310,17 @@ esp_err_t stm_update_post_handler(httpd_req_t *req)
     flash_stm32_firmware("digitaldash-firmware-gen2-stm32u5g.bin");
     httpd_resp_set_type(req, "application/json");
     httpd_resp_sendstr(req, "{\"message\": \"STM32 firmware update started\"}");
+    return ESP_OK;
+}
+
+// Add bootloader update handler
+esp_err_t bootloader_update_post_handler(httpd_req_t *req)
+{
+    flash_stm32_bootloader("STM32U5G9ZJTXQ_OSPI_Bootloader.bin");
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    uart_init(get_stm32_comm());
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_sendstr(req, "{\"message\": \"STM32 bootloader update started\"}");
     return ESP_OK;
 }
 
@@ -348,6 +370,13 @@ esp_err_t register_ota_routes(httpd_handle_t server)
         .handler = stm_update_post_handler,
         .user_ctx = NULL};
     httpd_register_uri_handler(server, &stm_update_post);
+
+    httpd_uri_t bootloader_update_post = {
+        .uri = "/api/firmware/bootloader",
+        .method = HTTP_POST,
+        .handler = bootloader_update_post_handler,
+        .user_ctx = NULL};
+    httpd_register_uri_handler(server, &bootloader_update_post);
 
     httpd_uri_t stm_progress_get = {
         .uri = "/api/flash/progress",

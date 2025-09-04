@@ -107,10 +107,18 @@
 {#if showPidModal}
 	<div
 		class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
+		role="dialog"
+		aria-modal="true"
+		aria-label="PID Selection Modal"
 		onclick={() => (showPidModal = false)}
+		onkeydown={(e) => e.key === 'Escape' && (showPidModal = false)}
+		tabindex="-1"
 	>
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<div
 			class="bg-background fixed inset-x-0 top-0 z-50 h-full"
+			role="document"
 			onclick={(e) => e.stopPropagation()}
 		>
 			<!-- Header -->
@@ -155,10 +163,18 @@
 {#if showUnitModal}
 	<div
 		class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
+		role="dialog"
+		aria-modal="true"
+		aria-label="Unit Selection Modal"
 		onclick={() => (showUnitModal = false)}
+		onkeydown={(e) => e.key === 'Escape' && (showUnitModal = false)}
+		tabindex="-1"
 	>
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<div
 			class="bg-background fixed inset-x-0 top-0 z-50 h-full"
+			role="document"
 			onclick={(e) => e.stopPropagation()}
 		>
 			<!-- Header -->

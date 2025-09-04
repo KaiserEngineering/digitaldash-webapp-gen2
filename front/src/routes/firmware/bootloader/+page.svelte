@@ -52,7 +52,7 @@
 		if (!file) return;
 
 		uploadStatus = 'uploading';
-		uploadMessage = 'Uploading firmware file...';
+		uploadMessage = 'Uploading bootloader file...';
 		uploadProgress = 0;
 
 		try {
@@ -62,7 +62,7 @@
 			xhr.upload.onprogress = (e) => {
 				if (e.lengthComputable) {
 					uploadProgress = (e.loaded / e.total) * 100;
-					uploadMessage = `Uploading firmware file... ${Math.floor(uploadProgress)}%`;
+					uploadMessage = `Uploading bootloader file... ${Math.floor(uploadProgress)}%`;
 				}
 			};
 
@@ -70,7 +70,7 @@
 			xhr.onload = async () => {
 				if (xhr.status >= 200 && xhr.status < 300) {
 					uploadStatus = 'success';
-					uploadMessage = 'Firmware file uploaded successfully!';
+					uploadMessage = 'Bootloader file uploaded successfully!';
 					uploadProgress = 100;
 
 					// Reload file list and clear input
@@ -101,18 +101,18 @@
 		} catch (err) {
 			uploadStatus = 'error';
 			uploadMessage =
-				err instanceof Error ? err.message : 'An error occurred during firmware upload';
+				err instanceof Error ? err.message : 'An error occurred during bootloader upload';
 		}
 	}
 
 	async function flashFirmware() {
 		flashStatus = 'flashing';
-		flashMessage = 'Starting firmware flash...';
+		flashMessage = 'Starting bootloader flash...';
 		flashProgress = 0;
 
 		try {
 			// Start the flash process
-			const flashRes = await fetch('/api/firmware/stm', {
+			const flashRes = await fetch('/api/firmware/bootloader', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -121,7 +121,7 @@
 
 			if (!flashRes.ok) {
 				const flashData = await flashRes.json();
-				throw new Error(flashData.message || 'Firmware flash failed');
+				throw new Error(flashData.message || 'Bootloader flash failed');
 			}
 
 			// Start polling for progress
@@ -132,14 +132,14 @@
 						const progressData = await progressRes.json();
 						flashProgress = progressData.percentage || 0;
 						flashMessage =
-							progressData.message || `Flashing firmware... ${Math.floor(flashProgress)}%`;
+							progressData.message || `Flashing bootloader... ${Math.floor(flashProgress)}%`;
 
 						// Check if complete
 						if (progressData.complete === true) {
 							clearInterval(flashPollingInterval!);
 							flashPollingInterval = null;
 							flashStatus = 'success';
-							flashMessage = 'Digital Dash updated successfully!';
+							flashMessage = 'Bootloader updated successfully!';
 							flashProgress = 100;
 							await loadFiles();
 						} else if (progressData.error) {
@@ -172,7 +172,7 @@
 			}
 			flashStatus = 'error';
 			flashMessage =
-				err instanceof Error ? err.message : 'An error occurred during firmware flashing';
+				err instanceof Error ? err.message : 'An error occurred during bootloader flashing';
 		}
 	}
 
@@ -219,12 +219,28 @@
 </script>
 
 <PageCard
-	title="Flash Digital Dash"
-	description="Select a firmware file (.bin) to update your Digital Dash. The flashing process typically takes 5–10 minutes, depending on the file size. Do not turn off your vehicle while the update is in progress."
+	title="Flash Bootloader"
+	description="Update the STM32 bootloader firmware. WARNING: This is an advanced operation that should only be performed if you know what you're doing. Incorrect bootloader updates can brick your device."
 	icon={Zap}
 >
 	<!-- Hidden file input -->
 	<input bind:this={fileInput} type="file" accept=".bin" class="hidden" onchange={uploadFirmware} />
+
+	<!-- Warning Notice -->
+	<div class="mb-6 rounded-lg border-2 border-red-200 bg-red-50 p-4">
+		<div class="flex items-center gap-3">
+			<div class="flex h-8 w-8 items-center justify-center rounded-full bg-red-200">
+				<TriangleAlert class="h-4 w-4 text-red-700" />
+			</div>
+			<div>
+				<h3 class="font-bold text-red-800">⚠️ DANGER: Advanced Operation</h3>
+				<p class="text-red-700">
+					Bootloader updates can <strong>permanently damage your device</strong> if done incorrectly.
+					Only proceed if you have the correct bootloader file and understand the risks.
+				</p>
+			</div>
+		</div>
+	</div>
 
 	<!-- Upload Button -->
 	<Button
@@ -234,10 +250,10 @@
 	>
 		{#if uploadStatus === 'uploading'}
 			<Loader class="mr-3 h-5 w-5 animate-spin" />
-			Uploading Firmware...
+			Uploading Bootloader...
 		{:else}
 			<Upload class="mr-3 h-5 w-5" />
-			Upload Firmware File
+			Upload Bootloader File
 		{/if}
 	</Button>
 
@@ -268,12 +284,12 @@
 		</div>
 	{/if}
 
-	<!-- Flash Button - only show when firmware file exists -->
-	{#if files.some((f) => f.name === 'digitaldash-firmware-gen2-stm32u5g.bin')}
+	<!-- Flash Button - only show when bootloader file exists -->
+	{#if files.some((f) => f.name === 'STM32U5G9ZJTXQ_OSPI_Bootloader.bin')}
 		<div class="space-y-3">
 			<div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
 				<p class="text-sm text-blue-800">
-					<strong>Target file:</strong> digitaldash-firmware-gen2-stm32u5g.bin
+					<strong>Target file:</strong> STM32U5G9ZJTXQ_OSPI_Bootloader.bin
 				</p>
 				<p class="mt-1 text-xs text-blue-700">
 					Clicking "Flash" will use this specific file from SPIFFS storage
@@ -287,10 +303,10 @@
 			>
 				{#if flashStatus === 'flashing'}
 					<Loader class="mr-3 h-5 w-5 animate-spin" />
-					Flashing Digital Dash...
+					Flashing Bootloader...
 				{:else}
 					<Zap class="mr-3 h-5 w-5" />
-					Flash to Digital Dash
+					Flash Bootloader to Digital Dash
 				{/if}
 			</Button>
 		</div>
@@ -345,7 +361,7 @@
 				</div>
 			{:else if files.length === 0}
 				<div class="text-muted-foreground flex items-center justify-center py-8">
-					<span class="font-medium">No firmware file found</span>
+					<span class="font-medium">No bootloader file found</span>
 				</div>
 			{:else}
 				<div class="divide-border divide-y">
