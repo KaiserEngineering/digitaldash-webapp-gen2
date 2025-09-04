@@ -313,8 +313,8 @@
 
 		<!-- Flash Status -->
 		{#if flashStatus === 'success'}
-			<div class="rounded-lg border border-green-200 bg-green-50 p-4">
-				<p class="flex items-center gap-3 font-medium text-green-800">
+			<div class="border-border bg-muted rounded-lg border p-4">
+				<p class="flex items-center gap-3 font-medium text-green-600">
 					<CircleCheck class="h-5 w-5 text-green-600" />
 					{flashMessage}
 				</p>
