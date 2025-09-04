@@ -201,7 +201,7 @@ void flash_stm32_firmware_task(void *pvParameter)
     {
         current_chunk_len = read_len;
 
-        ESP_LOGI(TAG, "Sending chunk %d at offset %d", chunk_num++, current_offset);
+        ESP_LOGI(TAG, "Sending chunk %d at offset %d, length %d", chunk_num++, current_offset, current_chunk_len);
 
         // Update progress before sending chunk
         int percentage = (int)((current_offset * 100) / total_size);
