@@ -32,6 +32,8 @@ esp_err_t register_ota_routes(httpd_handle_t server);
 
 esp_err_t stm_update_post_handler(httpd_req_t *req);
 
+esp_err_t bootloader_update_post_handler(httpd_req_t *req);
+
 /**
  * @brief Handler for STM flash progress requests.
  *
