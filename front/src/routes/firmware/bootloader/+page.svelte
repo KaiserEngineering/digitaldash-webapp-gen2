@@ -95,7 +95,7 @@
 			xhr.timeout = 360000; // 3 minutes
 
 			// Make the request
-			xhr.open('POST', '/api/spiffs');
+			xhr.open('POST', '/api/spiffs/STM32U5G9ZJTXQ_OSPI_Bootloader.bin');
 			xhr.setRequestHeader('Content-Type', 'application/octet-stream');
 			xhr.send(file);
 		} catch (err) {
