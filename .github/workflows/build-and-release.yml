@@ -26,12 +26,16 @@ jobs:
           node-version: 24 # Specify the Node.js version
           check-latest: true   # Ensures the latest patch of the specified version is used
 
+      # Enable Corepack for Yarn
+      - name: Enable Corepack
+        run: corepack enable
+
       # Install dependencies and build frontend
       - name: Install and Build Frontend
         working-directory: front
         run: |
-          npm install
-          npm run build
+          yarn install --frozen-lockfile
+          yarn build
 
       # Build with ESP-IDF
       - name: Build with ESP-IDF
