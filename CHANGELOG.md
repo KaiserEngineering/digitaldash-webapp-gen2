@@ -1,4 +1,9 @@
 
+## 1.03
+
+- **Web App**: Implemented unsaved changes persistence - form edits now persist when navigating between pages
+- **Web App**: Simplified save workflow - changes update immediately in preview while only saving to backend on explicit user action
+
 ## 1.02
 
 - **Web App**: Fixed issue where saved configurations would revert when navigating between pages
