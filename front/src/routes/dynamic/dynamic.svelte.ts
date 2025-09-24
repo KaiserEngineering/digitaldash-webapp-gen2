@@ -26,7 +26,9 @@ export function formDataToDynamicArray(formData: any): DigitalDashDynamic[] {
 }
 
 // Convert dynamic array back to form object
-export function dynamicArrayToFormData(dynamicArray: DigitalDashDynamic[]): Record<string, DigitalDashDynamic & { index: number }> {
+export function dynamicArrayToFormData(
+	dynamicArray: DigitalDashDynamic[]
+): Record<string, DigitalDashDynamic & { index: number }> {
 	const dynamicObject: Record<string, DigitalDashDynamic & { index: number }> = {};
 	dynamicArray.forEach((rule: DigitalDashDynamic, index: number) => {
 		const priority = rule.priority?.toLowerCase() || 'low';

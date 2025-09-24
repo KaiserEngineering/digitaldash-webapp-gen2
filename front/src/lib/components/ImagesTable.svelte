@@ -136,7 +136,11 @@
 						out:fade={{ duration: 200, easing: quintOut }}
 					>
 						<div class="m-2">
-							<a href={loadedImages[imageName]} download={`${imageName}.png`} title="Long press to save image">
+							<a
+								href={loadedImages[imageName]}
+								download={`${imageName}.png`}
+								title="Long press to save image"
+							>
 								<img
 									src={loadedImages[imageName] || '/placeholder.svg'}
 									alt="{imageName} background"
@@ -149,10 +153,10 @@
 
 						{#if editable}
 							<div
-								class="absolute inset-0 bg-black/0 transition-all duration-200 group-hover:bg-black/10 pointer-events-none"
+								class="pointer-events-none absolute inset-0 bg-black/0 transition-all duration-200 group-hover:bg-black/10"
 							>
 								<div
-									class="absolute top-2 right-2 flex gap-2 transition-opacity duration-200 group-hover:opacity-100 sm:opacity-0 pointer-events-auto"
+									class="pointer-events-auto absolute top-2 right-2 flex gap-2 transition-opacity duration-200 group-hover:opacity-100 sm:opacity-0"
 								>
 									<Button
 										variant="destructive"
