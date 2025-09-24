@@ -34,7 +34,9 @@
 					config.view[viewId] = { ...config.view[viewId], ...$form };
 				});
 
-				if (!result.success) {
+				if (result.success) {
+					toast.success('View settings saved successfully!');
+				} else {
 					toast.error('Failed to save view settings. Please try again.');
 				}
 			} catch (error) {
