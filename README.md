@@ -1,3 +1,5 @@
+[![ESP-IDF Build and Release](https://github.com/KaiserEngineering/DigitalDash-ESP32-S3-Webapp/actions/workflows/release.yml/badge.svg)](https://github.com/KaiserEngineering/DigitalDash-ESP32-S3-Webapp/actions/workflows/release.yml)
+
 # ESP32 Kaiser Engineering Digital Dash WEbapp
 
 Creates a webapp that can be used to customize and update the KE Digital Dash
