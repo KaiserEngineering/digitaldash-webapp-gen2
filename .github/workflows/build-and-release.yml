@@ -21,7 +21,7 @@ jobs:
 
       # Setup Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
           node-version: 24 # Specify the Node.js version
           check-latest: true   # Ensures the latest patch of the specified version is used
@@ -30,67 +30,22 @@ jobs:
       - name: Install and Build Frontend
         working-directory: front
         run: |
-          yarn install --frozen-lockfile
-          # Temporarily rename api folder to exclude it from build
-          mv src/routes/api src/routes/api.disabled || true
-          yarn build
-          # Restore api folder
-          mv src/routes/api.disabled src/routes/api || true
+          npm install
+          npm run build
 
-      # Copy web app build to ESP-IDF components for embedding
-      - name: Prepare Web App for Embedding
-        run: |
-          # Copy built web app to components/web_server/static
-          cp -r front/build/index.html.gz components/web_server/static/
-  
       # Build with ESP-IDF
       - name: Build with ESP-IDF
         uses: espressif/esp-idf-ci-action@v1
         with:
           esp_idf_version: v5.3.1 # Specify the ESP-IDF version
           target: esp32s3         # Specify the ESP-IDF target
-          path: './'              # Set the project path (current directory)
-
-      # Prepare firmware artifacts
-      - name: Prepare Firmware Artifacts
-        run: |
-          mkdir -p artifacts/firmware
-
-          # Copy only the KE_DigitalDash_Webapp.bin binary
-          cp build/KE_DigitalDash_Webapp.bin artifacts/firmware/ 2>/dev/null || echo "No firmware binary found"
-
-          echo "Created artifacts:"
-          ls -lh artifacts/firmware/
-
-      # Extract changelog for release notes
-      - name: Extract Latest Changelog Entry
-        run: |
-          if [ -f CHANGELOG.md ]; then
-            awk '/^## /{if (p) exit; p=1; next} p' CHANGELOG.md > latest_changelog.md
-            echo "Extracted release notes:"
-            cat latest_changelog.md
-          else
-            echo "No CHANGELOG.md found, creating default release notes"
-            echo "## Release $(echo $GITHUB_REF | sed 's/refs\/tags\///')" > latest_changelog.md
-            echo "- ESP32-S3 firmware build" >> latest_changelog.md
-            echo "- Web application build" >> latest_changelog.md
-          fi
+          path: './'              # Set the project path (default is the current directory)
 
       # Create a release and upload artifacts
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            artifacts/firmware/*.bin
-          body_path: latest_changelog.md
-          name: "Digital Dash Release ${{ github.ref_name }}"
+          files: build/KE_DigitalDash_Webapp.bin
+          body_path: CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Upload build artifacts for workflow download
-      - name: Upload ESP32 Firmware Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: esp32-firmware-${{ github.ref_name }}
-          path: artifacts/firmware/
-          retention-days: 30
