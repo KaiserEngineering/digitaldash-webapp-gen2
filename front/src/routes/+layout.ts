@@ -1,7 +1,6 @@
-import { DigitalDashSchema } from '$schemas/digitaldash';
-import { configStore } from '$lib/stores/configStore';
+import { getConfig } from '$lib/stores/configStore';
 import { getOptions, type OptionsData } from '$lib/stores/optionsCache';
-import { pidsStore } from '$lib/stores/PIDsStore';
+import { getPids } from '$lib/stores/PIDsStore';
 import { recoveryStore } from '$lib/stores/recoveryMode';
 
 export const load = async ({ fetch, url }) => {
@@ -15,23 +14,12 @@ export const load = async ({ fetch, url }) => {
 		recoveryStore.enterRecoveryMode(issues);
 		return { config: null, options: {} as OptionsData, pids: [] };
 	}
-	const configPromise = fetch('/api/config')
-		.then((res) => (res.ok ? res.json() : Promise.reject(new Error('Config fetch failed'))))
-		.then((raw) => {
-			const parsed = DigitalDashSchema.safeParse(raw);
-			if (!parsed.success) {
-				console.error('Invalid config schema:', parsed.error);
-				issues.push('Invalid configuration schema detected');
-				throw new Error('Invalid config schema');
-			}
-			configStore.setConfig(parsed.data);
-			return parsed.data;
-		})
-		.catch((error) => {
-			console.error('Config fetch failed:', error);
-			issues.push('Failed to connect to device configuration');
-			return null;
-		});
+
+	const configPromise = getConfig(fetch).catch((error) => {
+		console.error('Config fetch failed:', error);
+		issues.push('Failed to connect to device configuration');
+		return null;
+	});
 
 	const optionsPromise = getOptions(fetch).catch((error) => {
 		console.error('Options fetch failed:', error);
@@ -39,17 +27,11 @@ export const load = async ({ fetch, url }) => {
 		return {} as OptionsData;
 	});
 
-	const pidsPromise = fetch('/api/pids')
-		.then((res) => (res.ok ? res.json() : Promise.reject(new Error('PID fetch failed'))))
-		.then((pids) => {
-			pidsStore.setPIDs(pids);
-			return pids;
-		})
-		.catch((error) => {
-			console.error('PIDs fetch failed:', error);
-			issues.push('Failed to load PID definitions');
-			return [];
-		});
+	const pidsPromise = getPids(fetch).catch((error) => {
+		console.error('PIDs fetch failed:', error);
+		issues.push('Failed to load PID definitions');
+		return [];
+	});
 
 	// Wait for all promises to resolve and check for recovery mode
 	const results = await Promise.allSettled([configPromise, optionsPromise, pidsPromise]);

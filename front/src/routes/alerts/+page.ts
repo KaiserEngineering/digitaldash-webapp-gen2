@@ -3,6 +3,9 @@ import type { PageLoad } from './$types';
 import { AlertsFormSchema } from './alertsFormSchema';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import type { DigitalDashAlert } from '$schemas/digitaldash';
+import { getConfig } from '$lib/stores/configStore';
+import { getOptions } from '$lib/stores/optionsCache';
+import { getPids } from '$lib/stores/PIDsStore';
 
 function normalizeText(s: unknown): string | unknown {
 	if (typeof s !== 'string') return s;
@@ -22,11 +25,11 @@ function normalizeAlert(a: DigitalDashAlert): DigitalDashAlert {
 	};
 }
 
-export const load: PageLoad = async ({ parent }) => {
-	const parentData = await parent();
-	const pids = await parentData.pids;
-	const config = await parentData.config;
-	const options = await parentData.options;
+export const load: PageLoad = async () => {
+	// Use cached data from stores - consistent with other pages
+	const config = await getConfig();
+	const options = await getOptions();
+	const pids = await getPids();
 
 	// Normalize incoming alerts (handles curly quotes & mis-encodings)
 	const initialAlerts: DigitalDashAlert[] = (config?.alert ?? []).map(normalizeAlert);

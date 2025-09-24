@@ -3,9 +3,14 @@ import type { PageLoad } from './$types';
 import { DynamicFormSchema } from './dynamicFormSchema';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import type { DigitalDashDynamic } from '$schemas/digitaldash';
+import { getConfig } from '$lib/stores/configStore';
+import { getOptions } from '$lib/stores/optionsCache';
+import { getPids } from '$lib/stores/PIDsStore';
 
-export const load: PageLoad = async ({ parent }) => {
-	const { config, pids, options } = await parent();
+export const load: PageLoad = async () => {
+	const config = await getConfig();
+	const options = await getOptions();
+	const pids = await getPids();
 
 	const initialDynamic: DigitalDashDynamic[] = config?.dynamic || [];
 
