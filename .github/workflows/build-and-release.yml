@@ -41,7 +41,7 @@ jobs:
       - name: Prepare Web App for Embedding
         run: |
           # Copy built web app to components/web_server/static
-          cp -r front/build/index.html components/web_server/static/
+          cp -r front/build/index.html.gz components/web_server/static/
   
       # Build with ESP-IDF
       - name: Build with ESP-IDF
