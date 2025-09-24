@@ -1,5 +1,5 @@
 
-## 0.02
+## 1.02
 
 - **Web App**: Fixed issue where saved configurations would revert when navigating between pages
 - **Web App**: Standardized all data stores to use consistent caching patterns
