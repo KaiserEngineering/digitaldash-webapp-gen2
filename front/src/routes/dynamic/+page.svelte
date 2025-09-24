@@ -9,6 +9,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import * as Collapsible from '$lib/components/ui/collapsible';
 	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
+	import { configStore } from '$lib/stores/configStore';
 	import PageCard from '@/components/PageCard.svelte';
 	import PIDSelect from '$lib/components/PIDSelect.svelte';
 	import { Settings, ChevronDown, Zap, TriangleAlert, CircleCheck, Save } from 'lucide-svelte';
@@ -17,6 +18,7 @@
 	import { quintOut } from 'svelte/easing';
 	import { flip } from 'svelte/animate';
 	import { DynamicFormSchema } from './dynamicFormSchema';
+	import { formDataToDynamicArray, dynamicArrayToFormData } from './dynamic.svelte';
 	import type { DigitalDashDynamic } from '$schemas/digitaldash';
 
 	let { data } = $props();
@@ -29,48 +31,34 @@
 		return rule !== null && typeof rule === 'object' && 'enable' in rule!;
 	}
 
+	// Update configStore when form changes (without saving to backend)
+	function updateStoreOnly(formData: any) {
+		const currentConfig = $configStore;
+		if (!currentConfig) return;
+
+		const dynamicArray = formDataToDynamicArray(formData);
+		const updatedConfig = { ...currentConfig, dynamic: dynamicArray };
+		configStore.setConfig(updatedConfig);
+	}
+
 	const { form, submitting, enhance } = superForm(data.form, {
 		dataType: 'json',
 		SPA: true,
 		validators: zod4(DynamicFormSchema),
+		onChange: () => {
+			updateStoreOnly($form);
+		},
 		onUpdate: async ({ form: formData, cancel }) => {
 			cancel();
 
 			try {
 				const result = await updateFullConfig((config) => {
-					// Convert object back to array for backend
-					const dynamicArray = Object.values(formData.data).map((rule) => {
-						// Remove index field as it's only for frontend
-						const { index: _, ...ruleWithoutIndex } = rule as DigitalDashDynamic & {
-							index?: number;
-						};
-
-						// Ensure view_index is a number if present
-						if (ruleWithoutIndex.view_index !== undefined && ruleWithoutIndex.view_index !== null) {
-							ruleWithoutIndex.view_index = Number(ruleWithoutIndex.view_index);
-						}
-
-						// Ensure Low priority (Default in UI) is always enabled and has required defaults
-						if (ruleWithoutIndex.priority === 'Low') {
-							ruleWithoutIndex.enable = 'Enabled';
-							// Provide default values for required fields that aren't configurable in Default UI
-							if (!ruleWithoutIndex.pid) ruleWithoutIndex.pid = '';
-							if (!ruleWithoutIndex.compare) ruleWithoutIndex.compare = 'Greater Than';
-							if (ruleWithoutIndex.threshold === undefined || ruleWithoutIndex.threshold === null)
-								ruleWithoutIndex.threshold = 0;
-						}
-						return ruleWithoutIndex;
-					});
-					config.dynamic = dynamicArray;
+					config.dynamic = formDataToDynamicArray(formData.data);
 				});
 
 				if (result.success && result.config) {
 					// Convert returned array back to object for form
-					const dynamicObject: Record<string, DigitalDashDynamic & { index: number }> = {};
-					result.config.dynamic.forEach((rule: DigitalDashDynamic, index: number) => {
-						const priority = rule.priority?.toLowerCase() || 'low';
-						dynamicObject[priority] = { ...rule, index };
-					});
+					const dynamicObject = dynamicArrayToFormData(result.config.dynamic);
 					Object.assign($form, dynamicObject);
 					toast.success('Dynamic rules saved successfully!');
 				} else {

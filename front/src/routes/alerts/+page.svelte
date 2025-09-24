@@ -4,19 +4,21 @@
 	import { Bell, ChevronDown, TriangleAlert, CircleCheck, Save } from 'lucide-svelte';
 	import { flip } from 'svelte/animate';
 	import { Motion } from 'motion-start';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Input } from '@/components/ui/input/index.js';
+	import { Label } from '@/components/ui/label/index.js';
+	import { Button } from '@/components/ui/button/index.js';
 	import { superForm } from 'sveltekit-superforms';
 	import { AlertsFormSchema } from './alertsFormSchema';
 	import { toast } from 'svelte-5-french-toast';
 	import { zod4 } from 'sveltekit-superforms/adapters';
 	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
+	import { configStore } from '$lib/stores/configStore';
+	import { formDataToAlertsArray, alertsArrayToFormData } from './alerts.svelte';
 	import PageCard from '@/components/PageCard.svelte';
-	import PIDSelect from '$lib/components/PIDSelect.svelte';
-	import { Switch } from '$lib/components/ui/switch';
-	import * as Select from '$lib/components/ui/select';
-	import * as Collapsible from '$lib/components/ui/collapsible';
+	import PIDSelect from '@/components/PIDSelect.svelte';
+	import { Switch } from '@/components/ui/switch';
+	import * as Select from '@/components/ui/select';
+	import * as Collapsible from '@/components/ui/collapsible';
 	import { type DigitalDashAlert } from '$schemas/digitaldash';
 
 	let { data } = $props();
@@ -24,31 +26,33 @@
 	const pids = data.pids || [];
 	const compareOps = data.options?.alert_comparison || [];
 
+	// Update configStore when form changes (without saving to backend)
+	function updateStoreOnly(formData: any) {
+		const currentConfig = $configStore;
+		if (!currentConfig) return;
+
+		const alertsArray = formDataToAlertsArray(formData);
+		const updatedConfig = { ...currentConfig, alert: alertsArray };
+		configStore.setConfig(updatedConfig);
+	}
+
 	const { form, enhance, submitting } = superForm(data.form, {
 		dataType: 'json',
 		SPA: true,
 		validators: zod4(AlertsFormSchema),
+		onChange: () => {
+			updateStoreOnly($form);
+		},
 		onUpdate: async ({ form: formData, cancel }) => {
 			cancel();
 			try {
 				const result = await updateFullConfig((config) => {
-					// Convert object back to array for backend
-					const alertsArray = Object.values(formData.data).map((alert) => {
-						// Remove index field as it's only for frontend
-						const { index: _, ...alertWithoutIndex } = alert as DigitalDashAlert & {
-							index?: number;
-						};
-						return alertWithoutIndex;
-					});
-					config.alert = alertsArray;
+					config.alert = formDataToAlertsArray(formData.data);
 				});
 
 				if (result.success && result.config) {
 					// Convert returned array back to object for form
-					const alertsObject: Record<string, DigitalDashAlert & { index: number }> = {};
-					result.config.alert.forEach((alert: DigitalDashAlert, index: number) => {
-						alertsObject[index] = { ...alert, index };
-					});
+					const alertsObject = alertsArrayToFormData(result.config.alert);
 					Object.assign($form, alertsObject);
 					toast.success('Alerts saved successfully!');
 				} else {

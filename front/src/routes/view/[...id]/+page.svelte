@@ -10,6 +10,8 @@
 	import Gauges from './tabs/Gauges.svelte';
 	import Settings from './tabs/Settings.svelte';
 	import { updateConfig as updateFullConfig } from '$lib/utils/updateConfig';
+	import { configStore } from '$lib/stores/configStore';
+	import { updateViewInConfig } from './view.svelte';
 	import ViewCard from '@/components/ViewCard.svelte';
 	import PageCard from '@/components/PageCard.svelte';
 
@@ -18,14 +20,25 @@
 
 	let isSubmitting = $state(false);
 
+	// Update configStore when form changes (without saving to backend)
+	function updateStoreOnly(formData: any) {
+		const currentConfig = $configStore;
+		if (!currentConfig) return;
+
+		const updatedConfig = updateViewInConfig(currentConfig, viewId, formData);
+		configStore.setConfig(updatedConfig);
+	}
+
 	const { form, enhance } = superForm(data.form, {
 		dataType: 'json',
 		SPA: true,
-		invalidateAll: false, // Prevent SvelteKit from invalidating page data
+		invalidateAll: false,
 		resetForm: false,
 		validators: zod4(ViewSchema),
+		onChange: () => {
+			updateStoreOnly($form);
+		},
 		onSubmit: async ({ cancel }) => {
-			// Cancel the default form submission and handle manually
 			cancel();
 
 			isSubmitting = true;
