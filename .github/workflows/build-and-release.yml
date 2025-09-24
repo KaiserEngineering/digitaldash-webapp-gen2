@@ -36,7 +36,7 @@ jobs:
           yarn build
           # Restore api folder
           mv src/routes/api.disabled src/routes/api || true
-a
+
       # Copy web app build to ESP-IDF components for embedding
       - name: Prepare Web App for Embedding
         run: |
