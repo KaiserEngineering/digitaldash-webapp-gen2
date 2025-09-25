@@ -30,6 +30,7 @@
 #include "esp_log.h"
 #include "esp_http_server.h"
 #include "esp_vfs.h"
+#include "esp_spiffs.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
@@ -56,6 +57,7 @@ static const char *TAG = "FileHandler";
 static esp_err_t spiffs_list_handler(httpd_req_t *req);
 static esp_err_t spiffs_upload_handler(httpd_req_t *req);
 static esp_err_t spiffs_delete_handler(httpd_req_t *req);
+static esp_err_t spiffs_info_handler(httpd_req_t *req);
 
 static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepath)
 {
@@ -504,6 +506,37 @@ static esp_err_t spiffs_delete_handler(httpd_req_t *req)
     }
 }
 
+static esp_err_t spiffs_info_handler(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "SPIFFS info request: %s", req->uri);
+
+    size_t total = 0, used = 0;
+    esp_err_t ret = esp_spiffs_info(NULL, &total, &used);
+
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to get SPIFFS info: %s", esp_err_to_name(ret));
+        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to get SPIFFS info");
+    }
+
+    size_t free_space = total - used;
+    float usage_percent = total > 0 ? ((float)used / (float)total) * 100.0f : 0.0f;
+
+    // Build JSON response
+    char response[512];
+    snprintf(response, sizeof(response),
+             "{"
+             "\"success\": true,"
+             "\"total\": %zu,"
+             "\"used\": %zu,"
+             "\"free\": %zu,"
+             "\"usage_percent\": %.1f"
+             "}",
+             total, used, free_space, usage_percent);
+
+    httpd_resp_set_type(req, "application/json");
+    return httpd_resp_send(req, response, strlen(response));
+}
+
 esp_err_t register_spiffs(httpd_handle_t server)
 {
     // Register URI handlers
@@ -525,10 +558,17 @@ esp_err_t register_spiffs(httpd_handle_t server)
         .handler = spiffs_delete_handler,
         .user_ctx = NULL};
 
+    httpd_uri_t info_spiffs_uri = {
+        .uri = "/api/spiffs/info",
+        .method = HTTP_GET,
+        .handler = spiffs_info_handler,
+        .user_ctx = NULL};
+
     esp_err_t err;
     if ((err = httpd_register_uri_handler(server, &list_spiffs_uri)) != ESP_OK ||
         (err = httpd_register_uri_handler(server, &upload_spiffs_uri)) != ESP_OK ||
-        (err = httpd_register_uri_handler(server, &delete_spiffs_uri)) != ESP_OK)
+        (err = httpd_register_uri_handler(server, &delete_spiffs_uri)) != ESP_OK ||
+        (err = httpd_register_uri_handler(server, &info_spiffs_uri)) != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to register SPIFFS URI handlers: %s", esp_err_to_name(err));
         return err;
