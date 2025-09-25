@@ -12,7 +12,8 @@
 		Upload,
 		ChevronDown,
 		Moon,
-		Sun
+		Sun,
+		HardDrive
 	} from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
 	import { page } from '$app/state';
@@ -28,6 +29,7 @@
 		{ label: 'Dynamic', value: 'dynamic', icon: Zap },
 		{ label: 'Alerts', value: 'alerts', icon: Bell },
 		{ label: 'Advanced', value: 'advanced', icon: Settings },
+		{ label: 'Device Info', value: 'device/info', icon: HardDrive },
 		{
 			label: 'Firmware',
 			value: 'firmware',
