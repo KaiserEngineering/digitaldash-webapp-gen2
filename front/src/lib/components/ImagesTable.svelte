@@ -64,7 +64,6 @@
 			toast.success(`${imageName} deleted successfully`);
 		} catch (error) {
 			console.error('Delete failed:', error);
-			toast.error(`Failed to delete ${imageName}`);
 		} finally {
 			deletingStates[imageName] = false;
 		}
