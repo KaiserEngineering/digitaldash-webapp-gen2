@@ -61,7 +61,12 @@
 
 		try {
 			await deleteCallback(imageName);
-			await reloadImageSlot(imageName);
+
+			// After successful delete, clear the image state instead of trying to reload
+			loadedImages[imageName] = null;
+			failedImages[imageName] = false;
+			loadingStates[imageName] = false;
+
 			toast.success(`${imageName} deleted successfully`);
 		} catch (error) {
 			toast.error(`Failed to delete ${imageName}`);

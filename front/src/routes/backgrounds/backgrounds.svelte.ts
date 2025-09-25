@@ -53,12 +53,15 @@ export async function deleteBackground(
 	}
 
 	try {
-		const response = await fetch(`${apiUrl}/spiffs?filename=${encodeURIComponent(filename)}`, {
+		// Always append .png extension since backgrounds are always PNG
+		const fullFilename = `${filename}.png`;
+		const response = await fetch(`${apiUrl}/spiffs?filename=${encodeURIComponent(fullFilename)}`, {
 			method: 'DELETE'
 		});
 
 		if (!response.ok) {
-			throw new Error(`Delete failed: ${response.statusText}`);
+			const error = await response.json().catch(() => ({ message: 'Unknown error' }));
+			throw new Error(`Delete failed: ${error.message || response.statusText}`);
 		}
 
 		imageHandler.clearCache(filename);
@@ -67,6 +70,7 @@ export async function deleteBackground(
 			delete images[filename];
 		}
 	} catch (error) {
+		console.error('Background delete error:', error);
 		throw error;
 	}
 }

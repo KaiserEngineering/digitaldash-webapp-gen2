@@ -36,6 +36,16 @@ export async function GET({ url }) {
 					name: 'debug.txt',
 					size: 2048,
 					type: 'Text file'
+				},
+				{
+					name: 'background1.png',
+					size: 15360,
+					type: 'Image file'
+				},
+				{
+					name: 'background2.jpg',
+					size: 12800,
+					type: 'Image file'
 				}
 			]
 		});
