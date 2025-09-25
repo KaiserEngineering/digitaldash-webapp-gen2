@@ -469,7 +469,21 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
         return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "No file content");
     }
 
-    const char *filename = "digitaldash-firmware-gen2-stm32u5g.bin";
+    // Extract filename from URI path (after /api/spiffs/)
+    const char *prefix = "/api/spiffs/";
+    const char *filename = NULL;
+
+    if (strncmp(req->uri, prefix, strlen(prefix)) == 0) {
+        filename = req->uri + strlen(prefix);
+    }
+
+    if (!filename || strlen(filename) == 0) {
+        ESP_LOGW(TAG, "No filename in URI path");
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing filename in path");
+    }
+
+    ESP_LOGI(TAG, "Uploading file: %s", filename);
+
     char filepath[FILE_PATH_MAX];
     snprintf(filepath, sizeof(filepath), "/spiffs/%s", filename);
 
@@ -615,7 +629,7 @@ esp_err_t register_spiffs(httpd_handle_t server)
         .user_ctx = NULL};
 
     httpd_uri_t upload_spiffs_uri = {
-        .uri = "/api/spiffs",
+        .uri = "/api/spiffs/*",
         .method = HTTP_POST,
         .handler = spiffs_upload_handler,
         .user_ctx = NULL};

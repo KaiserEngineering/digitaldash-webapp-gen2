@@ -16,7 +16,11 @@ export async function uploadBackground(
 	file: File,
 	images: { [key: string]: ImageData } = {}
 ): Promise<UploadResponse> {
-	const response = await fetch(`${apiUrl}/image/${file.name}`, {
+	// Generate the filename with extension based on file type
+	const extension = file.type === 'image/jpeg' ? '.jpg' : '.png';
+	const filename = `${file.name}${extension}`;
+
+	const response = await fetch(`${apiUrl}/spiffs/${filename}`, {
 		method: 'POST',
 		body: file,
 		headers: {
@@ -50,7 +54,7 @@ export async function deleteBackground(
 	}
 
 	try {
-		const response = await fetch(`${apiUrl}/image/${encodeURIComponent(filename)}`, {
+		const response = await fetch(`${apiUrl}/spiffs?filename=${encodeURIComponent(filename)}`, {
 			method: 'DELETE'
 		});
 

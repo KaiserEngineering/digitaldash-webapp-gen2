@@ -95,7 +95,7 @@
 			xhr.timeout = 360000; // 3 minutes
 
 			// Make the request
-			xhr.open('POST', '/api/spiffs');
+			xhr.open('POST', '/api/spiffs/digitaldash-firmware-gen2-stm32u5g.bin');
 			xhr.setRequestHeader('Content-Type', 'application/octet-stream');
 			xhr.send(file);
 		} catch (err) {
