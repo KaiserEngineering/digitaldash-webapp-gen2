@@ -401,6 +401,18 @@ static esp_err_t spiffs_list_handler(httpd_req_t *req)
             {
                 file_type = "Configuration file";
             }
+            else if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".png") == 0)
+            {
+                file_type = "Image file";
+            }
+            else if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".jpg") == 0)
+            {
+                file_type = "Image file";
+            }
+            else if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".jpeg") == 0)
+            {
+                file_type = "Image file";
+            }
             else
             {
                 file_type = "Unknown file";
