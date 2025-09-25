@@ -328,6 +328,29 @@ static esp_err_t spiffs_list_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "SPIFFS list request: %s", req->uri);
 
+    // Check if there's a filter parameter
+    char query[128];
+    char filter[32] = {0};
+    bool filter_all = false;
+    bool filter_bin_only = true; // Default to .bin only
+
+    if (httpd_req_get_url_query_str(req, query, sizeof(query)) == ESP_OK)
+    {
+        if (httpd_query_key_value(query, "filter", filter, sizeof(filter)) == ESP_OK)
+        {
+            if (strcmp(filter, "all") == 0)
+            {
+                filter_all = true;
+                filter_bin_only = false;
+            }
+            else if (strcmp(filter, ".bin") == 0 || strcmp(filter, "bin") == 0)
+            {
+                filter_all = false;
+                filter_bin_only = true;
+            }
+        }
+    }
+
     // Open the SPIFFS directory
     DIR *dir = opendir("/spiffs");
     if (!dir)
@@ -337,7 +360,7 @@ static esp_err_t spiffs_list_handler(httpd_req_t *req)
         return httpd_resp_sendstr(req, "{\"files\": []}");
     }
 
-    // Build JSON response with all .bin files using stack buffer
+    // Build JSON response using stack buffer
     char response[2048]; // Use stack buffer to avoid heap fragmentation
     strcpy(response, "{\"files\": [");
     bool first_file = true;
@@ -346,9 +369,54 @@ static esp_err_t spiffs_list_handler(httpd_req_t *req)
 
     while ((entry = readdir(dir)) != NULL)
     {
-        // Check if file has .bin extension
+        // Skip hidden files and directories
+        if (entry->d_name[0] == '.')
+        {
+            continue;
+        }
+
         size_t name_len = strlen(entry->d_name);
-        if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".bin") == 0)
+        bool include_file = false;
+        const char *file_type = "Unknown file";
+
+        // Determine if we should include this file based on filter
+        if (filter_all)
+        {
+            // Include all files
+            include_file = true;
+            // Determine file type based on extension
+            if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".bin") == 0)
+            {
+                file_type = "Binary file";
+            }
+            else if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".txt") == 0)
+            {
+                file_type = "Text file";
+            }
+            else if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".json") == 0)
+            {
+                file_type = "JSON file";
+            }
+            else if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".cfg") == 0)
+            {
+                file_type = "Configuration file";
+            }
+            else
+            {
+                file_type = "Unknown file";
+            }
+        }
+        else if (filter_bin_only)
+        {
+            // Only .bin files
+            if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".bin") == 0)
+            {
+                include_file = true;
+                file_type = "Binary file";
+            }
+        }
+
+        if (include_file)
         {
             // Get file info
             char file_path[FILE_PATH_MAX];
@@ -360,9 +428,9 @@ static esp_err_t spiffs_list_handler(httpd_req_t *req)
                 // Check if we have enough space for this entry
                 char file_json[256];
                 int entry_len = snprintf(file_json, sizeof(file_json),
-                                       "%s{\"name\": \"%s\", \"size\": %zu, \"type\": \"Binary file\"}",
+                                       "%s{\"name\": \"%s\", \"size\": %zu, \"type\": \"%s\"}",
                                        first_file ? "" : ", ",
-                                       file_info.name, file_info.size);
+                                       file_info.name, file_info.size, file_type);
 
                 // Ensure we don't exceed buffer size (leave room for closing "]}")
                 if (response_len + entry_len + 3 < sizeof(response))

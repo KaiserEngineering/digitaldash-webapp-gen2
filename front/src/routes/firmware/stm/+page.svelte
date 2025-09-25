@@ -35,7 +35,7 @@
 	async function loadFiles() {
 		filesStatus = 'loading';
 		try {
-			const res = await fetch('/api/spiffs');
+			const res = await fetch('/api/spiffs?filter=bin');
 			const data = await res.json();
 			if (!res.ok) throw new Error(data.message || 'Failed to load files');
 			files = data.files || [];
