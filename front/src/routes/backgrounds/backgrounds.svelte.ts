@@ -49,7 +49,6 @@ export async function deleteBackground(
 	images: { [key: string]: ImageData } = {}
 ): Promise<void> {
 	if (!filename) {
-		toast.error('No filename provided');
 		throw new Error('Filename is required');
 	}
 
@@ -68,7 +67,6 @@ export async function deleteBackground(
 			delete images[filename];
 		}
 	} catch (error) {
-		toast.error('Failed to delete image');
 		throw error;
 	}
 }
@@ -85,10 +83,7 @@ export async function syncBackgrounds(): Promise<void> {
 		if (!response.ok) {
 			throw new Error(`Sync failed: ${response.statusText}`);
 		}
-
-		toast.success('Backgrounds synced successfully');
 	} catch (error) {
-		toast.error('Failed to sync backgrounds');
 		throw error;
 	}
 }

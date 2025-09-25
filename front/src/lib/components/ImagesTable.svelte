@@ -48,6 +48,7 @@
 			}
 		} catch (err) {
 			console.warn(`Failed to reload image: ${imageName}`, err);
+			toast.error(`Failed to load ${imageName}`);
 			failedImages[imageName] = true;
 			loadedImages[imageName] = null;
 		}
@@ -63,6 +64,7 @@
 			await reloadImageSlot(imageName);
 			toast.success(`${imageName} deleted successfully`);
 		} catch (error) {
+			toast.error(`Failed to delete ${imageName}`);
 			console.error('Delete failed:', error);
 		} finally {
 			deletingStates[imageName] = false;

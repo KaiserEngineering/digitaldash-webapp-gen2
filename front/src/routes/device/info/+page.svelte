@@ -1,15 +1,6 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import {
-		CircleCheck,
-		TriangleAlert,
-		Loader,
-		FileText,
-		Trash2,
-		RefreshCw,
-		HardDrive,
-		Download
-	} from 'lucide-svelte';
+	import { TriangleAlert, Loader, FileText, Trash2, RefreshCw, HardDrive } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import toast from 'svelte-5-french-toast';
 	import PageCard from '@/components/PageCard.svelte';
@@ -90,6 +81,7 @@
 	title="Device Information"
 	description="View device status and manage files stored in flash memory. Monitor storage usage and system information."
 	icon={HardDrive}
+	footerContent={null}
 >
 	<!-- SPIFFS Usage Stats -->
 	<SpiffsUsage />
@@ -100,12 +92,7 @@
 			<FileText class="h-5 w-5" />
 			All Files ({files.length} files, {formatFileSize(getTotalFilesSize())})
 		</h3>
-		<Button
-			onclick={loadFiles}
-			disabled={filesStatus === 'loading'}
-			variant="outline"
-			size="sm"
-		>
+		<Button onclick={loadFiles} disabled={filesStatus === 'loading'} variant="outline" size="sm">
 			{#if filesStatus === 'loading'}
 				<Loader class="mr-2 h-4 w-4 animate-spin" />
 				Loading...
@@ -174,7 +161,7 @@
 											disabled={isDeleting}
 											variant="outline"
 											size="sm"
-											class="text-red-600 hover:bg-red-50 hover:border-red-200 h-6 text-xs px-2"
+											class="h-6 px-2 text-xs text-red-600 hover:border-red-200 hover:bg-red-50"
 										>
 											{#if isDeleting}
 												<Loader class="mr-1 h-3 w-3 animate-spin" />
@@ -193,6 +180,4 @@
 			</div>
 		{/if}
 	</div>
-
-
 </PageCard>

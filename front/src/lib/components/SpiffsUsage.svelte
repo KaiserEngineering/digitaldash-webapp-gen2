@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { HardDrive, Loader, AlertTriangle, RefreshCw } from 'lucide-svelte';
+	import { HardDrive, Loader, TriangleAlert, RefreshCw } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 
 	interface SpiffsInfo {
@@ -79,7 +79,7 @@
 			</div>
 		{:else if status === 'error'}
 			<div class="flex items-center justify-center gap-3 py-4 text-red-600">
-				<AlertTriangle class="h-5 w-5" />
+				<TriangleAlert class="h-5 w-5" />
 				<span>Failed to load storage information</span>
 			</div>
 		{:else if spiffsInfo}
@@ -124,7 +124,7 @@
 				{#if spiffsInfo.usage_percent > 85}
 					<div class="rounded-lg border border-red-200 bg-red-50 p-3">
 						<div class="flex items-center gap-2">
-							<AlertTriangle class="h-4 w-4 text-red-600" />
+							<TriangleAlert class="h-4 w-4 text-red-600" />
 							<span class="text-sm font-medium text-red-800">Storage Almost Full</span>
 						</div>
 						<p class="mt-1 text-xs text-red-700">

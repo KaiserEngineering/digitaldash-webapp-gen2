@@ -4,6 +4,7 @@
 	import { ImageIcon, RefreshCcw, Loader } from 'lucide-svelte';
 	import { uploadBackground, deleteBackground, syncBackgrounds } from './backgrounds.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import toast from 'svelte-5-french-toast';
 
 	const { data } = $props();
 	const slotNames = data.slotNames || [];
@@ -17,9 +18,11 @@
 		try {
 			await syncBackgrounds();
 		} catch (error) {
+			toast.error('Failed to sync backgrounds');
 			console.error('Sync failed:', error);
 		} finally {
 			isSyncing = false;
+			toast.success('Backgrounds synced successfully');
 		}
 	}
 </script>
