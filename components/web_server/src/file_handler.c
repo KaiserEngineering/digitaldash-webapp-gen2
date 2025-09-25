@@ -628,16 +628,16 @@ esp_err_t register_spiffs(httpd_handle_t server)
         .handler = spiffs_list_handler,
         .user_ctx = NULL};
 
-    httpd_uri_t upload_spiffs_uri = {
-        .uri = "/api/spiffs/*",
-        .method = HTTP_POST,
-        .handler = spiffs_upload_handler,
-        .user_ctx = NULL};
-
     httpd_uri_t delete_spiffs_uri = {
         .uri = "/api/spiffs",
         .method = HTTP_DELETE,
         .handler = spiffs_delete_handler,
+        .user_ctx = NULL};
+
+    httpd_uri_t upload_spiffs_uri = {
+        .uri = "/api/spiffs/*",
+        .method = HTTP_POST,
+        .handler = spiffs_upload_handler,
         .user_ctx = NULL};
 
     httpd_uri_t info_spiffs_uri = {
@@ -648,9 +648,9 @@ esp_err_t register_spiffs(httpd_handle_t server)
 
     esp_err_t err;
     if ((err = httpd_register_uri_handler(server, &list_spiffs_uri)) != ESP_OK ||
-        (err = httpd_register_uri_handler(server, &upload_spiffs_uri)) != ESP_OK ||
         (err = httpd_register_uri_handler(server, &delete_spiffs_uri)) != ESP_OK ||
-        (err = httpd_register_uri_handler(server, &info_spiffs_uri)) != ESP_OK)
+        (err = httpd_register_uri_handler(server, &info_spiffs_uri)) != ESP_OK ||
+        (err = httpd_register_uri_handler(server, &upload_spiffs_uri)) != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to register SPIFFS URI handlers: %s", esp_err_to_name(err));
         return err;
