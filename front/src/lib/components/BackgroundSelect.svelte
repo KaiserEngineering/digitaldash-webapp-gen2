@@ -3,7 +3,7 @@
 	import { Check, Image as ImageIcon } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { cn } from '$lib/utils';
-	import Spinner from './Spinner.svelte';
+	import { Skeleton } from '$lib/components/ui/skeleton/index.js';
 
 	let {
 		value = $bindable(''),
@@ -33,6 +33,7 @@
 		});
 
 		await Promise.all(loadPromises);
+
 		loading = false;
 	}
 
@@ -71,9 +72,10 @@
 	{/if}
 
 	{#if loading}
-		<div class="flex items-center justify-center py-12">
-			<Spinner />
-			<span class="text-muted-foreground ml-2 text-sm">Loading backgrounds...</span>
+		<div class="flex flex-col gap-3">
+			{#each Array(3) as _, i}
+				<Skeleton class="h-16 w-full rounded-lg" style="animation-delay: {i * 100}ms" />
+			{/each}
 		</div>
 	{:else if options.length === 0}
 		<div class="text-muted-foreground py-8 text-center text-sm">No backgrounds available</div>
