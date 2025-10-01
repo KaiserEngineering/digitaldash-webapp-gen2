@@ -45,6 +45,17 @@
 		tabs.some((t) => '/' + t.value === page.url.pathname) ? page.url.pathname.slice(1) : ''
 	);
 
+	// Breadcrumb text for Home tab
+	let homeTabText = $derived.by(() => {
+		const path = page.url.pathname;
+		const viewMatch = path.match(/^\/view\/(\d+)/);
+		if (viewMatch) {
+			const viewId = parseInt(viewMatch[1]);
+			return `Home > View ${viewId + 1}`;
+		}
+		return 'Home';
+	});
+
 	function toggleMobileMenu() {
 		isMobileMenuOpen = !isMobileMenuOpen;
 		// Close firmware dropdown when mobile menu closes
@@ -79,7 +90,7 @@
 		<Card class="border-0 bg-transparent pb-0 shadow-none">
 			<CardHeader>
 				<div class="flex items-center justify-between">
-					<div class="flex items-center">
+					<div class="flex flex-col gap-2">
 						<div class="relative">
 							<!-- Mobile Title -->
 							<div class="sm:hidden">
@@ -171,8 +182,9 @@
 								{@const TabIcon = tab.icon}
 								{@const isActive =
 									tab.value === ''
-										? page.url.pathname === '/'
+										? page.url.pathname === '/' || page.url.pathname.startsWith('/view/')
 										: page.url.pathname.startsWith('/' + tab.value)}
+								{@const displayLabel = tab.value === '' ? homeTabText : tab.label}
 
 								{#if tab.subItems}
 									<!-- Dropdown for Firmware -->
@@ -189,10 +201,10 @@
 											<TabIcon
 												class="h-4 w-4 transition-transform duration-200 group-hover:scale-110"
 											/>
-											<span class="font-semibold">{tab.label}</span>
+											<span class="font-semibold">{displayLabel}</span>
 											<ChevronDown
 												class={`h-3 w-3 transition-all duration-300 ${
-													isFirmwareDropdownOpen ? 'scale-110 rotate-180' : 'group-hover:scale-110'
+													isFirmwareDropdownOpen ? 'rotate-180 scale-110' : 'group-hover:scale-110'
 												}`}
 											/>
 										</button>
@@ -235,7 +247,7 @@
 										<TabIcon
 											class="h-4 w-4 transition-transform duration-200 group-hover:scale-110"
 										/>
-										<span class="font-semibold">{tab.label}</span>
+										<span class="font-semibold">{displayLabel}</span>
 									</a>
 								{/if}
 							{/each}
@@ -256,7 +268,11 @@
 							<div class="space-y-2">
 								{#each tabs as tab (tab.value)}
 									{@const TabIcon = tab.icon}
-									{@const isActive = activeTab === tab.value}
+									{@const isActive =
+										tab.value === ''
+											? page.url.pathname === '/' || page.url.pathname.startsWith('/view/')
+											: activeTab === tab.value}
+									{@const displayLabel = tab.value === '' ? homeTabText : tab.label}
 
 									{#if tab.subItems}
 										<!-- Firmware with expandable sub-items -->
@@ -271,7 +287,7 @@
 											>
 												<div class="flex items-center gap-3">
 													<TabIcon class="h-5 w-5" />
-													<span class="font-semibold">{tab.label}</span>
+													<span class="font-semibold">{displayLabel}</span>
 												</div>
 												<ChevronDown
 													class={`h-4 w-4 transition-transform duration-300 ${
@@ -317,7 +333,7 @@
 											}}
 										>
 											<TabIcon class="h-5 w-5" />
-											<span class="font-semibold">{tab.label}</span>
+											<span class="font-semibold">{displayLabel}</span>
 										</a>
 									{/if}
 								{/each}
