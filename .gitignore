@@ -120,7 +120,6 @@ managed_components/
 !front/web-demo/dist/index.html
 
 # Frontend build artifacts and cache
-**/.yarn/install-state.gz
 front/svelte-kit/
 front/static/spiffs/
 
