@@ -75,11 +75,7 @@
 	}
 </script>
 
-<PageCard
-	title="Firmware Uploader"
-	description={`Current Firmware Version: ${ver}`}
-	icon={CloudUpload}
->
+<PageCard title="Web App Uploader" description={`Current Version: ${ver}`} icon={CloudUpload}>
 	<div
 		class="cursor-pointer rounded-lg border-2 border-dashed p-4 text-center transition-colors duration-200 ease-in-out"
 		class:border-primary={dragActive}

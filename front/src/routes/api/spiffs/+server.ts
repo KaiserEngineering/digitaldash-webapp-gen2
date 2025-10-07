@@ -189,8 +189,8 @@ export async function PUT() {
 	const mockData = {
 		success: true,
 		total: 1048576, // 1MB total
-		used: 524288,   // 512KB used
-		free: 524288,   // 512KB free
+		used: 524288, // 512KB used
+		free: 524288, // 512KB free
 		usage_percent: 50.0
 	};
 

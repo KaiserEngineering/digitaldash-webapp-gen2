@@ -74,7 +74,7 @@
 					async () => {
 						const result = await updateFullConfig((config) => {
 							// Replace the entire config with the parsed JSON
-							Object.keys(config).forEach(key => delete config[key]);
+							Object.keys(config).forEach((key) => delete config[key]);
 							Object.assign(config, parsedConfig);
 						});
 

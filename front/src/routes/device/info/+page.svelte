@@ -49,7 +49,7 @@
 
 			if (response.ok) {
 				toast.success(`File "${filename}" deleted successfully`);
-				files = files.filter(f => f.name !== filename); // Remove from local state
+				files = files.filter((f) => f.name !== filename); // Remove from local state
 
 				// Clear image cache if it's a background image (User0.png, User1.png, etc.)
 				if (/^User\d+\.png$/i.test(filename)) {

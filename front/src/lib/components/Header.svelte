@@ -204,7 +204,7 @@
 											<span class="font-semibold">{displayLabel}</span>
 											<ChevronDown
 												class={`h-3 w-3 transition-all duration-300 ${
-													isFirmwareDropdownOpen ? 'rotate-180 scale-110' : 'group-hover:scale-110'
+													isFirmwareDropdownOpen ? 'scale-110 rotate-180' : 'group-hover:scale-110'
 												}`}
 											/>
 										</button>

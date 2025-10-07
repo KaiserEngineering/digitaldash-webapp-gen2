@@ -7,9 +7,6 @@
 	const buildDate = new Date(VERSION_INFO.buildDate).toLocaleString();
 </script>
 
-<div
-	class="text-xs text-muted-foreground cursor-help {className}"
-	title="Built: {buildDate}"
->
+<div class="text-muted-foreground cursor-help text-xs {className}" title="Built: {buildDate}">
 	{VERSION_INFO.display}
 </div>
