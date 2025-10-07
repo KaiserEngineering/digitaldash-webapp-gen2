@@ -45,11 +45,17 @@ jobs:
           target: esp32s3         # Specify the ESP-IDF target
           path: './'              # Set the project path (default is the current directory)
 
+      # Extract latest release notes from CHANGELOG.md
+      - name: Extract Latest Release Notes
+        run: |
+          # Extract content from first ## until (but not including) second ##
+          awk '/^## /{if(found)exit; found=1} found' CHANGELOG.md > RELEASE_NOTES.md
+
       # Create a release and upload artifacts
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: build/KE_DigitalDash_Webapp.bin
-          body_path: CHANGELOG.md
+          body_path: RELEASE_NOTES.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
