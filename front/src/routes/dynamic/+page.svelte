@@ -112,7 +112,7 @@
 				out:slide={{ duration: 200, easing: quintOut }}
 				animate:flip={{ duration: 400 }}
 			>
-				<Motion.div key={i} class="overflow-hidden">
+				<Motion.div class="overflow-hidden">
 					<Collapsible.Root>
 						<div
 							class={`group relative rounded-2xl border-2 transition-all duration-300 ${
@@ -237,7 +237,7 @@
 																	: 'text-muted-foreground'}
 															>
 																{$form[key].view_index !== undefined
-																	? `View ${$form[key].view_index}`
+																	? `View ${$form[key].view_index + 1}`
 																	: 'Select view index'}
 															</span>
 														</Select.Trigger>
@@ -245,10 +245,10 @@
 															{#each [0, 1, 2] as index}
 																<Select.Item
 																	value={index.toString()}
-																	label={`View ${index}`}
+																	label={`View ${index + 1}`}
 																	class="rounded-lg py-3 hover:bg-slate-50"
 																>
-																	View {index}
+																	View {index + 1}
 																</Select.Item>
 															{/each}
 														</Select.Content>
@@ -295,7 +295,7 @@
 																	: 'text-muted-foreground'}
 															>
 																{$form[key].view_index !== undefined
-																	? `View ${$form[key].view_index}`
+																	? `View ${$form[key].view_index + 1}`
 																	: 'Select view index'}
 															</span>
 														</Select.Trigger>
@@ -303,10 +303,10 @@
 															{#each [0, 1, 2] as index}
 																<Select.Item
 																	value={index.toString()}
-																	label={`View ${index}`}
+																	label={`View ${index + 1}`}
 																	class={`rounded-lg py-3 hover:bg-${priorities[i].color.split('-')[1]}-50`}
 																>
-																	View {index}
+																	View {index + 1}
 																</Select.Item>
 															{/each}
 														</Select.Content>
