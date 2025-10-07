@@ -204,7 +204,11 @@
 		>
 			<div class="flex items-center gap-4">
 				<a href={file.url} download={`${slotName}_cropped.png`} title="Tap to save image">
-					<img src={file.url} alt={file.name} class="h-16 w-16 rounded-lg object-cover cursor-pointer" />
+					<img
+						src={file.url}
+						alt={file.name}
+						class="h-16 w-16 cursor-pointer rounded-lg object-cover"
+					/>
 				</a>
 				<div class="flex flex-col">
 					<span class="font-medium">{file.name}</span>

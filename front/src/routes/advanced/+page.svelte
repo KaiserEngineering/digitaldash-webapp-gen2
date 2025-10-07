@@ -9,6 +9,7 @@
 	import { handleError, withRetry } from '$lib/utils/errorHandling';
 	import PageCard from '@/components/PageCard.svelte';
 	import ErrorBoundary from '$lib/components/ErrorBoundary.svelte';
+	import toast from 'svelte-5-french-toast';
 
 	let { data } = $props();
 
@@ -71,13 +72,18 @@
 
 				await withRetry(
 					async () => {
-						const success = await updateFullConfig(() => {
-							return parsedConfig;
-						}, 'Configuration saved successfully!');
+						const result = await updateFullConfig((config) => {
+							// Replace the entire config with the parsed JSON
+							Object.keys(config).forEach((key) => delete config[key]);
+							Object.assign(config, parsedConfig);
+						});
 
-						if (!success) {
+						if (!result.success) {
 							throw new Error('Failed to save configuration to device');
 						}
+
+						// Show success message
+						toast.success('Configuration saved successfully!');
 					},
 					{
 						maxRetries: 2,

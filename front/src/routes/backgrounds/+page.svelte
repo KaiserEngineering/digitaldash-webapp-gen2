@@ -11,7 +11,7 @@
 	const { data } = $props();
 	const slotNames = data.slotNames || [];
 	const localImageNames = data.localImageNames || [];
-	
+
 	const imageHandler = new ImageHandler();
 	let storageInfo = $state({ used: 0, total: 0, remaining: 0, count: 0 });
 	let isSyncing = $state(false);
@@ -47,7 +47,6 @@
 	description="Upload custom background images stored securely on your device. Images are saved locally and not shared with other devices for privacy."
 	icon={ImageIcon}
 >
-
 	<!-- Local Storage Info -->
 	{#if localImageNames.length > 0}
 		<Card class="mb-6 border-emerald-200 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-900/20">
@@ -58,8 +57,9 @@
 				<div class="flex-1">
 					<h3 class="text-foreground text-sm font-medium">Local Storage</h3>
 					<p class="text-foreground/70 text-xs">
-						{storageInfo.count} images • {formatBytes(storageInfo.used)} / {formatBytes(storageInfo.total)} used
-						• {formatBytes(storageInfo.remaining)} remaining
+						{storageInfo.count} images • {formatBytes(storageInfo.used)} / {formatBytes(
+							storageInfo.total
+						)} used • {formatBytes(storageInfo.remaining)} remaining
 					</p>
 				</div>
 				<HardDrive class="h-4 w-4 text-emerald-600 dark:text-emerald-400" />

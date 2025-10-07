@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ImageHandler } from '$lib/image/handler';
-	import Spinner from './Spinner.svelte';
+	import { Skeleton } from '$lib/components/ui/skeleton/index.js';
 	import GaugeComponent from './GaugeComponent.svelte';
 	import toast from 'svelte-5-french-toast';
 	import { cn } from '$lib/utils';
@@ -81,10 +81,23 @@
 
 <div class={cn('group', className)}>
 	{#if loading}
-		<div
-			class="bg-muted border-primary-200 m-1 flex h-48 items-center justify-center rounded-2xl border sm:m-2 sm:h-52"
-		>
-			<Spinner />
+		<div class="m-1 sm:m-2">
+			<div class="relative h-32 w-full overflow-hidden rounded-2xl sm:h-52">
+				<Skeleton class="absolute inset-0 h-full w-full rounded-2xl" />
+				<div
+					class="relative z-10 flex h-full items-center justify-center gap-2 px-2 sm:gap-8 sm:px-4"
+				>
+					{#each [0, 1, 2] as i}
+						<div class="flex flex-col items-center gap-2">
+							<Skeleton
+								class="h-16 w-16 rounded-full sm:h-20 sm:w-20"
+								style="animation-delay: {i * 150}ms"
+							/>
+							<Skeleton class="h-3 w-12 rounded" style="animation-delay: {i * 150 + 75}ms" />
+						</div>
+					{/each}
+				</div>
+			</div>
 		</div>
 	{:else}
 		<a href="/view/{index}" class="m-1 block">

@@ -35,7 +35,7 @@
 	async function loadFiles() {
 		filesStatus = 'loading';
 		try {
-			const res = await fetch('/api/spiffs');
+			const res = await fetch('/api/spiffs?filter=bin');
 			const data = await res.json();
 			if (!res.ok) throw new Error(data.message || 'Failed to load files');
 			files = data.files || [];
@@ -56,26 +56,48 @@
 		uploadProgress = 0;
 
 		try {
-			// Simple demo implementation - keep it lightweight for Vercel
-			const uploadRes = await fetch('/api/spiffs', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/octet-stream',
-				},
-				body: file,
-			});
+			const xhr = new XMLHttpRequest();
 
-			const uploadData = await uploadRes.json();
-			if (!uploadRes.ok) throw new Error(uploadData.message || 'File upload failed');
+			// Set up progress tracking
+			xhr.upload.onprogress = (e) => {
+				if (e.lengthComputable) {
+					uploadProgress = (e.loaded / e.total) * 100;
+					uploadMessage = `Uploading firmware file... ${Math.floor(uploadProgress)}%`;
+				}
+			};
 
-			// Demo success response
-			uploadStatus = 'success';
-			uploadMessage = 'Firmware file uploaded successfully!';
-			uploadProgress = 100;
+			// Set up completion handlers
+			xhr.onload = async () => {
+				if (xhr.status >= 200 && xhr.status < 300) {
+					uploadStatus = 'success';
+					uploadMessage = 'Firmware file uploaded successfully!';
+					uploadProgress = 100;
 
-			// Reload file list and clear input
-			await loadFiles();
-			if (fileInput) fileInput.value = '';
+					// Reload file list and clear input
+					await loadFiles();
+					if (fileInput) fileInput.value = '';
+				} else {
+					uploadStatus = 'error';
+					uploadMessage = `Upload failed: ${xhr.statusText}`;
+				}
+			};
+
+			xhr.onerror = () => {
+				uploadStatus = 'error';
+				uploadMessage = 'Network error during upload';
+			};
+
+			xhr.ontimeout = () => {
+				uploadStatus = 'error';
+				uploadMessage = 'Upload timed out';
+			};
+
+			xhr.timeout = 360000; // 3 minutes
+
+			// Make the request
+			xhr.open('POST', '/api/spiffs/digitaldash-firmware-gen2-stm32u5g.bin');
+			xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+			xhr.send(file);
 		} catch (err) {
 			uploadStatus = 'error';
 			uploadMessage =
@@ -89,7 +111,7 @@
 		flashProgress = 0;
 
 		try {
-			// Simple demo flash - simulate the process without real hardware
+			// Start the flash process
 			const flashRes = await fetch('/api/firmware/stm', {
 				method: 'POST',
 				headers: {
@@ -97,17 +119,57 @@
 				}
 			});
 
-			const flashData = await flashRes.json();
-			if (!flashRes.ok) throw new Error(flashData.message || 'Firmware flash failed');
+			if (!flashRes.ok) {
+				const flashData = await flashRes.json();
+				throw new Error(flashData.message || 'Firmware flash failed');
+			}
 
-			// Demo success response
-			flashStatus = 'success';
-			flashMessage = 'Digital Dash updated successfully!';
-			flashProgress = 100;
+			// Start polling for progress
+			flashPollingInterval = setInterval(async () => {
+				try {
+					const progressRes = await fetch(`${apiUrl}/flash/progress`);
+					if (progressRes.ok) {
+						const progressData = await progressRes.json();
+						flashProgress = progressData.percentage || 0;
+						flashMessage =
+							progressData.message || `Flashing firmware... ${Math.floor(flashProgress)}%`;
 
-			// Reload file list
-			await loadFiles();
+						// Check if complete
+						if (progressData.complete === true) {
+							clearInterval(flashPollingInterval!);
+							flashPollingInterval = null;
+							flashStatus = 'success';
+							flashMessage = 'Digital Dash updated successfully!';
+							flashProgress = 100;
+							await loadFiles();
+						} else if (progressData.error) {
+							clearInterval(flashPollingInterval!);
+							flashPollingInterval = null;
+							flashStatus = 'error';
+							flashMessage = progressData.error;
+						}
+					}
+				} catch (progressErr) {
+					console.warn('Progress polling error:', progressErr);
+				}
+			}, 500); // Poll every 500ms
+
+			// Set a timeout to stop polling after 5 minutes
+			setTimeout(() => {
+				if (flashPollingInterval) {
+					clearInterval(flashPollingInterval);
+					flashPollingInterval = null;
+					if (flashStatus === 'flashing') {
+						flashStatus = 'error';
+						flashMessage = 'Flash operation timed out';
+					}
+				}
+			}, 300000); // 5 minutes
 		} catch (err) {
+			if (flashPollingInterval) {
+				clearInterval(flashPollingInterval);
+				flashPollingInterval = null;
+			}
 			flashStatus = 'error';
 			flashMessage =
 				err instanceof Error ? err.message : 'An error occurred during firmware flashing';

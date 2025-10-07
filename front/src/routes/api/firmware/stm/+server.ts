@@ -1,12 +1,13 @@
 import type { RequestHandler } from './$types';
 import { json } from '@sveltejs/kit';
 import { dev } from '$app/environment';
+import { isVercelDeployment } from '$lib/config';
 
 export const POST: RequestHandler = async ({ request, fetch }) => {
-	if (dev) {
-		// Development mock - simulate starting STM flash
+	if (dev || isVercelDeployment) {
+		// Development/Demo mock - simulate starting STM flash
 		console.log('Mock: Starting STM32 firmware flash');
-		return json({ message: 'STM32 firmware update started' });
+		return json({ message: 'STM32 firmware update started (demo mode)' });
 	}
 
 	// Production - forward to embedded device

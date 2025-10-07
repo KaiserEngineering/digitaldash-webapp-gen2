@@ -18,7 +18,7 @@ export async function uploadBackground(
 	try {
 		// Store image locally using localStorage
 		const localImage = await imageHandler.uploadLocalImage(file);
-		
+
 		// Update images object with local image data
 		const imageData: ImageData = {
 			name: localImage.name,
@@ -27,7 +27,7 @@ export async function uploadBackground(
 			lastModified: localImage.lastModified,
 			contentType: localImage.contentType
 		};
-		
+
 		images[localImage.name] = imageData;
 
 		return {
@@ -51,12 +51,28 @@ export async function deleteBackground(
 		throw new Error('Filename is required');
 	}
 
+	// Add a small delay for demo realism
+	await new Promise((resolve) => setTimeout(resolve, 300));
+
 	try {
-		// Delete from local storage
+		// Try to delete from local storage
 		const deleted = imageHandler.deleteLocalImage(filename);
-		
+
 		if (!deleted) {
-			throw new Error('Image not found in local storage');
+			// This is a demo/stock image - clear cache so it shows as failed/empty
+			imageHandler.clearCache(filename);
+
+			// Remove from images object
+			if (images && filename in images) {
+				delete images[filename];
+			}
+
+			toast('Demo image cleared. Upload a new image to replace it.', {
+				icon: 'ℹ️'
+			});
+
+			// Throw error so the UI knows to show empty slot
+			throw new Error('DEMO_IMAGE_CLEARED');
 		}
 
 		// Remove from images object
@@ -66,6 +82,11 @@ export async function deleteBackground(
 
 		toast.success('Image deleted from local storage');
 	} catch (error) {
+		// Don't show error toast for intentional demo image clearing
+		if (error instanceof Error && error.message === 'DEMO_IMAGE_CLEARED') {
+			throw error;
+		}
+
 		const errorMessage = error instanceof Error ? error.message : 'Delete failed';
 		toast.error(`Failed to delete image: ${errorMessage}`);
 		throw error;
@@ -74,17 +95,8 @@ export async function deleteBackground(
 
 export async function syncBackgrounds(): Promise<void> {
 	try {
-		const response = await fetch(`${apiUrl}/sync`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			}
-		});
-
-		if (!response.ok) {
-			throw new Error(`Sync failed: ${response.statusText}`);
-		}
-
+		// Simulate sync process with realistic delay
+		await new Promise((resolve) => setTimeout(resolve, 1500));
 		toast.success('Backgrounds synced successfully');
 	} catch (error) {
 		toast.error('Failed to sync backgrounds');

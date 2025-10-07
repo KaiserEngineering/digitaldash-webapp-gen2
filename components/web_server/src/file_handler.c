@@ -30,6 +30,7 @@
 #include "esp_log.h"
 #include "esp_http_server.h"
 #include "esp_vfs.h"
+#include "esp_spiffs.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
@@ -56,6 +57,7 @@ static const char *TAG = "FileHandler";
 static esp_err_t spiffs_list_handler(httpd_req_t *req);
 static esp_err_t spiffs_upload_handler(httpd_req_t *req);
 static esp_err_t spiffs_delete_handler(httpd_req_t *req);
+static esp_err_t spiffs_info_handler(httpd_req_t *req);
 
 static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepath)
 {
@@ -326,6 +328,29 @@ static esp_err_t spiffs_list_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "SPIFFS list request: %s", req->uri);
 
+    // Check if there's a filter parameter
+    char query[128];
+    char filter[32] = {0};
+    bool filter_all = false;
+    bool filter_bin_only = true; // Default to .bin only
+
+    if (httpd_req_get_url_query_str(req, query, sizeof(query)) == ESP_OK)
+    {
+        if (httpd_query_key_value(query, "filter", filter, sizeof(filter)) == ESP_OK)
+        {
+            if (strcmp(filter, "all") == 0)
+            {
+                filter_all = true;
+                filter_bin_only = false;
+            }
+            else if (strcmp(filter, ".bin") == 0 || strcmp(filter, "bin") == 0)
+            {
+                filter_all = false;
+                filter_bin_only = true;
+            }
+        }
+    }
+
     // Open the SPIFFS directory
     DIR *dir = opendir("/spiffs");
     if (!dir)
@@ -335,7 +360,7 @@ static esp_err_t spiffs_list_handler(httpd_req_t *req)
         return httpd_resp_sendstr(req, "{\"files\": []}");
     }
 
-    // Build JSON response with all .bin files using stack buffer
+    // Build JSON response using stack buffer
     char response[2048]; // Use stack buffer to avoid heap fragmentation
     strcpy(response, "{\"files\": [");
     bool first_file = true;
@@ -344,9 +369,66 @@ static esp_err_t spiffs_list_handler(httpd_req_t *req)
 
     while ((entry = readdir(dir)) != NULL)
     {
-        // Check if file has .bin extension
+        // Skip hidden files and directories
+        if (entry->d_name[0] == '.')
+        {
+            continue;
+        }
+
         size_t name_len = strlen(entry->d_name);
-        if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".bin") == 0)
+        bool include_file = false;
+        const char *file_type = "Unknown file";
+
+        // Determine if we should include this file based on filter
+        if (filter_all)
+        {
+            // Include all files
+            include_file = true;
+            // Determine file type based on extension
+            if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".bin") == 0)
+            {
+                file_type = "Binary file";
+            }
+            else if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".txt") == 0)
+            {
+                file_type = "Text file";
+            }
+            else if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".json") == 0)
+            {
+                file_type = "JSON file";
+            }
+            else if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".cfg") == 0)
+            {
+                file_type = "Configuration file";
+            }
+            else if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".png") == 0)
+            {
+                file_type = "Image file";
+            }
+            else if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".jpg") == 0)
+            {
+                file_type = "Image file";
+            }
+            else if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".jpeg") == 0)
+            {
+                file_type = "Image file";
+            }
+            else
+            {
+                file_type = "Unknown file";
+            }
+        }
+        else if (filter_bin_only)
+        {
+            // Only .bin files
+            if (name_len > 4 && strcasecmp(&entry->d_name[name_len - 4], ".bin") == 0)
+            {
+                include_file = true;
+                file_type = "Binary file";
+            }
+        }
+
+        if (include_file)
         {
             // Get file info
             char file_path[FILE_PATH_MAX];
@@ -358,9 +440,9 @@ static esp_err_t spiffs_list_handler(httpd_req_t *req)
                 // Check if we have enough space for this entry
                 char file_json[256];
                 int entry_len = snprintf(file_json, sizeof(file_json),
-                                       "%s{\"name\": \"%s\", \"size\": %zu, \"type\": \"Binary file\"}",
+                                       "%s{\"name\": \"%s\", \"size\": %zu, \"type\": \"%s\"}",
                                        first_file ? "" : ", ",
-                                       file_info.name, file_info.size);
+                                       file_info.name, file_info.size, file_type);
 
                 // Ensure we don't exceed buffer size (leave room for closing "]}")
                 if (response_len + entry_len + 3 < sizeof(response))
@@ -399,7 +481,21 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
         return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "No file content");
     }
 
-    const char *filename = "digitaldash-firmware-gen2-stm32u5g.bin";
+    // Extract filename from URI path (after /api/spiffs/)
+    const char *prefix = "/api/spiffs/";
+    const char *filename = NULL;
+
+    if (strncmp(req->uri, prefix, strlen(prefix)) == 0) {
+        filename = req->uri + strlen(prefix);
+    }
+
+    if (!filename || strlen(filename) == 0) {
+        ESP_LOGW(TAG, "No filename in URI path");
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing filename in path");
+    }
+
+    ESP_LOGI(TAG, "Uploading file: %s", filename);
+
     char filepath[FILE_PATH_MAX];
     snprintf(filepath, sizeof(filepath), "/spiffs/%s", filename);
 
@@ -504,6 +600,37 @@ static esp_err_t spiffs_delete_handler(httpd_req_t *req)
     }
 }
 
+static esp_err_t spiffs_info_handler(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "SPIFFS info request: %s", req->uri);
+
+    size_t total = 0, used = 0;
+    esp_err_t ret = esp_spiffs_info(NULL, &total, &used);
+
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to get SPIFFS info: %s", esp_err_to_name(ret));
+        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to get SPIFFS info");
+    }
+
+    size_t free_space = total - used;
+    float usage_percent = total > 0 ? ((float)used / (float)total) * 100.0f : 0.0f;
+
+    // Build JSON response
+    char response[512];
+    snprintf(response, sizeof(response),
+             "{"
+             "\"success\": true,"
+             "\"total\": %zu,"
+             "\"used\": %zu,"
+             "\"free\": %zu,"
+             "\"usage_percent\": %.1f"
+             "}",
+             total, used, free_space, usage_percent);
+
+    httpd_resp_set_type(req, "application/json");
+    return httpd_resp_send(req, response, strlen(response));
+}
+
 esp_err_t register_spiffs(httpd_handle_t server)
 {
     // Register URI handlers
@@ -513,22 +640,29 @@ esp_err_t register_spiffs(httpd_handle_t server)
         .handler = spiffs_list_handler,
         .user_ctx = NULL};
 
-    httpd_uri_t upload_spiffs_uri = {
-        .uri = "/api/spiffs",
-        .method = HTTP_POST,
-        .handler = spiffs_upload_handler,
-        .user_ctx = NULL};
-
     httpd_uri_t delete_spiffs_uri = {
         .uri = "/api/spiffs",
         .method = HTTP_DELETE,
         .handler = spiffs_delete_handler,
         .user_ctx = NULL};
 
+    httpd_uri_t upload_spiffs_uri = {
+        .uri = "/api/spiffs/*",
+        .method = HTTP_POST,
+        .handler = spiffs_upload_handler,
+        .user_ctx = NULL};
+
+    httpd_uri_t info_spiffs_uri = {
+        .uri = "/api/spiffs/info",
+        .method = HTTP_GET,
+        .handler = spiffs_info_handler,
+        .user_ctx = NULL};
+
     esp_err_t err;
     if ((err = httpd_register_uri_handler(server, &list_spiffs_uri)) != ESP_OK ||
-        (err = httpd_register_uri_handler(server, &upload_spiffs_uri)) != ESP_OK ||
-        (err = httpd_register_uri_handler(server, &delete_spiffs_uri)) != ESP_OK)
+        (err = httpd_register_uri_handler(server, &delete_spiffs_uri)) != ESP_OK ||
+        (err = httpd_register_uri_handler(server, &info_spiffs_uri)) != ESP_OK ||
+        (err = httpd_register_uri_handler(server, &upload_spiffs_uri)) != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to register SPIFFS URI handlers: %s", esp_err_to_name(err));
         return err;

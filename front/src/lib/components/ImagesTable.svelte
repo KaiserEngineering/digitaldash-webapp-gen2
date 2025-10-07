@@ -63,8 +63,16 @@
 			await reloadImageSlot(imageName);
 			// Don't show success toast here as it's already shown in deleteBackground function
 		} catch (error) {
-			console.error('Delete failed:', error);
-			// Error toast is already shown in deleteBackground function
+			// Check if it's a demo image being cleared (not a real error)
+			if (error instanceof Error && error.message === 'DEMO_IMAGE_CLEARED') {
+				// Clear the image from UI - don't reload it
+				imageHandler.clearCache(imageName);
+				loadedImages[imageName] = null;
+				failedImages[imageName] = true;
+			} else {
+				console.error('Delete failed:', error);
+				// Error toast is already shown in deleteBackground function
+			}
 		} finally {
 			deletingStates[imageName] = false;
 		}
@@ -136,7 +144,11 @@
 						out:fade={{ duration: 200, easing: quintOut }}
 					>
 						<div class="m-2">
-							<a href={loadedImages[imageName]} download={`${imageName}.png`} title="Long press to save image">
+							<a
+								href={loadedImages[imageName]}
+								download={`${imageName}.png`}
+								title="Long press to save image"
+							>
 								<img
 									src={loadedImages[imageName] || '/placeholder.svg'}
 									alt="{imageName} background"
@@ -149,10 +161,10 @@
 
 						{#if editable}
 							<div
-								class="absolute inset-0 bg-black/0 transition-all duration-200 group-hover:bg-black/10 pointer-events-none"
+								class="pointer-events-none absolute inset-0 bg-black/0 transition-all duration-200 group-hover:bg-black/10"
 							>
 								<div
-									class="absolute top-2 right-2 flex gap-2 transition-opacity duration-200 group-hover:opacity-100 sm:opacity-0 pointer-events-auto"
+									class="pointer-events-auto absolute top-2 right-2 flex gap-2 transition-opacity duration-200 group-hover:opacity-100 sm:opacity-0"
 								>
 									<Button
 										variant="destructive"

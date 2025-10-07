@@ -3,7 +3,7 @@
 	import { Check, Image as ImageIcon } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { cn } from '$lib/utils';
-	import Spinner from './Spinner.svelte';
+	import { Skeleton } from '$lib/components/ui/skeleton/index.js';
 
 	let {
 		value = $bindable(''),
@@ -56,6 +56,7 @@
 		});
 
 		await Promise.all(loadPromises);
+
 		loading = false;
 	}
 
@@ -92,9 +93,20 @@
 	{/if}
 
 	{#if loading}
-		<div class="flex items-center justify-center py-12">
-			<Spinner />
-			<span class="text-muted-foreground ml-3 text-sm">Loading images...</span>
+		<div
+			class={cn(
+				'grid gap-3',
+				themes
+					? 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8'
+					: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+			)}
+		>
+			{#each Array(themes ? 8 : 3) as _, i}
+				<Skeleton
+					class={cn('w-full rounded-lg', themes ? 'aspect-square' : 'aspect-[1024/200] h-16')}
+					style="animation-delay: {i * 75}ms"
+				/>
+			{/each}
 		</div>
 	{:else if options.length === 0}
 		<div class="border-border bg-muted rounded-lg border p-8 text-center">

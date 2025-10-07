@@ -60,3 +60,20 @@ void list_spiffs_files()
     }
     closedir(dir);
 }
+
+esp_err_t get_spiffs_usage_info(size_t *total, size_t *used)
+{
+    if (!total || !used) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    esp_err_t ret = esp_spiffs_info(NULL, total, used);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to get SPIFFS usage info: %s", esp_err_to_name(ret));
+        return ret;
+    }
+
+    ESP_LOGI(TAG, "SPIFFS usage - Total: %zu bytes, Used: %zu bytes (%.1f%%)",
+             *total, *used, *total > 0 ? ((float)*used / (float)*total) * 100.0f : 0.0f);
+    return ESP_OK;
+}

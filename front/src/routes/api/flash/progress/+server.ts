@@ -1,15 +1,16 @@
 import type { RequestHandler } from './$types';
 import { json } from '@sveltejs/kit';
 import { dev } from '$app/environment';
+import { isVercelDeployment } from '$lib/config';
 
-// Mock flash progress for development
+// Mock flash progress for development/demo
 let mockProgress = 0;
 let mockComplete = false;
 let mockStartTime: number | null = null;
 
 export const GET: RequestHandler = async ({ fetch }) => {
-	if (dev) {
-		// Development mock - simulate flash progress
+	if (dev || isVercelDeployment) {
+		// Development/Demo mock - simulate flash progress
 		if (mockStartTime === null) {
 			mockStartTime = Date.now();
 		}

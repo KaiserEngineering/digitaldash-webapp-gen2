@@ -114,8 +114,8 @@ export async function POST({ request }) {
 		throw error(413, 'File too large. Maximum size is 2MB');
 	}
 
-	// Simulate upload processing time
-	await new Promise((resolve) => setTimeout(resolve, 1000));
+	// Simulate upload processing time (longer for realism)
+	await new Promise((resolve) => setTimeout(resolve, 1800));
 
 	// Mock successful upload response (works in both local and Vercel)
 	return json({

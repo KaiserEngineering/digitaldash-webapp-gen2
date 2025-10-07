@@ -3,7 +3,6 @@ import { configStore } from '$local/server/configStore';
 import { json } from '@sveltejs/kit';
 import { DigitalDashSchema } from '$schemas/digitaldash';
 import { deviceClient } from '$local/server/deviceClient';
-
 import { useDeviceApi } from '$lib/config';
 
 export async function GET() {
@@ -44,6 +43,8 @@ export async function PATCH({ request }) {
 				return json({ error: 'Failed to save config to device' }, { status: 500 });
 			}
 		} else {
+			// Add realistic delay for demo mode
+			await new Promise((resolve) => setTimeout(resolve, 800));
 			await configStore.set(config);
 		}
 
