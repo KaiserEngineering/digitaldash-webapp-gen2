@@ -5,6 +5,9 @@
 	import toast from 'svelte-5-french-toast';
 	import PageCard from '@/components/PageCard.svelte';
 	import SpiffsUsage from '$lib/components/SpiffsUsage.svelte';
+	import { ImageHandler } from '$lib/image/handler';
+
+	const imageHandler = new ImageHandler();
 
 	interface DeviceFile {
 		name: string;
@@ -46,7 +49,13 @@
 
 			if (response.ok) {
 				toast.success(`File "${filename}" deleted successfully`);
-				await loadFiles(); // Reload file list
+				files = files.filter(f => f.name !== filename); // Remove from local state
+
+				// Clear image cache if it's a background image (User0.png, User1.png, etc.)
+				if (/^User\d+\.png$/i.test(filename)) {
+					const baseName = filename.slice(0, -4); // Remove .png extension
+					imageHandler.clearCache(baseName);
+				}
 			} else {
 				const error = await response.json().catch(() => ({ message: 'Unknown error' }));
 				toast.error(`Failed to delete file: ${error.message}`);
