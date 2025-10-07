@@ -1,0 +1,126 @@
+menu "Digital Dash Webapp Configuration"
+    
+    menu "ESP32 Pinout"
+        config WEBAPP_EXAMPLE_PIN
+            int "Signal connected to STM32"
+            default 4
+            help
+                Example pin
+    endmenu
+
+    menu "ESP32 to STM32 I2C"
+        config I2C_ENABLE
+            bool "I2C Enable"
+            default true
+            help
+                false = Disabled, true = Enabled
+
+        config I2C_MASTER_FREQUENCY
+            int "Master Frequency"
+            default 100000
+            help
+                I2C Speed of Master device.
+
+        config STM32_7BIT_ADDR
+            int "STM32 7-Bit Base Address in decimcal format"
+            default 42
+            help
+                7-Bit Base Address of the STM32 in decimal format
+
+        config ESP32_STM32_SCL_IO
+            int "SCL IO Pin"
+            default 17
+            help
+                SCL IO Pin of the I2C to STM32 connection
+
+        config ESP32_STM32_SDA_IO
+            int "SDA IO Pin"
+            default 16
+            help
+                SDA IO Pin of the I2C to STM32 connection
+    endmenu
+
+    menu "ESP32 to STM32 UART"
+        config ESP32_STM32_UART_CONTROLLER
+            int "UART Port Number"
+            default 1
+            help
+                UART port number, can be UART_NUM_0 ~ (UART_NUM_MAX -1)
+
+        config ESP32_STM32_UART_BAUD
+            int "UART Baud Rate"
+            default 115200
+            help
+                UART Baud Rate
+                
+        config ESP32_STM32_UART_BUFFER_SIZE
+            int "UART Buffer Size"
+            default 1024
+            help
+                UART Buffer Size
+
+        config STM32_RX_ESP32_TX
+            int "ESP32 TX IO Pin"
+            default 11
+            help
+                ESP32 TX pin connected to STM32 TX
+
+        config STM32_TX_ESP32_RX
+            int "ESP32 RX IO Pin"
+            default 10
+            help
+                ESP32 RX pin connected to STM32 RX
+
+        config STM32_RESET_PIN
+            int "STM32 Reset Pin"
+            default 2
+            help
+                ESP32 pin connected to STM32 reset pin
+
+        config STM32_BOOT_PIN
+            int "STM32 Boot Pin"
+            default 8
+            help
+                ESP32 pin connected to STM32 boot pin
+
+        config STM32_SPLASH_EN_PIN
+            int "STM32 Splash Enable Pin"
+            default 15
+            help
+                ESP32 pin connected to STM32 GPIO splash enable pin
+    endmenu
+
+    menu "WiFi AP"
+        config WIFI_ENABLE
+            bool "WiFi Enable"
+            default true
+            help
+                false = Disabled, true = Enabled
+
+        config ESP_WIFI_SSID
+            string "WiFi SSID"
+            default "Digital Dash"
+            help
+                SSID (network name) for the example to connect to.
+
+        config ESP_WIFI_PASSWORD
+            string "WiFi Password"
+            default "FordFocusSTRS"
+            help
+                WiFi password (WPA or WPA2) for the example to use.
+
+        config ESP_WIFI_CHANNEL
+            int "WiFi Channel"
+            range 1 13
+            default 1
+            help
+                WiFi channel (network channel) for the example to use.
+
+        config ESP_MAX_STA_CONN
+            int "Maximal STA connections"
+            default 4
+            help
+                Max number of the STA connects to AP.
+    endmenu
+
+endmenu

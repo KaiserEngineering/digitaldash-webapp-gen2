@@ -1,0 +1,183 @@
+<script lang="ts">
+	import { Trash2, Loader } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { ImageHandler } from '$lib/image/handler';
+	import { onMount } from 'svelte';
+	import FileUploaderExplorer from './FileUploaderExplorer.svelte';
+	import Spinner from './Spinner.svelte';
+	import toast from 'svelte-5-french-toast';
+	import { fade, scale } from 'svelte/transition';
+	import { quintOut } from 'svelte/easing';
+
+	let {
+		imageNames = [],
+		editable = true,
+		deleteCallback = () => {},
+		uploadBackground = () => {}
+	} = $props();
+
+	const imageHandler = new ImageHandler();
+
+	let failedImages = $state<Record<string | number, boolean>>({});
+	let loadedImages = $state<Record<string | number, string | null>>({});
+	let loadingStates = $state<Record<string | number, boolean>>({});
+	let deletingStates = $state<Record<string | number, boolean>>({});
+	let uploadingStates = $state<Record<string | number, boolean>>({});
+
+	function handleImageError(key: string | number) {
+		// Don't mark as failed if we're currently uploading - it's just the old image failing
+		if (uploadingStates[key]) {
+			return;
+		}
+		failedImages[key] = true;
+		loadedImages[key] = null;
+		loadingStates[key] = false;
+	}
+
+	async function reloadImageSlot(imageName: string) {
+		// Always try to load the image (don't toggle)
+		loadingStates[imageName] = true;
+		failedImages[imageName] = false;
+
+		try {
+			const image = await imageHandler.loadImage(imageName);
+			loadedImages[imageName] = image?.url ?? null;
+
+			if (!image?.url) {
+				failedImages[imageName] = true;
+			}
+		} catch (err) {
+			console.warn(`Failed to reload image: ${imageName}`, err);
+			failedImages[imageName] = true;
+			loadedImages[imageName] = null;
+		}
+
+		loadingStates[imageName] = false;
+	}
+
+	async function handleDelete(imageName: string) {
+		deletingStates[imageName] = true;
+
+		try {
+			await deleteCallback(imageName);
+			await reloadImageSlot(imageName);
+			// Don't show success toast here as it's already shown in deleteBackground function
+		} catch (error) {
+			console.error('Delete failed:', error);
+			// Error toast is already shown in deleteBackground function
+		} finally {
+			deletingStates[imageName] = false;
+		}
+	}
+
+	async function handleUploadSuccess(imageName: string) {
+		uploadingStates[imageName] = true;
+
+		toast.success(`${imageName} uploaded to local storage`);
+		imageHandler.clearCache(imageName);
+		await reloadImageSlot(imageName);
+
+		uploadingStates[imageName] = false;
+	}
+
+	onMount(() => {
+		imageNames.forEach(async (imageName) => {
+			loadingStates[imageName] = true;
+
+			try {
+				const image = await imageHandler.loadImage(imageName);
+				loadedImages[imageName] = image?.url ?? null;
+			} catch {
+				failedImages[imageName] = true;
+			}
+
+			loadingStates[imageName] = false;
+		});
+	});
+</script>
+
+{#if imageNames && imageNames.length > 0}
+	<div class="grid grid-cols-1 justify-items-center gap-6">
+		{#each imageNames as imageName (imageName)}
+			<div class="flex flex-col items-start">
+				{#if loadingStates[imageName]}
+					<div
+						class="border-border bg-muted flex h-40 items-center justify-center rounded-lg border-2 border-dashed"
+					>
+						<Loader class="text-muted-foreground h-6 w-6 animate-spin" />
+					</div>
+				{:else if failedImages[imageName] || !loadedImages[imageName]}
+					<div
+						class="relative"
+						in:fade={{ duration: 300, easing: quintOut }}
+						out:scale={{ duration: 200, easing: quintOut }}
+					>
+						{#if uploadingStates[imageName]}
+							<div
+								class="border-border bg-muted/50 flex h-40 items-center justify-center rounded-lg border-2 border-dashed"
+							>
+								<div class="flex flex-col items-center gap-2">
+									<Loader class="text-primary h-6 w-6 animate-spin" />
+									<span class="text-muted-foreground text-sm">Uploading {imageName}...</span>
+								</div>
+							</div>
+						{:else}
+							<FileUploaderExplorer
+								uploadCallback={uploadBackground}
+								slotName={imageName}
+								onUploaded={() => handleUploadSuccess(imageName)}
+							/>
+						{/if}
+					</div>
+				{:else}
+					<div
+						class="bg-card border-border group relative overflow-hidden rounded-lg border transition-all hover:shadow-md"
+						in:scale={{ duration: 300, easing: quintOut }}
+						out:fade={{ duration: 200, easing: quintOut }}
+					>
+						<div class="m-2">
+							<a href={loadedImages[imageName]} download={`${imageName}.png`} title="Long press to save image">
+								<img
+									src={loadedImages[imageName] || '/placeholder.svg'}
+									alt="{imageName} background"
+									loading="lazy"
+									class="max-h-60 w-full rounded-lg object-cover transition-transform duration-300 group-hover:scale-105"
+									onerror={() => handleImageError(imageName)}
+								/>
+							</a>
+						</div>
+
+						{#if editable}
+							<div
+								class="absolute inset-0 bg-black/0 transition-all duration-200 group-hover:bg-black/10 pointer-events-none"
+							>
+								<div
+									class="absolute top-2 right-2 flex gap-2 transition-opacity duration-200 group-hover:opacity-100 sm:opacity-0 pointer-events-auto"
+								>
+									<Button
+										variant="destructive"
+										size="icon"
+										class="bg-destructive/90 hover:bg-destructive h-8 w-8 rounded-full shadow-md"
+										onclick={() => handleDelete(imageName)}
+										disabled={deletingStates[imageName]}
+									>
+										{#if deletingStates[imageName]}
+											<Loader class="text-destructive-foreground h-4 w-4 animate-spin" />
+										{:else}
+											<Trash2 class="text-destructive-foreground h-4 w-4" />
+										{/if}
+									</Button>
+								</div>
+							</div>
+						{/if}
+					</div>
+				{/if}
+			</div>
+		{/each}
+	</div>
+{:else}
+	<div class="flex flex-col items-center justify-center py-12">
+		<Spinner />
+		<p class="text-muted-foreground mt-4">Loading image slots...</p>
+	</div>
+{/if}
