@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Trash2, Loader } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
+	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { ImageHandler } from '$lib/image/handler';
 	import { onMount } from 'svelte';
 	import FileUploaderExplorer from './FileUploaderExplorer.svelte';
@@ -107,11 +108,7 @@
 		{#each imageNames as imageName (imageName)}
 			<div class="flex flex-col items-start">
 				{#if loadingStates[imageName]}
-					<div
-						class="border-border bg-muted flex h-40 items-center justify-center rounded-lg border-2 border-dashed"
-					>
-						<Loader class="text-muted-foreground h-6 w-6 animate-spin" />
-					</div>
+					<Skeleton class="h-40 w-full rounded-lg" />
 				{:else if failedImages[imageName] || !loadedImages[imageName]}
 					<div
 						class="relative"
