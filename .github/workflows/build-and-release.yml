@@ -37,6 +37,11 @@ jobs:
           yarn install --frozen-lockfile
           yarn build
 
+      # Copy built frontend to ESP32 static files
+      - name: Copy Frontend to ESP32
+        run: |
+          cp front/build/index.html.gz components/web_server/static/index.html.gz
+
       # Build with ESP-IDF
       - name: Build with ESP-IDF
         uses: espressif/esp-idf-ci-action@v1
