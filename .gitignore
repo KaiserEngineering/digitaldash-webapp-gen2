@@ -118,3 +118,11 @@ managed_components/
 *.old
 
 !front/web-demo/dist/index.html
+
+# Frontend build artifacts and cache
+**/.yarn/install-state.gz
+front/svelte-kit/
+front/static/spiffs/
+
+# VSCode workspace files
+*.code-workspace
