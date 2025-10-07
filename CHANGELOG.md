@@ -1,5 +1,15 @@
 
-## 1.04
+## 1.0.5
+
+### Features
+- **Web App**: Add view breadcrumb to top navigation
+- **Web App**: Add Skeleton loading
+
+### Bug Fixes
+- **Web App**: Fixed file deletion on Device Info page to update UI without page refresh
+- **Web App**: Clear image cache when deleting background images to keep Backgrounds page in sync
+
+## 1.0.4
 
 ### Device Information & Storage Management
 - **Web App**: Added new "Device Info" page to monitor flash storage usage and manage files
@@ -22,12 +32,12 @@
 - **Web App**: Fixed Advanced page save functionality to work with current config store architecture
 - **Web App**: Added proper success notifications and error handling for configuration saves
 
-## 1.03
+## 1.0.3
 
 - **Web App**: Implemented unsaved changes persistence - form edits now persist when navigating between pages
 - **Web App**: Simplified save workflow - changes update immediately in preview while only saving to backend on explicit user action
 
-## 1.02
+## 1.0.2
 
 - **Web App**: Fixed issue where saved configurations would revert when navigating between pages
 - **Web App**: Standardized all data stores to use consistent caching patterns
