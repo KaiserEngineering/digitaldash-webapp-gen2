@@ -473,12 +473,20 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
 
     if (req->content_len > MAX_FILE_SIZE) {
         ESP_LOGW(TAG, "File too large: %d bytes (max: %d)", req->content_len, MAX_FILE_SIZE);
-        return httpd_resp_send_err(req, HTTPD_413_PAYLOAD_TOO_LARGE, "File too large");
+        httpd_resp_set_type(req, "application/json");
+        char response[256];
+        snprintf(response, sizeof(response),
+                 "{\"message\":\"File too large: %d bytes (max: %d bytes)\"}",
+                 req->content_len, MAX_FILE_SIZE);
+        httpd_resp_set_status(req, "413 Payload Too Large");
+        return httpd_resp_sendstr(req, response);
     }
 
     if (req->content_len == 0) {
         ESP_LOGW(TAG, "No content received");
-        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "No file content");
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_set_status(req, "400 Bad Request");
+        return httpd_resp_sendstr(req, "{\"message\":\"No file content - request body is empty\"}");
     }
 
     // Extract filename from URI path (after /api/spiffs/)
@@ -491,7 +499,9 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
 
     if (!filename || strlen(filename) == 0) {
         ESP_LOGW(TAG, "No filename in URI path");
-        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing filename in path");
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_set_status(req, "400 Bad Request");
+        return httpd_resp_sendstr(req, "{\"message\":\"Missing filename in URL path\"}");
     }
 
     ESP_LOGI(TAG, "Uploading file: %s", filename);
@@ -501,13 +511,21 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
 
     FILE *file = file_handler_open_write(filepath);
     if (!file) {
-        ESP_LOGE(TAG, "Failed to open file for writing: %s", filepath);
-        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to create file");
+        ESP_LOGE(TAG, "Failed to open file for writing: %s (errno: %d)", filepath, errno);
+        httpd_resp_set_type(req, "application/json");
+        char response[256];
+        snprintf(response, sizeof(response),
+                 "{\"message\":\"Failed to create file on storage (error code: %d)\"}",
+                 errno);
+        httpd_resp_set_status(req, "500 Internal Server Error");
+        return httpd_resp_sendstr(req, response);
     }
 
     int remaining = req->content_len;
     char buf[SPIFFS_WRITE_SIZE];
     int total_received = 0;
+    int timeout_count = 0;
+    const int MAX_TIMEOUTS = 10;
 
     while (remaining > 0) {
         int recv_len = MIN(remaining, (int)sizeof(buf));
@@ -515,28 +533,60 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
 
         if (received < 0) {
             if (received == HTTPD_SOCK_ERR_TIMEOUT) {
-                // retry instead of failing immediately
-                ESP_LOGW(TAG, "Socket timeout, retrying...");
+                timeout_count++;
+                ESP_LOGW(TAG, "Socket timeout #%d, retrying...", timeout_count);
+                if (timeout_count >= MAX_TIMEOUTS) {
+                    ESP_LOGE(TAG, "Max timeouts exceeded");
+                    file_handler_close(file);
+                    file_handler_delete(filepath);
+                    httpd_resp_set_type(req, "application/json");
+                    char response[256];
+                    snprintf(response, sizeof(response),
+                             "{\"message\":\"Upload timeout after %d retries. Received %d of %d bytes\"}",
+                             MAX_TIMEOUTS, total_received, req->content_len);
+                    httpd_resp_set_status(req, "408 Request Timeout");
+                    return httpd_resp_sendstr(req, response);
+                }
                 continue;
             }
-            ESP_LOGE(TAG, "Socket error: %d", received);
+            ESP_LOGE(TAG, "Socket error: %d (errno: %d)", received, errno);
             file_handler_close(file);
             file_handler_delete(filepath);
-            return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File upload failed");
+            httpd_resp_set_type(req, "application/json");
+            char response[256];
+            snprintf(response, sizeof(response),
+                     "{\"message\":\"Network error (code %d) after receiving %d of %d bytes\"}",
+                     received, total_received, req->content_len);
+            httpd_resp_set_status(req, "500 Internal Server Error");
+            return httpd_resp_sendstr(req, response);
         } else if (received == 0) {
-            // unexpected end of stream
             ESP_LOGE(TAG, "Connection closed before file fully received");
             file_handler_close(file);
             file_handler_delete(filepath);
-            return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File upload incomplete");
+            httpd_resp_set_type(req, "application/json");
+            char response[256];
+            snprintf(response, sizeof(response),
+                     "{\"message\":\"Connection closed - received only %d of %d bytes\"}",
+                     total_received, req->content_len);
+            httpd_resp_set_status(req, "500 Internal Server Error");
+            return httpd_resp_sendstr(req, response);
         }
+
+        // Reset timeout counter on successful receive
+        timeout_count = 0;
 
         size_t written = fwrite(buf, 1, received, file);
         if (written != received) {
-            ESP_LOGE(TAG, "Error writing to file (%d vs %d)", written, received);
+            ESP_LOGE(TAG, "Error writing to file (%zu vs %d, errno: %d)", written, received, errno);
             file_handler_close(file);
             file_handler_delete(filepath);
-            return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File write failed");
+            httpd_resp_set_type(req, "application/json");
+            char response[256];
+            snprintf(response, sizeof(response),
+                     "{\"message\":\"Write failed after %d bytes - storage may be full (error: %d)\"}",
+                     total_received, errno);
+            httpd_resp_set_status(req, "500 Internal Server Error");
+            return httpd_resp_sendstr(req, response);
         }
 
         remaining -= received;
@@ -547,8 +597,9 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
 
     ESP_LOGI(TAG, "File uploaded successfully: %s (%d bytes)", filepath, total_received);
 
-    // Respond
+    // Success response
     httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_status(req, "200 OK");
     char response[256];
     snprintf(response, sizeof(response),
              "{\"message\":\"File uploaded successfully\",\"filename\":\"%s\",\"size\":%d}",
