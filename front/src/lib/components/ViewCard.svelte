@@ -37,8 +37,7 @@
 					}
 				}
 			} catch (error) {
-				console.warn(`Failed to load background "${view.background}":`, error);
-				toast.error(`Failed to load background: ${(error as Error).message}`);
+				// Silently handle missing backgrounds - STM32 may reference deleted images
 				backgroundUrl = '';
 			}
 

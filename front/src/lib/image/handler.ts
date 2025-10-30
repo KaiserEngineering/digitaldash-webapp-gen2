@@ -120,7 +120,9 @@ export class ImageHandler {
 	async preloadImages(names: string[]): Promise<void> {
 		await Promise.allSettled(
 			names.map((name) =>
-				this.loadImage(name).catch((err) => console.warn(`Preload failed for ${name}:`, err))
+				this.loadImage(name).catch(() => {
+					// Silently handle missing backgrounds - STM32 may reference deleted images
+				})
 			)
 		);
 	}
