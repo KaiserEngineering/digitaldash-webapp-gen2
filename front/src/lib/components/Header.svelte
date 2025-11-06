@@ -13,7 +13,8 @@
 		ChevronDown,
 		Moon,
 		Sun,
-		HardDrive
+		HardDrive,
+		Wrench
 	} from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
 	import { page } from '$app/state';
@@ -28,6 +29,7 @@
 		{ label: 'Backgrounds', value: 'backgrounds', icon: Image },
 		{ label: 'Dynamic', value: 'dynamic', icon: Zap },
 		{ label: 'Alerts', value: 'alerts', icon: Bell },
+		{ label: 'Settings', value: 'settings', icon: Wrench },
 		{ label: 'Advanced', value: 'advanced', icon: Settings },
 		{ label: 'Device Info', value: 'device/info', icon: HardDrive },
 		{
