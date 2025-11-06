@@ -179,7 +179,7 @@
 					<div
 						class="bg-muted/30 border-border/30 rounded-2xl border p-2 shadow-lg backdrop-blur-sm"
 					>
-						<div class="flex justify-center gap-1">
+						<div class="flex flex-wrap justify-start gap-1 md:gap-2">
 							{#each tabs as tab (tab.value)}
 								{@const TabIcon = tab.icon}
 								{@const isActive =
@@ -192,7 +192,7 @@
 									<!-- Dropdown for Firmware -->
 									<div class="firmware-dropdown relative">
 										<button
-											class={`group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300 ${
+											class={`group flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-300 md:gap-3 md:px-4 md:py-3 ${
 												isActive
 													? 'bg-background text-foreground border-border/50 scale-105 border shadow-md'
 													: 'text-muted-foreground hover:text-foreground hover:bg-background/80 hover:scale-105 hover:shadow-sm'
@@ -239,7 +239,7 @@
 								{:else}
 									<a
 										href={'/' + tab.value}
-										class={`group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300 ${
+										class={`group flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-300 md:gap-3 md:px-4 md:py-3 ${
 											isActive
 												? 'bg-background text-foreground border-border/50 scale-105 border shadow-md'
 												: 'text-muted-foreground hover:text-foreground hover:bg-background/80 hover:scale-105 hover:shadow-sm'
