@@ -19,9 +19,11 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
+        working-directory: ./front
         run: yarn install --frozen-lockfile
 
       - name: Run unit tests
+        working-directory: ./front
         run: yarn test:unit:run
 
   e2e-tests:
@@ -36,12 +38,15 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
+        working-directory: ./front
         run: yarn install --frozen-lockfile
 
       - name: Install Playwright Browsers
+        working-directory: ./front
         run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests
+        working-directory: ./front
         run: yarn test:e2e
 
       - name: Upload Playwright Report
@@ -49,7 +54,7 @@ jobs:
         if: always()
         with:
           name: playwright-report
-          path: playwright-report/
+          path: front/playwright-report/
           retention-days: 30
 
   lint:
@@ -64,10 +69,13 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
+        working-directory: ./front
         run: yarn install --frozen-lockfile
 
       - name: Run linter
+        working-directory: ./front
         run: yarn lint
 
       - name: Run type check
+        working-directory: ./front
         run: yarn check
