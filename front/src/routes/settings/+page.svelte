@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Wrench, Save, Loader, Info } from 'lucide-svelte';
+	import { Wrench, Save, Loader, Info, Download, Upload, FileJson } from 'lucide-svelte';
 	import { Input } from '@/components/ui/input/index.js';
 	import { Label } from '@/components/ui/label/index.js';
 	import { Button } from '@/components/ui/button/index.js';
@@ -9,6 +9,8 @@
 	import { DigitalDashSchema } from '$schemas/digitaldash';
 	import { updateConfig } from '$lib/utils/updateConfig';
 	import { handleError, withRetry } from '$lib/utils/errorHandling';
+	import { exportConfig, importConfig } from '$lib/utils/configBackup';
+	import { configStore } from '$lib/stores/configStore';
 	import toast from 'svelte-5-french-toast';
 
 	let { data } = $props();
@@ -61,6 +63,91 @@
 			}
 		}
 	});
+
+	let fileInput: HTMLInputElement;
+	let isImporting = $state(false);
+
+	/**
+	 * Handle export configuration
+	 */
+	function handleExport() {
+		const config = configStore.getValue();
+		if (!config) {
+			toast.error('No configuration loaded to export');
+			return;
+		}
+
+		try {
+			exportConfig(config);
+			toast.success('Configuration exported successfully!');
+		} catch (e) {
+			handleError(e, {
+				context: 'Exporting configuration',
+				fallbackMessage: 'Failed to export configuration'
+			});
+		}
+	}
+
+	/**
+	 * Handle import configuration
+	 */
+	async function handleImport(event: Event) {
+		const input = event.target as HTMLInputElement;
+		const file = input.files?.[0];
+
+		if (!file) return;
+
+		isImporting = true;
+
+		try {
+			const importedConfig = await importConfig(file);
+
+			// Save imported configuration to device
+			await withRetry(
+				async () => {
+					const response = await fetch('/api/config', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify(importedConfig)
+					});
+
+					if (!response.ok) {
+						throw new Error('Failed to save imported configuration to device');
+					}
+
+					// Update local store
+					configStore.setConfig(importedConfig);
+
+					// Update form data
+					$form.general = importedConfig.general || [];
+
+					toast.success('Configuration imported and saved successfully!');
+				},
+				{
+					maxRetries: 2,
+					delay: 1000
+				}
+			);
+		} catch (e) {
+			handleError(e, {
+				context: 'Importing configuration',
+				fallbackMessage: 'Failed to import configuration'
+			});
+		} finally {
+			isImporting = false;
+			// Reset file input
+			input.value = '';
+		}
+	}
+
+	/**
+	 * Trigger file input click
+	 */
+	function triggerFileInput() {
+		fileInput?.click();
+	}
 </script>
 
 <form method="POST" use:enhance>
@@ -86,6 +173,61 @@
 					</div>
 				</div>
 			{/if}
+
+			<!-- Configuration Backup/Restore Section -->
+			<div class="border-border space-y-4 rounded-xl border-2 bg-card/50 p-6">
+				<div class="flex items-center gap-2">
+					<FileJson class="text-primary h-5 w-5" />
+					<h3 class="text-foreground text-lg font-semibold">Configuration Backup</h3>
+				</div>
+				<p class="text-muted-foreground text-sm">
+					Export your complete dashboard configuration to save as a backup or share with others.
+					Import previously saved configurations to quickly restore your settings.
+				</p>
+
+				<div class="flex flex-col gap-3 sm:flex-row">
+					<Button
+						type="button"
+						onclick={handleExport}
+						class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-emerald-200 bg-emerald-50 font-semibold text-emerald-700 transition-all duration-200 hover:border-emerald-300 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-900"
+					>
+						<Download class="h-4 w-4" />
+						Export Configuration
+					</Button>
+
+					<input
+						type="file"
+						accept=".json"
+						bind:this={fileInput}
+						onchange={handleImport}
+						class="hidden"
+					/>
+
+					<Button
+						type="button"
+						onclick={triggerFileInput}
+						disabled={isImporting}
+						class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-blue-200 bg-blue-50 font-semibold text-blue-700 transition-all duration-200 hover:border-blue-300 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300 dark:hover:border-blue-700 dark:hover:bg-blue-900"
+					>
+						{#if isImporting}
+							<Loader class="h-4 w-4 animate-spin" />
+							Importing...
+						{:else}
+							<Upload class="h-4 w-4" />
+							Import Configuration
+						{/if}
+					</Button>
+				</div>
+
+				<div
+					class="rounded-lg border border-orange-200 bg-orange-50 p-3 dark:border-orange-800 dark:bg-orange-900/20"
+				>
+					<p class="text-xs text-orange-800 dark:text-orange-200">
+						<strong>Note:</strong> Importing a configuration will overwrite your current settings. Make
+						sure to export your current configuration first if you want to keep it.
+					</p>
+				</div>
+			</div>
 
 			<div class="space-y-3 {settingsUnavailable ? 'opacity-50' : ''}">
 				<Label class="text-foreground text-sm font-semibold">Firmware Version</Label>
