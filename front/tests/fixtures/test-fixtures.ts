@@ -62,7 +62,7 @@ type TestFixtures = {
  * Extended test with custom fixtures
  */
 export const test = base.extend<TestFixtures>({
-	mockData: async ({}, use) => {
+	mockData: async (_, use) => {
 		await use(mockConfig);
 	}
 });

@@ -5,8 +5,9 @@
  * Copy this file and modify it for your specific test needs.
  */
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { test, expect } from '@playwright/test';
-import { navigateToRoute, waitForPageReady, expectVisible } from './utils/test-helpers';
+import { navigateToRoute, waitForPageReady } from './utils/test-helpers';
 
 test.describe.skip('Example Test Suite', () => {
 	// Runs before each test in this describe block

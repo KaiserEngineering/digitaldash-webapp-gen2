@@ -50,7 +50,6 @@ test.describe('Navigation', () => {
 		// Navigate to settings
 		await page.goto('/settings');
 		await waitForPageReady(page);
-		const settingsContent = await page.textContent('body');
 
 		// Navigate away
 		await page.goto('/');
