@@ -8,16 +8,12 @@ test.describe('Settings Page', () => {
 
 	test('should display the settings page with correct title', async ({ page }) => {
 		// Check page title - wait up to 10 seconds for content to load
-		await expect(
-			page.locator('main').getByText('Settings', { exact: true }).first()
-		).toBeVisible({
+		await expect(page.locator('main').getByText('Settings', { exact: true }).first()).toBeVisible({
 			timeout: 10000
 		});
 
 		// Check description
-		await expect(
-			page.locator('text=Configure your Digital Dash system preferences')
-		).toBeVisible();
+		await expect(page.locator('text=Configure your Digital Dash system preferences')).toBeVisible();
 	});
 
 	test('should show firmware version field', async ({ page }) => {
@@ -77,9 +73,7 @@ test.describe('Settings Page', () => {
 
 		// Check warning note
 		await expect(
-			page.locator(
-				'text=Importing a configuration will overwrite your current settings'
-			)
+			page.locator('text=Importing a configuration will overwrite your current settings')
 		).toBeVisible();
 	});
 
@@ -100,9 +94,7 @@ test.describe('Settings Page', () => {
 		if (isVisible) {
 			// If warning is shown, verify all expected elements
 			await expect(page.locator('text=General settings are not available')).toBeVisible();
-			await expect(
-				page.locator('text=Please update your Digital Dash firmware')
-			).toBeVisible();
+			await expect(page.locator('text=Please update your Digital Dash firmware')).toBeVisible();
 
 			// Verify save button is disabled
 			const saveButton = page.locator('button:has-text("Save Settings")');

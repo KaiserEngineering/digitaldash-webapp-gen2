@@ -175,7 +175,7 @@
 			{/if}
 
 			<!-- Configuration Backup/Restore Section -->
-			<div class="border-border space-y-4 rounded-xl border-2 bg-card/50 p-6">
+			<div class="border-border bg-card/50 space-y-4 rounded-xl border-2 p-6">
 				<div class="flex items-center gap-2">
 					<FileJson class="text-primary h-5 w-5" />
 					<h3 class="text-foreground text-lg font-semibold">Configuration Backup</h3>

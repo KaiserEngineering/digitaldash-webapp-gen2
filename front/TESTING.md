@@ -3,12 +3,14 @@
 ## Overview
 
 This project now includes a comprehensive testing suite using:
+
 - **Playwright** for end-to-end (E2E) testing
 - **Vitest** for unit testing (already configured)
 
 ## Quick Start
 
 ### Install Dependencies
+
 ```bash
 yarn install
 ```
@@ -45,6 +47,7 @@ yarn test:e2e:report
 We have **100+ test cases** covering:
 
 #### 1. **Home Page Tests** (`tests/e2e/home.spec.ts`)
+
 - 17 tests covering:
   - Page loading and rendering
   - Dashboard and view cards
@@ -55,6 +58,7 @@ We have **100+ test cases** covering:
   - Active/inactive states
 
 #### 2. **Settings Page Tests** (`tests/e2e/settings.spec.ts`)
+
 - 14 tests covering:
   - Page display and structure
   - Firmware version display
@@ -67,6 +71,7 @@ We have **100+ test cases** covering:
   - Button states and styling
 
 #### 3. **Navigation Tests** (`tests/e2e/navigation.spec.ts`)
+
 - 6 tests covering:
   - Route navigation across all pages
   - Browser back/forward buttons
@@ -75,6 +80,7 @@ We have **100+ test cases** covering:
   - Error handling
 
 #### 4. **Alerts Page Tests** (`tests/e2e/alerts.spec.ts`)
+
 - 4 tests covering:
   - Page display
   - Navigation from home
@@ -82,6 +88,7 @@ We have **100+ test cases** covering:
   - JavaScript error detection
 
 #### 5. **Accessibility Tests** (`tests/e2e/accessibility.spec.ts`)
+
 - 50+ tests covering:
   - Page titles for all routes
   - Keyboard navigation
@@ -113,6 +120,7 @@ tests/
 ## Key Features
 
 ### Test Helpers
+
 The `test-helpers.ts` provides utilities for common tasks:
 
 ```typescript
@@ -133,20 +141,23 @@ const value = await getLocalStorage(page, 'key');
 ```
 
 ### Test Fixtures
+
 Mock data is available through fixtures:
 
 ```typescript
 import { test, expect } from '../fixtures/test-fixtures';
 
 test('uses mock data', async ({ page, mockData }) => {
-  // Access mock configuration
-  console.log(mockData.general);
-  console.log(mockData.alerts);
+	// Access mock configuration
+	console.log(mockData.general);
+	console.log(mockData.alerts);
 });
 ```
 
 ### Example Template
+
 Use `tests/example.spec.ts` as a template for creating new tests. It includes examples of:
+
 - Basic page navigation
 - Element interaction
 - Form filling
@@ -160,21 +171,26 @@ Use `tests/example.spec.ts` as a template for creating new tests. It includes ex
 ### GitHub Actions Workflows
 
 #### 1. `test.yml` - Full Test Suite
+
 Runs on push/PR to main/master/develop:
+
 - Unit tests
 - E2E tests
 - Linting
 - Type checking
 
 #### 2. `playwright.yml` - Playwright Tests Only
+
 Focused workflow for E2E tests with detailed reporting.
 
 ### Artifacts
+
 Test reports and results are uploaded as artifacts and retained for 30 days.
 
 ## Configuration
 
 ### Playwright Config (`playwright.config.ts`)
+
 - **Test Directory**: `./tests`
 - **Base URL**: `http://localhost:4173`
 - **Browser**: Chromium (Firefox and WebKit available)
@@ -185,6 +201,7 @@ Test reports and results are uploaded as artifacts and retained for 30 days.
 - **Parallel**: Full parallelization enabled
 
 ### Vitest Config (`vite.config.ts`)
+
 - **Test Files**: `src/**/*.{test,spec}.{js,ts}`
 - Already configured for unit testing
 
@@ -197,13 +214,13 @@ import { test, expect } from '@playwright/test';
 import { navigateToRoute } from '../utils/test-helpers';
 
 test.describe('My Feature', () => {
-  test.beforeEach(async ({ page }) => {
-    await navigateToRoute(page, '/my-route');
-  });
+	test.beforeEach(async ({ page }) => {
+		await navigateToRoute(page, '/my-route');
+	});
 
-  test('should do something', async ({ page }) => {
-    await expect(page.locator('.element')).toBeVisible();
-  });
+	test('should do something', async ({ page }) => {
+		await expect(page.locator('.element')).toBeVisible();
+	});
 });
 ```
 
@@ -241,25 +258,33 @@ yarn test:e2e:headed
 ## Debugging
 
 ### Visual Debugging (Recommended)
+
 ```bash
 yarn test:e2e:ui
 ```
+
 Opens an interactive UI to run, debug, and inspect tests.
 
 ### Step-by-Step Debugging
+
 ```bash
 yarn test:e2e:debug
 ```
+
 Opens Playwright Inspector for step-by-step debugging.
 
 ### View Test Report
+
 ```bash
 yarn test:e2e:report
 ```
+
 Opens HTML report of last test run.
 
 ### Trace Viewer
+
 After a failed test:
+
 ```bash
 npx playwright show-trace test-results/path-to-trace.zip
 ```
@@ -267,14 +292,17 @@ npx playwright show-trace test-results/path-to-trace.zip
 ## Common Issues
 
 ### Port 4173 Already in Use
+
 Either stop the process using that port or change it in `playwright.config.ts`.
 
 ### Tests Timing Out
+
 - Ensure dev server is running
 - Check network conditions
 - Increase timeout if needed
 
 ### Browser Not Found
+
 ```bash
 npx playwright install chromium
 ```
@@ -282,16 +310,19 @@ npx playwright install chromium
 ## Running Tests in Different Environments
 
 ### Local Development
+
 ```bash
 yarn test:e2e:ui  # Interactive, best for development
 ```
 
 ### CI/CD
+
 ```bash
 yarn test  # Runs all tests once
 ```
 
 ### Pre-commit
+
 ```bash
 yarn test:unit:run  # Quick unit tests before committing
 ```
@@ -324,6 +355,7 @@ yarn test:unit:run  # Quick unit tests before committing
 ## Maintenance
 
 ### Updating Dependencies
+
 ```bash
 # Update Playwright
 yarn add -D @playwright/test@latest
@@ -333,9 +365,11 @@ npx playwright install chromium
 ```
 
 ### Adding New Routes
+
 When adding new routes, create corresponding test files in `tests/e2e/` and add route tests to `navigation.spec.ts` and `accessibility.spec.ts`.
 
 ### Test Coverage Goals
+
 - Aim for >80% route coverage
 - All critical user flows should have E2E tests
 - Complex components should have unit tests

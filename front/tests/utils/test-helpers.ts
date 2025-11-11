@@ -99,10 +99,7 @@ export async function getLocalStorage(page: Page, key: string): Promise<string |
  * Set localStorage value
  */
 export async function setLocalStorage(page: Page, key: string, value: string) {
-	await page.evaluate(
-		({ k, v }) => localStorage.setItem(k, v),
-		{ k: key, v: value }
-	);
+	await page.evaluate(({ k, v }) => localStorage.setItem(k, v), { k: key, v: value });
 }
 
 /**

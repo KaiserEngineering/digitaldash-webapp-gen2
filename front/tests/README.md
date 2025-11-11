@@ -62,6 +62,7 @@ yarn test:all
 ## Test Categories
 
 ### Home Page Tests (`home.spec.ts`)
+
 - Dashboard loading and display
 - View cards rendering
 - System overview (alerts and dynamic rules)
@@ -70,6 +71,7 @@ yarn test:all
 - Responsive layout
 
 ### Settings Page Tests (`settings.spec.ts`)
+
 - Settings page display and structure
 - Firmware version field
 - Splash screen duration input
@@ -79,6 +81,7 @@ yarn test:all
 - Responsive design
 
 ### Navigation Tests (`navigation.spec.ts`)
+
 - Route navigation
 - Browser back/forward buttons
 - State preservation
@@ -86,6 +89,7 @@ yarn test:all
 - Error handling
 
 ### Accessibility Tests (`accessibility.spec.ts`)
+
 - Page titles
 - Keyboard navigation
 - Console error checking
@@ -95,6 +99,7 @@ yarn test:all
 - Responsive design across viewports
 
 ### Alerts Page Tests (`alerts.spec.ts`)
+
 - Page loading
 - Navigation from home
 - Error-free rendering
@@ -108,14 +113,14 @@ import { test, expect } from '@playwright/test';
 import { navigateToRoute, waitForPageReady } from '../utils/test-helpers';
 
 test.describe('Feature Name', () => {
-  test.beforeEach(async ({ page }) => {
-    await navigateToRoute(page, '/route');
-  });
+	test.beforeEach(async ({ page }) => {
+		await navigateToRoute(page, '/route');
+	});
 
-  test('should do something', async ({ page }) => {
-    // Test implementation
-    await expect(page.locator('selector')).toBeVisible();
-  });
+	test('should do something', async ({ page }) => {
+		// Test implementation
+		await expect(page.locator('selector')).toBeVisible();
+	});
 });
 ```
 
@@ -140,8 +145,8 @@ Import custom fixtures for mock data:
 import { test, expect } from '../fixtures/test-fixtures';
 
 test('should use mock data', async ({ page, mockData }) => {
-  // mockData contains predefined test data
-  console.log(mockData.general);
+	// mockData contains predefined test data
+	console.log(mockData.general);
 });
 ```
 
@@ -182,22 +187,27 @@ Test results and reports are uploaded as artifacts and retained for 30 days.
 ## Debugging Tips
 
 ### Visual Debugging
+
 ```bash
 yarn test:e2e:ui
 ```
 
 ### Step-by-Step Debugging
+
 ```bash
 yarn test:e2e:debug
 ```
 
 ### See Browser Actions
+
 ```bash
 yarn test:e2e:headed
 ```
 
 ### Trace Viewer
+
 After a test run, view traces:
+
 ```bash
 npx playwright show-trace test-results/path-to-trace.zip
 ```
@@ -205,14 +215,18 @@ npx playwright show-trace test-results/path-to-trace.zip
 ## Common Issues
 
 ### Port Already in Use
+
 If port 4173 is in use, either:
+
 - Stop the process using that port
 - Change the port in `playwright.config.ts`
 
 ### Browser Not Installed
+
 Run: `npx playwright install chromium`
 
 ### Tests Timing Out
+
 - Check if the dev server is running
 - Increase timeout in test configuration
 - Check network conditions

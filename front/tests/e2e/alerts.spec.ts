@@ -19,7 +19,10 @@ test.describe('Alerts Page', () => {
 		expect(pageContent).toBeTruthy();
 
 		// Page should load without errors
-		const hasError = await page.locator('text=/error|404/i').isVisible().catch(() => false);
+		const hasError = await page
+			.locator('text=/error|404/i')
+			.isVisible()
+			.catch(() => false);
 		expect(hasError).toBeFalsy();
 	});
 

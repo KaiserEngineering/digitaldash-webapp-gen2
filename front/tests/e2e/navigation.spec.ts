@@ -22,7 +22,10 @@ test.describe('Navigation', () => {
 			await waitForPageReady(page);
 
 			// Verify no error page is shown
-			const hasError = await page.locator('text=/error|404|not found/i').isVisible().catch(() => false);
+			const hasError = await page
+				.locator('text=/error|404|not found/i')
+				.isVisible()
+				.catch(() => false);
 			expect(hasError).toBeFalsy();
 
 			// Verify page has loaded content

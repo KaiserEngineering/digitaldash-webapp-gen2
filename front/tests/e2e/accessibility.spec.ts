@@ -51,7 +51,10 @@ test.describe('Accessibility', () => {
 
 			// Log errors for debugging but don't fail the test for minor issues
 			if (criticalErrors.length > 0) {
-				console.log(`Console errors on ${route}:`, criticalErrors.map((e) => e.message));
+				console.log(
+					`Console errors on ${route}:`,
+					criticalErrors.map((e) => e.message)
+				);
 			}
 
 			// Should have no critical errors

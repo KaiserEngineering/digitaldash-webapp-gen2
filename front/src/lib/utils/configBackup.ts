@@ -32,8 +32,7 @@ export function exportConfig(config: DigitalDash, filename?: string): void {
 
 	const link = document.createElement('a');
 	link.href = url;
-	link.download =
-		filename || `digitaldash-config-${new Date().toISOString().slice(0, 10)}.json`;
+	link.download = filename || `digitaldash-config-${new Date().toISOString().slice(0, 10)}.json`;
 
 	document.body.appendChild(link);
 	link.click();
