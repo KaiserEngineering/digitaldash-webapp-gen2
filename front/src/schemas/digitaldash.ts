@@ -118,17 +118,28 @@ export const DynamicSchema = z.object({
 });
 
 /**
+ * General settings structure
+ * Contains system-wide configuration like version and splash screen
+ */
+export const GeneralSchema = z.object({
+	EE_Version: z.number().int(), // Readonly - firmware version, not user-editable
+	Splash: z.number().int()
+});
+
+/**
  * Root digitaldash struct
  * typedef struct {
  *   digitaldash_view view[MAX_VIEWS];
  *   digitaldash_alert alert[MAX_ALERTS];
  *   digitaldash_dynamic dynamic[NUM_DYNAMIC];
+ *   digitaldash_general general[];
  * } digitaldash;
  */
 export const DigitalDashSchema = z.object({
 	view: z.array(ViewSchema).max(MAX_VIEWS),
 	alert: z.array(AlertSchema).max(MAX_ALERTS),
-	dynamic: z.array(DynamicSchema).max(NUM_DYNAMIC)
+	dynamic: z.array(DynamicSchema).max(NUM_DYNAMIC),
+	general: z.array(GeneralSchema).optional()
 });
 
 /**
@@ -139,5 +150,6 @@ export type DigitalDashView = z.infer<typeof ViewSchema>;
 export type DigitalDashGauge = z.infer<typeof GaugeSchema>;
 export type DigitalDashAlert = z.infer<typeof AlertSchema>;
 export type DigitalDashDynamic = z.infer<typeof DynamicSchema>;
+export type DigitalDashGeneral = z.infer<typeof GeneralSchema>;
 export type DigitalDashCompare = z.infer<typeof CompareEnum>;
 export type DigitalDashPriority = z.infer<typeof PriorityEnum>;
