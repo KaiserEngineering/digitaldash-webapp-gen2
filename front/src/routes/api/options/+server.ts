@@ -42,7 +42,8 @@ export async function GET() {
 			'Greater Than Or Equal To',
 			'Equal',
 			'Not Equal'
-		]
+		],
+		can_bus_mode: ['Normal Mode', 'Listen Only']
 	};
 
 	return json(options);

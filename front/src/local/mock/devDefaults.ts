@@ -117,7 +117,8 @@ export const devConfig: DigitalDash = {
 	general: [
 		{
 			EE_Version: 68,
-			splash: "Dog"
+			splash: 5,
+			can_bus_mode: 'Normal Mode'
 		}
 	]
 };

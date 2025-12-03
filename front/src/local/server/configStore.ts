@@ -22,7 +22,12 @@ export const configStore = {
 			| undefined;
 		if (row) {
 			const parsed = DigitalDashSchema.safeParse(JSON.parse(row.value));
-			if (parsed.success) return parsed.data;
+			if (parsed.success) {
+				return parsed.data;
+			} else {
+				console.error('Stored config failed validation:', parsed.error.format());
+				console.warn('Falling back to default config due to validation errors');
+			}
 		}
 
 		// no saved config? use devConfig
@@ -39,7 +44,10 @@ export const configStore = {
 
 	async set(config: unknown): Promise<boolean> {
 		const parsed = DigitalDashSchema.safeParse(config);
-		if (!parsed.success) return false;
+		if (!parsed.success) {
+			console.error('Failed to save config - validation errors:', parsed.error.format());
+			return false;
+		}
 
 		const json = JSON.stringify(parsed.data);
 

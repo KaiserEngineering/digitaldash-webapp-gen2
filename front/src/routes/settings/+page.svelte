@@ -3,6 +3,7 @@
 	import { Input } from '@/components/ui/input/index.js';
 	import { Label } from '@/components/ui/label/index.js';
 	import { Button } from '@/components/ui/button/index.js';
+	import * as Select from '@/components/ui/select/index.js';
 	import PageCard from '@/components/PageCard.svelte';
 	import { superForm } from 'sveltekit-superforms';
 	import { zod4 } from 'sveltekit-superforms/adapters';
@@ -36,6 +37,9 @@
 								// Update only fields that exist in the form data
 								if ('splash' in formData.data.general![0]) {
 									config.general[0].splash = formData.data.general![0].splash;
+								}
+								if ('can_bus_mode' in formData.data.general![0]) {
+									config.general[0].can_bus_mode = formData.data.general![0].can_bus_mode;
 								}
 							}
 						});
@@ -213,6 +217,42 @@
 				{/if}
 				<p class="text-muted-foreground text-xs">
 					Set how long the splash screen displays (in seconds). Use 0 for an instant startup
+				</p>
+			</div>
+
+			<div class="space-y-3">
+				<Label for="can_bus_mode" class="text-foreground text-sm font-semibold">CAN Bus Mode</Label>
+				{#if hasField(generalSettings, 'can_bus_mode') && $form.general && $form.general[0] && data.options.can_bus_mode}
+					<Select.Root bind:value={$form.general[0].can_bus_mode} type="single">
+						<Select.Trigger
+							class="border-border bg-card h-12 rounded-xl border-2 transition-all duration-200 hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+						>
+							<span
+								class={$form.general[0].can_bus_mode ? 'text-foreground' : 'text-muted-foreground'}
+							>
+								{$form.general[0].can_bus_mode || 'Select CAN Bus Mode'}
+							</span>
+						</Select.Trigger>
+						<Select.Content class="border-border rounded-xl border-2 shadow-xl">
+							{#each data.options.can_bus_mode as mode}
+								<Select.Item value={mode} label={mode} class="rounded-lg py-3 hover:bg-emerald-50">
+									{mode}
+								</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
+				{:else}
+					<Select.Root type="single" disabled>
+						<Select.Trigger
+							class="border-border bg-muted h-12 cursor-not-allowed rounded-xl border-2 opacity-50 transition-all duration-200"
+						>
+							<span class="text-muted-foreground">Not available</span>
+						</Select.Trigger>
+					</Select.Root>
+				{/if}
+				<p class="text-muted-foreground text-xs">
+					Configure the CAN bus operation mode (Normal Mode for full communication, Listen Only for
+					monitoring)
 				</p>
 			</div>
 		</div>
