@@ -17,7 +17,11 @@ export const load = async ({ fetch, url }) => {
 
 	const configPromise = getConfig(fetch).catch((error) => {
 		console.error('Config fetch failed:', error);
-		issues.push('Failed to connect to device configuration');
+		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+		// Only add to recovery issues if it's NOT a validation error (those are shown in the banner)
+		if (!errorMessage.includes('validation')) {
+			issues.push(`Configuration Error: ${errorMessage}`);
+		}
 		return null;
 	});
 
