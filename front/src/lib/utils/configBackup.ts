@@ -1,5 +1,6 @@
 import { DigitalDashSchema, type DigitalDash } from '$schemas/digitaldash';
 import { z } from 'zod/v4';
+import { fromZodError } from 'zod-validation-error';
 
 /**
  * Metadata schema for exported configurations
@@ -60,14 +61,22 @@ export async function importConfig(file: File): Promise<DigitalDash> {
 				if (parsed.version && parsed.config) {
 					const backupValidation = ConfigBackupSchema.safeParse(parsed);
 					if (!backupValidation.success) {
-						throw new Error('Invalid backup file format');
+						const validationError = fromZodError(backupValidation.error, {
+							prefix: 'Invalid backup file'
+						});
+						console.error('Backup validation errors:', backupValidation.error.format());
+						throw new Error(validationError.message);
 					}
 					resolve(backupValidation.data.config);
 				} else {
 					// Legacy format - raw config object
 					const configValidation = DigitalDashSchema.safeParse(parsed);
 					if (!configValidation.success) {
-						throw new Error('Invalid configuration format');
+						const validationError = fromZodError(configValidation.error, {
+							prefix: 'Invalid configuration file'
+						});
+						console.error('Config validation errors:', configValidation.error.format());
+						throw new Error(validationError.message);
 					}
 					resolve(configValidation.data);
 				}
@@ -107,7 +116,7 @@ export function validateConfig(config: unknown): {
 		};
 	}
 
-	const errors = result.error.errors.map((err) => `${err.path.join('.')}: ${err.message}`);
+	const errors = result.error.issues?.map((err) => `${err.path.join('.')}: ${err.message}`) || ['Unknown validation error'];
 
 	return {
 		valid: false,
@@ -145,13 +154,21 @@ export function decodeConfig(encodedConfig: string): DigitalDash {
 	if (parsed.version && parsed.config) {
 		const backupValidation = ConfigBackupSchema.safeParse(parsed);
 		if (!backupValidation.success) {
-			throw new Error('Invalid encoded configuration');
+			const validationError = fromZodError(backupValidation.error, {
+				prefix: 'Invalid encoded backup'
+			});
+			console.error('Encoded config validation errors:', backupValidation.error.format());
+			throw new Error(validationError.message);
 		}
 		return backupValidation.data.config;
 	} else {
 		const configValidation = DigitalDashSchema.safeParse(parsed);
 		if (!configValidation.success) {
-			throw new Error('Invalid encoded configuration');
+			const validationError = fromZodError(configValidation.error, {
+				prefix: 'Invalid encoded configuration'
+			});
+			console.error('Encoded config validation errors:', configValidation.error.format());
+			throw new Error(validationError.message);
 		}
 		return configValidation.data;
 	}

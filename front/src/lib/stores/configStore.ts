@@ -1,5 +1,6 @@
 import { writable, get, type Writable } from 'svelte/store';
 import { DigitalDashSchema, type DigitalDash } from '$schemas/digitaldash';
+import { fromZodError } from 'zod-validation-error';
 
 type ConfigStore = {
 	subscribe: Writable<DigitalDash | null>['subscribe'];
@@ -63,10 +64,67 @@ async function fetchConfig(fetch = globalThis.fetch): Promise<DigitalDash> {
 		const parsed = DigitalDashSchema.safeParse(raw);
 
 		if (!parsed.success) {
-			console.error('Invalid config schema:', parsed.error);
-			throw new Error('Invalid configuration schema');
+			console.warn('Config has validation errors, filtering invalid fields:', parsed.error.format());
+
+			// Convert Zod error to human-readable format
+			const validationError = fromZodError(parsed.error, {
+				prefix: 'Configuration validation failed',
+				prefixSeparator: ': '
+			});
+
+			// Build a clean config by filtering out invalid items
+			const cleanConfig: any = {
+				view: Array.isArray(raw.view) ? raw.view.filter((v: any, i: number) => {
+					const errors = parsed.error.issues?.filter(issue =>
+						issue.path[0] === 'view' && issue.path[1] === i
+					);
+					if (errors && errors.length > 0) {
+						console.warn(`Dropping invalid view[${i}]:`, errors.map(e => e.message));
+						return false;
+					}
+					return true;
+				}) : [],
+				alert: Array.isArray(raw.alert) ? raw.alert.filter((a: any, i: number) => {
+					const errors = parsed.error.issues?.filter(issue =>
+						issue.path[0] === 'alert' && issue.path[1] === i
+					);
+					if (errors && errors.length > 0) {
+						console.warn(`Dropping invalid alert[${i}]:`, errors.map(e => e.message));
+						return false;
+					}
+					return true;
+				}) : [],
+				dynamic: Array.isArray(raw.dynamic) ? raw.dynamic.filter((d: any, i: number) => {
+					const errors = parsed.error.issues?.filter(issue =>
+						issue.path[0] === 'dynamic' && issue.path[1] === i
+					);
+					if (errors && errors.length > 0) {
+						console.warn(`Dropping invalid dynamic[${i}]:`, errors.map(e => e.message));
+						return false;
+					}
+					return true;
+				}) : [],
+				general: Array.isArray(raw.general) ? raw.general.filter((g: any, i: number) => {
+					const errors = parsed.error.issues?.filter(issue =>
+						issue.path[0] === 'general' && issue.path[1] === i
+					);
+					if (errors && errors.length > 0) {
+						console.warn(`Dropping invalid general[${i}]:`, errors.map(e => e.message));
+						return false;
+					}
+					return true;
+				}) : []
+			};
+
+			// Store the human-readable error for UI to display
+			configErrorStore.set(new Error(validationError.message));
+
+			console.warn('Cleaned config:', cleanConfig);
+			return cleanConfig as DigitalDash;
 		}
 
+		// Clear any previous errors
+		configErrorStore.set(null);
 		return parsed.data;
 	} catch (error) {
 		clearTimeout(timeoutId);
