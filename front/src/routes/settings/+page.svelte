@@ -122,7 +122,6 @@
 				</div>
 			{/if}
 
-			<!-- Configuration Backup/Restore Section -->
 			<div class="border-border bg-card space-y-4 rounded-xl border-2 p-6">
 				<div class="flex items-center gap-2">
 					<FileBracesCorner class="text-primary h-5 w-5" />
@@ -137,7 +136,7 @@
 					<Button
 						type="button"
 						onclick={handleExport}
-						class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-emerald-200 bg-emerald-50 font-semibold text-emerald-700 transition-all duration-200 hover:border-emerald-300 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-900"
+						class="btn-primary flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-200"
 					>
 						<Download class="h-4 w-4" />
 						Export Configuration
@@ -155,7 +154,7 @@
 						type="button"
 						onclick={triggerFileInput}
 						disabled={isImporting}
-						class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-blue-200 bg-blue-50 font-semibold text-blue-700 transition-all duration-200 hover:border-blue-300 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300 dark:hover:border-blue-700 dark:hover:bg-blue-900"
+						class="btn-secondary flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
 					>
 						{#if isImporting}
 							<Loader class="h-4 w-4 animate-spin" />
@@ -167,14 +166,13 @@
 					</Button>
 				</div>
 
-				<div
-					class="rounded-lg border border-amber-200 bg-amber-50 p-3.5 dark:border-yellow-800 dark:bg-yellow-900/20"
-				>
+				<div class="bg-muted border-border rounded-lg border p-3.5">
 					<div class="flex items-start gap-2">
-						<Info class="mt-0.5 h-4 w-4 flex-shrink-0" />
-						<p class="text-xs">
-							<strong>Note:</strong> Importing a configuration will overwrite your current settings.
-							Make sure to export your current configuration first if you want to keep it.
+						<Info class="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+						<p class="text-muted-foreground text-xs">
+							<strong class="text-foreground">Note:</strong> Importing a configuration will overwrite
+							your current settings. Make sure to export your current configuration first if you want
+							to keep it.
 						</p>
 					</div>
 				</div>
