@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Wrench, Save, Loader, Info, Download, Upload, FileJson } from 'lucide-svelte';
+	import { Wrench, Save, Loader, Info, Download, Upload, FileBracesCorner } from 'lucide-svelte';
 	import { Input } from '@/components/ui/input/index.js';
 	import { Label } from '@/components/ui/label/index.js';
 	import { Button } from '@/components/ui/button/index.js';
@@ -9,15 +9,10 @@
 	import { DigitalDashSchema } from '$schemas/digitaldash';
 	import { updateConfig } from '$lib/utils/updateConfig';
 	import { handleError, withRetry } from '$lib/utils/errorHandling';
-	import { exportConfig, importConfig } from '$lib/utils/configBackup';
-	import { configStore } from '$lib/stores/configStore';
 	import toast from 'svelte-5-french-toast';
+	import { hasField, handleExport, handleImport } from './Settings';
 
 	let { data } = $props();
-
-	const hasGeneralSettings = $derived(data.form.data.general && data.form.data.general.length > 0);
-	const generalSettings = $derived(hasGeneralSettings ? data?.form?.data?.general?.[0] : null);
-	const settingsUnavailable = $derived(!hasGeneralSettings);
 
 	const { form, enhance, submitting } = superForm(data.form, {
 		dataType: 'json',
@@ -26,6 +21,7 @@
 		onUpdate: async ({ form: formData, cancel }) => {
 			cancel();
 
+			const hasGeneralSettings = formData.data.general && formData.data.general.length > 0;
 			if (!hasGeneralSettings) {
 				toast.error('Settings are not available. Please update your firmware.');
 				return;
@@ -37,7 +33,10 @@
 						const result = await updateConfig((config) => {
 							// Update general settings
 							if (config.general && config.general.length > 0) {
-								config.general[0].Splash = formData.data.general![0].Splash;
+								// Update only fields that exist in the form data
+								if ('splash' in formData.data.general![0]) {
+									config.general[0].splash = formData.data.general![0].splash;
+								}
 							}
 						});
 
@@ -64,82 +63,27 @@
 		}
 	});
 
+	const hasGeneralSettings = $derived(($form.general?.length ?? 0) > 0);
+	const generalSettings = $derived($form.general?.[0] ?? null);
+	const settingsUnavailable = $derived(!hasGeneralSettings);
+
 	let fileInput: HTMLInputElement;
 	let isImporting = $state(false);
 
 	/**
-	 * Handle export configuration
+	 * Wrapper for handleImport to update form data
 	 */
-	function handleExport() {
-		const config = configStore.getValue();
-		if (!config) {
-			toast.error('No configuration loaded to export');
-			return;
-		}
-
-		try {
-			exportConfig(config);
-			toast.success('Configuration exported successfully!');
-		} catch (e) {
-			handleError(e, {
-				context: 'Exporting configuration',
-				fallbackMessage: 'Failed to export configuration'
-			});
-		}
-	}
-
-	/**
-	 * Handle import configuration
-	 */
-	async function handleImport(event: Event) {
-		const input = event.target as HTMLInputElement;
-		const file = input.files?.[0];
-
-		if (!file) return;
-
-		isImporting = true;
-
-		try {
-			const importedConfig = await importConfig(file);
-
-			// Save imported configuration to device
-			await withRetry(
-				async () => {
-					const response = await fetch('/api/config', {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json'
-						},
-						body: JSON.stringify(importedConfig)
-					});
-
-					if (!response.ok) {
-						throw new Error('Failed to save imported configuration to device');
-					}
-
-					// Update local store
-					configStore.setConfig(importedConfig);
-
-					// Update form data
-					$form.general = importedConfig.general || [];
-
-					toast.success('Configuration imported and saved successfully!');
-				},
-				{
-					maxRetries: 2,
-					delay: 1000
-				}
-			);
-		} catch (e) {
-			handleError(e, {
-				context: 'Importing configuration',
-				fallbackMessage: 'Failed to import configuration'
-			});
-		} finally {
-			isImporting = false;
-			// Reset file input
-			input.value = '';
-		}
+	async function onImportFile(event: Event) {
+		await handleImport(
+			event,
+			(importedConfig) => {
+				// Update form data
+				$form.general = importedConfig.general || [];
+			},
+			(value) => {
+				isImporting = value;
+			}
+		);
 	}
 
 	/**
@@ -162,9 +106,9 @@
 					class="rounded-xl border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20"
 				>
 					<div class="flex items-start gap-3">
-						<Info class="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+						<Info class="h-5 w-5" />
 						<div>
-							<h4 class="font-medium text-yellow-800 dark:text-yellow-200">Settings Unavailable</h4>
+							<h4 class="text font-medium">Settings Unavailable</h4>
 							<p class="text-muted-foreground mt-1 text-sm">
 								General settings are not available in your current firmware version. Please update
 								your Digital Dash firmware to access these settings.
@@ -175,9 +119,9 @@
 			{/if}
 
 			<!-- Configuration Backup/Restore Section -->
-			<div class="border-border bg-card/50 space-y-4 rounded-xl border-2 p-6">
+			<div class="border-border bg-card space-y-4 rounded-xl border-2 p-6">
 				<div class="flex items-center gap-2">
-					<FileJson class="text-primary h-5 w-5" />
+					<FileBracesCorner class="text-primary h-5 w-5" />
 					<h3 class="text-foreground text-lg font-semibold">Configuration Backup</h3>
 				</div>
 				<p class="text-muted-foreground text-sm">
@@ -199,7 +143,7 @@
 						type="file"
 						accept=".json"
 						bind:this={fileInput}
-						onchange={handleImport}
+						onchange={onImportFile}
 						class="hidden"
 					/>
 
@@ -220,16 +164,19 @@
 				</div>
 
 				<div
-					class="rounded-lg border border-orange-200 bg-orange-50 p-3 dark:border-orange-800 dark:bg-orange-900/20"
+					class="rounded-lg border border-amber-200 bg-amber-50 p-3.5 dark:border-yellow-800 dark:bg-yellow-900/20"
 				>
-					<p class="text-xs text-orange-800 dark:text-orange-200">
-						<strong>Note:</strong> Importing a configuration will overwrite your current settings. Make
-						sure to export your current configuration first if you want to keep it.
-					</p>
+					<div class="flex items-start gap-2">
+						<Info class="mt-0.5 h-4 w-4 flex-shrink-0" />
+						<p class="text-xs">
+							<strong>Note:</strong> Importing a configuration will overwrite your current settings.
+							Make sure to export your current configuration first if you want to keep it.
+						</p>
+					</div>
 				</div>
 			</div>
 
-			<div class="space-y-3 {settingsUnavailable ? 'opacity-50' : ''}">
+			<div class="space-y-3 {!hasField(generalSettings, 'EE_Version') ? 'opacity-50' : ''}">
 				<Label class="text-foreground text-sm font-semibold">Firmware Version</Label>
 				<Input
 					type="number"
@@ -240,16 +187,16 @@
 				/>
 			</div>
 
-			<div class="space-y-3 {settingsUnavailable ? 'opacity-50' : ''}">
+			<div class="space-y-3 {!hasField(generalSettings, 'splash') ? 'opacity-50' : ''}">
 				<Label for="splash" class="text-foreground text-sm font-semibold"
 					>Splash Screen Duration</Label
 				>
-				{#if hasGeneralSettings}
+				{#if hasField(generalSettings, 'splash') && $form.general && $form.general[0]}
 					<Input
 						id="splash"
 						type="number"
-						bind:value={$form.general[0].Splash}
-						disabled={settingsUnavailable}
+						bind:value={$form.general[0].splash}
+						disabled={!hasField(generalSettings, 'splash')}
 						class="border-border bg-card disabled:bg-muted h-12 rounded-xl border-2 transition-all duration-200 hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
 						placeholder="Enter splash screen duration"
 						min="0"
