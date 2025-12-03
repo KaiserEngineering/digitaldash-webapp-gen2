@@ -117,7 +117,7 @@ export const devConfig: DigitalDash = {
 	general: [
 		{
 			EE_Version: 68,
-			Splash: 5
+			splash: "Dog"
 		}
 	]
 };

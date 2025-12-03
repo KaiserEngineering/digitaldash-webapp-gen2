@@ -122,8 +122,8 @@ export const DynamicSchema = z.object({
  * Contains system-wide configuration like version and splash screen
  */
 export const GeneralSchema = z.object({
-	EE_Version: z.number().int(), // Readonly - firmware version, not user-editable
-	Splash: z.number().int()
+	EE_Version: z.number().int().optional(),
+	splash: z.number().int().optional()
 });
 
 /**
