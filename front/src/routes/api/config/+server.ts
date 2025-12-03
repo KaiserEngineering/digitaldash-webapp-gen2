@@ -42,9 +42,9 @@ export async function PATCH({ request }) {
 		const parsed = DigitalDashSchema.safeParse(data);
 		if (!parsed.success) {
 			console.warn('PATCH validation warnings:', parsed.error.format());
-			const errorMessages = parsed.error.issues
-				?.map((err) => `${err.path.join('.')}: ${err.message}`)
-				.join(', ') || 'Unknown validation error';
+			const errorMessages =
+				parsed.error.issues?.map((err) => `${err.path.join('.')}: ${err.message}`).join(', ') ||
+				'Unknown validation error';
 			console.warn('Validation issues:', errorMessages);
 			// Continue with raw data instead of failing
 		}

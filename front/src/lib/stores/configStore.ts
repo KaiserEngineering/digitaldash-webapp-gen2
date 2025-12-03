@@ -64,7 +64,10 @@ async function fetchConfig(fetch = globalThis.fetch): Promise<DigitalDash> {
 		const parsed = DigitalDashSchema.safeParse(raw);
 
 		if (!parsed.success) {
-			console.warn('Config has validation errors, filtering invalid fields:', parsed.error.format());
+			console.warn(
+				'Config has validation errors, filtering invalid fields:',
+				parsed.error.format()
+			);
 
 			// Convert Zod error to human-readable format
 			const validationError = fromZodError(parsed.error, {
@@ -74,46 +77,66 @@ async function fetchConfig(fetch = globalThis.fetch): Promise<DigitalDash> {
 
 			// Build a clean config by filtering out invalid items
 			const cleanConfig: any = {
-				view: Array.isArray(raw.view) ? raw.view.filter((v: any, i: number) => {
-					const errors = parsed.error.issues?.filter(issue =>
-						issue.path[0] === 'view' && issue.path[1] === i
-					);
-					if (errors && errors.length > 0) {
-						console.warn(`Dropping invalid view[${i}]:`, errors.map(e => e.message));
-						return false;
-					}
-					return true;
-				}) : [],
-				alert: Array.isArray(raw.alert) ? raw.alert.filter((a: any, i: number) => {
-					const errors = parsed.error.issues?.filter(issue =>
-						issue.path[0] === 'alert' && issue.path[1] === i
-					);
-					if (errors && errors.length > 0) {
-						console.warn(`Dropping invalid alert[${i}]:`, errors.map(e => e.message));
-						return false;
-					}
-					return true;
-				}) : [],
-				dynamic: Array.isArray(raw.dynamic) ? raw.dynamic.filter((d: any, i: number) => {
-					const errors = parsed.error.issues?.filter(issue =>
-						issue.path[0] === 'dynamic' && issue.path[1] === i
-					);
-					if (errors && errors.length > 0) {
-						console.warn(`Dropping invalid dynamic[${i}]:`, errors.map(e => e.message));
-						return false;
-					}
-					return true;
-				}) : [],
-				general: Array.isArray(raw.general) ? raw.general.filter((g: any, i: number) => {
-					const errors = parsed.error.issues?.filter(issue =>
-						issue.path[0] === 'general' && issue.path[1] === i
-					);
-					if (errors && errors.length > 0) {
-						console.warn(`Dropping invalid general[${i}]:`, errors.map(e => e.message));
-						return false;
-					}
-					return true;
-				}) : []
+				view: Array.isArray(raw.view)
+					? raw.view.filter((v: any, i: number) => {
+							const errors = parsed.error.issues?.filter(
+								(issue) => issue.path[0] === 'view' && issue.path[1] === i
+							);
+							if (errors && errors.length > 0) {
+								console.warn(
+									`Dropping invalid view[${i}]:`,
+									errors.map((e) => e.message)
+								);
+								return false;
+							}
+							return true;
+						})
+					: [],
+				alert: Array.isArray(raw.alert)
+					? raw.alert.filter((a: any, i: number) => {
+							const errors = parsed.error.issues?.filter(
+								(issue) => issue.path[0] === 'alert' && issue.path[1] === i
+							);
+							if (errors && errors.length > 0) {
+								console.warn(
+									`Dropping invalid alert[${i}]:`,
+									errors.map((e) => e.message)
+								);
+								return false;
+							}
+							return true;
+						})
+					: [],
+				dynamic: Array.isArray(raw.dynamic)
+					? raw.dynamic.filter((d: any, i: number) => {
+							const errors = parsed.error.issues?.filter(
+								(issue) => issue.path[0] === 'dynamic' && issue.path[1] === i
+							);
+							if (errors && errors.length > 0) {
+								console.warn(
+									`Dropping invalid dynamic[${i}]:`,
+									errors.map((e) => e.message)
+								);
+								return false;
+							}
+							return true;
+						})
+					: [],
+				general: Array.isArray(raw.general)
+					? raw.general.filter((g: any, i: number) => {
+							const errors = parsed.error.issues?.filter(
+								(issue) => issue.path[0] === 'general' && issue.path[1] === i
+							);
+							if (errors && errors.length > 0) {
+								console.warn(
+									`Dropping invalid general[${i}]:`,
+									errors.map((e) => e.message)
+								);
+								return false;
+							}
+							return true;
+						})
+					: []
 			};
 
 			// Store the human-readable error for UI to display

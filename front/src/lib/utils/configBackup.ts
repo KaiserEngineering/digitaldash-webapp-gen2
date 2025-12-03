@@ -116,7 +116,9 @@ export function validateConfig(config: unknown): {
 		};
 	}
 
-	const errors = result.error.issues?.map((err) => `${err.path.join('.')}: ${err.message}`) || ['Unknown validation error'];
+	const errors = result.error.issues?.map((err) => `${err.path.join('.')}: ${err.message}`) || [
+		'Unknown validation error'
+	];
 
 	return {
 		valid: false,
