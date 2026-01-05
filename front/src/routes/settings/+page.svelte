@@ -122,16 +122,117 @@
 				</div>
 			{/if}
 
-			<div class="border-border bg-card space-y-4 rounded-xl border-2 p-6">
-				<div class="flex items-center gap-2">
-					<FileBracesCorner class="text-primary h-5 w-5" />
-					<h3 class="text-foreground text-lg font-semibold">Configuration Backup</h3>
-				</div>
-				<p class="text-muted-foreground text-sm">
-					Export your complete dashboard configuration to save as a backup or share with others.
-					Import previously saved configurations to quickly restore your settings.
-				</p>
+			{#if false}
+			<div class="space-y-2">
+				<Label class="text-foreground text-sm font-semibold">
+					EEPROM Version:
+					<span class="font-normal">
+						{generalSettings?.EE_Version ?? 'Not available'}
+					</span>
+				</Label>
+			</div>
+			<hr>
+			{/if}
 
+			<div class="space-y-2 {!hasField(generalSettings, 'splash') ? 'opacity-50' : ''}">
+				<Label for="splash" class="text-foreground text-sm font-semibold"
+					>Splash Screen Duration</Label
+				>
+				<p class="text-muted-foreground text-xs">
+					Set the splash screen display duration (in seconds). Use 0 to skip the splash screen and start immediately.
+				</p>
+				{#if hasField(generalSettings, 'splash') && $form.general && $form.general[0]}
+					<Input
+						id="splash"
+						type="number"
+						bind:value={$form.general[0].splash}
+						disabled={!hasField(generalSettings, 'splash')}
+						class="border-border bg-card disabled:bg-muted h-12 rounded-xl border-2 transition-all duration-200 hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+						placeholder="Enter splash screen duration"
+						min="0"
+					/>
+				{:else}
+					<Input
+						id="splash"
+						type="number"
+						value={0}
+						disabled
+						class="border-border bg-muted h-12 cursor-not-allowed rounded-xl border-2 opacity-50 transition-all duration-200"
+						placeholder="Not available"
+					/>
+				{/if}
+			</div>
+			<hr>
+
+			<div class="space-y-2 {!hasField(generalSettings, 'can_bus_mode') ? 'opacity-50' : ''}">
+				<Label for="can_bus_mode" class="text-foreground text-sm font-semibold">CAN Bus Mode</Label>
+				<p class="text-muted-foreground text-xs">
+					Normal Mode provides full communication; Listen-Only Mode passively monitors the bus for emissions testing, external OBD-II devices, or tuning.
+				</p>
+				{#if hasField(generalSettings, 'can_bus_mode') && $form.general && $form.general[0] && data.options.can_bus_mode}
+					<Select.Root bind:value={$form.general[0].can_bus_mode} type="single">
+						<Select.Trigger
+							class="border-border bg-card h-12 rounded-xl border-2 transition-all duration-200 hover:border-primary-200 focus:border-primary-200 focus:ring-2 focus:border-primary-200"
+						>
+							<span
+								class={$form.general[0].can_bus_mode ? 'text-foreground' : 'text-muted-foreground'}
+							>
+								{$form.general[0].can_bus_mode || 'Select CAN Bus Mode'}
+							</span>
+						</Select.Trigger>
+						<Select.Content class="border-border rounded-xl border-2 shadow-xl">
+							{#each data.options.can_bus_mode as mode}
+								<Select.Item value={mode} label={mode} class="rounded-lg py-3 hover:border-primary-200">
+									{mode}
+								</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
+				{:else}
+					<Select.Root type="single" disabled>
+						<Select.Trigger
+							class="border-border bg-muted h-12 cursor-not-allowed rounded-xl border-2 opacity-50 transition-all duration-200"
+						>
+							<span class="text-muted-foreground">Not available</span>
+						</Select.Trigger>
+					</Select.Root>
+				{/if}
+			</div>
+		</div>
+
+		{#snippet footerContent()}
+			<div
+				class="border-border flex w-full flex-col items-center justify-between gap-4 py-4 md:flex-row"
+			>
+				<div class="text-muted-foreground text-sm">
+					{#if settingsUnavailable}
+						Update your Digital Dash firmware to access additional settings.
+					{:else}
+						
+					{/if}
+				</div>
+				<Button
+					type="submit"
+					disabled={$submitting || settingsUnavailable}
+					class="btn-primary flex h-12 items-center gap-2 rounded-xl px-8 font-semibold shadow-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+				>
+					{#if $submitting}
+						<Loader class="h-4 w-4 animate-spin" />
+						Saving...
+					{:else}
+						<Save class="h-4 w-4" />
+						Save Settings
+					{/if}
+				</Button>
+			</div>
+		{/snippet}
+	</PageCard>
+	<PageCard
+		title="Configuration Backup"
+		description="Export your complete dashboard configuration to save as a backup or share with others.
+					Import previously saved configurations to quickly restore your settings."
+		icon={Wrench}
+	>
 				<div class="flex flex-col gap-3 sm:flex-row">
 					<Button
 						type="button"
@@ -154,7 +255,7 @@
 						type="button"
 						onclick={triggerFileInput}
 						disabled={isImporting}
-						class="btn-secondary flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+						class="btn-primary flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
 					>
 						{#if isImporting}
 							<Loader class="h-4 w-4 animate-spin" />
@@ -176,110 +277,5 @@
 						</p>
 					</div>
 				</div>
-			</div>
-
-			<div class="space-y-3 {!hasField(generalSettings, 'EE_Version') ? 'opacity-50' : ''}">
-				<Label class="text-foreground text-sm font-semibold">Firmware Version</Label>
-				<Input
-					type="number"
-					value={generalSettings?.EE_Version ?? 0}
-					disabled
-					class="border-border bg-muted h-12 cursor-not-allowed rounded-xl border-2 transition-all duration-200"
-					placeholder="Not available"
-				/>
-			</div>
-
-			<div class="space-y-3 {!hasField(generalSettings, 'splash') ? 'opacity-50' : ''}">
-				<Label for="splash" class="text-foreground text-sm font-semibold"
-					>Splash Screen Duration</Label
-				>
-				{#if hasField(generalSettings, 'splash') && $form.general && $form.general[0]}
-					<Input
-						id="splash"
-						type="number"
-						bind:value={$form.general[0].splash}
-						disabled={!hasField(generalSettings, 'splash')}
-						class="border-border bg-card disabled:bg-muted h-12 rounded-xl border-2 transition-all duration-200 hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
-						placeholder="Enter splash screen duration"
-						min="0"
-					/>
-				{:else}
-					<Input
-						id="splash"
-						type="number"
-						value={0}
-						disabled
-						class="border-border bg-muted h-12 cursor-not-allowed rounded-xl border-2 opacity-50 transition-all duration-200"
-						placeholder="Not available"
-					/>
-				{/if}
-				<p class="text-muted-foreground text-xs">
-					Set how long the splash screen displays (in seconds). Use 0 for an instant startup
-				</p>
-			</div>
-
-			<div class="space-y-3">
-				<Label for="can_bus_mode" class="text-foreground text-sm font-semibold">CAN Bus Mode</Label>
-				{#if hasField(generalSettings, 'can_bus_mode') && $form.general && $form.general[0] && data.options.can_bus_mode}
-					<Select.Root bind:value={$form.general[0].can_bus_mode} type="single">
-						<Select.Trigger
-							class="border-border bg-card h-12 rounded-xl border-2 transition-all duration-200 hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
-						>
-							<span
-								class={$form.general[0].can_bus_mode ? 'text-foreground' : 'text-muted-foreground'}
-							>
-								{$form.general[0].can_bus_mode || 'Select CAN Bus Mode'}
-							</span>
-						</Select.Trigger>
-						<Select.Content class="border-border rounded-xl border-2 shadow-xl">
-							{#each data.options.can_bus_mode as mode}
-								<Select.Item value={mode} label={mode} class="rounded-lg py-3 hover:bg-emerald-50">
-									{mode}
-								</Select.Item>
-							{/each}
-						</Select.Content>
-					</Select.Root>
-				{:else}
-					<Select.Root type="single" disabled>
-						<Select.Trigger
-							class="border-border bg-muted h-12 cursor-not-allowed rounded-xl border-2 opacity-50 transition-all duration-200"
-						>
-							<span class="text-muted-foreground">Not available</span>
-						</Select.Trigger>
-					</Select.Root>
-				{/if}
-				<p class="text-muted-foreground text-xs">
-					Configure the CAN bus operation mode (Normal Mode for full communication, Listen Only for
-					monitoring)
-				</p>
-			</div>
-		</div>
-
-		{#snippet footerContent()}
-			<div
-				class="border-border flex w-full flex-col items-center justify-between gap-4 py-4 md:flex-row"
-			>
-				<div class="text-muted-foreground text-sm">
-					{#if settingsUnavailable}
-						Update your Digital Dash firmware to access additional settings.
-					{:else}
-						Configure your device settings and preferences
-					{/if}
-				</div>
-				<Button
-					type="submit"
-					disabled={$submitting || settingsUnavailable}
-					class="btn-primary flex h-12 items-center gap-2 rounded-xl px-8 font-semibold shadow-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
-				>
-					{#if $submitting}
-						<Loader class="h-4 w-4 animate-spin" />
-						Saving...
-					{:else}
-						<Save class="h-4 w-4" />
-						Save Settings
-					{/if}
-				</Button>
-			</div>
-		{/snippet}
-	</PageCard>
+		</PageCard>
 </form>
