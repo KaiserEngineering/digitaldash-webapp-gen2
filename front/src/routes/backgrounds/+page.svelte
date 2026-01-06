@@ -44,7 +44,8 @@
 			<Button
 				onclick={handleSyncBackgrounds}
 				disabled={isSyncing}
-				class="btn-primary flex h-12 items-center gap-2 rounded-xl px-8 font-semibold shadow-lg transition-all duration-200"
+				variant="primary"
+				class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-200"
 			>
 				{#if isSyncing}
 					<Loader class="h-4 w-4 animate-spin" />

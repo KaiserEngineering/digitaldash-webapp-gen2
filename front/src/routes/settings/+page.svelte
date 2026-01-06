@@ -107,7 +107,7 @@
 		<div class="space-y-6">
 			{#if settingsUnavailable}
 				<div
-					class="rounded-xl border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20"
+					class="rounded-xl border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] p-4"
 				>
 					<div class="flex items-start gap-3">
 						<Info class="h-5 w-5" />
@@ -123,15 +123,15 @@
 			{/if}
 
 			{#if false}
-			<div class="space-y-2">
-				<Label class="text-foreground text-sm font-semibold">
-					EEPROM Version:
-					<span class="font-normal">
-						{generalSettings?.EE_Version ?? 'Not available'}
-					</span>
-				</Label>
-			</div>
-			<hr>
+				<div class="space-y-2">
+					<Label class="text-foreground text-sm font-semibold">
+						EEPROM Version:
+						<span class="font-normal">
+							{generalSettings?.EE_Version ?? 'Not available'}
+						</span>
+					</Label>
+				</div>
+				<hr />
 			{/if}
 
 			<div class="space-y-2 {!hasField(generalSettings, 'splash') ? 'opacity-50' : ''}">
@@ -139,7 +139,8 @@
 					>Splash Screen Duration</Label
 				>
 				<p class="text-muted-foreground text-xs">
-					Set the splash screen display duration (in seconds). Use 0 to skip the splash screen and start immediately.
+					Set the splash screen display duration (in seconds). Use 0 to skip the splash screen and
+					start immediately.
 				</p>
 				{#if hasField(generalSettings, 'splash') && $form.general && $form.general[0]}
 					<Input
@@ -162,17 +163,18 @@
 					/>
 				{/if}
 			</div>
-			<hr>
+			<hr />
 
 			<div class="space-y-2 {!hasField(generalSettings, 'can_bus_mode') ? 'opacity-50' : ''}">
 				<Label for="can_bus_mode" class="text-foreground text-sm font-semibold">CAN Bus Mode</Label>
 				<p class="text-muted-foreground text-xs">
-					Normal Mode provides full communication; Listen-Only Mode passively monitors the bus for emissions testing, external OBD-II devices, or tuning.
+					Normal Mode provides full communication; Listen-Only Mode passively monitors the bus for
+					emissions testing, external OBD-II devices, or tuning.
 				</p>
 				{#if hasField(generalSettings, 'can_bus_mode') && $form.general && $form.general[0] && data.options.can_bus_mode}
 					<Select.Root bind:value={$form.general[0].can_bus_mode} type="single">
 						<Select.Trigger
-							class="border-border bg-card h-12 rounded-xl border-2 transition-all duration-200 hover:border-primary-200 focus:border-primary-200 focus:ring-2 focus:border-primary-200"
+							class="border-border bg-card hover:border-primary-200 focus:border-primary-200 focus:border-primary-200 h-12 rounded-xl border-2 transition-all duration-200 focus:ring-2"
 						>
 							<span
 								class={$form.general[0].can_bus_mode ? 'text-foreground' : 'text-muted-foreground'}
@@ -182,7 +184,11 @@
 						</Select.Trigger>
 						<Select.Content class="border-border rounded-xl border-2 shadow-xl">
 							{#each data.options.can_bus_mode as mode}
-								<Select.Item value={mode} label={mode} class="rounded-lg py-3 hover:border-primary-200">
+								<Select.Item
+									value={mode}
+									label={mode}
+									class="hover:border-primary-200 rounded-lg py-3"
+								>
 									{mode}
 								</Select.Item>
 							{/each}
@@ -207,14 +213,13 @@
 				<div class="text-muted-foreground text-sm">
 					{#if settingsUnavailable}
 						Update your Digital Dash firmware to access additional settings.
-					{:else}
-						
-					{/if}
+					{:else}{/if}
 				</div>
 				<Button
 					type="submit"
 					disabled={$submitting || settingsUnavailable}
-					class="btn-primary flex h-12 items-center gap-2 rounded-xl px-8 font-semibold shadow-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+					variant="primary"
+					class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-200"
 				>
 					{#if $submitting}
 						<Loader class="h-4 w-4 animate-spin" />
@@ -233,49 +238,50 @@
 					Import previously saved configurations to quickly restore your settings."
 		icon={Wrench}
 	>
-				<div class="flex flex-col gap-3 sm:flex-row">
-					<Button
-						type="button"
-						onclick={handleExport}
-						class="btn-primary flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-200"
-					>
-						<Download class="h-4 w-4" />
-						Export Configuration
-					</Button>
+		<div class="flex flex-col gap-3 sm:flex-row">
+			<Button
+				type="button"
+				onclick={handleExport}
+				variant="primary"
+				class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-200"
+			>
+				<Download class="h-4 w-4" />
+				Export Configuration
+			</Button>
 
-					<input
-						type="file"
-						accept=".json"
-						bind:this={fileInput}
-						onchange={onImportFile}
-						class="hidden"
-					/>
+			<input
+				type="file"
+				accept=".json"
+				bind:this={fileInput}
+				onchange={onImportFile}
+				class="hidden"
+			/>
 
-					<Button
-						type="button"
-						onclick={triggerFileInput}
-						disabled={isImporting}
-						class="btn-primary flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
-					>
-						{#if isImporting}
-							<Loader class="h-4 w-4 animate-spin" />
-							Importing...
-						{:else}
-							<Upload class="h-4 w-4" />
-							Import Configuration
-						{/if}
-					</Button>
-				</div>
+			<Button
+				type="button"
+				onclick={triggerFileInput}
+				disabled={isImporting}
+				variant="primary"
+				class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-200"
+			>
+				{#if isImporting}
+					<Loader class="h-4 w-4 animate-spin" />
+					Importing...
+				{:else}
+					<Upload class="h-4 w-4" />
+					Import Configuration
+				{/if}
+			</Button>
+		</div>
 
-				<div class="bg-muted border-border rounded-lg border p-3.5">
-					<div class="flex items-start gap-2">
-						<Info class="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
-						<p class="text-muted-foreground text-xs">
-							<strong class="text-foreground">Note:</strong> Importing a configuration will overwrite
-							your current settings. Make sure to export your current configuration first if you want
-							to keep it.
-						</p>
-					</div>
-				</div>
-		</PageCard>
+		<div class="bg-muted border-border rounded-xl border p-4">
+			<div class="flex items-start gap-2">
+				<Info class="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+				<p class="text-muted-foreground text-xs">
+					<strong class="text-foreground">Note:</strong> Importing a configuration will overwrite your
+					current settings. Make sure to export your current configuration first if you want to keep it.
+				</p>
+			</div>
+		</div>
+	</PageCard>
 </form>

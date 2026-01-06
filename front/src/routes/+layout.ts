@@ -7,7 +7,9 @@ export const load = async ({ fetch, url }) => {
 	const issues: string[] = [];
 
 	// Debug mode only available in development
-	if (import.meta.env.DEV && url.searchParams.get('debug') === 'recovery') {
+	const debugParam = url.searchParams.get('debug');
+
+	if (import.meta.env.DEV && debugParam === 'recovery') {
 		issues.push('Debug mode: Simulated device connection failure');
 		issues.push('Failed to connect to device configuration');
 		issues.push('Failed to load PID definitions');
