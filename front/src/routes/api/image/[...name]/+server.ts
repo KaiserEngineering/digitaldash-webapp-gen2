@@ -22,8 +22,9 @@ const validSlots = [
 	'User15'
 ];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const isVercel = typeof process !== 'undefined' && process.env.VERCEL === '1';
 
-export async function GET({ params }) {
+export async function GET({ params, fetch }) {
 	const { name } = params;
 	// Remove .png extension if it exists to avoid double extensions
 	const base = name.endsWith('.png') ? name.slice(0, -4) : name;
@@ -32,8 +33,24 @@ export async function GET({ params }) {
 		throw error(400, 'Invalid slot name');
 	}
 
-	const filePath = path.join(BACKGROUND_DIR, base + '.png');
+	// On Vercel: use fetch to get static files (they're deployed with the build)
+	if (isVercel) {
+		try {
+			const res = await fetch(`/dummy-backgrounds/${base}.png`);
+			if (!res.ok) {
+				throw error(404, 'Image not found');
+			}
+			return new Response(res.body, {
+				status: 200,
+				headers: { 'Content-Type': 'image/png' }
+			});
+		} catch (err) {
+			throw error(404, 'Image not found');
+		}
+	}
 
+	// Local: use filesystem
+	const filePath = path.join(BACKGROUND_DIR, base + '.png');
 	try {
 		const file = await fs.readFile(filePath);
 		return new Response(file, {
@@ -62,7 +79,6 @@ export async function POST({ request, params }) {
 	}
 
 	const fileName = `${baseName}.png`;
-	const filePath = path.join(BACKGROUND_DIR, fileName);
 
 	try {
 		const buffer = Buffer.from(await request.arrayBuffer());
@@ -80,9 +96,23 @@ export async function POST({ request, params }) {
 			throw error(400, 'Invalid PNG file format');
 		}
 
-		// Ensure directory exists
-		await fs.mkdir(BACKGROUND_DIR, { recursive: true });
+		// On Vercel: simulate success (demo mode - no persistence)
+		if (isVercel) {
+			return json(
+				{
+					message: 'Demo: File upload simulated successfully',
+					filename: fileName,
+					url: `/api/image/${baseName}`
+				},
+				{
+					status: 201
+				}
+			);
+		}
 
+		// Local: write to filesystem
+		const filePath = path.join(BACKGROUND_DIR, fileName);
+		await fs.mkdir(BACKGROUND_DIR, { recursive: true });
 		await fs.writeFile(filePath, buffer);
 
 		return json(
@@ -112,6 +142,12 @@ export async function DELETE({ params }) {
 		throw error(400, 'Invalid slot name');
 	}
 
+	// On Vercel: simulate success (demo mode - no persistence)
+	if (isVercel) {
+		return json({ message: 'Demo: File deletion simulated successfully' });
+	}
+
+	// Local: delete from filesystem
 	try {
 		await fs.unlink(path.join(BACKGROUND_DIR, base + '.png'));
 		return json({ message: 'File deleted successfully' });
