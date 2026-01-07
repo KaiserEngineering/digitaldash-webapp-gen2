@@ -1,6 +1,7 @@
 export const prod = process.env.NODE_ENV === 'production';
 export const apiUrl = '/api';
 export const useDeviceApi = prod;
+export const isVercelDeployment = !!process.env.VERCEL;
 
 export const factoryBackgroundImages: string[] = ['flare', 'galaxy'];
 
