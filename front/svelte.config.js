@@ -15,10 +15,6 @@ const config = {
 			pollInterval: 0
 		},
 
-		output: {
-			bundleStrategy: 'inline'
-		},
-
 		alias: {
 			'@/*': './src/lib/*',
 			'$schemas/*': './src/schemas/*',
