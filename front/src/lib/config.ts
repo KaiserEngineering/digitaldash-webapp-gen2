@@ -2,15 +2,12 @@
 export const prod = import.meta.env.MODE === 'production';
 export const apiUrl = '/api';
 
-// Check if running on Vercel (these are set at build time by Vercel)
-export const isVercelDeployment = !!(
-	import.meta.env.VITE_VERCEL ||
-	import.meta.env.VERCEL ||
-	import.meta.env.VERCEL_ENV
-);
+// Check if running on Vercel (VITE_VERCEL must be set in Vercel environment variables)
+export const isVercelDeployment = import.meta.env.VITE_VERCEL === 'true';
 
-// Only use device API in production AND not on Vercel (Vercel is demo mode)
-export const useDeviceApi = prod && !isVercelDeployment;
+// For demo deployment: never use device API (always demo mode in production)
+// For local device deployment: would need to set VITE_VERCEL=false or undefined
+export const useDeviceApi = false; // Always demo mode for now
 
 export const factoryBackgroundImages: string[] = ['flare', 'galaxy'];
 
