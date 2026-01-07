@@ -12,16 +12,10 @@ export async function POST({ request, params }) {
 		throw error(400, 'No filename provided');
 	}
 
-	// Validate file is a .bin file
-	if (!filename.endsWith('.bin')) {
-		throw error(400, 'Only .bin files are allowed');
-	}
-
-	const contentType = request.headers.get('content-type');
-
-	// Handle binary upload (application/octet-stream)
-	if (!contentType?.includes('application/octet-stream')) {
-		throw error(400, 'Content-Type must be application/octet-stream');
+	// Validate file type (.bin for firmware, .png for backgrounds)
+	const isValidFile = filename.endsWith('.bin') || filename.endsWith('.png');
+	if (!isValidFile) {
+		throw error(400, 'Only .bin and .png files are allowed');
 	}
 
 	const buffer = await request.arrayBuffer();

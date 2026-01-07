@@ -22,7 +22,7 @@ export async function uploadBackground(
 	const extension = file.type === 'image/jpeg' ? '.jpg' : '.png';
 	const filename = `${file.name}${extension}`;
 
-	// Upload to API (may be simulated on Vercel)
+	// Upload to SPIFFS endpoint
 	const response = await fetch(`${apiUrl}/spiffs/${filename}`, {
 		method: 'POST',
 		body: file,
@@ -32,7 +32,8 @@ export async function uploadBackground(
 	});
 
 	if (!response.ok) {
-		throw new Error(`Upload failed: ${response.statusText}`);
+		const errorText = await response.text().catch(() => 'Unknown error');
+		throw new Error(`Upload failed: ${errorText}`);
 	}
 
 	const result: UploadResponse = await response.json();
