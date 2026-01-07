@@ -2,7 +2,6 @@ import { writable, get, type Writable } from 'svelte/store';
 import { DigitalDashSchema, type DigitalDash } from '$schemas/digitaldash';
 import { fromZodError } from 'zod-validation-error';
 import { browser } from '$app/environment';
-import { isVercelDeployment } from '$lib/config';
 
 const LOCAL_STORAGE_KEY = 'digitaldash_demo_config';
 
@@ -22,8 +21,8 @@ function createConfigStore() {
 
 		setConfig: (newConfig: DigitalDash) => {
 			set(newConfig);
-			// In demo mode, also save to localStorage
-			if (browser && isVercelDeployment) {
+			// Always save to localStorage (demo mode)
+			if (browser) {
 				try {
 					localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newConfig));
 				} catch (error) {
@@ -36,8 +35,8 @@ function createConfigStore() {
 			update((cfg) => {
 				if (cfg) {
 					const updated = { ...cfg, [key]: value };
-					// In demo mode, also save to localStorage
-					if (browser && isVercelDeployment) {
+					// Always save to localStorage (demo mode)
+					if (browser) {
 						try {
 							localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
 						} catch (error) {
@@ -52,8 +51,8 @@ function createConfigStore() {
 
 		reset: () => {
 			set(null);
-			// In demo mode, also clear localStorage
-			if (browser && isVercelDeployment) {
+			// Always clear localStorage (demo mode)
+			if (browser) {
 				try {
 					localStorage.removeItem(LOCAL_STORAGE_KEY);
 				} catch (error) {
@@ -191,8 +190,8 @@ export async function loadConfig(fetch = globalThis.fetch): Promise<DigitalDash>
 		return configFetchPromise;
 	}
 
-	// In demo mode, check localStorage first
-	if (browser && isVercelDeployment) {
+	// Always check localStorage first (demo mode)
+	if (browser) {
 		try {
 			const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
 			if (stored) {
