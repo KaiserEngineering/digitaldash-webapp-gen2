@@ -1,4 +1,6 @@
 import { apiUrl } from '$lib/config';
+import { LocalImageHandler } from './localHandler';
+import { browser } from '$app/environment';
 
 export interface ImageData {
 	name: string;
@@ -13,9 +15,11 @@ const themeCache = new Map<string, ImageData>();
 // Track themes that failed to load - themes are embedded in firmware so they never change
 const failedThemes = new Set<string>();
 
+const localImageHandler = new LocalImageHandler();
+
 export class ImageHandler {
 	/**
-	 * Load a background image from /api/image/:slot
+	 * Load a background image from localStorage first, then /api/image/:slot
 	 * @param name - The name of the image to load
 	 * @param customFetch - Optional custom fetch function (defaults to global fetch)
 	 * @returns Promise<ImageData> - The loaded image data including URL and metadata
@@ -26,6 +30,26 @@ export class ImageHandler {
 			const cached = backgroundCache.get(name);
 			if (cached === null) throw new Error(`Previously failed to load image: ${name}`);
 			return cached!;
+		}
+
+		// Try localStorage first (demo mode uploaded images)
+		if (browser) {
+			try {
+				const localImage = await localImageHandler.loadLocalImage(name);
+				if (localImage) {
+					const imageData: ImageData = {
+						name: localImage.name,
+						url: localImage.url,
+						size: localImage.size,
+						lastModified: localImage.lastModified,
+						contentType: localImage.contentType
+					};
+					backgroundCache.set(name, imageData);
+					return imageData;
+				}
+			} catch (err) {
+				// Not in localStorage, try API
+			}
 		}
 
 		// Remove .png extension if it exists to avoid double extensions
