@@ -1,10 +1,13 @@
 import db from './db';
 import { DigitalDashSchema, type DigitalDash } from '$schemas/digitaldash';
 import { deviceClient } from './deviceClient';
-import { useDeviceApi, isVercelDeployment } from '$lib/config';
+import { useDeviceApi } from '$lib/config';
 import { devConfig } from '$local/mock/devDefaults';
 
 const CONFIG_KEY = 'digitaldash';
+
+// Check runtime environment (not build-time)
+const isVercelDeployment = typeof process !== 'undefined' && process.env.VERCEL === '1';
 
 // In-memory cache for demo/Vercel deployment (no persistence needed)
 let memoryCache: DigitalDash | null = null;

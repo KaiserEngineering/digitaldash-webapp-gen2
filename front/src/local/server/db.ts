@@ -1,11 +1,13 @@
 // src/lib/server/db.ts
 import Database from 'better-sqlite3';
-import { isVercelDeployment } from '$lib/config';
 
 let db: Database.Database | null = null;
 
 // Only initialize SQLite when NOT on Vercel (serverless doesn't support it)
-if (!isVercelDeployment) {
+// Check process.env at runtime (not import.meta.env which is build-time)
+const isVercel = typeof process !== 'undefined' && process.env.VERCEL === '1';
+
+if (!isVercel) {
 	db = new Database('data.sqlite', { verbose: console.log });
 
 	// Create tables if they don't exist
