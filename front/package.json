@@ -65,6 +65,7 @@
 	},
 	"dependencies": {
 		"@internationalized/date": "^3.10.0",
+		"@sveltejs/adapter-vercel": "^6.3.0",
 		"@tailwindcss/vite": "^4.1.17",
 		"@types/better-sqlite3": "^7.6.13",
 		"@types/node": "^24.10.1",
