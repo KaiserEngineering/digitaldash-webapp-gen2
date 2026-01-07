@@ -1,6 +1,10 @@
 import { writable, get, type Writable } from 'svelte/store';
 import { DigitalDashSchema, type DigitalDash } from '$schemas/digitaldash';
 import { fromZodError } from 'zod-validation-error';
+import { browser } from '$app/environment';
+import { isVercelDeployment } from '$lib/config';
+
+const LOCAL_STORAGE_KEY = 'digitaldash_demo_config';
 
 type ConfigStore = {
 	subscribe: Writable<DigitalDash | null>['subscribe'];
@@ -18,19 +22,45 @@ function createConfigStore() {
 
 		setConfig: (newConfig: DigitalDash) => {
 			set(newConfig);
+			// In demo mode, also save to localStorage
+			if (browser && isVercelDeployment) {
+				try {
+					localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newConfig));
+				} catch (error) {
+					console.warn('Failed to save config to localStorage:', error);
+				}
+			}
 		},
 
 		updateField: <K extends keyof DigitalDash>(key: K, value: DigitalDash[K]) => {
 			update((cfg) => {
 				if (cfg) {
 					const updated = { ...cfg, [key]: value };
+					// In demo mode, also save to localStorage
+					if (browser && isVercelDeployment) {
+						try {
+							localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+						} catch (error) {
+							console.warn('Failed to save config to localStorage:', error);
+						}
+					}
 					return updated;
 				}
 				return null;
 			});
 		},
 
-		reset: () => set(null),
+		reset: () => {
+			set(null);
+			// In demo mode, also clear localStorage
+			if (browser && isVercelDeployment) {
+				try {
+					localStorage.removeItem(LOCAL_STORAGE_KEY);
+				} catch (error) {
+					console.warn('Failed to clear config from localStorage:', error);
+				}
+			}
+		},
 
 		getValue: () => get({ subscribe })
 	};
@@ -159,6 +189,25 @@ export async function loadConfig(fetch = globalThis.fetch): Promise<DigitalDash>
 	// If already fetching, return the existing promise
 	if (configFetchPromise) {
 		return configFetchPromise;
+	}
+
+	// In demo mode, check localStorage first
+	if (browser && isVercelDeployment) {
+		try {
+			const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+			if (stored) {
+				const parsed = DigitalDashSchema.safeParse(JSON.parse(stored));
+				if (parsed.success) {
+					configStore.setConfig(parsed.data);
+					return parsed.data;
+				} else {
+					console.warn('Stored config invalid, removing:', parsed.error);
+					localStorage.removeItem(LOCAL_STORAGE_KEY);
+				}
+			}
+		} catch (error) {
+			console.warn('Failed to load config from localStorage:', error);
+		}
 	}
 
 	configLoadingStore.set(true);
