@@ -7,6 +7,7 @@
 	import LoadingState from '$lib/components/LoadingState.svelte';
 	import ErrorBoundary from '$lib/components/ErrorBoundary.svelte';
 	import RecoveryBanner from '$lib/components/RecoveryBanner.svelte';
+	import ConfigValidationBanner from '$lib/components/ConfigValidationBanner.svelte';
 	import { recoveryStore } from '$lib/stores/recoveryMode';
 	import { parseApiError } from '$lib/utils/errorHandling';
 
@@ -35,6 +36,7 @@
 				}}
 			/>
 			<RecoveryBanner recovery={$recoveryStore} />
+			<ConfigValidationBanner />
 			<Header />
 
 			<main class="container mx-auto flex-1 px-2 py-2 sm:px-4 sm:py-3">

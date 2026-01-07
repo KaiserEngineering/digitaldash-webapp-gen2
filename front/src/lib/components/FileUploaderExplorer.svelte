@@ -273,8 +273,8 @@
 		<ImageCropper.Dialog>
 			<ImageCropper.Cropper cropShape="rect" aspect={1024 / 200} />
 			<ImageCropper.Controls>
-				<ImageCropper.Cancel class="btn-secondary cursor-pointer" />
-				<ImageCropper.Crop class="btn-primary cursor-pointer" />
+				<ImageCropper.Cancel variant="secondary" class="cursor-pointer" />
+				<ImageCropper.Crop variant="primary" class="cursor-pointer" />
 			</ImageCropper.Controls>
 		</ImageCropper.Dialog>
 	</ImageCropper.Root>

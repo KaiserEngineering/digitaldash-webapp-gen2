@@ -1,76 +1,110 @@
 import { json, error } from '@sveltejs/kit';
-import { isVercelDeployment } from '$lib/config';
+import { existsSync, statSync } from 'fs';
+import { join } from 'path';
 
 export const prerender = false;
 
 // API endpoint for SPIFFS file listing
 // This will be replaced by the real C webserver implementation
-export async function GET() {
+export async function GET({ url }) {
 	// Simulate processing time
 	await new Promise((resolve) => setTimeout(resolve, 500));
 
-	const { existsSync, statSync } = await import('fs');
-	const { join } = await import('path');
+	const filter = url.searchParams.get('filter');
 
-	// Try to get real file information
-	const firmwareFilePath = join(
-		process.cwd(),
-		'static',
-		'spiffs',
-		'digitaldash-firmware-gen2-stm32u5g.bin'
-	);
-
-	const bootloaderFilePath = join(
-		process.cwd(),
-		'static',
-		'spiffs',
-		'STM32U5G9ZJTXQ_OSPI_Bootloader.bin'
-	);
-
-	try {
-		const files = [];
-
-		// Check for firmware file
-		if (existsSync(firmwareFilePath)) {
-			const stats = statSync(firmwareFilePath);
-			files.push({
-				name: 'digitaldash-firmware-gen2-stm32u5g.bin',
-				size: stats.size,
-				type: 'Binary firmware file'
-			});
-		}
-
-		// Check for bootloader file
-		if (existsSync(bootloaderFilePath)) {
-			const stats = statSync(bootloaderFilePath);
-			files.push({
-				name: 'STM32U5G9ZJTXQ_OSPI_Bootloader.bin',
-				size: stats.size,
-				type: 'Binary bootloader file'
-			});
-		}
-
-		return json({
-			success: true,
-			files: files
-		});
-	} catch {
-		// Fallback to mock data if file access fails
+	if (filter === 'all') {
+		// Return all files (various types)
 		return json({
 			success: true,
 			files: [
 				{
 					name: 'digitaldash-firmware-gen2-stm32u5g.bin',
 					size: 524288,
-					type: 'Binary firmware file'
+					type: 'Binary file'
 				},
 				{
-					name: 'STM32U5G9ZJTXQ_OSPI_Bootloader.bin',
-					size: 262144,
-					type: 'Binary bootloader file'
+					name: 'config.json',
+					size: 1024,
+					type: 'JSON file'
+				},
+				{
+					name: 'settings.cfg',
+					size: 512,
+					type: 'Configuration file'
+				},
+				{
+					name: 'debug.txt',
+					size: 2048,
+					type: 'Text file'
+				},
+				{
+					name: 'background1.png',
+					size: 15360,
+					type: 'Image file'
+				},
+				{
+					name: 'background2.jpg',
+					size: 12800,
+					type: 'Image file'
 				}
 			]
 		});
+	} else if (filter === 'bin' || filter === '.bin' || !filter) {
+		// Default behavior: only .bin files
+		try {
+			const firmwareFilePath = join(
+				process.cwd(),
+				'static',
+				'spiffs',
+				'digitaldash-firmware-gen2-stm32u5g.bin'
+			);
+
+			const bootloaderFilePath = join(
+				process.cwd(),
+				'static',
+				'spiffs',
+				'STM32U5G9ZJTXQ_OSPI_Bootloader.bin'
+			);
+
+			const files = [];
+
+			// Check for firmware file
+			if (existsSync(firmwareFilePath)) {
+				const stats = statSync(firmwareFilePath);
+				files.push({
+					name: 'digitaldash-firmware-gen2-stm32u5g.bin',
+					size: stats.size,
+					type: 'Binary file'
+				});
+			}
+
+			// Check for bootloader file
+			if (existsSync(bootloaderFilePath)) {
+				const stats = statSync(bootloaderFilePath);
+				files.push({
+					name: 'STM32U5G9ZJTXQ_OSPI_Bootloader.bin',
+					size: stats.size,
+					type: 'Binary file'
+				});
+			}
+
+			return json({
+				success: true,
+				files: files
+			});
+		} catch {
+			// Fallback to mock data if file access fails
+			return json({
+				success: true,
+				files: [
+					{
+						name: 'digitaldash-firmware-gen2-stm32u5g.bin',
+						size: 524288,
+						type: 'Binary file'
+					}
+				]
+			});
+		}
 	}
 }
 
@@ -114,15 +148,13 @@ export async function POST({ request }) {
 		throw error(413, 'File too large. Maximum size is 2MB');
 	}
 
-	// Simulate upload processing time (longer for realism)
-	await new Promise((resolve) => setTimeout(resolve, 1800));
+	// Simulate upload processing time
+	await new Promise((resolve) => setTimeout(resolve, 1000));
 
-	// Mock successful upload response (works in both local and Vercel)
+	// Mock successful upload response
 	return json({
 		success: true,
-		message: isVercelDeployment
-			? 'Demo: File upload simulated successfully'
-			: 'File uploaded to SPIFFS successfully',
+		message: 'File uploaded to SPIFFS successfully',
 		filename: filename,
 		size: file.size
 	});
@@ -140,11 +172,27 @@ export async function DELETE({ url }) {
 	// Simulate delete processing time
 	await new Promise((resolve) => setTimeout(resolve, 300));
 
-	// Mock successful delete response (works in both local and Vercel)
+	// Mock successful delete response
 	return json({
 		success: true,
-		message: isVercelDeployment
-			? `Demo: File ${filename} deletion simulated`
-			: `File ${filename} deleted from SPIFFS successfully`
+		message: `File ${filename} deleted from SPIFFS successfully`
 	});
+}
+
+// Dummy API endpoint for SPIFFS usage stats
+// This will be replaced by the real C webserver implementation
+export async function PUT() {
+	// Simulate processing time
+	await new Promise((resolve) => setTimeout(resolve, 200));
+
+	// Mock SPIFFS usage data (typical ESP32-S3 SPIFFS partition size)
+	const mockData = {
+		success: true,
+		total: 1048576, // 1MB total
+		used: 524288, // 512KB used
+		free: 524288, // 512KB free
+		usage_percent: 50.0
+	};
+
+	return json(mockData);
 }

@@ -27,3 +27,9 @@ static/dummy-backgrounds/*
 *storybook.log
 
 data.sqlite
+
+# Test results
+/test-results/
+/playwright-report/
+/playwright/.cache/
+/tests/screenshots/

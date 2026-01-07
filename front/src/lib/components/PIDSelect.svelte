@@ -140,8 +140,8 @@
 					>
 						<div class="flex items-center justify-between">
 							<div class="flex-1">
-								<div class="text-foreground font-medium">{pid.label}</div>
-								<div class="text-muted-foreground text-sm">{pid.desc}</div>
+								<div class="text-foreground font-medium">{pid.desc}</div>
+								<div class="text-muted-foreground text-sm">{pid.label}</div>
 								{#if pid.units.length > 0}
 									<div class="text-muted-foreground mt-1 text-xs">
 										Units: {pid.units.join(', ')}

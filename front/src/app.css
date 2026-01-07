@@ -96,6 +96,18 @@
 
 		--color-info: var(--color-secondary-600);
 		--color-info-foreground: oklch(0.98 0 0);
+		--color-info-bg: oklch(0.97 0.02 240);
+		--color-info-border: oklch(0.87 0.05 240);
+
+		/* Status background and border variants */
+		--color-warning-bg: var(--color-accent-50);
+		--color-warning-border: var(--color-accent-200);
+
+		--color-error-bg: var(--color-primary-50);
+		--color-error-border: var(--color-primary-200);
+
+		--color-success-bg: oklch(0.97 0.05 140);
+		--color-success-border: oklch(0.87 0.1 140);
 
 		/* ----------------------------------------
        Background Variations
@@ -104,9 +116,54 @@
 		--color-background-muted: var(--color-secondary-100);
 
 		/* ----------------------------------------
-       Radii
+       Border Radius Tokens
        ---------------------------------------- */
-		--radius: 0.5rem;
+		--radius-sm: 0.375rem; /* 6px - small elements */
+		--radius: 0.5rem; /* 8px - base */
+		--radius-md: 0.5rem; /* 8px - alias for clarity */
+		--radius-lg: 0.75rem; /* 12px - cards, inputs */
+		--radius-xl: 1rem; /* 16px - large cards */
+		--radius-2xl: 1.5rem; /* 24px - prominent cards */
+
+		/* Semantic radius tokens */
+		--radius-button: var(--radius-md);
+		--radius-input: var(--radius-lg);
+		--radius-card: var(--radius-xl);
+		--radius-modal: var(--radius-xl);
+
+		/* ----------------------------------------
+       Shadow/Elevation Tokens
+       ---------------------------------------- */
+		--shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+		--shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+		--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+		--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+		--shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+		/* Semantic elevation tokens */
+		--elevation-card: var(--shadow-sm);
+		--elevation-popover: var(--shadow-md);
+		--elevation-modal: var(--shadow-lg);
+		--elevation-tooltip: var(--shadow-xs);
+
+		/* ----------------------------------------
+       Spacing Tokens
+       ---------------------------------------- */
+		--spacing-card-padding: 1.5rem; /* 24px - p-6 */
+		--spacing-section-gap: 1.5rem; /* 24px - space-y-6 */
+		--spacing-form-gap: 0.75rem; /* 12px - space-y-3 */
+		--spacing-button-gap: 0.5rem; /* 8px - gap-2 */
+
+		/* ----------------------------------------
+       Typography Guidelines (use Tailwind defaults)
+       ----------------------------------------
+       text-xs (0.75rem): Helper text, captions, badges
+       text-sm (0.875rem): Body text, form labels, buttons
+       text-base (1rem): Primary content
+       text-lg (1.125rem): Card titles, section headers
+       text-xl (1.25rem): Page titles
+       text-2xl (1.5rem): Hero headings
+       ---------------------------------------- */
 
 		/* ----------------------------------------
        Tabs
@@ -175,6 +232,18 @@
 
 	--color-info: oklch(0.64 0 0);
 	--color-info-foreground: oklch(0.98 0 0);
+	--color-info-bg: oklch(0.2 0.03 240);
+	--color-info-border: oklch(0.3 0.05 240);
+
+	/* Status background and border variants - dark mode */
+	--color-warning-bg: oklch(0.25 0.05 60);
+	--color-warning-border: oklch(0.35 0.1 60);
+
+	--color-error-bg: oklch(0.25 0.05 27);
+	--color-error-border: oklch(0.35 0.1 27);
+
+	--color-success-bg: oklch(0.2 0.05 140);
+	--color-success-border: oklch(0.3 0.1 140);
 
 	--color-background-soft: oklch(0.14 0 0);
 	--color-background-muted: oklch(0.17 0 0);
@@ -193,6 +262,13 @@
 	--btn-secondary-active-text: var(--color-secondary-50);
 	--btn-secondary-hover-bg: var(--color-primary-400);
 	--btn-secondary-hover-text: var(--color-secondary-50);
+
+	/* Shadow overrides for dark mode */
+	--shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+	--shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+	--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+	--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+	--shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.6);
 }
 
 @layer base {
@@ -208,30 +284,6 @@
 }
 
 @layer utilities {
-	/* Background Utilities */
-	.btn-primary {
-		background-color: var(--btn-primary-bg);
-		color: var(--btn-primary-active-text);
-		@apply shadow hover:opacity-90 active:scale-95;
-		border: 0px solid black;
-	}
-
-	.btn-primary:hover {
-		background-color: var(--btn-primary-hover-bg);
-		color: var(--btn-primary-hover-text);
-	}
-
-	.btn-secondary {
-		background-color: var(--btn-secondary-bg);
-		color: var(--btn-secondary-active-text);
-		@apply shadow hover:opacity-90 active:scale-95;
-	}
-
-	.btn-secondary:hover {
-		background-color: var(--btn-secondary-hover-bg);
-		color: var(--btn-secondary-hover-text);
-	}
-
 	/* Tabs */
 	.tab-trigger {
 		@apply flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-all;

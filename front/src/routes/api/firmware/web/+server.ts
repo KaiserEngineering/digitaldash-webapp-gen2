@@ -1,11 +1,10 @@
 import type { RequestHandler } from './$types';
 import { json } from '@sveltejs/kit';
 import { dev } from '$app/environment';
-import { isVercelDeployment } from '$lib/config';
 
 export const POST: RequestHandler = async ({ request, fetch }) => {
-	if (dev || isVercelDeployment) {
-		// Development/Demo mock - simulate web firmware upload
+	if (dev) {
+		// Development mock - simulate web firmware upload
 		const buffer = await request.arrayBuffer();
 		const file = new File([buffer], 'web-firmware.bin', {
 			type: 'application/octet-stream'
@@ -13,12 +12,12 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 
 		console.log(`Mock: Uploading web firmware - ${file.name} (${file.size} bytes)`);
 
-		// Simulate processing time with realistic delay
-		await new Promise((resolve) => setTimeout(resolve, 2500));
+		// Simulate processing time
+		await new Promise((resolve) => setTimeout(resolve, 2000));
 
 		return json({
 			success: true,
-			message: 'Web firmware uploaded successfully (demo mode)',
+			message: 'Web firmware uploaded successfully',
 			size: file.size
 		});
 	}

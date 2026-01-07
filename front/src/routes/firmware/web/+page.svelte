@@ -117,11 +117,12 @@
 	{/if}
 
 	{#snippet footerContent()}
-		<div class="border-border bg-muted/30 py-4">
+		<div class="border-border py-4">
 			<Button
 				onclick={startUpload}
 				disabled={!file || uploadProgress > 0}
-				class="btn-primary flex h-12 items-center gap-2 rounded-xl px-8 font-semibold text-gray-800 shadow-lg transition-all duration-200"
+				variant="primary"
+				class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-200"
 			>
 				{#if uploadProgress > 0 && !uploadComplete}
 					Uploading...

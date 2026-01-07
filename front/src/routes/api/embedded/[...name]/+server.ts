@@ -1,17 +1,29 @@
 import { error } from '@sveltejs/kit';
-import { isVercelDeployment } from '$lib/config';
 
-export async function GET({ params, fetch, url }) {
+export async function GET({ params, fetch }) {
 	const filename = decodeURIComponent(params?.name ?? '');
 	if (!filename) {
 		throw error(400, 'Filename is required');
 	}
 
-	// Add .png extension if not present
-	const imageFile = filename.endsWith('.png') ? filename : `${filename}.png`;
+	try {
+		const res = await fetch(`/${filename}`);
 
-	// For Vercel deployment, redirect to the static file
-	const staticUrl = `${url.origin}/${imageFile}`;
-	console.log(`Redirecting theme to: ${staticUrl}`);
-	return Response.redirect(staticUrl, 302);
+		if (!res.ok) {
+			console.error(`Failed to load ${filename}: ${res.status} ${res.statusText}`);
+			throw error(404, 'Image not found');
+		}
+
+		const headers = new Headers(res.headers);
+		headers.set('Content-Type', res.headers.get('content-type') || 'image/png');
+
+		// Return metadata + stream response
+		return new Response(res.body, {
+			status: res.status,
+			headers: headers
+		});
+	} catch (err) {
+		console.error(`Error loading image: ${err instanceof Error ? err.message : 'Unknown error'}`);
+		throw error(500, 'Internal server error');
+	}
 }

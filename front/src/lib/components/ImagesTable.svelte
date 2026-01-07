@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Trash2, Loader } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
+	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { ImageHandler } from '$lib/image/handler';
 	import { onMount } from 'svelte';
 	import FileUploaderExplorer from './FileUploaderExplorer.svelte';
@@ -48,6 +49,7 @@
 			}
 		} catch (err) {
 			console.warn(`Failed to reload image: ${imageName}`, err);
+			toast.error(`Failed to load ${imageName}`);
 			failedImages[imageName] = true;
 			loadedImages[imageName] = null;
 		}
@@ -60,19 +62,16 @@
 
 		try {
 			await deleteCallback(imageName);
-			await reloadImageSlot(imageName);
-			// Don't show success toast here as it's already shown in deleteBackground function
+
+			// After successful delete, clear the image state instead of trying to reload
+			loadedImages[imageName] = null;
+			failedImages[imageName] = false;
+			loadingStates[imageName] = false;
+
+			toast.success(`${imageName} deleted successfully`);
 		} catch (error) {
-			// Check if it's a demo image being cleared (not a real error)
-			if (error instanceof Error && error.message === 'DEMO_IMAGE_CLEARED') {
-				// Clear the image from UI - don't reload it
-				imageHandler.clearCache(imageName);
-				loadedImages[imageName] = null;
-				failedImages[imageName] = true;
-			} else {
-				console.error('Delete failed:', error);
-				// Error toast is already shown in deleteBackground function
-			}
+			toast.error(`Failed to delete ${imageName}`);
+			console.error('Delete failed:', error);
 		} finally {
 			deletingStates[imageName] = false;
 		}
@@ -81,7 +80,7 @@
 	async function handleUploadSuccess(imageName: string) {
 		uploadingStates[imageName] = true;
 
-		toast.success(`${imageName} uploaded to local storage`);
+		toast.success(`${imageName} uploaded successfully`);
 		imageHandler.clearCache(imageName);
 		await reloadImageSlot(imageName);
 
@@ -109,11 +108,7 @@
 		{#each imageNames as imageName (imageName)}
 			<div class="flex flex-col items-start">
 				{#if loadingStates[imageName]}
-					<div
-						class="border-border bg-muted flex h-40 items-center justify-center rounded-lg border-2 border-dashed"
-					>
-						<Loader class="text-muted-foreground h-6 w-6 animate-spin" />
-					</div>
+					<Skeleton class="h-40 w-full rounded-lg" />
 				{:else if failedImages[imageName] || !loadedImages[imageName]}
 					<div
 						class="relative"

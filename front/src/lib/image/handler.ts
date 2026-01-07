@@ -1,5 +1,4 @@
 import { apiUrl } from '$lib/config';
-import { LocalImageHandler, type LocalImageData } from './localHandler';
 
 export interface ImageData {
 	name: string;
@@ -15,15 +14,14 @@ const themeCache = new Map<string, ImageData>();
 const failedThemes = new Set<string>();
 
 export class ImageHandler {
-	private localHandler = new LocalImageHandler();
-
 	/**
-	 * Load a background image - first try local storage, then fallback to server
+	 * Load a background image from /api/image/:slot
 	 * @param name - The name of the image to load
+	 * @param customFetch - Optional custom fetch function (defaults to global fetch)
 	 * @returns Promise<ImageData> - The loaded image data including URL and metadata
 	 * @throws Error if the image fails to load or doesn't exist
 	 */
-	async loadImage(name: string): Promise<ImageData> {
+	async loadImage(name: string, customFetch: typeof fetch = fetch): Promise<ImageData> {
 		if (backgroundCache.has(name)) {
 			const cached = backgroundCache.get(name);
 			if (cached === null) throw new Error(`Previously failed to load image: ${name}`);
@@ -32,28 +30,9 @@ export class ImageHandler {
 
 		// Remove .png extension if it exists to avoid double extensions
 		const baseName = name.endsWith('.png') ? name.slice(0, -4) : name;
-
-		// First try local storage
-		try {
-			const localImage = await this.localHandler.loadLocalImage(baseName);
-			const imageData: ImageData = {
-				name: localImage.name,
-				url: localImage.url,
-				size: localImage.size,
-				lastModified: localImage.lastModified,
-				contentType: localImage.contentType
-			};
-			backgroundCache.set(name, imageData);
-			return imageData;
-		} catch (localError) {
-			// Local image not found, fallback to server
-			console.log(`Local image '${baseName}' not found, trying server...`);
-		}
-
-		// Fallback to server
 		const url = `${apiUrl}/image/${encodeURIComponent(baseName)}.png`;
 		try {
-			const imageData = await this._fetchAndCacheImage(name, url, backgroundCache);
+			const imageData = await this._fetchAndCacheImage(name, url, backgroundCache, customFetch);
 			return imageData;
 		} catch (err) {
 			backgroundCache.set(name, null as unknown as ImageData);
@@ -64,10 +43,11 @@ export class ImageHandler {
 	/**
 	 * Load a theme image from /api/embedded/:name
 	 * @param name - The name of the theme to load
+	 * @param customFetch - Optional custom fetch function (defaults to global fetch)
 	 * @returns Promise<ImageData> - The loaded theme data including URL and metadata
 	 * @throws Error if the theme fails to load or doesn't exist
 	 */
-	async loadTheme(name: string): Promise<ImageData> {
+	async loadTheme(name: string, customFetch: typeof fetch = fetch): Promise<ImageData> {
 		if (themeCache.has(name)) return themeCache.get(name)!;
 
 		// Don't retry failed themes - themes are embedded in firmware and never change
@@ -78,7 +58,7 @@ export class ImageHandler {
 		const url = `${apiUrl}/embedded/${encodeURIComponent(name)}.png`;
 
 		try {
-			const res = await fetch(url);
+			const res = await customFetch(url);
 			if (!res.ok)
 				throw new Error(`Failed to load theme '${name}': ${res.status} ${res.statusText}`);
 
@@ -105,15 +85,17 @@ export class ImageHandler {
 	 * @param name - The name of the image
 	 * @param url - The URL to fetch the image from
 	 * @param cache - The cache to store the image data in
+	 * @param customFetch - Optional custom fetch function (defaults to global fetch)
 	 * @returns Promise<ImageData> - The loaded and cached image data
 	 * @throws Error if the fetch fails or response is not ok
 	 */
 	private async _fetchAndCacheImage(
 		name: string,
 		url: string,
-		cache: Map<string, ImageData>
+		cache: Map<string, ImageData>,
+		customFetch: typeof fetch = fetch
 	): Promise<ImageData> {
-		const res = await fetch(url);
+		const res = await customFetch(url);
 		if (!res.ok) throw new Error(`Failed to load image '${name}': ${res.status} ${res.statusText}`);
 
 		const blob = await res.blob();
@@ -137,12 +119,15 @@ export class ImageHandler {
 	/**
 	 * Preload background images for better performance
 	 * @param names - Array of image names to preload
+	 * @param customFetch - Optional custom fetch function (defaults to global fetch)
 	 * @returns Promise<void> - Resolves when all preloads complete (success or failure)
 	 */
-	async preloadImages(names: string[]): Promise<void> {
+	async preloadImages(names: string[], customFetch: typeof fetch = fetch): Promise<void> {
 		await Promise.allSettled(
 			names.map((name) =>
-				this.loadImage(name).catch((err) => console.warn(`Preload failed for ${name}:`, err))
+				this.loadImage(name, customFetch).catch(() => {
+					// Silently handle missing backgrounds - STM32 may reference deleted images
+				})
 			)
 		);
 	}
@@ -150,64 +135,15 @@ export class ImageHandler {
 	/**
 	 * Preload theme images for better performance
 	 * @param names - Array of theme names to preload
+	 * @param customFetch - Optional custom fetch function (defaults to global fetch)
 	 * @returns Promise<void> - Resolves when all preloads complete (success or failure)
 	 */
-	async preloadThemes(names: string[]): Promise<void> {
+	async preloadThemes(names: string[], customFetch: typeof fetch = fetch): Promise<void> {
 		await Promise.allSettled(
 			names.map((name) =>
-				this.loadTheme(name).catch((err) => console.warn(`Theme preload failed for ${name}:`, err))
+				this.loadTheme(name, customFetch).catch((err) => console.warn(`Theme preload failed for ${name}:`, err))
 			)
 		);
-	}
-
-	/**
-	 * Upload an image to local storage
-	 * @param file - The file to upload
-	 * @returns Promise<LocalImageData> - The uploaded image data
-	 */
-	async uploadLocalImage(file: File): Promise<LocalImageData> {
-		const result = await this.localHandler.uploadImage(file);
-		// Clear cache for this image name so it gets reloaded from local storage
-		this.clearCache(result.name);
-		return result;
-	}
-
-	/**
-	 * Delete a local image
-	 * @param name - The name of the image to delete
-	 * @returns boolean - True if deleted
-	 */
-	deleteLocalImage(name: string): boolean {
-		const result = this.localHandler.deleteLocalImage(name);
-		if (result) {
-			// Clear cache for this image so it doesn't show up anymore
-			this.clearCache(name);
-		}
-		return result;
-	}
-
-	/**
-	 * List all local images
-	 * @returns LocalImageData[] - Array of local images
-	 */
-	listLocalImages(): LocalImageData[] {
-		return this.localHandler.listLocalImages();
-	}
-
-	/**
-	 * Check if an image exists locally
-	 * @param name - The name of the image to check
-	 * @returns boolean - True if exists locally
-	 */
-	hasLocalImage(name: string): boolean {
-		return this.localHandler.hasLocalImage(name);
-	}
-
-	/**
-	 * Get local storage usage info
-	 */
-	getLocalStorageInfo() {
-		return this.localHandler.getStorageInfo();
 	}
 
 	/**
@@ -218,17 +154,13 @@ export class ImageHandler {
 		const clear = (cache: Map<string, ImageData>) => {
 			if (name) {
 				const data = cache.get(name);
-				if (data && data.url.startsWith('blob:')) {
+				if (data) {
 					URL.revokeObjectURL(data.url);
 				}
 				// Always delete the cache entry, even if it's null (failed image)
 				cache.delete(name);
 			} else {
-				cache.forEach((data) => {
-					if (data.url.startsWith('blob:')) {
-						URL.revokeObjectURL(data.url);
-					}
-				});
+				cache.forEach((data) => URL.revokeObjectURL(data.url));
 				cache.clear();
 			}
 		};

@@ -7,7 +7,9 @@ export const load = async ({ fetch, url }) => {
 	const issues: string[] = [];
 
 	// Debug mode only available in development
-	if (import.meta.env.DEV && url.searchParams.get('debug') === 'recovery') {
+	const debugParam = url.searchParams.get('debug');
+
+	if (import.meta.env.DEV && debugParam === 'recovery') {
 		issues.push('Debug mode: Simulated device connection failure');
 		issues.push('Failed to connect to device configuration');
 		issues.push('Failed to load PID definitions');
@@ -17,7 +19,11 @@ export const load = async ({ fetch, url }) => {
 
 	const configPromise = getConfig(fetch).catch((error) => {
 		console.error('Config fetch failed:', error);
-		issues.push('Failed to connect to device configuration');
+		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+		// Only add to recovery issues if it's NOT a validation error (those are shown in the banner)
+		if (!errorMessage.includes('validation')) {
+			issues.push(`Configuration Error: ${errorMessage}`);
+		}
 		return null;
 	});
 

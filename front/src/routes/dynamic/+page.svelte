@@ -124,11 +124,7 @@
 							<!-- Enhanced Header -->
 							<Collapsible.Trigger class="w-full text-left">
 								<div
-									class={`flex items-center justify-between p-6 transition-all duration-200 ${
-										isDynamicRule($form[key]) && $form[key].enable === 'Enabled'
-											? priorities[i].hoverColor
-											: 'hover:bg-slate-50/50'
-									}`}
+									class="hover:bg-muted/50 flex items-center justify-between p-6 transition-all duration-200"
 								>
 									<div class="flex items-center gap-4">
 										<div class="flex flex-col">
@@ -137,7 +133,7 @@
 													{priorities[i].name}
 												</h4>
 												{#if isDynamicRule($form[key]) && $form[key].enable === 'Enabled'}
-													<CircleCheck class="h-4 w-4 text-emerald-500" />
+													<CircleCheck class="text-success h-4 w-4" />
 												{:else}
 													<TriangleAlert class="text-muted-foreground h-4 w-4" />
 												{/if}
@@ -207,7 +203,7 @@
 													checked={$form[key].enable === 'Enabled'}
 													onCheckedChange={(checked) =>
 														($form[key].enable = checked ? 'Enabled' : 'Disabled')}
-													class={`data-[state=checked]:bg-${priorities[i].color.split('-')[1]}-500 border border-green-300 bg-green-200`}
+													class="data-[state=checked]:bg-success data-[state=checked]:border-success/30 border-muted bg-muted border"
 												/>
 											{:else if priorities[i].name === 'Default'}
 												<div class="text-success flex items-center gap-2 text-sm font-medium">
@@ -241,12 +237,12 @@
 																	: 'Select view index'}
 															</span>
 														</Select.Trigger>
-														<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
+														<Select.Content class="border-border rounded-xl border-2 shadow-xl">
 															{#each [0, 1, 2] as index}
 																<Select.Item
 																	value={index.toString()}
 																	label={`View ${index + 1}`}
-																	class="rounded-lg py-3 hover:bg-slate-50"
+																	class="hover:bg-muted/50 rounded-xl py-3"
 																>
 																	View {index + 1}
 																</Select.Item>
@@ -299,7 +295,7 @@
 																	: 'Select view index'}
 															</span>
 														</Select.Trigger>
-														<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
+														<Select.Content class="border-border rounded-xl border-2 shadow-xl">
 															{#each [0, 1, 2] as index}
 																<Select.Item
 																	value={index.toString()}
@@ -342,7 +338,7 @@
 																{$form[key].compare || 'Select operator'}
 															</span>
 														</Select.Trigger>
-														<Select.Content class="rounded-xl border-2 border-slate-200 shadow-xl">
+														<Select.Content class="border-border rounded-xl border-2 shadow-xl">
 															{#each compareOps as op (op)}
 																<Select.Item
 																	value={op}
@@ -364,7 +360,7 @@
 													<Input
 														type="number"
 														bind:value={$form[key].threshold}
-														class={`h-9 rounded-xl border-2 transition-all duration-200 ${
+														class={`h-12 rounded-xl border-2 transition-all duration-200 ${
 															$form[key].enable === 'Enabled'
 																? `border-border bg-card hover:border-${priorities[i].color.split('-')[1]}-300 focus:border-${priorities[i].color.split('-')[1]}-400 focus:ring-2 focus:ring-${priorities[i].color.split('-')[1]}-100`
 																: 'border-border bg-muted'
@@ -400,7 +396,8 @@
 			<Button
 				type="submit"
 				disabled={$submitting}
-				class="btn-primary flex h-12 items-center gap-2 rounded-xl px-8 font-semibold shadow-lg transition-all duration-200"
+				variant="primary"
+				class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-200"
 			>
 				{#if $submitting}
 					<div

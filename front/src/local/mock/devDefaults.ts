@@ -112,5 +112,13 @@ export const devConfig: DigitalDash = {
 			priority: 'Low',
 			view_index: 0
 		}
+	],
+
+	general: [
+		{
+			EE_Version: 68,
+			splash: 5,
+			can_bus_mode: 'Normal Mode'
+		}
 	]
 };

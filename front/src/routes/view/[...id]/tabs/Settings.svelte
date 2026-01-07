@@ -17,22 +17,18 @@
 <Tabs.Content value="view" class="focus:outline-none">
 	<Card.Root class="border-0 bg-transparent shadow-none">
 		<Card.Content class="space-y-6 px-0">
-			<div
-				class="bg-muted/30 border-border/50 flex items-center justify-between rounded-lg border p-4"
-			>
+			<div class="border-border/50 flex items-center justify-between rounded-xl border p-4">
 				<div>
 					<Label for="enable" class="text-sm font-medium">View Status</Label>
 					<p class="text-muted-foreground mt-1 text-xs">Enable or disable this view</p>
 				</div>
 				<div class="flex items-center gap-3">
 					<Switch
-						class="border {$form.enable === 'Enabled'
-							? 'bg-muted border-green-300'
-							: 'border-primary !bg-red-200'}"
 						id="enable"
 						name="enable"
 						checked={$form.enable === 'Enabled'}
 						onCheckedChange={(checked) => ($form.enable = checked ? 'Enabled' : 'Disabled')}
+						class="data-[state=checked]:bg-success data-[state=checked]:border-success/30 border-muted bg-muted border"
 					/>
 					<span
 						class={`rounded-full px-2 py-1 text-xs font-medium ${
