@@ -61,10 +61,10 @@
 			variant="outline"
 			onclick={() => (showPidModal = true)}
 			{disabled}
-			class={`h-12 w-full justify-between rounded-xl border-2 transition-all duration-200 ${
+			class={`!h-12 w-full justify-between rounded-xl border-2 transition-all duration-200 ${
 				disabled
 					? 'border-border bg-muted text-muted-foreground'
-					: 'border-border bg-card hover:border-emerald-300 focus:border-emerald-400'
+					: 'border-border bg-card hover:border-primary-300'
 			}`}
 		>
 			<span class={pidValue ? 'text-foreground' : 'text-muted-foreground'}>
@@ -89,10 +89,10 @@
 			variant="outline"
 			onclick={() => (showUnitModal = true)}
 			disabled={disabled || availableUnits.length === 0}
-			class={`h-12 w-full justify-between rounded-xl border-2 transition-all duration-200 ${
+			class={`!h-12 w-full justify-between rounded-xl border-2 transition-all duration-200 ${
 				disabled || availableUnits.length === 0
 					? 'border-border bg-muted text-muted-foreground'
-					: 'border-border bg-card hover:border-emerald-300 focus:border-emerald-400'
+					: 'border-border bg-card hover:border-primary-300'
 			}`}
 		>
 			<span class={unitValue ? 'text-foreground' : 'text-muted-foreground'}>
@@ -149,7 +149,7 @@
 								{/if}
 							</div>
 							{#if pidValue === pid.desc}
-								<Check class="h-5 w-5 text-emerald-600" />
+								<Check class="text-primary h-5 w-5" />
 							{/if}
 						</div>
 					</button>
@@ -199,7 +199,7 @@
 								<div class="text-foreground font-medium">{unit}</div>
 							</div>
 							{#if unitValue === unit}
-								<Check class="h-5 w-5 text-emerald-600" />
+								<Check class="text-primary h-5 w-5" />
 							{/if}
 						</div>
 					</button>

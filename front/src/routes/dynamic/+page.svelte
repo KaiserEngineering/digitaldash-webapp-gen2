@@ -225,7 +225,7 @@
 														type="single"
 													>
 														<Select.Trigger
-															class="border-border bg-card h-12 w-full rounded-xl border-2 transition-all duration-200 hover:border-slate-300 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+															class="border-border bg-card !h-12 w-full rounded-xl border-2 transition-all duration-200 hover:border-primary-300"
 														>
 															<span
 																class={$form[key].view_index !== undefined
@@ -279,9 +279,9 @@
 														type="single"
 													>
 														<Select.Trigger
-															class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
+															class={`!h-12 w-full rounded-xl border-2 transition-all duration-200 ${
 																$form[key].enable === 'Enabled'
-																	? `border-border bg-card hover:border-${priorities[i].color.split('-')[1]}-300 focus:border-${priorities[i].color.split('-')[1]}-400 focus:ring-2 focus:ring-${priorities[i].color.split('-')[1]}-100`
+																	? 'border-border bg-card hover:border-primary-300'
 																	: 'border-border bg-muted'
 															}`}
 														>
@@ -300,7 +300,7 @@
 																<Select.Item
 																	value={index.toString()}
 																	label={`View ${index + 1}`}
-																	class={`rounded-lg py-3 hover:bg-${priorities[i].color.split('-')[1]}-50`}
+																	class="hover:bg-muted/50 rounded-xl py-3"
 																>
 																	View {index + 1}
 																</Select.Item>
@@ -324,9 +324,9 @@
 														type="single"
 													>
 														<Select.Trigger
-															class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
+															class={`!h-12 w-full rounded-xl border-2 transition-all duration-200 ${
 																$form[key].enable === 'Enabled'
-																	? `border-border bg-card hover:border-${priorities[i].color.split('-')[1]}-300 focus:border-${priorities[i].color.split('-')[1]}-400 focus:ring-2 focus:ring-${priorities[i].color.split('-')[1]}-100`
+																	? 'border-border bg-card hover:border-primary-300'
 																	: 'border-border bg-muted'
 															}`}
 														>
@@ -343,7 +343,7 @@
 																<Select.Item
 																	value={op}
 																	label={op}
-																	class={`rounded-lg py-3 hover:bg-${priorities[i].color.split('-')[1]}-50`}
+																	class="hover:bg-muted/50 rounded-xl py-3"
 																>
 																	{op}
 																</Select.Item>
@@ -360,9 +360,9 @@
 													<Input
 														type="number"
 														bind:value={$form[key].threshold}
-														class={`h-12 rounded-xl border-2 transition-all duration-200 ${
+														class={`!h-12 rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 focus-visible:border-border ${
 															$form[key].enable === 'Enabled'
-																? `border-border bg-card hover:border-${priorities[i].color.split('-')[1]}-300 focus:border-${priorities[i].color.split('-')[1]}-400 focus:ring-2 focus:ring-${priorities[i].color.split('-')[1]}-100`
+																? 'border-border bg-card hover:border-primary-300'
 																: 'border-border bg-muted'
 														}`}
 														disabled={$form[key].enable !== 'Enabled'}
