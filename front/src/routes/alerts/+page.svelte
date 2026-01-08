@@ -196,9 +196,9 @@
 												type="single"
 											>
 												<Select.Trigger
-													class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
+													class={`!h-12 w-full rounded-xl border-2 transition-all duration-200 ${
 														alert.enable === 'Enabled'
-															? 'border-border bg-card hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
+															? 'border-border bg-card hover:border-primary-300'
 															: 'border-border bg-muted'
 													}`}
 												>
@@ -226,9 +226,9 @@
 											<Input
 												type="number"
 												bind:value={$form[key].threshold}
-												class={`h-9 rounded-xl border-2 transition-all duration-200 ${
+												class={`!h-12 rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 focus-visible:border-border ${
 													alert.enable === 'Enabled'
-														? 'border-border bg-card hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
+														? 'border-border bg-card hover:border-primary-300'
 														: 'border-border bg-muted'
 												}`}
 												disabled={alert.enable !== 'Enabled'}
@@ -242,9 +242,9 @@
 											<Input
 												type="text"
 												bind:value={$form[key].message}
-												class={`h-12 rounded-xl border-2 transition-all duration-200 ${
+												class={`!h-12 rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 focus-visible:border-border ${
 													alert.enable === 'Enabled'
-														? 'border-border bg-card hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
+														? 'border-border bg-card hover:border-primary-300'
 														: 'border-border bg-muted'
 												}`}
 												disabled={alert.enable !== 'Enabled'}
