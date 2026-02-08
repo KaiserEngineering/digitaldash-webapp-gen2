@@ -41,13 +41,13 @@
 </script>
 
 {#if recovery.isRecoveryMode}
-	<Alert class="flex flex-col border-red-200 bg-red-50 p-3">
+	<Alert class="flex flex-col border-[var(--color-error-border)] bg-[var(--color-error-bg)] p-3">
 		<!-- Technical details toggle -->
 		{#if recovery.issues.length > 0}
 			<div class="mb-1 sm:mb-2 sm:ml-4">
 				<button
 					onclick={() => (showDetails = !showDetails)}
-					class="flex items-center gap-1 py-1 text-xs text-red-600 transition-colors hover:text-red-800"
+					class="text-destructive hover:text-destructive/90 flex items-center gap-1 py-1 text-xs transition-colors"
 				>
 					{#if showDetails}
 						<ChevronDown class="h-3 w-3" />
@@ -58,10 +58,10 @@
 				</button>
 
 				{#if showDetails}
-					<div class="mt-1 rounded bg-red-100 p-2 text-xs">
+					<div class="mt-1 rounded bg-[var(--color-error-bg)] p-2 text-xs">
 						<ul class="space-y-1">
 							{#each recovery.issues as issue, index (index)}
-								<li class="leading-snug break-words text-red-800">• {issue}</li>
+								<li class="text-destructive leading-snug break-words">• {issue}</li>
 							{/each}
 						</ul>
 					</div>
@@ -70,33 +70,36 @@
 		{/if}
 
 		<!-- Action buttons -->
-		<div class="mt-1 flex w-full flex-col gap-1.5 sm:ml-4 sm:flex-row sm:gap-2">
+		<div class="mt-2 flex w-full flex-col gap-2 sm:ml-4 sm:flex-row">
 			<Button
 				size="sm"
 				href="/firmware/web"
-				class="h-7 justify-start bg-blue-600 px-2 text-xs text-white hover:bg-blue-700"
+				variant="outline"
+				class="h-8 justify-start px-3 text-xs font-medium"
+				data-sveltekit-preload-data="off"
 			>
-				<Upload class="mr-1 h-3 w-3" />
-				Web App
+				<Upload class="mr-1.5 h-3.5 w-3.5" />
+				Update Web App
 			</Button>
 			<Button
 				size="sm"
 				href="/firmware/stm"
-				class="h-7 justify-start bg-red-600 px-2 text-xs text-white hover:bg-red-700"
+				variant="outline"
+				class="h-8 justify-start px-3 text-xs font-medium"
+				data-sveltekit-preload-data="off"
 			>
-				<Smartphone class="mr-1 h-3 w-3" />
-				DigitalDash
+				<Smartphone class="mr-1.5 h-3.5 w-3.5" />
+				Update DigitalDash
 			</Button>
 			<Button
 				size="sm"
 				onclick={resetDigitalDash}
 				disabled={resetting}
-				class="h-7 justify-start bg-orange-600 px-2 text-xs text-white hover:bg-orange-700 disabled:bg-orange-400"
+				variant="secondary"
+				class="h-8 justify-start px-3 text-xs font-medium"
 			>
-				<span class="mr-1 h-3 w-3" class:animate-spin={resetting}>
-					<RotateCcw class="h-3 w-3" />
-				</span>
-				{resetting ? 'Resetting...' : 'Reset Digital Dash'}
+				<RotateCcw class={`mr-1.5 h-3.5 w-3.5 ${resetting ? 'animate-spin' : ''}`} />
+				{resetting ? 'Resetting...' : 'Reset Device'}
 			</Button>
 		</div>
 	</Alert>

@@ -10,22 +10,20 @@
 </script>
 
 {#if error}
-	<div
-		class="border-b border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-900/20"
-	>
+	<div class="border-b border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] px-4 py-3">
 		<div class="container mx-auto flex items-start justify-between gap-3">
 			<div class="flex items-start gap-3">
-				<TriangleAlert class="mt-0.5 h-5 w-5 flex-shrink-0" />
+				<TriangleAlert class="text-warning mt-0.5 h-5 w-5 flex-shrink-0" />
 				<div class="flex-1">
-					<h3 class="font-semibold">Configuration Validation Warning</h3>
-					<p class="mt-1 text-sm">
+					<h3 class="text-foreground font-semibold">Configuration Validation Warning</h3>
+					<p class="text-foreground/90 mt-1 text-sm">
 						{error.message}
 					</p>
 				</div>
 			</div>
 			<button
 				onclick={dismissError}
-				class="cursor-pointer rounded-full p-1 transition-colors duration-200"
+				class="text-foreground hover:bg-muted cursor-pointer rounded-full p-1 transition-colors duration-200"
 				aria-label="Dismiss"
 			>
 				<X class="h-5 w-5" />

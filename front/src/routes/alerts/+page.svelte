@@ -92,9 +92,7 @@
 							<!-- Enhanced Header -->
 							<Collapsible.Trigger class="w-full text-left">
 								<div
-									class={`flex items-center justify-between p-6 transition-all duration-200 ${
-										alert.enable === 'Enabled' ? 'hover:bg-emerald-50/50' : 'hover:bg-muted/50'
-									}`}
+									class="hover:bg-muted/50 flex items-center justify-between p-6 transition-all duration-200"
 								>
 									<div class="flex items-center gap-4">
 										<!-- Status Indicator -->
@@ -133,7 +131,7 @@
 												<span
 													class={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
 														alert.enable === 'Enabled'
-															? 'bg-emerald-100 text-emerald-700'
+															? 'bg-success/20 text-success'
 															: 'bg-muted text-muted-foreground'
 													}`}
 												>
@@ -198,9 +196,9 @@
 												type="single"
 											>
 												<Select.Trigger
-													class={`h-12 w-full rounded-xl border-2 transition-all duration-200 ${
+													class={`!h-12 w-full rounded-xl border-2 transition-all duration-200 ${
 														alert.enable === 'Enabled'
-															? 'border-border bg-card hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
+															? 'border-border bg-card hover:border-primary-300'
 															: 'border-border bg-muted'
 													}`}
 												>
@@ -213,7 +211,7 @@
 														<Select.Item
 															value={op}
 															label={op}
-															class="rounded-lg py-3 hover:bg-emerald-50"
+															class="hover:bg-muted/50 rounded-xl py-3"
 														>
 															{op}
 														</Select.Item>
@@ -228,9 +226,9 @@
 											<Input
 												type="number"
 												bind:value={$form[key].threshold}
-												class={`h-9 rounded-xl border-2 transition-all duration-200 ${
+												class={`!h-12 rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 focus-visible:border-border ${
 													alert.enable === 'Enabled'
-														? 'border-border bg-card hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
+														? 'border-border bg-card hover:border-primary-300'
 														: 'border-border bg-muted'
 												}`}
 												disabled={alert.enable !== 'Enabled'}
@@ -244,9 +242,9 @@
 											<Input
 												type="text"
 												bind:value={$form[key].message}
-												class={`h-12 rounded-xl border-2 transition-all duration-200 ${
+												class={`!h-12 rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 focus-visible:border-border ${
 													alert.enable === 'Enabled'
-														? 'border-border bg-card hover:border-emerald-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
+														? 'border-border bg-card hover:border-primary-300'
 														: 'border-border bg-muted'
 												}`}
 												disabled={alert.enable !== 'Enabled'}
@@ -274,7 +272,8 @@
 			<Button
 				type="submit"
 				disabled={$submitting}
-				class="btn-primary flex h-12 items-center gap-2 rounded-xl px-8 font-semibold shadow-lg transition-all duration-200"
+				variant="primary"
+				class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-200"
 			>
 				{#if $submitting}
 					<div

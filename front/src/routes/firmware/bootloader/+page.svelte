@@ -227,14 +227,16 @@
 	<input bind:this={fileInput} type="file" accept=".bin" class="hidden" onchange={uploadFirmware} />
 
 	<!-- Warning Notice -->
-	<div class="mb-6 rounded-lg border-2 border-red-200 bg-red-50 p-4">
+	<div
+		class="mb-6 rounded-xl border-2 border-[var(--color-error-border)] bg-[var(--color-error-bg)] p-4"
+	>
 		<div class="flex items-center gap-3">
-			<div class="flex h-8 w-8 items-center justify-center rounded-full bg-red-200">
-				<TriangleAlert class="h-4 w-4 text-red-700" />
+			<div class="bg-primary/20 flex h-8 w-8 items-center justify-center rounded-full">
+				<TriangleAlert class="text-primary h-4 w-4" />
 			</div>
 			<div>
-				<h3 class="font-bold text-red-800">⚠️ DANGER: Advanced Operation</h3>
-				<p class="text-red-700">
+				<h3 class="text-destructive font-bold">DANGER: Advanced Operation</h3>
+				<p class="text-destructive/90">
 					Bootloader updates can <strong>permanently damage your device</strong> if done incorrectly.
 					Only proceed if you have the correct bootloader file and understand the risks.
 				</p>
@@ -246,7 +248,8 @@
 	<Button
 		onclick={browseFirmware}
 		disabled={uploadStatus === 'uploading' || flashStatus === 'flashing'}
-		class="btn-primary h-12 w-full text-lg font-semibold shadow-md transition-all duration-200"
+		variant="primary"
+		class="flex h-12 w-full items-center justify-center gap-2 text-lg font-semibold shadow-md transition-all duration-200"
 	>
 		{#if uploadStatus === 'uploading'}
 			<Loader class="mr-3 h-5 w-5 animate-spin" />
@@ -259,21 +262,21 @@
 
 	<!-- Upload Status -->
 	{#if uploadStatus === 'success'}
-		<div class="border-border bg-muted rounded-lg border p-4">
+		<div class="border-border bg-muted rounded-xl border p-4">
 			<p class="flex items-center gap-3 font-medium text-green-600">
 				<CircleCheck class="h-5 w-5 text-green-600" />
 				{uploadMessage}
 			</p>
 		</div>
 	{:else if uploadStatus === 'error'}
-		<div class="border-border bg-muted rounded-lg border p-4">
+		<div class="border-border bg-muted rounded-xl border p-4">
 			<p class="flex items-center gap-3 font-medium text-red-600">
 				<TriangleAlert class="h-5 w-5 text-red-600" />
 				{uploadMessage}
 			</p>
 		</div>
 	{:else if uploadStatus === 'uploading'}
-		<div class="border-border bg-muted space-y-3 rounded-lg border p-4">
+		<div class="border-border bg-muted space-y-3 rounded-xl border p-4">
 			<p class="flex items-center gap-3 font-medium text-blue-600">
 				<Loader class="h-5 w-5 animate-spin text-blue-600" />
 				{uploadMessage}
@@ -287,7 +290,7 @@
 	<!-- Flash Button - only show when bootloader file exists -->
 	{#if files.some((f) => f.name === 'STM32U5G9ZJTXQ_OSPI_Bootloader.bin')}
 		<div class="space-y-3">
-			<div class="border-border bg-muted rounded-lg border p-3">
+			<div class="border-border bg-muted rounded-xl border p-4">
 				<p class="text-sm font-medium">
 					<strong>Target file:</strong> STM32U5G9ZJTXQ_OSPI_Bootloader.bin
 				</p>
@@ -299,7 +302,8 @@
 			<Button
 				onclick={flashFirmware}
 				disabled={uploadStatus === 'uploading' || flashStatus === 'flashing'}
-				class="btn-primary h-12 w-full text-lg font-semibold shadow-md transition-all duration-200"
+				variant="primary"
+				class="flex h-12 w-full items-center justify-center gap-2 text-lg font-semibold shadow-md transition-all duration-200"
 			>
 				{#if flashStatus === 'flashing'}
 					<Loader class="mr-3 h-5 w-5 animate-spin" />
@@ -313,7 +317,7 @@
 
 		<!-- Flash Status -->
 		{#if flashStatus === 'success'}
-			<div class="border-border bg-muted rounded-lg border p-4">
+			<div class="border-border bg-muted rounded-xl border p-4">
 				<p class="flex items-center gap-3 font-medium text-green-600">
 					<CircleCheck class="h-5 w-5 text-green-600" />
 					{flashMessage}
@@ -323,14 +327,14 @@
 				</p>
 			</div>
 		{:else if flashStatus === 'error'}
-			<div class="border-border bg-muted rounded-lg border p-4">
+			<div class="border-border bg-muted rounded-xl border p-4">
 				<p class="flex items-center gap-3 font-medium text-red-600">
 					<TriangleAlert class="h-5 w-5 text-red-600" />
 					{flashMessage}
 				</p>
 			</div>
 		{:else if flashStatus === 'flashing'}
-			<div class="border-border bg-muted space-y-3 rounded-lg border p-4">
+			<div class="border-border bg-muted space-y-3 rounded-xl border p-4">
 				<p class="flex items-center gap-3 font-medium text-blue-600">
 					<Loader class="h-5 w-5 animate-spin text-blue-600" />
 					{flashMessage}
@@ -348,7 +352,7 @@
 			<FileText class="h-5 w-5" />
 			Current Spiffs .bin Files
 		</h3>
-		<div class="border-border bg-muted min-h-[120px] rounded-lg border">
+		<div class="border-border bg-muted min-h-[120px] rounded-xl border">
 			{#if filesStatus === 'loading'}
 				<div class="text-muted-foreground flex items-center justify-center gap-3 py-8">
 					<Loader class="h-5 w-5 animate-spin" />
@@ -407,7 +411,7 @@
 	</div>
 
 	{#snippet footerContent()}
-		<div class="border-border bg-muted/30 flex justify-between gap-4 py-4">
+		<div class="border-border flex justify-between gap-4 py-4">
 			<Button
 				onclick={resetSTM32}
 				disabled={resetStatus === 'resetting'}

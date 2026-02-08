@@ -42,7 +42,7 @@
 		<!-- Alerts Row -->
 		<a href="/alerts" class="block">
 			<div
-				class="m-2 flex items-center gap-3 rounded-lg bg-red-50/50 p-4 transition-all duration-200 hover:bg-red-100/50 dark:bg-red-900/10 dark:hover:bg-red-900/20"
+				class="border-border/50 bg-card hover:bg-muted/50 m-2 flex items-center gap-3 rounded-xl border p-4 transition-all duration-200"
 			>
 				<div class="rounded-md bg-red-100 p-2 dark:bg-red-900/30">
 					<Bell class="h-4 w-4 text-red-600 dark:text-red-400" />
@@ -71,7 +71,7 @@
 		<!-- Dynamic Rules Row -->
 		<a href="/dynamic" class="block">
 			<div
-				class="m-2 flex items-center gap-3 rounded-lg bg-blue-50/50 p-4 transition-all duration-200 hover:bg-blue-100/50 dark:bg-blue-900/10 dark:hover:bg-blue-900/20"
+				class="border-border/50 bg-card hover:bg-muted/50 m-2 flex items-center gap-3 rounded-xl border p-4 transition-all duration-200"
 			>
 				<div class="rounded-md bg-blue-100 p-2 dark:bg-blue-900/30">
 					<Zap class="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -86,11 +86,11 @@
 							{#each dynamic.filter((rule) => rule.enable === 'Enabled') as rule, index}
 								<div class="text-foreground/70 text-xs">
 									{#if rule.priority === 'Low'}
-										Default: View #{rule.view_index !== undefined ? rule.view_index : '0'}
+										Default: View #{rule.view_index !== undefined ? rule.view_index + 1 : '1'}
 									{:else}
-										{rule.priority || 'Unknown'}: Switch to View #{rule.view_index !== undefined
-											? rule.view_index
-											: '0'} when {rule.pid || 'No PID'}
+										{rule.priority || 'Unknown'}: Switch to view #{rule.view_index !== undefined
+											? rule.view_index + 1
+											: '1'} when {rule.pid || 'No PID'}
 										{rule.compare || ''}
 										{rule.threshold || ''}
 									{/if}
