@@ -63,7 +63,7 @@ export async function handleImport(
 		await withRetry(
 			async () => {
 				const response = await fetch('/api/config', {
-					method: 'POST',
+					method: 'PATCH',
 					headers: {
 						'Content-Type': 'application/json'
 					},
