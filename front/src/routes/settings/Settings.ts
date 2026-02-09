@@ -2,7 +2,10 @@ import type { DigitalDash, DigitalDashGeneral } from '$schemas/digitaldash';
 import { exportConfig, importConfig } from '$lib/utils/configBackup';
 import { configStore } from '$lib/stores/configStore';
 import { handleError, withRetry } from '$lib/utils/errorHandling';
+import { createLogger } from '$lib/utils/logger';
 import toast from 'svelte-5-french-toast';
+
+const log = createLogger({ module: 'settings' });
 
 /**
  * Check if a specific field is available from firmware
@@ -54,6 +57,7 @@ export async function handleImport(
 
 	if (!file) return;
 
+	log.info('Starting config import', { filename: file.name });
 	setImporting(true);
 
 	try {
@@ -88,6 +92,7 @@ export async function handleImport(
 			}
 		);
 	} catch (e) {
+		log.error('Config import failed', e);
 		handleError(e, {
 			context: 'Importing configuration',
 			fallbackMessage: 'Failed to import configuration'

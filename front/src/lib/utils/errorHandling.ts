@@ -1,4 +1,7 @@
 import { toast } from 'svelte-5-french-toast';
+import { createLogger } from './logger';
+
+const log = createLogger({ module: 'errorHandling' });
 
 export interface AppError {
 	type: 'network' | 'validation' | 'server' | 'client' | 'unknown';
@@ -121,7 +124,7 @@ export function handleError(
 
 	const appError = parseApiError(error);
 
-	console.error(`Error ${context ? `in ${context}` : ''}:`, appError);
+	log.error(`Error ${context ? `in ${context}` : ''}:`, appError);
 
 	if (showToast) {
 		const message = appError.message || fallbackMessage;

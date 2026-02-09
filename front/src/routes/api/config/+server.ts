@@ -25,13 +25,13 @@ export async function POST({ request }) {
 		const success = await configStore.set(data);
 		if (!success) {
 			console.error('Failed to save config to store');
-			return json({ error: 'Failed to save configuration', success: false }, { status: 200 }); // 200 to not crash the app
+			return json({ error: 'Failed to save configuration', success: false }, { status: 500 });
 		}
 
 		return json({ success: true });
 	} catch (error) {
 		console.error('Error in POST /api/config:', error);
-		return json({ error: 'Internal error saving config', success: false }, { status: 200 }); // 200 to not crash the app
+		return json({ error: 'Internal error saving config', success: false }, { status: 500 });
 	}
 }
 
