@@ -12,6 +12,9 @@ RUN apt-get update \
   libglib2.0-0 \
   libnuma1 \
   libpixman-1-0 \
+  curl \
+  && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+  && apt install -y -q nodejs \
   && rm -rf /var/lib/apt/lists/*
 
 # QEMU
