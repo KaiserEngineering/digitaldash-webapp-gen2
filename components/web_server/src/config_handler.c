@@ -10,7 +10,7 @@
 
 static const char *TAG = "ConfigHandler";
 
-#define JSON_BUF_SIZE 60000
+#define JSON_BUF_SIZE 16384  // 16KB - sufficient for typical configs (~4KB)
 #define OPTION_LIST_SIZE 1200
 #define PID_LIST_SIZE 10000
 
@@ -80,13 +80,18 @@ esp_err_t config_get_handler(httpd_req_t *req)
 
 esp_err_t config_patch_handler(httpd_req_t *req)
 {
-    ESP_LOGI(TAG, "PATCH /api/config requested");
+    ESP_LOGI(TAG, "PATCH /api/config requested (content_len=%d, max=%d)",
+             req->content_len, JSON_BUF_SIZE - 1);
 
     int received = 0;
     upload_result_t result = upload_to_buffer(req, json_data_output,
                                               JSON_BUF_SIZE - 1, &received, TAG);
     if (result != UPLOAD_OK)
     {
+        if (result == UPLOAD_ERR_TOO_LARGE) {
+            ESP_LOGE(TAG, "CONFIG BUFFER OVERFLOW: config size %d exceeds JSON_BUF_SIZE %d - increase buffer!",
+                     req->content_len, JSON_BUF_SIZE);
+        }
         return upload_send_result_error(req, result, TAG);
     }
 
@@ -118,10 +123,13 @@ esp_err_t config_patch_handler(httpd_req_t *req)
 
 esp_err_t config_handler_init_buffer(void)
 {
+    ESP_LOGI(TAG, "Allocating config buffers from SPIRAM (JSON_BUF_SIZE=%d bytes each)", JSON_BUF_SIZE);
+
     json_data_input = heap_caps_malloc(JSON_BUF_SIZE, MALLOC_CAP_SPIRAM);
     if (json_data_input) {
         memset(json_data_input, '\0', JSON_BUF_SIZE);
     } else {
+        ESP_LOGE(TAG, "Failed to allocate json_data_input buffer (%d bytes)", JSON_BUF_SIZE);
         return ESP_FAIL;
     }
 
@@ -129,6 +137,7 @@ esp_err_t config_handler_init_buffer(void)
     if (json_data_output) {
         memset(json_data_output, '\0', JSON_BUF_SIZE);
     } else {
+        ESP_LOGE(TAG, "Failed to allocate json_data_output buffer (%d bytes)", JSON_BUF_SIZE);
         return ESP_FAIL;
     }
 
@@ -136,9 +145,12 @@ esp_err_t config_handler_init_buffer(void)
     if (option_list) {
         memset(option_list, '\0', OPTION_LIST_SIZE);
     } else {
+        ESP_LOGE(TAG, "Failed to allocate option_list buffer (%d bytes)", OPTION_LIST_SIZE);
         return ESP_FAIL;
     }
 
+    ESP_LOGI(TAG, "Config buffers allocated: %d bytes total from SPIRAM",
+             (JSON_BUF_SIZE * 2) + OPTION_LIST_SIZE);
     return ESP_OK;
 }
 

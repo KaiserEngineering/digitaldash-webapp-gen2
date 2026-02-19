@@ -3,7 +3,7 @@ import { handleError, ServerError, ValidationError, NetworkError } from './error
 
 // Match backend limits
 export const UPLOAD_LIMITS = {
-	CONFIG: 60 * 1024, // 60KB - matches JSON_BUF_SIZE
+	CONFIG: 16 * 1024, // 16KB - matches JSON_BUF_SIZE (typical config ~4KB)
 	IMAGE: 1 * 1024 * 1024, // 1MB - matches MAX_FILE_SIZE in images_handler
 	SPIFFS: 4 * 1024 * 1024, // 4MB - matches MAX_FILE_SIZE in file_handler
 	FIRMWARE: 10 * 1024 * 1024 // 10MB - practical limit for OTA
