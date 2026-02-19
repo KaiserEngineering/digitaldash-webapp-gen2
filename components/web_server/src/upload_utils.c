@@ -28,6 +28,7 @@
 #include "upload_utils.h"
 #include "file_handler.h"
 #include "esp_log.h"
+#include "esp_heap_caps.h"
 #include <string.h>
 #include <sys/param.h>
 
@@ -95,24 +96,32 @@ upload_result_t upload_to_file(httpd_req_t *req, const char *filepath,
         return UPLOAD_ERR_TOO_LARGE;
     }
 
+    /* Allocate upload buffer from SPIRAM to preserve internal SRAM for other uses */
+    char *buf = (char *)heap_caps_malloc(UPLOAD_CHUNK_SIZE, MALLOC_CAP_SPIRAM);
+    if (!buf) {
+        ESP_LOGE(log_tag, "Failed to allocate upload buffer from SPIRAM");
+        return UPLOAD_ERR_FILE_OPEN;
+    }
+
     FILE *file = file_handler_open_write(filepath);
     if (!file) {
         ESP_LOGE(log_tag, "Failed to open file for writing: %s", filepath);
+        free(buf);
         return UPLOAD_ERR_FILE_OPEN;
     }
 
     int remaining = req->content_len;
-    char buf[UPLOAD_CHUNK_SIZE];
     int total_received = 0;
 
     while (remaining > 0) {
         int received = 0;
-        upload_result_t result = upload_receive_chunk(req, buf, sizeof(buf),
+        upload_result_t result = upload_receive_chunk(req, buf, UPLOAD_CHUNK_SIZE,
                                                       remaining, &received, log_tag);
 
         if (result != UPLOAD_OK) {
             file_handler_close(file);
             file_handler_delete(filepath);
+            free(buf);
             return result;
         }
 
@@ -121,6 +130,7 @@ upload_result_t upload_to_file(httpd_req_t *req, const char *filepath,
             ESP_LOGE(log_tag, "File write error (%zu vs %d)", written, received);
             file_handler_close(file);
             file_handler_delete(filepath);
+            free(buf);
             return UPLOAD_ERR_WRITE;
         }
 
@@ -129,6 +139,7 @@ upload_result_t upload_to_file(httpd_req_t *req, const char *filepath,
     }
 
     file_handler_close(file);
+    free(buf);
     *bytes_written = total_received;
 
     ESP_LOGI(log_tag, "File uploaded successfully: %s (%d bytes)",

@@ -4,6 +4,7 @@
 #include "esp_log.h"
 #include "esp_ota_ops.h"
 #include "esp_http_server.h"
+#include "esp_heap_caps.h"
 #include "upload_utils.h"
 #include "stm32_uart.h"
 #include "ota_handler.h"
@@ -14,16 +15,25 @@ static const char *TAG = "OTAHandler";
 /* OTA file upload handler */
 esp_err_t web_update_post_handler(httpd_req_t *req)
 {
-    char buf[UPLOAD_CHUNK_SIZE];
     esp_ota_handle_t ota_handle;
     int remaining = req->content_len;
     int timeout_retries = 0;
+
+    /* Allocate upload buffer from SPIRAM to preserve internal SRAM for other uses */
+    char *buf = (char *)heap_caps_malloc(UPLOAD_CHUNK_SIZE, MALLOC_CAP_SPIRAM);
+    if (!buf)
+    {
+        upload_send_error(req, "500 Internal Server Error", "Failed to allocate buffer",
+                          TAG, "SPIRAM allocation failed for OTA buffer");
+        return ESP_FAIL;
+    }
 
     const esp_partition_t *ota_partition = esp_ota_get_next_update_partition(NULL);
     if (!ota_partition)
     {
         upload_send_error(req, "500 Internal Server Error", "Failed to get OTA partition",
                           TAG, "OTA partition retrieval failed");
+        free(buf);
         return ESP_FAIL;
     }
 
@@ -31,12 +41,13 @@ esp_err_t web_update_post_handler(httpd_req_t *req)
     {
         upload_send_error(req, "500 Internal Server Error", "OTA begin failed",
                           TAG, "OTA begin operation failed");
+        free(buf);
         return ESP_FAIL;
     }
 
     while (remaining > 0)
     {
-        int recv_len = httpd_req_recv(req, buf, remaining < (int)sizeof(buf) ? remaining : (int)sizeof(buf));
+        int recv_len = httpd_req_recv(req, buf, remaining < UPLOAD_CHUNK_SIZE ? remaining : UPLOAD_CHUNK_SIZE);
         if (recv_len == HTTPD_SOCK_ERR_TIMEOUT)
         {
             timeout_retries++;
@@ -46,6 +57,7 @@ esp_err_t web_update_post_handler(httpd_req_t *req)
                 esp_ota_end(ota_handle);
                 upload_send_error(req, "408 Request Timeout", "OTA upload timed out",
                                   TAG, "OTA timeout limit reached");
+                free(buf);
                 return ESP_FAIL;
             }
             ESP_LOGW(TAG, "Socket timeout (retry %d/%d)", timeout_retries, UPLOAD_MAX_TIMEOUT_RETRIES);
@@ -56,6 +68,7 @@ esp_err_t web_update_post_handler(httpd_req_t *req)
             upload_send_error(req, "500 Internal Server Error", "Protocol error during OTA",
                               TAG, "HTTP receive error during OTA");
             esp_ota_end(ota_handle);
+            free(buf);
             return ESP_FAIL;
         }
 
@@ -66,11 +79,14 @@ esp_err_t web_update_post_handler(httpd_req_t *req)
             upload_send_error(req, "500 Internal Server Error", "Flash error during OTA",
                               TAG, "OTA write operation failed");
             esp_ota_end(ota_handle);
+            free(buf);
             return ESP_FAIL;
         }
 
         remaining -= recv_len;
     }
+
+    free(buf);
 
     if (esp_ota_end(ota_handle) != ESP_OK ||
         esp_ota_set_boot_partition(ota_partition) != ESP_OK)
