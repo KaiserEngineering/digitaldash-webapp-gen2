@@ -1,6 +1,9 @@
 import { DigitalDashSchema, type DigitalDash } from '$schemas/digitaldash';
 import { z } from 'zod/v4';
 import { fromZodError } from 'zod-validation-error';
+import { createLogger } from './logger';
+
+const log = createLogger({ module: 'configBackup' });
 
 /**
  * Metadata schema for exported configurations
@@ -64,7 +67,7 @@ export async function importConfig(file: File): Promise<DigitalDash> {
 						const validationError = fromZodError(backupValidation.error, {
 							prefix: 'Invalid backup file'
 						});
-						console.error('Backup validation errors:', backupValidation.error.format());
+						log.error('Backup validation errors:', backupValidation.error.format());
 						throw new Error(validationError.message);
 					}
 					resolve(backupValidation.data.config);
@@ -75,7 +78,7 @@ export async function importConfig(file: File): Promise<DigitalDash> {
 						const validationError = fromZodError(configValidation.error, {
 							prefix: 'Invalid configuration file'
 						});
-						console.error('Config validation errors:', configValidation.error.format());
+						log.error('Config validation errors:', configValidation.error.format());
 						throw new Error(validationError.message);
 					}
 					resolve(configValidation.data);
@@ -159,7 +162,7 @@ export function decodeConfig(encodedConfig: string): DigitalDash {
 			const validationError = fromZodError(backupValidation.error, {
 				prefix: 'Invalid encoded backup'
 			});
-			console.error('Encoded config validation errors:', backupValidation.error.format());
+			log.error('Encoded config validation errors:', backupValidation.error.format());
 			throw new Error(validationError.message);
 		}
 		return backupValidation.data.config;
@@ -169,7 +172,7 @@ export function decodeConfig(encodedConfig: string): DigitalDash {
 			const validationError = fromZodError(configValidation.error, {
 				prefix: 'Invalid encoded configuration'
 			});
-			console.error('Encoded config validation errors:', configValidation.error.format());
+			log.error('Encoded config validation errors:', configValidation.error.format());
 			throw new Error(validationError.message);
 		}
 		return configValidation.data;

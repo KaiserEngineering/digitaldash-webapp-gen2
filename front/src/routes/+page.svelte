@@ -86,11 +86,11 @@
 							{#each dynamic.filter((rule) => rule.enable === 'Enabled') as rule, index}
 								<div class="text-foreground/70 text-xs">
 									{#if rule.priority === 'Low'}
-										Default: View #{rule.view_index !== undefined ? rule.view_index : '0'}
+										Default: View #{rule.view_index !== undefined ? rule.view_index + 1 : '1'}
 									{:else}
-										{rule.priority || 'Unknown'}: Switch to View #{rule.view_index !== undefined
-											? rule.view_index
-											: '0'} when {rule.pid || 'No PID'}
+										{rule.priority || 'Unknown'}: Switch to view #{rule.view_index !== undefined
+											? rule.view_index + 1
+											: '1'} when {rule.pid || 'No PID'}
 										{rule.compare || ''}
 										{rule.threshold || ''}
 									{/if}

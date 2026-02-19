@@ -1,4 +1,15 @@
 
+## 1.0.6
+
+### Features
+- **Web App**: Add settings page
+- **Web App**: Add _Splash Screen Duration_ setting
+- **Web App**: Add _CAN Bus Mode_ setting
+- **Web App**: Replace Advanced page with settings import/export button
+
+### Improvements
+- **Web App**: Improved styling consistency throughout
+
 ## 1.0.5
 
 ### Features

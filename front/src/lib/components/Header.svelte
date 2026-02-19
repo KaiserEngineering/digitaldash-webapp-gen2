@@ -3,7 +3,6 @@
 	import { Button } from '$lib/components/ui/button';
 	import {
 		Image,
-		Settings,
 		Zap,
 		House,
 		Menu,
@@ -30,7 +29,6 @@
 		{ label: 'Dynamic', value: 'dynamic', icon: Zap },
 		{ label: 'Alerts', value: 'alerts', icon: Bell },
 		{ label: 'Settings', value: 'settings', icon: Wrench },
-		{ label: 'Advanced', value: 'advanced', icon: Settings },
 		{ label: 'Device Info', value: 'device/info', icon: HardDrive },
 		{
 			label: 'Firmware',
@@ -179,7 +177,7 @@
 					<div
 						class="bg-muted/30 border-border/30 rounded-2xl border p-2 shadow-lg backdrop-blur-sm"
 					>
-						<div class="flex flex-wrap justify-start gap-1 md:gap-2">
+						<div class="flex flex-wrap justify-center gap-1 md:gap-2">
 							{#each tabs as tab (tab.value)}
 								{@const TabIcon = tab.icon}
 								{@const isActive =

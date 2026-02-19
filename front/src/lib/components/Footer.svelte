@@ -9,7 +9,11 @@
 				&copy; 2025 <span class="text-primary font-semibold">Digital Dash</span>. All rights
 				reserved.
 			</p>
-			<VersionInfo />
+			<div class="flex items-center gap-2">
+				<VersionInfo />
+				<span class="text-muted-foreground text-xs">·</span>
+				<a href="/logs" class="text-muted-foreground hover:text-foreground text-xs transition-colors">logs</a>
+			</div>
 		</div>
 	</div>
 </footer>

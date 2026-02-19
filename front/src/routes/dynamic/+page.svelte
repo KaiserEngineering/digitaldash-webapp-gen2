@@ -149,7 +149,7 @@
 													{#if isDynamicRule($form[key])}
 														{#if priorities[i].name === 'Default'}
 															View {$form[key].view_index !== undefined
-																? $form[key].view_index
+																? $form[key].view_index + 1
 																: 'Not Set'}
 														{:else}
 															{$form[key].pid || 'No PID selected'}
