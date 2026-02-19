@@ -1,6 +1,7 @@
 // config_handler.c
 
 #include "config_handler.h"
+#include "upload_utils.h"
 #include "esp_log.h"
 #include "lib_ke_protocol.h"
 #include <sys/param.h>
@@ -81,13 +82,12 @@ esp_err_t config_patch_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "PATCH /api/config requested");
 
-    int total_len = req->content_len;
-
-    int received = httpd_req_recv(req, json_data_output, MIN(total_len, JSON_BUF_SIZE));
-    if (received <= 0)
+    int received = 0;
+    upload_result_t result = upload_to_buffer(req, json_data_output,
+                                              JSON_BUF_SIZE - 1, &received, TAG);
+    if (result != UPLOAD_OK)
     {
-        ESP_LOGE(TAG, "Failed to receive config PATCH payload");
-        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid request");
+        return upload_send_result_error(req, result, TAG);
     }
 
     json_data_output[received] = '\0';

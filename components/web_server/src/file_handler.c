@@ -26,6 +26,7 @@
  */
 
 #include "file_handler.h"
+#include "upload_utils.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_http_server.h"
@@ -46,12 +47,6 @@ static const char *TAG = "FileHandler";
 #define SCRATCH_BUFSIZE (20480)
 #define MAX_FILE_SIZE (4 * 1024 * 1024)
 #define CHECK_FILE_EXTENSION(filename, ext) (strcasecmp(&filename[strlen(filename) - strlen(ext)], ext) == 0)
-#define SPIFFS_WRITE_SIZE 4096
-
-// Define HTTP 413 Payload Too Large if not defined
-#ifndef HTTPD_413_PAYLOAD_TOO_LARGE
-#define HTTPD_413_PAYLOAD_TOO_LARGE 413
-#endif
 
 // Forward declarations
 static esp_err_t spiffs_list_handler(httpd_req_t *req);
@@ -471,16 +466,6 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "SPIFFS upload request: %s (len=%d)", req->uri, req->content_len);
 
-    if (req->content_len > MAX_FILE_SIZE) {
-        ESP_LOGW(TAG, "File too large: %d bytes (max: %d)", req->content_len, MAX_FILE_SIZE);
-        return httpd_resp_send_err(req, HTTPD_413_PAYLOAD_TOO_LARGE, "File too large");
-    }
-
-    if (req->content_len == 0) {
-        ESP_LOGW(TAG, "No content received");
-        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "No file content");
-    }
-
     // Extract filename from URI path (after /api/spiffs/)
     const char *prefix = "/api/spiffs/";
     const char *filename = NULL;
@@ -499,60 +484,18 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
     char filepath[FILE_PATH_MAX];
     snprintf(filepath, sizeof(filepath), "/spiffs/%s", filename);
 
-    FILE *file = file_handler_open_write(filepath);
-    if (!file) {
-        ESP_LOGE(TAG, "Failed to open file for writing: %s", filepath);
-        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to create file");
+    int bytes_written = 0;
+    upload_result_t result = upload_to_file(req, filepath, MAX_FILE_SIZE,
+                                            &bytes_written, TAG);
+    if (result != UPLOAD_OK) {
+        return upload_send_result_error(req, result, TAG);
     }
 
-    int remaining = req->content_len;
-    char buf[SPIFFS_WRITE_SIZE];
-    int total_received = 0;
-
-    while (remaining > 0) {
-        int recv_len = MIN(remaining, (int)sizeof(buf));
-        int received = httpd_req_recv(req, buf, recv_len);
-
-        if (received < 0) {
-            if (received == HTTPD_SOCK_ERR_TIMEOUT) {
-                // retry instead of failing immediately
-                ESP_LOGW(TAG, "Socket timeout, retrying...");
-                continue;
-            }
-            ESP_LOGE(TAG, "Socket error: %d", received);
-            file_handler_close(file);
-            file_handler_delete(filepath);
-            return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File upload failed");
-        } else if (received == 0) {
-            // unexpected end of stream
-            ESP_LOGE(TAG, "Connection closed before file fully received");
-            file_handler_close(file);
-            file_handler_delete(filepath);
-            return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File upload incomplete");
-        }
-
-        size_t written = fwrite(buf, 1, received, file);
-        if (written != received) {
-            ESP_LOGE(TAG, "Error writing to file (%d vs %d)", written, received);
-            file_handler_close(file);
-            file_handler_delete(filepath);
-            return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File write failed");
-        }
-
-        remaining -= received;
-        total_received += received;
-    }
-
-    file_handler_close(file);
-
-    ESP_LOGI(TAG, "File uploaded successfully: %s (%d bytes)", filepath, total_received);
-
-    // Respond
     httpd_resp_set_type(req, "application/json");
     char response[256];
     snprintf(response, sizeof(response),
              "{\"message\":\"File uploaded successfully\",\"filename\":\"%s\",\"size\":%d}",
-             filename, total_received);
+             filename, bytes_written);
     return httpd_resp_sendstr(req, response);
 }
 
