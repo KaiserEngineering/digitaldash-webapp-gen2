@@ -11,7 +11,6 @@
 #include "file_handler.h"
 #include <ctype.h>
 #include <sys/param.h>
-#include "version.h"
 #include "pids_handler.h"
 #include "ota_handler.h"
 #include "stm_flash.h"
@@ -266,13 +265,10 @@ esp_err_t web_request_handler(httpd_req_t *req)
 
 esp_err_t sveltekit_version_handler(httpd_req_t *req)
 {
-    ESP_LOGI(TAG, "Handling request: %s", req->uri);
-    ESP_LOGI(TAG, "Serving SvelteKit version: %s", APP_VERSION_STRING);
-    ESP_LOGI(TAG, "VERSION_JSON_RESPONSE: %s", VERSION_JSON_RESPONSE);
-
     httpd_resp_set_type(req, "application/json");
     httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
-    static const char version_json[] = VERSION_JSON_RESPONSE;
+    // Version is managed by the frontend's version.json
+    static const char version_json[] = "{\"ver\": \"embedded\"}";
     return httpd_resp_send(req, version_json, strlen(version_json));
 }
 

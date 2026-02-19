@@ -12,6 +12,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { apiUrl } from '$lib/config';
 	import toast from 'svelte-5-french-toast';
+	import { uploadWithProgress, UPLOAD_LIMITS } from '$lib/utils/upload';
 	import PageCard from '@/components/PageCard.svelte';
 
 	let filesStatus: 'idle' | 'loading' | 'success' | 'error' = $state('idle');
@@ -55,53 +56,25 @@
 		uploadMessage = 'Uploading firmware file...';
 		uploadProgress = 0;
 
-		try {
-			const xhr = new XMLHttpRequest();
+		const result = await uploadWithProgress('/api/spiffs/digitaldash-firmware-gen2-stm32u5g.bin', file, {
+			maxSize: UPLOAD_LIMITS.SPIFFS,
+			timeout: 360000, // 6 minutes
+			onProgress: (percent) => {
+				uploadProgress = percent;
+				uploadMessage = `Uploading firmware file... ${Math.floor(percent)}%`;
+			},
+			context: 'STM32 firmware upload'
+		});
 
-			// Set up progress tracking
-			xhr.upload.onprogress = (e) => {
-				if (e.lengthComputable) {
-					uploadProgress = (e.loaded / e.total) * 100;
-					uploadMessage = `Uploading firmware file... ${Math.floor(uploadProgress)}%`;
-				}
-			};
-
-			// Set up completion handlers
-			xhr.onload = async () => {
-				if (xhr.status >= 200 && xhr.status < 300) {
-					uploadStatus = 'success';
-					uploadMessage = 'Firmware file uploaded successfully!';
-					uploadProgress = 100;
-
-					// Reload file list and clear input
-					await loadFiles();
-					if (fileInput) fileInput.value = '';
-				} else {
-					uploadStatus = 'error';
-					uploadMessage = `Upload failed: ${xhr.statusText}`;
-				}
-			};
-
-			xhr.onerror = () => {
-				uploadStatus = 'error';
-				uploadMessage = 'Network error during upload';
-			};
-
-			xhr.ontimeout = () => {
-				uploadStatus = 'error';
-				uploadMessage = 'Upload timed out';
-			};
-
-			xhr.timeout = 360000; // 3 minutes
-
-			// Make the request
-			xhr.open('POST', '/api/spiffs/digitaldash-firmware-gen2-stm32u5g.bin');
-			xhr.setRequestHeader('Content-Type', 'application/octet-stream');
-			xhr.send(file);
-		} catch (err) {
+		if (result.success) {
+			uploadStatus = 'success';
+			uploadMessage = 'Firmware file uploaded successfully!';
+			uploadProgress = 100;
+			await loadFiles();
+			if (fileInput) fileInput.value = '';
+		} else {
 			uploadStatus = 'error';
-			uploadMessage =
-				err instanceof Error ? err.message : 'An error occurred during firmware upload';
+			uploadMessage = result.error || 'Upload failed';
 		}
 	}
 

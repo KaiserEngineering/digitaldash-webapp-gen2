@@ -2,7 +2,7 @@
 import { apiUrl } from '$lib/config';
 import { ImageHandler } from '$lib/image/handler';
 import type { ImageData } from '$lib/image/handler';
-import { toast } from 'svelte-5-french-toast';
+import { upload, UPLOAD_LIMITS } from '$lib/utils/upload';
 
 interface UploadResponse {
 	success: boolean;
@@ -20,28 +20,23 @@ export async function uploadBackground(
 	const extension = file.type === 'image/jpeg' ? '.jpg' : '.png';
 	const filename = `${file.name}${extension}`;
 
-	const response = await fetch(`${apiUrl}/spiffs/${filename}`, {
-		method: 'POST',
-		body: file,
-		headers: {
-			'Content-Type': file.type
-		}
+	const result = await upload<UploadResponse>(`${apiUrl}/spiffs/${filename}`, file, {
+		maxSize: UPLOAD_LIMITS.IMAGE,
+		context: 'Background upload'
 	});
 
-	if (!response.ok) {
-		throw new Error(`Upload failed: ${response.statusText}`);
+	if (!result.success) {
+		throw new Error(result.error || 'Upload failed');
 	}
 
-	const result: UploadResponse = await response.json();
-
-	if (result.filename) {
+	if (result.data?.filename) {
 		// Invalidate and reload the image to get fresh metadata + blob URL
-		imageHandler.clearCache(result.filename);
-		const fresh = await imageHandler.loadImage(result.filename);
-
-		images[result.filename] = fresh;
+		imageHandler.clearCache(result.data.filename);
+		const fresh = await imageHandler.loadImage(result.data.filename);
+		images[result.data.filename] = fresh;
 	}
-	return result;
+
+	return result.data || { success: true };
 }
 
 export async function deleteBackground(
@@ -52,26 +47,21 @@ export async function deleteBackground(
 		throw new Error('Filename is required');
 	}
 
-	try {
-		// Always append .png extension since backgrounds are always PNG
-		const fullFilename = `${filename}.png`;
-		const response = await fetch(`${apiUrl}/spiffs?filename=${encodeURIComponent(fullFilename)}`, {
-			method: 'DELETE'
-		});
+	// Always append .png extension since backgrounds are always PNG
+	const fullFilename = `${filename}.png`;
+	const response = await fetch(`${apiUrl}/spiffs?filename=${encodeURIComponent(fullFilename)}`, {
+		method: 'DELETE'
+	});
 
-		if (!response.ok) {
-			const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-			throw new Error(`Delete failed: ${error.message || response.statusText}`);
-		}
+	if (!response.ok) {
+		const error = await response.json().catch(() => ({ message: 'Unknown error' }));
+		throw new Error(error.error || error.message || response.statusText);
+	}
 
-		imageHandler.clearCache(filename);
+	imageHandler.clearCache(filename);
 
-		if (images && filename in images) {
-			delete images[filename];
-		}
-	} catch (error) {
-		console.error('Background delete error:', error);
-		throw error;
+	if (images && filename in images) {
+		delete images[filename];
 	}
 }
 

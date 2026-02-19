@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import toast from 'svelte-5-french-toast';
 	import { apiUrl } from '$lib/config';
+	import { uploadWithProgress, UPLOAD_LIMITS, validateFile } from '$lib/utils/upload';
 	import PageCard from '@/components/PageCard.svelte';
 
 	let { data } = $props();
@@ -12,6 +13,7 @@
 	let dragActive = $state(false);
 	let uploadProgress = $state(0);
 	let uploadComplete = $state(false);
+	let isUploading = $state(false);
 
 	function handleDrag(e: DragEvent) {
 		e.preventDefault();
@@ -45,33 +47,36 @@
 
 	async function startUpload() {
 		if (!file) return toast.error('No file selected.');
-		if (!file.name.endsWith('.bin')) return toast.error('Only .bin files allowed.');
-		if (file.size > 10 * 1024 * 1024) return toast.error('File too large (max 10MB).');
+
+		// Validate file before upload
+		const validation = validateFile(file, {
+			maxSize: UPLOAD_LIMITS.FIRMWARE,
+			allowedTypes: ['.bin']
+		});
+		if (!validation.valid) {
+			toast.error(validation.error!);
+			return;
+		}
 
 		resetUploadState();
+		isUploading = true;
 
-		try {
-			const xhr = new XMLHttpRequest();
-			xhr.open('POST', `${apiUrl}/firmware/web`, true);
-			xhr.upload.onprogress = (e) => {
-				if (e.lengthComputable) uploadProgress = (e.loaded / e.total) * 100;
-			};
-			xhr.onload = () => {
-				if (xhr.status >= 200 && xhr.status < 300) {
-					uploadComplete = true;
-					toast.success('Upload complete!');
-				} else {
-					toast.error(`Upload failed: ${xhr.statusText}`);
-				}
-			};
-			xhr.onerror = () => toast.error('Network error.');
-			xhr.ontimeout = () => toast.error('Upload timed out.');
-			xhr.timeout = 360000; // 3 minutes
-			xhr.send(file);
-		} catch (err) {
-			console.error(err);
-			toast.error('Unexpected upload error.');
+		const result = await uploadWithProgress(`${apiUrl}/firmware/web`, file, {
+			maxSize: UPLOAD_LIMITS.FIRMWARE,
+			timeout: 360000, // 6 minutes for firmware
+			onProgress: (percent) => {
+				uploadProgress = percent;
+			},
+			context: 'Web firmware upload'
+		});
+
+		isUploading = false;
+
+		if (result.success) {
+			uploadComplete = true;
+			toast.success('Upload complete!');
 		}
+		// Error toast is handled by uploadWithProgress
 	}
 </script>
 
@@ -105,7 +110,7 @@
 		</label>
 	</div>
 
-	{#if uploadProgress > 0 && !uploadComplete}
+	{#if isUploading}
 		<div class="mt-4">
 			<p class="mt-2 text-center text-sm">Uploading: {Math.floor(uploadProgress)}%</p>
 		</div>
@@ -120,11 +125,11 @@
 		<div class="border-border py-4">
 			<Button
 				onclick={startUpload}
-				disabled={!file || uploadProgress > 0}
+				disabled={!file || isUploading}
 				variant="primary"
 				class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-200"
 			>
-				{#if uploadProgress > 0 && !uploadComplete}
+				{#if isUploading}
 					Uploading...
 				{:else}
 					Upload Firmware

@@ -21,7 +21,10 @@
 
 	let failedImages = $state<Record<string | number, boolean>>({});
 	let loadedImages = $state<Record<string | number, string | null>>({});
-	let loadingStates = $state<Record<string | number, boolean>>({});
+	let loadingStates = $state<Record<string | number, boolean>>(
+		// Initialize all slots as loading
+		Object.fromEntries(imageNames.map((name: string) => [name, true]))
+	);
 	let deletingStates = $state<Record<string | number, boolean>>({});
 	let uploadingStates = $state<Record<string | number, boolean>>({});
 
