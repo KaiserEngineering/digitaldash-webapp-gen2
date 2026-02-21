@@ -57,8 +57,14 @@ typedef enum {
     UPLOAD_ERR_WRITE,
     UPLOAD_ERR_TOO_LARGE,
     UPLOAD_ERR_NO_CONTENT,
-    UPLOAD_ERR_FILE_OPEN
+    UPLOAD_ERR_FILE_OPEN,
+    UPLOAD_ERR_CHECKSUM
 } upload_result_t;
+
+/* HTTP 422 Unprocessable Entity (checksum mismatch) */
+#ifndef HTTPD_422_UNPROCESSABLE_ENTITY
+#define HTTPD_422_UNPROCESSABLE_ENTITY 422
+#endif
 
 /**
  * Send a JSON error response with logging

@@ -29,8 +29,36 @@
 #include "file_handler.h"
 #include "esp_log.h"
 #include "esp_heap_caps.h"
+#include "esp_rom_crc.h"
 #include <string.h>
 #include <sys/param.h>
+
+/**
+ * Parse X-Checksum-CRC32 header value (hex string like "A1B2C3D4")
+ * Returns 0 if header not present or invalid
+ */
+static uint32_t parse_checksum_header(httpd_req_t *req)
+{
+    char checksum_str[16] = {0};
+    size_t hdr_len = httpd_req_get_hdr_value_len(req, "X-Checksum-CRC32");
+
+    if (hdr_len == 0 || hdr_len >= sizeof(checksum_str)) {
+        return 0;  // No checksum header or too long
+    }
+
+    if (httpd_req_get_hdr_value_str(req, "X-Checksum-CRC32", checksum_str, sizeof(checksum_str)) != ESP_OK) {
+        return 0;
+    }
+
+    // Parse hex string
+    char *endptr;
+    uint32_t checksum = strtoul(checksum_str, &endptr, 16);
+    if (*endptr != '\0') {
+        return 0;  // Invalid hex
+    }
+
+    return checksum;
+}
 
 void upload_send_error(httpd_req_t *req, const char *status,
                        const char *error_msg, const char *log_tag,
@@ -96,6 +124,14 @@ upload_result_t upload_to_file(httpd_req_t *req, const char *filepath,
         return UPLOAD_ERR_TOO_LARGE;
     }
 
+    /* Check for checksum header */
+    uint32_t expected_crc = parse_checksum_header(req);
+    bool verify_checksum = (expected_crc != 0);
+    if (verify_checksum) {
+        ESP_LOGI(log_tag, "Checksum verification enabled (expected: 0x%08X)",
+                 (unsigned)expected_crc);
+    }
+
     /* Allocate upload buffer from SPIRAM to preserve internal SRAM for other uses */
     char *buf = (char *)heap_caps_malloc(UPLOAD_CHUNK_SIZE, MALLOC_CAP_SPIRAM);
     if (!buf) {
@@ -112,6 +148,7 @@ upload_result_t upload_to_file(httpd_req_t *req, const char *filepath,
 
     int remaining = req->content_len;
     int total_received = 0;
+    uint32_t running_crc = 0;
 
     while (remaining > 0) {
         int received = 0;
@@ -123,6 +160,11 @@ upload_result_t upload_to_file(httpd_req_t *req, const char *filepath,
             file_handler_delete(filepath);
             free(buf);
             return result;
+        }
+
+        /* Update running CRC if verification enabled */
+        if (verify_checksum) {
+            running_crc = esp_rom_crc32_le(running_crc, (const uint8_t *)buf, received);
         }
 
         size_t written = fwrite(buf, 1, received, file);
@@ -140,10 +182,24 @@ upload_result_t upload_to_file(httpd_req_t *req, const char *filepath,
 
     file_handler_close(file);
     free(buf);
+
+    /* Verify checksum if header was provided */
+    if (verify_checksum && running_crc != expected_crc) {
+        ESP_LOGE(log_tag, "Checksum mismatch! Expected: 0x%08X, Got: 0x%08X",
+                 (unsigned)expected_crc, (unsigned)running_crc);
+        file_handler_delete(filepath);
+        return UPLOAD_ERR_CHECKSUM;
+    }
+
     *bytes_written = total_received;
 
-    ESP_LOGI(log_tag, "File uploaded successfully: %s (%d bytes)",
-             filepath, total_received);
+    if (verify_checksum) {
+        ESP_LOGI(log_tag, "File uploaded and verified: %s (%d bytes, CRC: 0x%08X)",
+                 filepath, total_received, (unsigned)running_crc);
+    } else {
+        ESP_LOGI(log_tag, "File uploaded successfully: %s (%d bytes)",
+                 filepath, total_received);
+    }
     return UPLOAD_OK;
 }
 
@@ -215,6 +271,11 @@ esp_err_t upload_send_result_error(httpd_req_t *req, upload_result_t result,
             upload_send_error(req, "500 Internal Server Error",
                               "Failed to create file", log_tag,
                               "Failed to open file for writing");
+            break;
+        case UPLOAD_ERR_CHECKSUM:
+            upload_send_error(req, "422 Unprocessable Entity",
+                              "Checksum verification failed - file may be corrupted",
+                              log_tag, "CRC32 checksum mismatch");
             break;
         default:
             upload_send_error(req, "500 Internal Server Error",
