@@ -17,7 +17,12 @@ esp_err_t web_update_post_handler(httpd_req_t *req)
 {
     esp_ota_handle_t ota_handle;
     int remaining = req->content_len;
-    int timeout_retries = 0;
+
+    if (remaining == 0) {
+        upload_send_error(req, "400 Bad Request", "No firmware data received",
+                          TAG, "OTA upload with zero content length");
+        return ESP_FAIL;
+    }
 
     /* Allocate upload buffer from SPIRAM to preserve internal SRAM for other uses */
     char *buf = (char *)heap_caps_malloc(UPLOAD_CHUNK_SIZE, MALLOC_CAP_SPIRAM);
@@ -47,34 +52,17 @@ esp_err_t web_update_post_handler(httpd_req_t *req)
 
     while (remaining > 0)
     {
-        int recv_len = httpd_req_recv(req, buf, remaining < UPLOAD_CHUNK_SIZE ? remaining : UPLOAD_CHUNK_SIZE);
-        if (recv_len == HTTPD_SOCK_ERR_TIMEOUT)
-        {
-            timeout_retries++;
-            if (timeout_retries >= UPLOAD_MAX_TIMEOUT_RETRIES)
-            {
-                ESP_LOGE(TAG, "Max timeout retries exceeded during OTA");
-                esp_ota_end(ota_handle);
-                upload_send_error(req, "408 Request Timeout", "OTA upload timed out",
-                                  TAG, "OTA timeout limit reached");
-                free(buf);
-                return ESP_FAIL;
-            }
-            ESP_LOGW(TAG, "Socket timeout (retry %d/%d)", timeout_retries, UPLOAD_MAX_TIMEOUT_RETRIES);
-            continue;
-        }
-        else if (recv_len <= 0)
-        {
-            upload_send_error(req, "500 Internal Server Error", "Protocol error during OTA",
-                              TAG, "HTTP receive error during OTA");
+        int received = 0;
+        upload_result_t result = upload_receive_chunk(req, buf, UPLOAD_CHUNK_SIZE,
+                                                       remaining, &received, TAG);
+
+        if (result != UPLOAD_OK) {
             esp_ota_end(ota_handle);
             free(buf);
-            return ESP_FAIL;
+            return upload_send_result_error(req, result, TAG);
         }
 
-        timeout_retries = 0;  // Reset on successful receive
-
-        if (esp_ota_write(ota_handle, (const void *)buf, recv_len) != ESP_OK)
+        if (esp_ota_write(ota_handle, (const void *)buf, received) != ESP_OK)
         {
             upload_send_error(req, "500 Internal Server Error", "Flash error during OTA",
                               TAG, "OTA write operation failed");
@@ -83,7 +71,7 @@ esp_err_t web_update_post_handler(httpd_req_t *req)
             return ESP_FAIL;
         }
 
-        remaining -= recv_len;
+        remaining -= received;
     }
 
     free(buf);
