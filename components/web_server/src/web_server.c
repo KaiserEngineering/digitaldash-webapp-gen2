@@ -16,8 +16,8 @@
 #include "stm_flash.h"
 #include <lwip/sockets.h>
 
-// External function declaration
-extern void mirror_spiffs(void);
+// External function declaration - returns number of synced backgrounds or -1 on error
+extern int mirror_spiffs(void);
 
 static const char *TAG = "WebServer";
 
@@ -299,13 +299,18 @@ esp_err_t sync_handler(httpd_req_t *req)
     httpd_resp_set_type(req, "application/json");
     httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
 
-    // Call the mirror_spiffs function first
-    mirror_spiffs();
+    int result = mirror_spiffs();
 
-    const char* success_response = "{\"success\":true,\"message\":\"Backgrounds synced successfully\"}";
-    esp_err_t ret = httpd_resp_send(req, success_response, strlen(success_response));
+    char response[128];
+    if (result < 0) {
+        snprintf(response, sizeof(response),
+                 "{\"success\":false,\"message\":\"Sync failed - communication error with Digital Dash\"}");
+        return httpd_resp_send(req, response, strlen(response));
+    }
 
-    return ret;
+    snprintf(response, sizeof(response),
+             "{\"success\":true,\"message\":\"Backgrounds synced successfully\",\"count\":%d}", result);
+    return httpd_resp_send(req, response, strlen(response));
 }
 
 esp_err_t start_webserver()

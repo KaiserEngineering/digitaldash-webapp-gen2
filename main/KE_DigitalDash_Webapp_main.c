@@ -277,7 +277,7 @@ uint32_t png_to_rgba(char *buffer, uint32_t buffer_size, uint8_t background_idx)
     return num_bytes;
 }
 
-void mirror_spiffs(void)
+int mirror_spiffs(void)
 {
     char *ptr;
     uint32_t len;
@@ -286,38 +286,56 @@ void mirror_spiffs(void)
     // Parse the JSON string
     cJSON *root = cJSON_Parse(ptr);
     if (root == NULL) {
-        ESP_LOGI(TAG, "Error parsing JSON!\n");
-        return;
+        ESP_LOGE(TAG, "Error parsing JSON for background sync");
+        return -1;
     }
-    
+
     // Get the "view_background" array from the JSON object
     cJSON *view_background = cJSON_GetObjectItemCaseSensitive(root, "view_background");
     if (!cJSON_IsArray(view_background)) {
         ESP_LOGI(TAG, "\"view_background\" is not an array or does not exist!");
         cJSON_Delete(root);
-        return;
+        return 0;  // No backgrounds to sync is not an error
     }
-    
+
     int count = cJSON_GetArraySize(view_background);
+    int synced = 0;
+    int skipped = 0;
+    int errors = 0;
+
     for (int i = 0; i < count; i++) {
         cJSON *user = cJSON_GetArrayItem(view_background, i);
         if (cJSON_IsString(user) && user->valuestring != NULL) {
             char image_name[64] = {0};
             snprintf(image_name, sizeof(image_name), "/spiffs/%s.png", user->valuestring);
-            
+
             FILE *fp = fopen(image_name, "rb");
             if (fp) {
                 ESP_LOGI(TAG, "File exists: %s", image_name);
                 uint32_t img_crc = crc32_png_rgba(fp);
                 ESP_LOGI(TAG, "ESP32 CRC: %lu", img_crc);
-                Generate_TX_Message(&stm32_comm, KE_BACKGROUND_CRC_REQUEST, &i );
-                KE_wait_for_response(&stm32_comm, 1000);
+                Generate_TX_Message(&stm32_comm, KE_BACKGROUND_CRC_REQUEST, &i);
+                KE_CP_OP_CODES result = KE_wait_for_response(&stm32_comm, 1000);
+                if (result != KE_ACK) {
+                    ESP_LOGW(TAG, "No response from STM32 for CRC request");
+                    errors++;
+                    fclose(fp);
+                    continue;
+                }
                 ESP_LOGI(TAG, "STM32 CRC: %lu", background_crc);
-                if( background_crc == img_crc ) {
+                if (background_crc == img_crc) {
                     ESP_LOGI(TAG, "Image match, skipping");
+                    skipped++;
                 } else {
-                    Generate_TX_Message(&stm32_comm, KE_BACKGROUND_SEND, &i );
-                    KE_wait_for_response(&stm32_comm, 30000);
+                    Generate_TX_Message(&stm32_comm, KE_BACKGROUND_SEND, &i);
+                    result = KE_wait_for_response(&stm32_comm, 30000);
+                    if (result == KE_ACK) {
+                        ESP_LOGI(TAG, "Image synced successfully");
+                        synced++;
+                    } else {
+                        ESP_LOGW(TAG, "Failed to sync image to STM32");
+                        errors++;
+                    }
                 }
                 fclose(fp);
             } else {
@@ -327,9 +345,12 @@ void mirror_spiffs(void)
             ESP_LOGI(TAG, "view_background[%d] is not a valid string", i);
         }
     }
-    
+
     // Clean up
     cJSON_Delete(root);
+
+    ESP_LOGI(TAG, "Background sync complete: %d synced, %d skipped, %d errors", synced, skipped, errors);
+    return errors > 0 ? -1 : synced + skipped;
 }
 
 void stm32_communication_init(void)

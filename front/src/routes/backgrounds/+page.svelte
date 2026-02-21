@@ -17,12 +17,12 @@
 		isSyncing = true;
 		try {
 			await syncBackgrounds();
+			toast.success('Backgrounds synced successfully');
 		} catch (error) {
 			toast.error('Failed to sync backgrounds');
 			console.error('Sync failed:', error);
 		} finally {
 			isSyncing = false;
-			toast.success('Backgrounds synced successfully');
 		}
 	}
 </script>
@@ -49,10 +49,10 @@
 			>
 				{#if isSyncing}
 					<Loader class="h-4 w-4 animate-spin" />
-					Syncing...
+					Syncing to Digital Dash...
 				{:else}
 					<RefreshCcw class="h-4 w-4" />
-					Sync Backgrounds
+					Sync to Digital Dash
 				{/if}
 			</Button>
 		</div>

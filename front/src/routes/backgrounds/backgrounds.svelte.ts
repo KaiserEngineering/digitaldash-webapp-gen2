@@ -65,19 +65,29 @@ export async function deleteBackground(
 	}
 }
 
-export async function syncBackgrounds(): Promise<void> {
-	try {
-		const response = await fetch(`${apiUrl}/sync`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			}
-		});
+export interface SyncResult {
+	success: boolean;
+	message: string;
+	count?: number;
+}
 
-		if (!response.ok) {
-			throw new Error(`Sync failed: ${response.statusText}`);
+export async function syncBackgrounds(): Promise<SyncResult> {
+	const response = await fetch(`${apiUrl}/sync`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
 		}
-	} catch (error) {
-		throw error;
+	});
+
+	if (!response.ok) {
+		throw new Error(`Sync failed: ${response.statusText}`);
 	}
+
+	const result: SyncResult = await response.json();
+
+	if (!result.success) {
+		throw new Error(result.message || 'Sync failed');
+	}
+
+	return result;
 }
