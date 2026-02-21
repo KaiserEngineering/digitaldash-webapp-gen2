@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { FileSearch, Upload, CircleCheck, CloudUpload } from 'lucide-svelte';
+	import { FileSearch, Upload, CircleCheck, CloudUpload, Loader2 } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import toast from 'svelte-5-french-toast';
 	import { apiUrl } from '$lib/config';
@@ -9,11 +9,12 @@
 	let { data } = $props();
 	const ver = data?.ver || 'Unknown';
 
+	type UploadPhase = 'idle' | 'uploading' | 'flashing' | 'rebooting' | 'complete' | 'error';
+
 	let file: File | null = $state(null);
 	let dragActive = $state(false);
 	let uploadProgress = $state(0);
-	let uploadComplete = $state(false);
-	let isUploading = $state(false);
+	let uploadPhase: UploadPhase = $state('idle');
 
 	function handleDrag(e: DragEvent) {
 		e.preventDefault();
@@ -42,7 +43,7 @@
 
 	function resetUploadState() {
 		uploadProgress = 0;
-		uploadComplete = false;
+		uploadPhase = 'idle';
 	}
 
 	async function startUpload() {
@@ -59,25 +60,42 @@
 		}
 
 		resetUploadState();
-		isUploading = true;
+		uploadPhase = 'uploading';
 
 		const result = await uploadWithProgress(`${apiUrl}/firmware/web`, file, {
 			maxSize: UPLOAD_LIMITS.FIRMWARE,
 			timeout: 360000, // 6 minutes for firmware
 			onProgress: (percent) => {
 				uploadProgress = percent;
+				// When upload hits 100%, we're waiting for flash verification
+				if (percent >= 100 && uploadPhase === 'uploading') {
+					uploadPhase = 'flashing';
+				}
 			},
 			context: 'Web firmware upload'
 		});
 
-		isUploading = false;
-
 		if (result.success) {
-			uploadComplete = true;
-			toast.success('Upload complete!');
+			uploadPhase = 'rebooting';
+			toast.success('Firmware updated! Device is rebooting...');
+			// After a delay, show complete state
+			setTimeout(() => {
+				uploadPhase = 'complete';
+			}, 3000);
+		} else {
+			uploadPhase = 'error';
 		}
-		// Error toast is handled by uploadWithProgress
 	}
+
+	const isUploading = $derived(uploadPhase === 'uploading' || uploadPhase === 'flashing' || uploadPhase === 'rebooting');
+	const statusMessage = $derived(() => {
+		switch (uploadPhase) {
+			case 'uploading': return `Uploading firmware... ${Math.floor(uploadProgress)}%`;
+			case 'flashing': return 'Writing to flash...';
+			case 'rebooting': return 'Rebooting device...';
+			default: return '';
+		}
+	});
 </script>
 
 <PageCard title="Web App Uploader" description={`Current Version: ${ver}`} icon={CloudUpload}>
@@ -110,14 +128,15 @@
 		</label>
 	</div>
 
-	{#if isUploading}
-		<div class="mt-4">
-			<p class="mt-2 text-center text-sm">Uploading: {Math.floor(uploadProgress)}%</p>
+	{#if uploadPhase !== 'idle' && uploadPhase !== 'complete' && uploadPhase !== 'error'}
+		<div class="mt-4 flex flex-col items-center gap-2">
+			<Loader2 size={24} class="animate-spin text-primary" />
+			<p class="text-center text-sm">{statusMessage()}</p>
 		</div>
-	{:else if uploadComplete}
+	{:else if uploadPhase === 'complete'}
 		<div class="mt-4 text-center text-green-600">
 			<CircleCheck size={24} class="mx-auto mb-2" />
-			<p class="text-sm font-medium">Upload complete! Reconnect and refresh if needed.</p>
+			<p class="text-sm font-medium">Firmware updated! Reconnect and refresh when ready.</p>
 		</div>
 	{/if}
 
@@ -129,8 +148,12 @@
 				variant="primary"
 				class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-200"
 			>
-				{#if isUploading}
-					Uploading...
+				{#if uploadPhase === 'uploading'}
+					Uploading... {Math.floor(uploadProgress)}%
+				{:else if uploadPhase === 'flashing'}
+					Writing to flash...
+				{:else if uploadPhase === 'rebooting'}
+					Rebooting...
 				{:else}
 					Upload Firmware
 				{/if}
