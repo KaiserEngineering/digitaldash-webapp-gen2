@@ -8,6 +8,7 @@
 	import ErrorBoundary from '$lib/components/ErrorBoundary.svelte';
 	import RecoveryBanner from '$lib/components/RecoveryBanner.svelte';
 	import ConfigValidationBanner from '$lib/components/ConfigValidationBanner.svelte';
+	import SyncStatus from '$lib/components/SyncStatus.svelte';
 	import { recoveryStore } from '$lib/stores/recoveryMode';
 	import { parseApiError } from '$lib/utils/errorHandling';
 
@@ -44,6 +45,7 @@
 			</main>
 
 			<Footer />
+			<SyncStatus />
 		</div>
 	{:catch err}
 		<!-- Enhanced error screen -->
