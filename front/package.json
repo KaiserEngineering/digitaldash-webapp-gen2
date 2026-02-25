@@ -71,6 +71,7 @@
 		"@types/better-sqlite3": "^7.6.13",
 		"@types/node": "^25.0.3",
 		"@types/pako": "^2.0.4",
+		"@vercel/analytics": "^1.6.1",
 		"better-sqlite3": "^12.5.0",
 		"install": "^0.13.0",
 		"lucide-svelte": "^0.562.0",
