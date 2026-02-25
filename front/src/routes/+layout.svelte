@@ -10,7 +10,6 @@
 	import ConfigValidationBanner from '$lib/components/ConfigValidationBanner.svelte';
 	import { recoveryStore } from '$lib/stores/recoveryMode';
 	import { parseApiError } from '$lib/utils/errorHandling';
-	import { injectAnalytics } from '@vercel/analytics/sveltekit'
 
 	let { children, data } = $props();
 
