@@ -52,7 +52,7 @@ void init_spiffs(void)
         while ((entry = readdir(dir)) != NULL) {
             size_t name_len = strlen(entry->d_name);
             if (name_len > 4 && strcmp(entry->d_name + name_len - 4, ".tmp") == 0) {
-                char path[64];
+                char path[8 + sizeof(entry->d_name)];
                 snprintf(path, sizeof(path), "/spiffs/%s", entry->d_name);
                 if (unlink(path) == 0) {
                     ESP_LOGW(TAG, "Cleaned up leftover temp file: %s", path);
