@@ -2,10 +2,6 @@ import { getConfig } from '$lib/stores/configStore';
 import { getOptions, type OptionsData } from '$lib/stores/optionsCache';
 import { getPids } from '$lib/stores/PIDsStore';
 import { recoveryStore } from '$lib/stores/recoveryMode';
-import { injectAnalytics } from '@vercel/analytics/sveltekit'
-import { dev } from '$app/environment';
-
-injectAnalytics({ mode: dev ? 'development' : 'production' });
 
 export const load = async ({ fetch, url }) => {
 	const issues: string[] = [];
