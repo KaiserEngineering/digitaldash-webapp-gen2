@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Dialog as DialogPrimitive } from 'bits-ui';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { cn } from '$lib/utils';
 	import { useImageCropperDialog } from './image-cropper.svelte.js';
@@ -9,10 +10,10 @@
 	const dialogState = useImageCropperDialog();
 </script>
 
-<Dialog.Root bind:open={dialogState.rootState.open}>
+<DialogPrimitive.Root bind:open={dialogState.rootState.open}>
 	<Dialog.Content
 		{...rest}
-		hideClose
+		showCloseButton={false}
 		class={cn(
 			'min-h-96 max-w-full rounded-none border-x-0 sm:max-w-lg sm:rounded-lg sm:border-x',
 			className
@@ -22,4 +23,4 @@
 			{@render children?.()}
 		</div>
 	</Dialog.Content>
-</Dialog.Root>
+</DialogPrimitive.Root>
