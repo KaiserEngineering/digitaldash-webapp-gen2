@@ -102,7 +102,7 @@ void init_webapp_ap(void)
     ESP_LOGI(TAG, "Application started successfully");
 }
 
-int stm32_tx(const uint8_t *data, uint32_t len)
+int stm32_tx(uint8_t *data, uint32_t len)
 {
     size_t total_sent = 0;
     size_t max_chunk_size = 0x7FFF; // 1/2 0xFFFF which is the STM32 max DMA size
