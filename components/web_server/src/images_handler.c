@@ -47,6 +47,7 @@ static const char *TAG = "ImagesHandler";
 #define MAX_FILES 100
 #define MAX_FILE_SIZE (1024 * 1024)
 #define IMAGE_DIR "/spiffs"
+#define SERVE_CHUNK_SIZE 4096
 
 static void url_decode(char *dest, const char *src, size_t dest_size)
 {
@@ -68,14 +69,22 @@ static void url_decode(char *dest, const char *src, size_t dest_size)
     *dest = '\0';
 }
 
+static bool has_extension(const char *filename, const char *ext)
+{
+    size_t fname_len = strlen(filename);
+    size_t ext_len = strlen(ext);
+    if (fname_len < ext_len) return false;
+    return strcasecmp(filename + fname_len - ext_len, ext) == 0;
+}
+
 static bool is_image_file(const char *filename, const char **mime_type)
 {
-    if (strstr(filename, ".png"))
+    if (has_extension(filename, ".png"))
     {
         *mime_type = "image/png";
         return true;
     }
-    else if (strstr(filename, ".jpg") || strstr(filename, ".jpeg"))
+    else if (has_extension(filename, ".jpg") || has_extension(filename, ".jpeg"))
     {
         *mime_type = "image/jpeg";
         return true;

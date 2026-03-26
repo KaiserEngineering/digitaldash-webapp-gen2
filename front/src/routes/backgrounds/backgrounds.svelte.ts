@@ -2,7 +2,7 @@
 import { apiUrl } from '$lib/config';
 import { ImageHandler } from '$lib/image/handler';
 import type { ImageData } from '$lib/image/handler';
-import { upload, UPLOAD_LIMITS } from '$lib/utils/upload';
+import { uploadWithProgress, UPLOAD_LIMITS } from '$lib/utils/upload';
 
 interface UploadResponse {
 	success: boolean;
@@ -14,15 +14,17 @@ const imageHandler = new ImageHandler();
 
 export async function uploadBackground(
 	file: File,
-	images: { [key: string]: ImageData } = {}
+	images: { [key: string]: ImageData } = {},
+	onProgress?: (percent: number) => void
 ): Promise<UploadResponse> {
 	// Generate the filename with extension based on file type
 	const extension = file.type === 'image/jpeg' ? '.jpg' : '.png';
 	const filename = `${file.name}${extension}`;
 
-	const result = await upload<UploadResponse>(`${apiUrl}/spiffs/${filename}`, file, {
+	const result = await uploadWithProgress<UploadResponse>(`${apiUrl}/spiffs/${filename}`, file, {
 		maxSize: UPLOAD_LIMITS.IMAGE,
-		context: 'Background upload'
+		context: 'Background upload',
+		onProgress
 	});
 
 	if (!result.success) {

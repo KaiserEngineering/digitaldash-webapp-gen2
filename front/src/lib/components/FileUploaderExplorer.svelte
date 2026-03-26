@@ -30,6 +30,7 @@
 
 	let file = $state<UploadedFile | null>(null);
 	let isUploading = $state(false);
+	let uploadProgress = $state(0);
 	let requiresCropping = $state(false);
 	let isProperlyResized = $state(false);
 
@@ -140,13 +141,16 @@
 		if (!file?.rawFile) return;
 
 		isUploading = true;
+		uploadProgress = 0;
 		try {
 			// Rename file to match slot name (don't add .png as it's handled by the API)
 			const renamedFile = new File([file.rawFile], slotName, {
 				type: file.rawFile.type
 			});
 
-			await uploadCallback(renamedFile);
+			await uploadCallback(renamedFile, {}, (percent: number) => {
+				uploadProgress = percent;
+			});
 			onUploaded();
 		} catch (error) {
 			console.error('Failed to upload file:', error);
@@ -154,6 +158,7 @@
 		} finally {
 			removeFile();
 			isUploading = false;
+			uploadProgress = 0;
 		}
 	};
 
@@ -257,6 +262,7 @@
 			>
 				{#if isUploading}
 					<Spinner />
+					Uploading {uploadProgress}%
 				{:else if requiresCropping}
 					Must Crop to 1024x200 First
 				{:else if !isProperlyResized}
