@@ -3,6 +3,7 @@
 #include "sys/dirent.h"
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 static const char *TAG = "SPIFFS";
 
@@ -41,6 +42,30 @@ void init_spiffs(void)
     else
     {
         ESP_LOGI(TAG, "SPIFFS mounted successfully. Total: %zu bytes, Used: %zu bytes", total, used);
+    }
+
+    /* Remove any leftover .tmp files from interrupted uploads */
+    DIR *dir = opendir("/spiffs");
+    if (dir) {
+        struct dirent *entry;
+        int cleaned = 0;
+        while ((entry = readdir(dir)) != NULL) {
+            size_t name_len = strlen(entry->d_name);
+            if (name_len > 4 && strcmp(entry->d_name + name_len - 4, ".tmp") == 0) {
+                char path[64];
+                snprintf(path, sizeof(path), "/spiffs/%s", entry->d_name);
+                if (unlink(path) == 0) {
+                    ESP_LOGW(TAG, "Cleaned up leftover temp file: %s", path);
+                    cleaned++;
+                } else {
+                    ESP_LOGE(TAG, "Failed to delete temp file: %s", path);
+                }
+            }
+        }
+        closedir(dir);
+        if (cleaned > 0) {
+            ESP_LOGW(TAG, "Removed %d leftover temp file(s) from prior interrupted upload(s)", cleaned);
+        }
     }
 }
 
