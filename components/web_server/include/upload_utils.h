@@ -58,7 +58,9 @@ typedef enum {
     UPLOAD_ERR_TOO_LARGE,
     UPLOAD_ERR_NO_CONTENT,
     UPLOAD_ERR_FILE_OPEN,
-    UPLOAD_ERR_CHECKSUM
+    UPLOAD_ERR_CHECKSUM,
+    UPLOAD_ERR_RENAME,
+    UPLOAD_ERR_STORAGE_FULL
 } upload_result_t;
 
 /* HTTP 422 Unprocessable Entity (checksum mismatch) */

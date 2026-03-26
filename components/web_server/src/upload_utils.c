@@ -30,6 +30,7 @@
 #include "esp_log.h"
 #include "esp_heap_caps.h"
 #include "esp_rom_crc.h"
+#include <errno.h>
 #include <string.h>
 #include <sys/param.h>
 
@@ -139,9 +140,15 @@ upload_result_t upload_to_file(httpd_req_t *req, const char *filepath,
         return UPLOAD_ERR_FILE_OPEN;
     }
 
-    FILE *file = file_handler_open_write(filepath);
+    /* Write to a temp path first; rename to target only on full success.
+     * This prevents a partial or failed upload from corrupting the existing
+     * file and avoids leaving inconsistent SPIFFS metadata behind. */
+    char tmp_path[256];
+    snprintf(tmp_path, sizeof(tmp_path), "%s.tmp", filepath);
+
+    FILE *file = file_handler_open_write(tmp_path);
     if (!file) {
-        ESP_LOGE(log_tag, "Failed to open file for writing: %s", filepath);
+        ESP_LOGE(log_tag, "Failed to open temp file for writing: %s", tmp_path);
         free(buf);
         return UPLOAD_ERR_FILE_OPEN;
     }
@@ -157,7 +164,7 @@ upload_result_t upload_to_file(httpd_req_t *req, const char *filepath,
 
         if (result != UPLOAD_OK) {
             file_handler_close(file);
-            file_handler_delete(filepath);
+            file_handler_delete(tmp_path);
             free(buf);
             return result;
         }
@@ -169,10 +176,15 @@ upload_result_t upload_to_file(httpd_req_t *req, const char *filepath,
 
         size_t written = fwrite(buf, 1, received, file);
         if (written != (size_t)received) {
-            ESP_LOGE(log_tag, "File write error (%zu vs %d)", written, received);
+            int write_errno = errno;
             file_handler_close(file);
-            file_handler_delete(filepath);
+            file_handler_delete(tmp_path);
             free(buf);
+            if (write_errno == ENOSPC) {
+                ESP_LOGE(log_tag, "SPIFFS storage full (errno=ENOSPC)");
+                return UPLOAD_ERR_STORAGE_FULL;
+            }
+            ESP_LOGE(log_tag, "File write error (%zu vs %d, errno=%d)", written, received, write_errno);
             return UPLOAD_ERR_WRITE;
         }
 
@@ -187,8 +199,15 @@ upload_result_t upload_to_file(httpd_req_t *req, const char *filepath,
     if (verify_checksum && running_crc != expected_crc) {
         ESP_LOGE(log_tag, "Checksum mismatch! Expected: 0x%08X, Got: 0x%08X",
                  (unsigned)expected_crc, (unsigned)running_crc);
-        file_handler_delete(filepath);
+        file_handler_delete(tmp_path);
         return UPLOAD_ERR_CHECKSUM;
+    }
+
+    /* Atomically replace target file with the fully-received temp file */
+    if (rename(tmp_path, filepath) != 0) {
+        ESP_LOGE(log_tag, "Failed to rename %s -> %s (errno=%d)", tmp_path, filepath, errno);
+        file_handler_delete(tmp_path);
+        return UPLOAD_ERR_RENAME;
     }
 
     *bytes_written = total_received;
@@ -276,6 +295,16 @@ esp_err_t upload_send_result_error(httpd_req_t *req, upload_result_t result,
             upload_send_error(req, "422 Unprocessable Entity",
                               "Checksum verification failed - file may be corrupted",
                               log_tag, "CRC32 checksum mismatch");
+            break;
+        case UPLOAD_ERR_RENAME:
+            upload_send_error(req, "500 Internal Server Error",
+                              "Failed to finalize file after upload",
+                              log_tag, "Rename from temp path failed");
+            break;
+        case UPLOAD_ERR_STORAGE_FULL:
+            upload_send_error(req, "507 Insufficient Storage",
+                              "Storage full - delete some files and try again",
+                              log_tag, "SPIFFS out of space");
             break;
         default:
             upload_send_error(req, "500 Internal Server Error",

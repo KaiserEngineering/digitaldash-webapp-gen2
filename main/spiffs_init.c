@@ -12,7 +12,7 @@ void init_spiffs(void)
         .base_path = "/spiffs",
         .partition_label = NULL,
         .max_files = 25,
-        .format_if_mount_failed = true};
+        .format_if_mount_failed = false};
 
     esp_err_t ret = esp_vfs_spiffs_register(&conf);
     if (ret != ESP_OK)
