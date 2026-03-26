@@ -26,7 +26,8 @@
 	let { uploadCallback, slotName, onUploaded } = $props();
 
 	// Create unique ID for this slot's cropper to avoid conflicts
-	const cropperId = $derived(`crop-file-input-${slotName}`);
+	// slotName is a mount-time constant so capturing initial value is intentional
+	const cropperId = `crop-file-input-${slotName}`;
 
 	let file = $state<UploadedFile | null>(null);
 	let isUploading = $state(false);
