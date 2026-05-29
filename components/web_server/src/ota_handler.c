@@ -4,9 +4,15 @@
 #include "esp_log.h"
 #include "esp_ota_ops.h"
 #include "esp_http_server.h"
+#include "esp_heap_caps.h"
 #include "stm32_uart.h"
 #include "ota_handler.h"
 #include "stm_flash.h"
+
+typedef struct {
+    uint8_t *buf;
+    size_t   size;
+} stm_flash_buf_t;
 
 static const char *TAG = "OTAHandler";
 
@@ -146,32 +152,15 @@ uint32_t get_binary_chunk_data(char *buffer, uint32_t buffer_size)
     return (uint32_t)current_chunk_len;
 }
 
-/* STM32 firmware flashing using the custom bootloader */
-void flash_stm32_firmware_task(void *pvParameter)
+/* STM32 firmware flash task — reads from a PSRAM buffer, no SPIFFS involved */
+static void flash_stm32_firmware_task(void *pvParameter)
 {
-    const char *firmware_path = (const char *)pvParameter;
+    stm_flash_buf_t *fw = (stm_flash_buf_t *)pvParameter;
+    uint8_t *firmware_buf  = fw->buf;
+    size_t   firmware_size = fw->size;
+    free(fw);
 
-    char file_path[FILE_PATH_MAX];
-    sprintf(file_path, "%s%s", BASE_PATH, firmware_path);
-    logD(TAG, "File name: %s", file_path);
-
-    // Reset progress tracking
     reset_stm_flash_progress();
-
-    // Open firmware file from SPIFFS
-    FILE *file = fopen(file_path, "rb");
-    if (!file)
-    {
-        ESP_LOGE(TAG, "Failed to open firmware file: %s", file_path);
-        set_stm_flash_error("Failed to open firmware file");
-        vTaskDelete(NULL);
-        return;
-    }
-
-    // Get total file size for progress calculation
-    fseek(file, 0, SEEK_END);
-    long total_size = ftell(file);
-    fseek(file, 0, SEEK_SET);
 
     if (!binary_chunk)
     {
@@ -180,51 +169,49 @@ void flash_stm32_firmware_task(void *pvParameter)
         {
             ESP_LOGE(TAG, "Failed to allocate binary_chunk buffer");
             set_stm_flash_error("Memory allocation failed");
-            fclose(file);
+            heap_caps_free(firmware_buf);
             vTaskDelete(NULL);
             return;
         }
     }
 
-    size_t read_len = 0;
     int chunk_num = 0;
     bool success = true;
-
     current_offset = 0;
 
-    // Enter bootloader mode
     update_stm_flash_progress(0, "Entering bootloader mode");
     Generate_TX_Message(get_stm32_comm(), KE_ENTER_BOOTLOADER, NULL);
     KE_wait_for_response(get_stm32_comm(), 5000);
 
-    while ((read_len = fread(binary_chunk, 1, BINARY_CHUNK_SIZE, file)) > 0)
+    while (current_offset < firmware_size)
     {
-        current_chunk_len = read_len;
+        size_t remaining  = firmware_size - current_offset;
+        size_t chunk_size = remaining < BINARY_CHUNK_SIZE ? remaining : BINARY_CHUNK_SIZE;
 
-        ESP_LOGI(TAG, "Sending chunk %d at offset %d, length %d", chunk_num++, current_offset, current_chunk_len);
+        memcpy(binary_chunk, firmware_buf + current_offset, chunk_size);
+        current_chunk_len = chunk_size;
 
-        // Update progress before sending chunk
-        int percentage = (int)((current_offset * 100) / total_size);
+        ESP_LOGI(TAG, "Sending chunk %d at offset %zu, length %zu", chunk_num++, current_offset, chunk_size);
+
+        int percentage = (int)((current_offset * 100) / firmware_size);
         update_stm_flash_progress(percentage, "Flashing firmware");
 
-        // Send chunk (KE lib will internally call get_binary_chunk_data)
         Generate_TX_Message(get_stm32_comm(), KE_BINARY_SEND_CHUNK, &current_offset);
 
-        // Wait for ACK from STM32
         if (KE_wait_for_response(get_stm32_comm(), 20000) != KE_ACK)
         {
             success = false;
             break;
         }
 
-        current_offset += read_len;
+        current_offset += chunk_size;
     }
 
-    fclose(file);
+    heap_caps_free(firmware_buf);
 
     if (success)
     {
-        ESP_LOGI(TAG, "STM32 firmware flashed successfully (%lu bytes)", (unsigned long)current_offset);
+        ESP_LOGI(TAG, "STM32 firmware flashed successfully (%zu bytes)", current_offset);
         update_stm_flash_progress(100, "Resetting STM32");
         stm32_reset();
         ESP_LOGI(TAG, "STM32 reset to run new firmware");
@@ -279,35 +266,69 @@ void flash_stm32_bootloader(const char *firmware_path)
     set_stm_flash_complete();
 }
 
-/* STM32 firmware flashing function */
-void flash_stm32_firmware(const char *firmware_path)
-{
-    // Create a copy of the firmware path string for the task
-    static char firmware_path_copy[64];
-    strncpy(firmware_path_copy, firmware_path, sizeof(firmware_path_copy) - 1);
-    firmware_path_copy[sizeof(firmware_path_copy) - 1] = '\0';
-
-    // Create a task to run the flash operation in background
-    BaseType_t result = xTaskCreate(
-        flash_stm32_firmware_task,  // Task function
-        "stm_flash_task",           // Task name
-        8192,                       // Stack size
-        (void *)firmware_path_copy, // Parameters
-        5,                          // Priority
-        NULL                        // Task handle
-    );
-
-    if (result != pdPASS)
-    {
-        ESP_LOGE(TAG, "Failed to create STM32 flash task");
-        set_stm_flash_error("Failed to start flash task");
-    }
-}
-
-// Add STM firmware update handler
+/* Receive firmware binary over HTTP, buffer in PSRAM, and start flash task */
 esp_err_t stm_update_post_handler(httpd_req_t *req)
 {
-    flash_stm32_firmware("digitaldash-firmware-gen2-stm32u5g.bin");
+    if (req->content_len == 0) {
+        send_error_response(req, "400 Bad Request", "No firmware content", "STM upload received empty body");
+        return ESP_FAIL;
+    }
+
+    if (req->content_len > (4 * 1024 * 1024)) {
+        send_error_response(req, "413 Payload Too Large", "Firmware too large", "STM firmware exceeds 4 MB limit");
+        return ESP_FAIL;
+    }
+
+    uint8_t *firmware_buf = heap_caps_malloc(req->content_len, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    if (!firmware_buf) {
+        ESP_LOGE(TAG, "Failed to allocate %d bytes in PSRAM for firmware", req->content_len);
+        send_error_response(req, "500 Internal Server Error", "Out of memory", "PSRAM allocation failed for firmware upload");
+        return ESP_FAIL;
+    }
+
+    int remaining = req->content_len;
+    int total     = 0;
+    char chunk[4096];
+
+    while (remaining > 0) {
+        int to_recv = remaining < (int)sizeof(chunk) ? remaining : (int)sizeof(chunk);
+        int received = httpd_req_recv(req, chunk, to_recv);
+
+        if (received == HTTPD_SOCK_ERR_TIMEOUT) {
+            continue;
+        } else if (received <= 0) {
+            heap_caps_free(firmware_buf);
+            send_error_response(req, "500 Internal Server Error", "Upload failed", "Connection lost during firmware upload");
+            return ESP_FAIL;
+        }
+
+        memcpy(firmware_buf + total, chunk, received);
+        remaining -= received;
+        total     += received;
+    }
+
+    ESP_LOGI(TAG, "Firmware received: %d bytes — starting flash task", total);
+
+    stm_flash_buf_t *fw = malloc(sizeof(stm_flash_buf_t));
+    if (!fw) {
+        heap_caps_free(firmware_buf);
+        send_error_response(req, "500 Internal Server Error", "Out of memory", "Failed to allocate flash params");
+        return ESP_FAIL;
+    }
+    fw->buf  = firmware_buf;
+    fw->size = total;
+
+    reset_stm_flash_progress();
+    update_stm_flash_progress(0, "Initializing flash");
+
+    BaseType_t res = xTaskCreate(flash_stm32_firmware_task, "stm_flash_task", 8192, fw, 5, NULL);
+    if (res != pdPASS) {
+        heap_caps_free(firmware_buf);
+        free(fw);
+        send_error_response(req, "500 Internal Server Error", "Failed to start flash task", "xTaskCreate failed");
+        return ESP_FAIL;
+    }
+
     httpd_resp_set_type(req, "application/json");
     httpd_resp_sendstr(req, "{\"message\": \"STM32 firmware update started\"}");
     return ESP_OK;

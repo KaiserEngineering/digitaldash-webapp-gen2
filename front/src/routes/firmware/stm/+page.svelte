@@ -1,401 +1,212 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import {
-		CircleCheck,
-		TriangleAlert,
-		Loader,
-		Upload,
-		FileText,
-		Zap,
-		RotateCcw
-	} from 'lucide-svelte';
-	import { onMount, onDestroy } from 'svelte';
+	import { CircleCheck, TriangleAlert, Loader, Zap, RotateCcw } from 'lucide-svelte';
+	import { onDestroy } from 'svelte';
 	import { apiUrl } from '$lib/config';
 	import toast from 'svelte-5-french-toast';
 	import PageCard from '@/components/PageCard.svelte';
 
-	let filesStatus: 'idle' | 'loading' | 'success' | 'error' = $state('idle');
-	interface FirmwareFile {
-		name: string;
-		size: number;
-		type: string;
-	}
+	type FlashStatus = 'idle' | 'uploading' | 'flashing' | 'success' | 'error';
 
-	let files: FirmwareFile[] = $state([]);
+	let status = $state<FlashStatus>('idle');
+	let message = $state('');
+	let progress = $state(0);
 	let fileInput: HTMLInputElement | undefined = $state();
-	let uploadStatus: 'idle' | 'uploading' | 'success' | 'error' = $state('idle');
-	let flashStatus: 'idle' | 'flashing' | 'success' | 'error' = $state('idle');
-	let uploadMessage = $state('');
-	let flashMessage = $state('');
-	let uploadProgress = $state(0);
-	let flashProgress = $state(0);
-	let flashPollingInterval: number | null = null;
+	let pollingInterval: number | null = null;
 	let resetStatus: 'idle' | 'resetting' = $state('idle');
 
-	async function loadFiles() {
-		filesStatus = 'loading';
-		try {
-			const res = await fetch('/api/spiffs?filter=bin');
-			const data = await res.json();
-			if (!res.ok) throw new Error(data.message || 'Failed to load files');
-			files = data.files || [];
-			filesStatus = 'success';
-		} catch {
-			filesStatus = 'error';
-			files = [];
+	const busy = $derived(status === 'uploading' || status === 'flashing');
+
+	function browseAndFlash() {
+		if (fileInput) {
+			fileInput.value = '';
+			fileInput.click();
 		}
 	}
 
-	async function uploadFirmware() {
-		if (!fileInput) return;
-		const file = fileInput.files?.[0];
+	async function onFileSelected() {
+		const file = fileInput?.files?.[0];
 		if (!file) return;
-
-		uploadStatus = 'uploading';
-		uploadMessage = 'Uploading firmware file...';
-		uploadProgress = 0;
-
-		try {
-			const xhr = new XMLHttpRequest();
-
-			// Set up progress tracking — transfer is 0–85%, SPIFFS write is 85–100%
-			xhr.upload.onprogress = (e) => {
-				if (e.lengthComputable) {
-					uploadProgress = (e.loaded / e.total) * 85;
-					uploadMessage = 'Sending to Digital Dash...';
-				}
-			};
-
-			xhr.upload.onload = () => {
-				uploadProgress = 85;
-				uploadMessage = 'Saving firmware to storage (~45s)...';
-			};
-
-			// Set up completion handlers
-			xhr.onload = async () => {
-				if (xhr.status >= 200 && xhr.status < 300) {
-					uploadStatus = 'success';
-					uploadMessage = 'Firmware file uploaded successfully!';
-					uploadProgress = 100;
-
-					// Reload file list and clear input
-					await loadFiles();
-					if (fileInput) fileInput.value = '';
-				} else {
-					uploadStatus = 'error';
-					uploadMessage = `Upload failed: ${xhr.statusText}`;
-				}
-			};
-
-			xhr.onerror = () => {
-				uploadStatus = 'error';
-				uploadMessage = 'Network error during upload';
-			};
-
-			xhr.ontimeout = () => {
-				uploadStatus = 'error';
-				uploadMessage = 'Upload timed out';
-			};
-
-			xhr.timeout = 360000; // 3 minutes
-
-			// Make the request
-			xhr.open('POST', '/api/spiffs/digitaldash-firmware-gen2-stm32u5g.bin');
-			xhr.setRequestHeader('Content-Type', 'application/octet-stream');
-			xhr.send(file);
-		} catch (err) {
-			uploadStatus = 'error';
-			uploadMessage =
-				err instanceof Error ? err.message : 'An error occurred during firmware upload';
-		}
+		await uploadAndFlash(file);
 	}
 
-	async function flashFirmware() {
-		flashStatus = 'flashing';
-		flashMessage = 'Starting firmware flash...';
-		flashProgress = 0;
+	async function uploadAndFlash(file: File) {
+		status = 'uploading';
+		message = 'Sending to Digital Dash...';
+		progress = 0;
 
 		try {
-			// Start the flash process
-			const flashRes = await fetch('/api/firmware/stm', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			});
+			await new Promise<void>((resolve, reject) => {
+				const xhr = new XMLHttpRequest();
 
-			if (!flashRes.ok) {
-				const flashData = await flashRes.json();
-				throw new Error(flashData.message || 'Firmware flash failed');
-			}
+				// Upload phase: 0–50%
+				xhr.upload.onprogress = (e) => {
+					if (e.lengthComputable) {
+						progress = (e.loaded / e.total) * 50;
+					}
+				};
 
-			// Start polling for progress
-			flashPollingInterval = setInterval(async () => {
-				try {
-					const progressRes = await fetch(`${apiUrl}/flash/progress`);
-					if (progressRes.ok) {
-						const progressData = await progressRes.json();
-						flashProgress = progressData.percentage || 0;
-						flashMessage =
-							progressData.message || `Flashing firmware... ${Math.floor(flashProgress)}%`;
+				xhr.upload.onload = () => {
+					progress = 50;
+					message = 'Saving to memory...';
+				};
 
-						// Check if complete
-						if (progressData.complete === true) {
-							clearInterval(flashPollingInterval!);
-							flashPollingInterval = null;
-							flashStatus = 'success';
-							flashMessage = 'Digital Dash updated successfully!';
-							flashProgress = 100;
-							await loadFiles();
-						} else if (progressData.error) {
-							clearInterval(flashPollingInterval!);
-							flashPollingInterval = null;
-							flashStatus = 'error';
-							flashMessage = progressData.error;
+				xhr.onload = () => {
+					if (xhr.status >= 200 && xhr.status < 300) {
+						resolve();
+					} else {
+						try {
+							const body = JSON.parse(xhr.responseText);
+							reject(new Error(body.error || xhr.statusText));
+						} catch {
+							reject(new Error(xhr.statusText || 'Upload failed'));
 						}
 					}
-				} catch (progressErr) {
-					console.warn('Progress polling error:', progressErr);
-				}
-			}, 500); // Poll every 500ms
+				};
 
-			// Set a timeout to stop polling after 5 minutes
+				xhr.onerror = () => reject(new Error('Network error during upload'));
+				xhr.ontimeout = () => reject(new Error('Upload timed out'));
+				xhr.timeout = 360000;
+
+				xhr.open('POST', '/api/firmware/stm');
+				xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+				xhr.send(file);
+			});
+
+			// Flash phase: poll progress and map 0–100% → 50–100% overall
+			status = 'flashing';
+			progress = 50;
+			message = 'Starting flash...';
+
+			pollingInterval = window.setInterval(async () => {
+				try {
+					const res = await fetch(`${apiUrl}/flash/progress`);
+					if (!res.ok) return;
+					const data = await res.json();
+
+					progress = 50 + (data.percentage || 0) / 2;
+					message = data.message || 'Flashing firmware...';
+
+					if (data.complete === true) {
+						clearInterval(pollingInterval!);
+						pollingInterval = null;
+						status = 'success';
+						progress = 100;
+						message = 'Digital Dash updated successfully!';
+					} else if (data.error) {
+						clearInterval(pollingInterval!);
+						pollingInterval = null;
+						status = 'error';
+						message = data.error;
+					}
+				} catch {
+					// transient poll error — keep trying
+				}
+			}, 500);
+
 			setTimeout(() => {
-				if (flashPollingInterval) {
-					clearInterval(flashPollingInterval);
-					flashPollingInterval = null;
-					if (flashStatus === 'flashing') {
-						flashStatus = 'error';
-						flashMessage = 'Flash operation timed out';
+				if (pollingInterval) {
+					clearInterval(pollingInterval);
+					pollingInterval = null;
+					if (status === 'flashing') {
+						status = 'error';
+						message = 'Flash operation timed out';
 					}
 				}
-			}, 300000); // 5 minutes
+			}, 300000);
 		} catch (err) {
-			if (flashPollingInterval) {
-				clearInterval(flashPollingInterval);
-				flashPollingInterval = null;
+			if (pollingInterval) {
+				clearInterval(pollingInterval);
+				pollingInterval = null;
 			}
-			flashStatus = 'error';
-			flashMessage =
-				err instanceof Error ? err.message : 'An error occurred during firmware flashing';
+			status = 'error';
+			message = err instanceof Error ? err.message : 'An error occurred';
 		}
-	}
-
-	function browseFirmware() {
-		fileInput?.click();
 	}
 
 	async function resetSTM32() {
 		if (resetStatus === 'resetting') return;
-
 		resetStatus = 'resetting';
 		try {
-			const response = await fetch('/api/reset', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			});
-
-			if (response.ok) {
+			const res = await fetch('/api/reset', { method: 'POST' });
+			if (res.ok) {
 				toast.success('Digital Dash reset successfully!');
 			} else {
-				const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-				toast.error(error.error || 'Failed to reset Digital Dash');
+				const body = await res.json().catch(() => ({ error: 'Unknown error' }));
+				toast.error(body.error || 'Failed to reset Digital Dash');
 			}
-		} catch (err) {
-			console.error('Reset error:', err);
+		} catch {
 			toast.error('Network error while resetting Digital Dash');
 		} finally {
 			resetStatus = 'idle';
 		}
 	}
 
-	onMount(() => {
-		loadFiles();
-	});
-
 	onDestroy(() => {
-		if (flashPollingInterval) {
-			clearInterval(flashPollingInterval);
-			flashPollingInterval = null;
+		if (pollingInterval) {
+			clearInterval(pollingInterval);
+			pollingInterval = null;
 		}
 	});
 </script>
 
 <PageCard
 	title="Flash Digital Dash"
-	description="Select a firmware file (.bin) to update your Digital Dash. The flashing process typically takes around 5 minutes, depending on the file size. Do not turn off the vehicle while the update is in progress."
+	description="Select a firmware file (.bin) to update your Digital Dash. The flashing process typically takes about 2 minutes, depending on the file size. Do not turn off the vehicle while the update is in progress."
 	icon={Zap}
 >
 	<!-- Hidden file input -->
-	<input bind:this={fileInput} type="file" accept=".bin" class="hidden" onchange={uploadFirmware} />
+	<input bind:this={fileInput} type="file" accept=".bin" class="hidden" onchange={onFileSelected} />
 
-	<!-- Upload Button -->
+	<!-- Main action button -->
 	<Button
-		onclick={browseFirmware}
-		disabled={uploadStatus === 'uploading' || flashStatus === 'flashing'}
+		onclick={browseAndFlash}
+		disabled={busy}
 		variant="primary"
 		class="flex h-12 w-full items-center justify-center gap-2 text-lg font-semibold shadow-md transition-all duration-200"
 	>
-		{#if uploadStatus === 'uploading'}
+		{#if busy}
 			<Loader class="mr-3 h-5 w-5 animate-spin" />
-			Uploading Firmware...
+			{status === 'uploading' ? 'Sending...' : 'Flashing...'}
 		{:else}
-			<Upload class="mr-3 h-5 w-5" />
-			Upload Firmware File
+			<Zap class="mr-3 h-5 w-5" />
+			{status === 'error' ? 'Retry Firmware Flash' : 'Select & Flash Firmware'}
 		{/if}
 	</Button>
 
-	<!-- Upload Status -->
-	{#if uploadStatus === 'success'}
-		<div class="border-border bg-muted rounded-xl border p-4">
-			<p class="flex items-center gap-3 font-medium text-green-600">
-				<CircleCheck class="h-5 w-5 text-green-600" />
-				{uploadMessage}
-			</p>
-		</div>
-	{:else if uploadStatus === 'error'}
-		<div class="border-border bg-muted rounded-xl border p-4">
-			<p class="flex items-center gap-3 font-medium text-red-600">
-				<TriangleAlert class="h-5 w-5 text-red-600" />
-				{uploadMessage}
-			</p>
-		</div>
-	{:else if uploadStatus === 'uploading'}
+	<!-- Progress -->
+	{#if busy}
 		<div class="border-border bg-muted space-y-3 rounded-xl border p-4">
 			<p class="flex items-center gap-3 font-medium text-blue-600">
 				<Loader class="h-5 w-5 animate-spin text-blue-600" />
-				{uploadMessage}
+				{message}
 			</p>
-			<p class="text-muted-foreground text-center text-sm">
-				{Math.floor(uploadProgress)}% complete
+			<div class="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+				<div
+					class="h-full bg-blue-500 transition-all duration-300"
+					style="width: {Math.floor(progress)}%"
+				></div>
+			</div>
+			<p class="text-muted-foreground text-center text-sm">{Math.floor(progress)}% complete</p>
+		</div>
+	{:else if status === 'success'}
+		<div class="border-border bg-muted rounded-xl border p-4">
+			<p class="flex items-center gap-3 font-medium text-green-600">
+				<CircleCheck class="h-5 w-5 text-green-600" />
+				{message}
+			</p>
+			<p class="mt-2 font-bold text-orange-600">
+				Digital Dash will reboot in about 30s — DO NOT POWER OFF VEHICLE
+			</p>
+		</div>
+	{:else if status === 'error'}
+		<div class="border-border bg-muted rounded-xl border p-4">
+			<p class="flex items-center gap-3 font-medium text-red-600">
+				<TriangleAlert class="h-5 w-5 text-red-600" />
+				{message}
 			</p>
 		</div>
 	{/if}
-
-	<!-- Flash Button - only show when firmware file exists -->
-	{#if files.some((f) => f.name === 'digitaldash-firmware-gen2-stm32u5g.bin')}
-		<div class="space-y-3">
-			<div class="border-border bg-muted rounded-xl border p-4">
-				<p class="text-sm font-medium">
-					<strong>Target file:</strong> digitaldash-firmware-gen2-stm32u5g.bin
-				</p>
-				<p class="text-muted-foreground mt-1 text-xs">
-					Clicking "Flash" will use this specific file from SPIFFS storage
-				</p>
-			</div>
-
-			<Button
-				onclick={flashFirmware}
-				disabled={uploadStatus === 'uploading' || flashStatus === 'flashing'}
-				variant="primary"
-				class="flex h-12 w-full items-center justify-center gap-2 text-lg font-semibold shadow-md transition-all duration-200"
-			>
-				{#if flashStatus === 'flashing'}
-					<Loader class="mr-3 h-5 w-5 animate-spin" />
-					Flashing Digital Dash...
-				{:else}
-					<Zap class="mr-3 h-5 w-5" />
-					Flash to Digital Dash
-				{/if}
-			</Button>
-		</div>
-
-		<!-- Flash Status -->
-		{#if flashStatus === 'success'}
-			<div class="border-border bg-muted rounded-xl border p-4">
-				<p class="flex items-center gap-3 font-medium text-green-600">
-					<CircleCheck class="h-5 w-5 text-green-600" />
-					{flashMessage}
-				</p>
-				<p class="mt-2 font-bold text-orange-600">
-					Digital Dash will reboot in 30 seconds - DO NOT POWER OFF VEHICLE
-				</p>
-			</div>
-		{:else if flashStatus === 'error'}
-			<div class="border-border bg-muted rounded-xl border p-4">
-				<p class="flex items-center gap-3 font-medium text-red-600">
-					<TriangleAlert class="h-5 w-5 text-red-600" />
-					{flashMessage}
-				</p>
-			</div>
-		{:else if flashStatus === 'flashing'}
-			<div class="border-border bg-muted space-y-3 rounded-xl border p-4">
-				<p class="flex items-center gap-3 font-medium text-blue-600">
-					<Loader class="h-5 w-5 animate-spin text-blue-600" />
-					{flashMessage}
-				</p>
-				<p class="text-muted-foreground text-center text-sm">
-					{Math.floor(flashProgress)}% complete
-				</p>
-			</div>
-		{/if}
-	{/if}
-
-	<!-- Current Firmware Files -->
-	<div class="space-y-4">
-		<h3 class="flex items-center gap-2 font-medium">
-			<FileText class="h-5 w-5" />
-			Current Spiffs .bin Files
-		</h3>
-		<div class="border-border bg-muted min-h-[120px] rounded-xl border">
-			{#if filesStatus === 'loading'}
-				<div class="text-muted-foreground flex items-center justify-center gap-3 py-8">
-					<Loader class="h-5 w-5 animate-spin" />
-					<span class="font-medium">Loading files...</span>
-				</div>
-			{:else if filesStatus === 'error'}
-				<div class="flex items-center justify-center gap-3 py-8 text-red-600">
-					<TriangleAlert class="h-5 w-5" />
-					<span class="font-medium">Failed to load files</span>
-				</div>
-			{:else if files.length === 0}
-				<div class="text-muted-foreground flex items-center justify-center py-8">
-					<span class="font-medium">No firmware file found</span>
-				</div>
-			{:else}
-				<div class="divide-border divide-y">
-					{#each files as file, index (file.name || index)}
-						<div
-							class="hover:bg-background p-4 transition-colors duration-150 {index === 0
-								? 'rounded-t-lg'
-								: ''} {index === files.length - 1 ? 'rounded-b-lg' : ''}"
-						>
-							<div class="flex items-start gap-4">
-								<div
-									class="bg-muted flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg"
-								>
-									<FileText class="text-foreground h-6 w-6" />
-								</div>
-								<div class="min-w-0 flex-grow">
-									<h5 class="text-foreground truncate font-medium">
-										{file.name || file}
-									</h5>
-									<div
-										class="text-muted-foreground mt-2 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3"
-									>
-										{#if file.size}
-											<div class="flex items-center gap-1">
-												<span class="font-medium">Size:</span>
-												<span>{(file.size / 1024).toFixed(1)} KB</span>
-											</div>
-										{/if}
-										{#if file.type}
-											<div class="flex items-center gap-1">
-												<span class="font-medium">Type:</span>
-												<span>{file.type}</span>
-											</div>
-										{/if}
-									</div>
-								</div>
-							</div>
-						</div>
-					{/each}
-				</div>
-			{/if}
-		</div>
-	</div>
 
 	{#snippet footerContent()}
 		<div class="border-border flex justify-between gap-4 py-4">

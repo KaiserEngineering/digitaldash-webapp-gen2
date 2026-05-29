@@ -10,8 +10,6 @@ extern "C" {
 
 KE_PACKET_MANAGER *get_stm32_comm(void);
 
-void flash_stm32_firmware(const char *firmware_path);
-
 /**
  * @brief Handler for OTA file uploads.
  *
