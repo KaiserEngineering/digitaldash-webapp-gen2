@@ -58,12 +58,17 @@
 		try {
 			const xhr = new XMLHttpRequest();
 
-			// Set up progress tracking
+			// Set up progress tracking — transfer is 0–85%, SPIFFS write is 85–100%
 			xhr.upload.onprogress = (e) => {
 				if (e.lengthComputable) {
-					uploadProgress = (e.loaded / e.total) * 100;
-					uploadMessage = `Uploading bootloader file... ${Math.floor(uploadProgress)}%`;
+					uploadProgress = (e.loaded / e.total) * 85;
+					uploadMessage = 'Sending to Digital Dash...';
 				}
+			};
+
+			xhr.upload.onload = () => {
+				uploadProgress = 85;
+				uploadMessage = 'Saving firmware to storage...';
 			};
 
 			// Set up completion handlers

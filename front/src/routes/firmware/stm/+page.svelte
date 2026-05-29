@@ -58,12 +58,17 @@
 		try {
 			const xhr = new XMLHttpRequest();
 
-			// Set up progress tracking
+			// Set up progress tracking — transfer is 0–85%, SPIFFS write is 85–100%
 			xhr.upload.onprogress = (e) => {
 				if (e.lengthComputable) {
-					uploadProgress = (e.loaded / e.total) * 100;
-					uploadMessage = `Uploading firmware file... ${Math.floor(uploadProgress)}%`;
+					uploadProgress = (e.loaded / e.total) * 85;
+					uploadMessage = 'Sending to Digital Dash...';
 				}
+			};
+
+			xhr.upload.onload = () => {
+				uploadProgress = 85;
+				uploadMessage = 'Saving firmware to storage (~45s)...';
 			};
 
 			// Set up completion handlers
@@ -220,7 +225,7 @@
 
 <PageCard
 	title="Flash Digital Dash"
-	description="Select a firmware file (.bin) to update your Digital Dash. The flashing process typically takes 5–10 minutes, depending on the file size. Do not turn off your vehicle while the update is in progress."
+	description="Select a firmware file (.bin) to update your Digital Dash. The flashing process typically takes around 5 minutes, depending on the file size. Do not turn off the vehicle while the update is in progress."
 	icon={Zap}
 >
 	<!-- Hidden file input -->
