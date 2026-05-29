@@ -31,6 +31,7 @@
 #include "esp_http_server.h"
 #include "esp_vfs.h"
 #include "esp_spiffs.h"
+#include "esp_heap_caps.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
@@ -494,20 +495,22 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
         return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing filename in path");
     }
 
-    ESP_LOGI(TAG, "Uploading file: %s", filename);
+    ESP_LOGI(TAG, "Uploading file: %s (%d bytes)", filename, req->content_len);
 
     char filepath[FILE_PATH_MAX];
     snprintf(filepath, sizeof(filepath), "/spiffs/%s", filename);
 
-    FILE *file = file_handler_open_write(filepath);
-    if (!file) {
-        ESP_LOGE(TAG, "Failed to open file for writing: %s", filepath);
-        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to create file");
+    // Buffer the entire file in PSRAM so SPIFFS is only written once with complete data
+    // CONFIG_SPIRAM_USE_CAPS_ALLOC is set, so heap_caps_malloc is required to reach PSRAM
+    uint8_t *file_buf = heap_caps_malloc(req->content_len, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    if (!file_buf) {
+        ESP_LOGE(TAG, "Failed to allocate %d bytes in PSRAM for upload buffer", req->content_len);
+        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Out of memory");
     }
 
     int remaining = req->content_len;
-    char buf[SPIFFS_WRITE_SIZE];
     int total_received = 0;
+    char buf[SPIFFS_WRITE_SIZE];
 
     while (remaining > 0) {
         int recv_len = MIN(remaining, (int)sizeof(buf));
@@ -515,32 +518,39 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
 
         if (received < 0) {
             if (received == HTTPD_SOCK_ERR_TIMEOUT) {
-                // retry instead of failing immediately
                 ESP_LOGW(TAG, "Socket timeout, retrying...");
                 continue;
             }
             ESP_LOGE(TAG, "Socket error: %d", received);
-            file_handler_close(file);
-            file_handler_delete(filepath);
+            free(file_buf);
             return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File upload failed");
         } else if (received == 0) {
-            // unexpected end of stream
             ESP_LOGE(TAG, "Connection closed before file fully received");
-            file_handler_close(file);
-            file_handler_delete(filepath);
+            free(file_buf);
             return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File upload incomplete");
         }
 
-        size_t written = fwrite(buf, 1, received, file);
-        if (written != received) {
-            ESP_LOGE(TAG, "Error writing to file (%d vs %d)", written, received);
-            file_handler_close(file);
-            file_handler_delete(filepath);
-            return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File write failed");
-        }
-
+        memcpy(file_buf + total_received, buf, received);
         remaining -= received;
         total_received += received;
+    }
+
+    // Full file is in RAM — now write to SPIFFS in one shot
+    FILE *file = file_handler_open_write(filepath);
+    if (!file) {
+        ESP_LOGE(TAG, "Failed to open file for writing: %s", filepath);
+        free(file_buf);
+        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to create file");
+    }
+
+    size_t written = fwrite(file_buf, 1, total_received, file);
+    free(file_buf);
+
+    if (written != (size_t)total_received) {
+        ESP_LOGE(TAG, "SPIFFS write incomplete (%zu of %d bytes)", written, total_received);
+        file_handler_close(file);
+        file_handler_delete(filepath);
+        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File write failed");
     }
 
     file_handler_close(file);
