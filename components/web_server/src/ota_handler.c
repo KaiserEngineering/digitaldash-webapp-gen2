@@ -152,12 +152,12 @@ uint32_t get_binary_chunk_data(char *buffer, uint32_t buffer_size)
     return (uint32_t)current_chunk_len;
 }
 
-/* STM32 firmware flash task — reads from a PSRAM buffer, no SPIFFS involved */
+/* STM32 firmware flash task — reads from PSRAM buffer, frees it on completion */
 static void flash_stm32_firmware_task(void *pvParameter)
 {
-    stm_flash_buf_t *fw = (stm_flash_buf_t *)pvParameter;
-    uint8_t *firmware_buf  = fw->buf;
-    size_t   firmware_size = fw->size;
+    stm_flash_buf_t *fw           = (stm_flash_buf_t *)pvParameter;
+    uint8_t         *firmware_buf  = fw->buf;
+    size_t           firmware_size = fw->size;
     free(fw);
 
     reset_stm_flash_progress();
@@ -208,6 +208,9 @@ static void flash_stm32_firmware_task(void *pvParameter)
     }
 
     heap_caps_free(firmware_buf);
+
+    free(binary_chunk);
+    binary_chunk = NULL;
 
     if (success)
     {
@@ -266,7 +269,8 @@ void flash_stm32_bootloader(const char *firmware_path)
     set_stm_flash_complete();
 }
 
-/* Receive firmware binary over HTTP, buffer in PSRAM, and start flash task */
+/* Receive firmware binary over HTTP, buffer in PSRAM, start flash task.
+ * The task owns the buffer and frees it when the flash completes or fails. */
 esp_err_t stm_update_post_handler(httpd_req_t *req)
 {
     if (req->content_len == 0) {
@@ -291,7 +295,7 @@ esp_err_t stm_update_post_handler(httpd_req_t *req)
     char chunk[4096];
 
     while (remaining > 0) {
-        int to_recv = remaining < (int)sizeof(chunk) ? remaining : (int)sizeof(chunk);
+        int to_recv  = remaining < (int)sizeof(chunk) ? remaining : (int)sizeof(chunk);
         int received = httpd_req_recv(req, chunk, to_recv);
 
         if (received == HTTPD_SOCK_ERR_TIMEOUT) {

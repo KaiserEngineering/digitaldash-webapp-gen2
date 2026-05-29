@@ -1,3 +1,10 @@
+## 1.0.7
+
+### Features
+- **Web App**: Digital Dash firmware flash is now a single unified step. Select a `.bin` file and it uploads directly to the ESP32 and flashes immediately, with no intermediate save.
+
+### Bug Fixes
+- **ESP32**: Fixed SPIFFS corruption when a firmware upload connection drops mid-transfer. File is now buffered entirely in RAM before being written to the Digital Dash.
 
 ## 1.0.6
 
