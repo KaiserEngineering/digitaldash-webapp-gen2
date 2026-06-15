@@ -4,6 +4,7 @@ import { configStore } from '$lib/stores/configStore';
 import { handleError, withRetry } from '$lib/utils/errorHandling';
 import { createLogger } from '$lib/utils/logger';
 import toast from 'svelte-5-french-toast';
+import { errorFromResponse, showCommandBusyToast } from '$lib/utils/apiError';
 
 const log = createLogger({ module: 'settings' });
 
@@ -75,7 +76,7 @@ export async function handleImport(
 				});
 
 				if (!response.ok) {
-					throw new Error('Failed to save imported configuration to device');
+					throw await errorFromResponse(response, 'Failed to save imported configuration to device');
 				}
 
 				// Update local store
@@ -93,10 +94,12 @@ export async function handleImport(
 		);
 	} catch (e) {
 		log.error('Config import failed', e);
-		handleError(e, {
-			context: 'Importing configuration',
-			fallbackMessage: 'Failed to import configuration'
-		});
+		if (!showCommandBusyToast(e)) {
+			handleError(e, {
+				context: 'Importing configuration',
+				fallbackMessage: 'Failed to import configuration'
+			});
+		}
 	} finally {
 		setImporting(false);
 		// Reset file input

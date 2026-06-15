@@ -13,6 +13,7 @@
 	import { apiUrl } from '$lib/config';
 	import toast from 'svelte-5-french-toast';
 	import PageCard from '@/components/PageCard.svelte';
+	import { CommandBusyError, errorFromResponse, showCommandBusyToast } from '$lib/utils/apiError';
 
 	let filesStatus: 'idle' | 'loading' | 'success' | 'error' = $state('idle');
 	interface FirmwareFile {
@@ -83,7 +84,19 @@
 					if (fileInput) fileInput.value = '';
 				} else {
 					uploadStatus = 'error';
-					uploadMessage = `Upload failed: ${xhr.statusText}`;
+					let body: { busy?: boolean; operation?: string; error?: string; message?: string } = {};
+					try {
+						body = JSON.parse(xhr.responseText || '{}');
+					} catch {
+						// Keep fallback message below for non-JSON errors.
+					}
+					if (xhr.status === 409 || body.busy) {
+						const error = new CommandBusyError(body.operation || 'command');
+						uploadMessage = error.message;
+						showCommandBusyToast(error);
+					} else {
+						uploadMessage = body.error || body.message || `Upload failed: ${xhr.statusText}`;
+					}
 				}
 			};
 
@@ -125,8 +138,7 @@
 			});
 
 			if (!flashRes.ok) {
-				const flashData = await flashRes.json();
-				throw new Error(flashData.message || 'Bootloader flash failed');
+				throw await errorFromResponse(flashRes, 'Bootloader flash failed');
 			}
 
 			// Start polling for progress
@@ -178,6 +190,7 @@
 			flashStatus = 'error';
 			flashMessage =
 				err instanceof Error ? err.message : 'An error occurred during bootloader flashing';
+			showCommandBusyToast(err);
 		}
 	}
 
@@ -200,8 +213,10 @@
 			if (response.ok) {
 				toast.success('Digital Dash reset successfully!');
 			} else {
-				const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-				toast.error(error.error || 'Failed to reset Digital Dash');
+				const error = await errorFromResponse(response, 'Failed to reset Digital Dash');
+				if (!showCommandBusyToast(error)) {
+					toast.error(error.message);
+				}
 			}
 		} catch (err) {
 			console.error('Reset error:', err);

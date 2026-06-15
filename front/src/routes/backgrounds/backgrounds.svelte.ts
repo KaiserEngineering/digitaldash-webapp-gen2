@@ -2,7 +2,7 @@
 import { apiUrl } from '$lib/config';
 import { ImageHandler } from '$lib/image/handler';
 import type { ImageData } from '$lib/image/handler';
-import { toast } from 'svelte-5-french-toast';
+import { errorFromResponse } from '$lib/utils/apiError';
 
 interface UploadResponse {
 	success: boolean;
@@ -29,7 +29,7 @@ export async function uploadBackground(
 	});
 
 	if (!response.ok) {
-		throw new Error(`Upload failed: ${response.statusText}`);
+		throw await errorFromResponse(response, `Upload failed: ${response.statusText}`);
 	}
 
 	const result: UploadResponse = await response.json();
@@ -60,8 +60,7 @@ export async function deleteBackground(
 		});
 
 		if (!response.ok) {
-			const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-			throw new Error(`Delete failed: ${error.message || response.statusText}`);
+			throw await errorFromResponse(response, `Delete failed: ${response.statusText}`);
 		}
 
 		imageHandler.clearCache(filename);
@@ -85,7 +84,7 @@ export async function syncBackgrounds(): Promise<void> {
 		});
 
 		if (!response.ok) {
-			throw new Error(`Sync failed: ${response.statusText}`);
+			throw await errorFromResponse(response, `Sync failed: ${response.statusText}`);
 		}
 	} catch (error) {
 		throw error;

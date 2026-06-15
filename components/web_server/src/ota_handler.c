@@ -8,6 +8,7 @@
 #include "stm32_uart.h"
 #include "ota_handler.h"
 #include "stm_flash.h"
+#include "operation_lock.h"
 
 typedef struct {
     uint8_t *buf;
@@ -35,11 +36,17 @@ esp_err_t web_update_post_handler(httpd_req_t *req)
     esp_ota_handle_t ota_handle;
     int remaining = req->content_len;
 
+    if (!web_operation_try_begin("web firmware update"))
+    {
+        return web_operation_send_busy(req);
+    }
+
     const esp_partition_t *ota_partition = esp_ota_get_next_update_partition(NULL);
     if (!ota_partition)
     {
         send_error_response(req, "500 Internal Server Error", "Failed to get OTA partition",
                             "OTA partition retrieval failed");
+        web_operation_end();
         return ESP_FAIL;
     }
 
@@ -47,6 +54,7 @@ esp_err_t web_update_post_handler(httpd_req_t *req)
     {
         send_error_response(req, "500 Internal Server Error", "OTA begin failed",
                             "OTA begin operation failed");
+        web_operation_end();
         return ESP_FAIL;
     }
 
@@ -62,6 +70,7 @@ esp_err_t web_update_post_handler(httpd_req_t *req)
             send_error_response(req, "500 Internal Server Error", "Protocol error during OTA",
                                 "HTTP receive error during OTA");
             esp_ota_end(ota_handle);
+            web_operation_end();
             return ESP_FAIL;
         }
 
@@ -70,6 +79,7 @@ esp_err_t web_update_post_handler(httpd_req_t *req)
             send_error_response(req, "500 Internal Server Error", "Flash error during OTA",
                                 "OTA write operation failed");
             esp_ota_end(ota_handle);
+            web_operation_end();
             return ESP_FAIL;
         }
 
@@ -81,6 +91,7 @@ esp_err_t web_update_post_handler(httpd_req_t *req)
     {
         send_error_response(req, "500 Internal Server Error", "Validation or activation error",
                             "OTA end or boot partition activation failed");
+        web_operation_end();
         return ESP_FAIL;
     }
 
@@ -170,6 +181,7 @@ static void flash_stm32_firmware_task(void *pvParameter)
             ESP_LOGE(TAG, "Failed to allocate binary_chunk buffer");
             set_stm_flash_error("Memory allocation failed");
             heap_caps_free(firmware_buf);
+            web_operation_end();
             vTaskDelete(NULL);
             return;
         }
@@ -226,6 +238,7 @@ static void flash_stm32_firmware_task(void *pvParameter)
         set_stm_flash_error("Flash operation failed");
     }
 
+    web_operation_end();
     vTaskDelete(NULL);
 }
 
@@ -283,10 +296,16 @@ esp_err_t stm_update_post_handler(httpd_req_t *req)
         return ESP_FAIL;
     }
 
+    if (!web_operation_try_begin("STM32 firmware update"))
+    {
+        return web_operation_send_busy(req);
+    }
+
     uint8_t *firmware_buf = heap_caps_malloc(req->content_len, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     if (!firmware_buf) {
         ESP_LOGE(TAG, "Failed to allocate %d bytes in PSRAM for firmware", req->content_len);
         send_error_response(req, "500 Internal Server Error", "Out of memory", "PSRAM allocation failed for firmware upload");
+        web_operation_end();
         return ESP_FAIL;
     }
 
@@ -303,6 +322,7 @@ esp_err_t stm_update_post_handler(httpd_req_t *req)
         } else if (received <= 0) {
             heap_caps_free(firmware_buf);
             send_error_response(req, "500 Internal Server Error", "Upload failed", "Connection lost during firmware upload");
+            web_operation_end();
             return ESP_FAIL;
         }
 
@@ -317,6 +337,7 @@ esp_err_t stm_update_post_handler(httpd_req_t *req)
     if (!fw) {
         heap_caps_free(firmware_buf);
         send_error_response(req, "500 Internal Server Error", "Out of memory", "Failed to allocate flash params");
+        web_operation_end();
         return ESP_FAIL;
     }
     fw->buf  = firmware_buf;
@@ -330,6 +351,7 @@ esp_err_t stm_update_post_handler(httpd_req_t *req)
         heap_caps_free(firmware_buf);
         free(fw);
         send_error_response(req, "500 Internal Server Error", "Failed to start flash task", "xTaskCreate failed");
+        web_operation_end();
         return ESP_FAIL;
     }
 
@@ -341,12 +363,18 @@ esp_err_t stm_update_post_handler(httpd_req_t *req)
 // Add bootloader update handler
 esp_err_t bootloader_update_post_handler(httpd_req_t *req)
 {
+    if (!web_operation_try_begin("STM32 bootloader update"))
+    {
+        return web_operation_send_busy(req);
+    }
+
     flash_stm32_bootloader("STM32U5G9ZJTXQ_OSPI_Bootloader.bin");
     vTaskDelay(pdMS_TO_TICKS(1000));
     uart_init(get_stm32_comm());
     httpd_resp_set_type(req, "application/json");
-    httpd_resp_sendstr(req, "{\"message\": \"STM32 bootloader update started\"}");
-    return ESP_OK;
+    esp_err_t ret = httpd_resp_sendstr(req, "{\"message\": \"STM32 bootloader update started\"}");
+    web_operation_end();
+    return ret;
 }
 
 // STM flash progress handler

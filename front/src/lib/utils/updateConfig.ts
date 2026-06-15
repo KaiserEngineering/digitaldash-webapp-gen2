@@ -2,6 +2,7 @@
 import { configStore } from '$lib/stores/configStore';
 import { get } from 'svelte/store';
 import type { DigitalDash } from '$schemas/digitaldash';
+import { errorFromResponse, showCommandBusyToast } from './apiError';
 
 /**
  * Updates the entire config object after applying custom modifications.
@@ -9,7 +10,7 @@ import type { DigitalDash } from '$schemas/digitaldash';
  */
 export async function updateConfig(
 	mutateFn: (config: DigitalDash) => void
-): Promise<{ success: boolean; config?: DigitalDash }> {
+): Promise<{ success: boolean; config?: DigitalDash; busy?: boolean }> {
 	try {
 		const currentConfig = get(configStore);
 		if (!currentConfig) {
@@ -32,8 +33,7 @@ export async function updateConfig(
 		});
 
 		if (!response.ok) {
-			const error = await response.json();
-			throw new Error(error.error || 'Failed to save configuration');
+			throw await errorFromResponse(response, 'Failed to save configuration');
 		}
 
 		// Update the store with the new config
@@ -42,6 +42,7 @@ export async function updateConfig(
 		return { success: true, config: configCopy };
 	} catch (error) {
 		console.error('Error updating config:', error);
-		return { success: false };
+		const busy = showCommandBusyToast(error);
+		return { success: false, busy };
 	}
 }

@@ -45,6 +45,7 @@
 						});
 
 						if (!result.success) {
+							if (result.busy) return;
 							throw new Error('Failed to save settings to device');
 						}
 

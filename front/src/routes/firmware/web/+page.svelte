@@ -4,6 +4,7 @@
 	import toast from 'svelte-5-french-toast';
 	import { apiUrl } from '$lib/config';
 	import PageCard from '@/components/PageCard.svelte';
+	import { CommandBusyError, showCommandBusyToast } from '$lib/utils/apiError';
 
 	let { data } = $props();
 	const ver = data?.ver || 'Unknown';
@@ -61,7 +62,18 @@
 					uploadComplete = true;
 					toast.success('Upload complete!');
 				} else {
-					toast.error(`Upload failed: ${xhr.statusText}`);
+					let body: { busy?: boolean; operation?: string; error?: string; message?: string } = {};
+					try {
+						body = JSON.parse(xhr.responseText || '{}');
+					} catch {
+						// Keep fallback toast below for non-JSON errors.
+					}
+
+					if (xhr.status === 409 || body.busy) {
+						showCommandBusyToast(new CommandBusyError(body.operation || 'command'));
+					} else {
+						toast.error(body.error || body.message || `Upload failed: ${xhr.statusText}`);
+					}
 				}
 			};
 			xhr.onerror = () => toast.error('Network error.');
