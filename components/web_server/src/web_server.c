@@ -16,6 +16,7 @@
 #include "ota_handler.h"
 #include "stm_flash.h"
 #include <lwip/sockets.h>
+#include "driver/temperature_sensor.h"
 
 // External function declaration
 extern void mirror_spiffs(void);
@@ -312,6 +313,30 @@ esp_err_t sync_handler(httpd_req_t *req)
     return ret;
 }
 
+esp_err_t system_info_handler(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "System info requested");
+
+    temperature_sensor_handle_t temp_sensor = NULL;
+    temperature_sensor_config_t ts_cfg = TEMPERATURE_SENSOR_CONFIG_DEFAULT(20, 100);
+    float celsius = -1.0f;
+
+    if (temperature_sensor_install(&ts_cfg, &temp_sensor) == ESP_OK) {
+        if (temperature_sensor_enable(temp_sensor) == ESP_OK) {
+            temperature_sensor_get_celsius(temp_sensor, &celsius);
+            temperature_sensor_disable(temp_sensor);
+        }
+        temperature_sensor_uninstall(temp_sensor);
+    }
+
+    char response[64];
+    snprintf(response, sizeof(response), "{\"cpu_temp_c\":%.1f}", celsius);
+
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
+    return httpd_resp_send(req, response, strlen(response));
+}
+
 esp_err_t start_webserver()
 {
     httpd_handle_t server = NULL;
@@ -325,7 +350,7 @@ esp_err_t start_webserver()
     config.recv_wait_timeout = 60;  // seconds
     config.send_wait_timeout = 60;  // seconds
     config.stack_size = HTTPD_TASK_STACK_SIZE;
-    config.max_uri_handlers = 24; // Increased to accommodate all routes
+    config.max_uri_handlers = 25; // Increased to accommodate all routes
     config.uri_match_fn = httpd_uri_match_wildcard;
 
     config.backlog_conn = 8;         // allow short connection bursts
@@ -420,6 +445,12 @@ esp_err_t start_webserver()
                                            .uri = "/api/sync",
                                            .method = HTTP_POST,
                                            .handler = sync_handler,
+                                           .user_ctx = NULL});
+
+    httpd_register_uri_handler(server, &(httpd_uri_t){
+                                           .uri = "/api/system/info",
+                                           .method = HTTP_GET,
+                                           .handler = system_info_handler,
                                            .user_ctx = NULL});
 
     if (register_spiffs(server) != ESP_OK)

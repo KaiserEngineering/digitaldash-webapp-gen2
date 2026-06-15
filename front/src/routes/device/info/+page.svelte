@@ -5,6 +5,7 @@
 	import toast from 'svelte-5-french-toast';
 	import PageCard from '@/components/PageCard.svelte';
 	import SpiffsUsage from '$lib/components/SpiffsUsage.svelte';
+	import CpuTemp from '$lib/components/CpuTemp.svelte';
 	import { ImageHandler } from '$lib/image/handler';
 
 	const imageHandler = new ImageHandler();
@@ -94,6 +95,9 @@
 >
 	<!-- SPIFFS Usage Stats -->
 	<SpiffsUsage />
+
+	<!-- CPU Temperature -->
+	<CpuTemp />
 
 	<!-- File List Actions -->
 	<div class="flex items-center justify-between">
