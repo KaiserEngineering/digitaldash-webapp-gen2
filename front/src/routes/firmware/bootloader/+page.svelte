@@ -13,7 +13,13 @@
 	import { apiUrl } from '$lib/config';
 	import toast from 'svelte-5-french-toast';
 	import PageCard from '@/components/PageCard.svelte';
-	import { CommandBusyError, errorFromResponse, showCommandBusyToast } from '$lib/utils/apiError';
+	import {
+		CommandBusyError,
+		dismissOperationToast,
+		errorFromResponse,
+		showCommandBusyToast,
+		showOperationToast
+	} from '$lib/utils/apiError';
 
 	let filesStatus: 'idle' | 'loading' | 'success' | 'error' = $state('idle');
 	interface FirmwareFile {
@@ -57,6 +63,7 @@
 		uploadProgress = 0;
 
 		try {
+			const operationToast = showOperationToast('SPIFFS upload');
 			const xhr = new XMLHttpRequest();
 
 			// Set up progress tracking — transfer is 0–85%, SPIFFS write is 85–100%
@@ -110,6 +117,7 @@
 				uploadMessage = 'Upload timed out';
 			};
 
+			xhr.onloadend = () => dismissOperationToast(operationToast);
 			xhr.timeout = 360000; // 3 minutes
 
 			// Make the request
@@ -130,12 +138,21 @@
 
 		try {
 			// Start the flash process
-			const flashRes = await fetch('/api/firmware/bootloader', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			});
+			const operationToast = showOperationToast('STM32 bootloader update');
+			let flashRes: Response | undefined;
+			try {
+				flashRes = await fetch('/api/firmware/bootloader', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				});
+			} finally {
+				dismissOperationToast(operationToast);
+			}
+			if (!flashRes) {
+				throw new Error('Bootloader flash failed');
+			}
 
 			if (!flashRes.ok) {
 				throw await errorFromResponse(flashRes, 'Bootloader flash failed');
@@ -203,12 +220,21 @@
 
 		resetStatus = 'resetting';
 		try {
-			const response = await fetch('/api/reset', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			});
+			const operationToast = showOperationToast('STM32 reset');
+			let response: Response | undefined;
+			try {
+				response = await fetch('/api/reset', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				});
+			} finally {
+				dismissOperationToast(operationToast);
+			}
+			if (!response) {
+				throw new Error('Failed to reset Digital Dash');
+			}
 
 			if (response.ok) {
 				toast.success('Digital Dash reset successfully!');

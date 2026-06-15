@@ -2,7 +2,7 @@
 import { apiUrl } from '$lib/config';
 import { ImageHandler } from '$lib/image/handler';
 import type { ImageData } from '$lib/image/handler';
-import { errorFromResponse } from '$lib/utils/apiError';
+import { dismissOperationToast, errorFromResponse, showOperationToast } from '$lib/utils/apiError';
 
 interface UploadResponse {
 	success: boolean;
@@ -20,13 +20,22 @@ export async function uploadBackground(
 	const extension = file.type === 'image/jpeg' ? '.jpg' : '.png';
 	const filename = `${file.name}${extension}`;
 
-	const response = await fetch(`${apiUrl}/spiffs/${filename}`, {
-		method: 'POST',
-		body: file,
-		headers: {
-			'Content-Type': file.type
-		}
-	});
+	const operationToast = showOperationToast('background upload');
+	let response: Response | undefined;
+	try {
+		response = await fetch(`${apiUrl}/spiffs/${filename}`, {
+			method: 'POST',
+			body: file,
+			headers: {
+				'Content-Type': file.type
+			}
+		});
+	} finally {
+		dismissOperationToast(operationToast);
+	}
+	if (!response) {
+		throw new Error('Upload failed');
+	}
 
 	if (!response.ok) {
 		throw await errorFromResponse(response, `Upload failed: ${response.statusText}`);
@@ -55,9 +64,18 @@ export async function deleteBackground(
 	try {
 		// Always append .png extension since backgrounds are always PNG
 		const fullFilename = `${filename}.png`;
-		const response = await fetch(`${apiUrl}/spiffs?filename=${encodeURIComponent(fullFilename)}`, {
-			method: 'DELETE'
-		});
+		const operationToast = showOperationToast('background delete');
+		let response: Response | undefined;
+		try {
+			response = await fetch(`${apiUrl}/spiffs?filename=${encodeURIComponent(fullFilename)}`, {
+				method: 'DELETE'
+			});
+		} finally {
+			dismissOperationToast(operationToast);
+		}
+		if (!response) {
+			throw new Error('Delete failed');
+		}
 
 		if (!response.ok) {
 			throw await errorFromResponse(response, `Delete failed: ${response.statusText}`);
@@ -76,12 +94,21 @@ export async function deleteBackground(
 
 export async function syncBackgrounds(): Promise<void> {
 	try {
-		const response = await fetch(`${apiUrl}/sync`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			}
-		});
+		const operationToast = showOperationToast('background sync');
+		let response: Response | undefined;
+		try {
+			response = await fetch(`${apiUrl}/sync`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
+		} finally {
+			dismissOperationToast(operationToast);
+		}
+		if (!response) {
+			throw new Error('Sync failed');
+		}
 
 		if (!response.ok) {
 			throw await errorFromResponse(response, `Sync failed: ${response.statusText}`);

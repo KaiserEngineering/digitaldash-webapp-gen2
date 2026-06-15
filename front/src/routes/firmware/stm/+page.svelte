@@ -5,7 +5,13 @@
 	import { apiUrl } from '$lib/config';
 	import toast from 'svelte-5-french-toast';
 	import PageCard from '@/components/PageCard.svelte';
-	import { CommandBusyError, errorFromResponse, showCommandBusyToast } from '$lib/utils/apiError';
+	import {
+		CommandBusyError,
+		dismissOperationToast,
+		errorFromResponse,
+		showCommandBusyToast,
+		showOperationToast
+	} from '$lib/utils/apiError';
 
 	type FlashStatus = 'idle' | 'uploading' | 'flashing' | 'success' | 'error';
 
@@ -36,6 +42,7 @@
 		message = 'Sending to Digital Dash...';
 		progress = 0;
 
+		const operationToast = showOperationToast('Digital Dash firmware update');
 		try {
 			await new Promise<void>((resolve, reject) => {
 				const xhr = new XMLHttpRequest();
@@ -98,11 +105,13 @@
 						status = 'success';
 						progress = 100;
 						message = 'Digital Dash updated successfully!';
+						dismissOperationToast(operationToast);
 					} else if (data.error) {
 						clearInterval(pollingInterval!);
 						pollingInterval = null;
 						status = 'error';
 						message = data.error;
+						dismissOperationToast(operationToast);
 					}
 				} catch {
 					// transient poll error — keep trying
@@ -116,10 +125,12 @@
 					if (status === 'flashing') {
 						status = 'error';
 						message = 'Flash operation timed out';
+						dismissOperationToast(operationToast);
 					}
 				}
 			}, 300000);
 		} catch (err) {
+			dismissOperationToast(operationToast);
 			if (pollingInterval) {
 				clearInterval(pollingInterval);
 				pollingInterval = null;
@@ -134,7 +145,16 @@
 		if (resetStatus === 'resetting') return;
 		resetStatus = 'resetting';
 		try {
-			const res = await fetch('/api/reset', { method: 'POST' });
+			const operationToast = showOperationToast('STM32 reset');
+			let res: Response | undefined;
+			try {
+				res = await fetch('/api/reset', { method: 'POST' });
+			} finally {
+				dismissOperationToast(operationToast);
+			}
+			if (!res) {
+				throw new Error('Failed to reset Digital Dash');
+			}
 			if (res.ok) {
 				toast.success('Digital Dash reset successfully!');
 			} else {

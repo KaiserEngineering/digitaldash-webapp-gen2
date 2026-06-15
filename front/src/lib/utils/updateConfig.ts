@@ -2,7 +2,12 @@
 import { configStore } from '$lib/stores/configStore';
 import { get } from 'svelte/store';
 import type { DigitalDash } from '$schemas/digitaldash';
-import { errorFromResponse, showCommandBusyToast } from './apiError';
+import {
+	dismissOperationToast,
+	errorFromResponse,
+	showCommandBusyToast,
+	showOperationToast
+} from './apiError';
 
 /**
  * Updates the entire config object after applying custom modifications.
@@ -23,14 +28,22 @@ export async function updateConfig(
 		// Apply the mutation
 		mutateFn(configCopy);
 
-		// Save the updated config
-		const response = await fetch('/api/config', {
-			method: 'PATCH',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(configCopy)
-		});
+		const operationToast = showOperationToast('config update');
+		let response: Response | undefined;
+		try {
+			response = await fetch('/api/config', {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(configCopy)
+			});
+		} finally {
+			dismissOperationToast(operationToast);
+		}
+		if (!response) {
+			throw new Error('Failed to save configuration');
+		}
 
 		if (!response.ok) {
 			throw await errorFromResponse(response, 'Failed to save configuration');

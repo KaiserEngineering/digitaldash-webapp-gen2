@@ -35,6 +35,18 @@ export function showCommandBusyToast(error: unknown): error is CommandBusyError 
 		return false;
 	}
 
-	toast.error(`Please wait. ${error.operation} is already in progress.`);
+	toast.error(`Waiting for ${error.operation} to complete.`);
 	return true;
+}
+
+export function showOperationToast(operation: string): string {
+	return toast.loading(`Waiting for ${operation} to complete.`, {
+		duration: Infinity
+	});
+}
+
+export function dismissOperationToast(toastId: string | null | undefined) {
+	if (toastId) {
+		toast.dismiss(toastId);
+	}
 }
