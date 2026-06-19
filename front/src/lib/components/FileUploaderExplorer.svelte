@@ -13,6 +13,7 @@
 	import * as ImageCropper from '$lib/components/ui/image-cropper';
 	import { fade, scale, slide } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
+	import { showCommandBusyToast } from '$lib/utils/apiError';
 
 	type UploadedFile = {
 		name: string;
@@ -150,6 +151,9 @@
 			onUploaded();
 		} catch (error) {
 			console.error('Failed to upload file:', error);
+			if (!showCommandBusyToast(error)) {
+				toast.error(`Failed to upload ${slotName}`);
+			}
 			// Don't call onUploaded on error
 		} finally {
 			removeFile();

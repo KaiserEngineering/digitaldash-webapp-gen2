@@ -4,6 +4,12 @@
 	import toast from 'svelte-5-french-toast';
 	import { apiUrl } from '$lib/config';
 	import PageCard from '@/components/PageCard.svelte';
+	import {
+		CommandBusyError,
+		dismissOperationToast,
+		showCommandBusyToast,
+		showOperationToast
+	} from '$lib/utils/apiError';
 
 	let { data } = $props();
 	const ver = data?.ver || 'Unknown';
@@ -44,13 +50,14 @@
 	}
 
 	async function startUpload() {
-		if (!file) return toast.error('No file selected.');
+		if (!file) return toast.error('No file sFelected.');
 		if (!file.name.endsWith('.bin')) return toast.error('Only .bin files allowed.');
 		if (file.size > 10 * 1024 * 1024) return toast.error('File too large (max 10MB).');
 
 		resetUploadState();
 
 		try {
+			const operationToast = showOperationToast('web app update');
 			const xhr = new XMLHttpRequest();
 			xhr.open('POST', `${apiUrl}/firmware/web`, true);
 			xhr.upload.onprogress = (e) => {
@@ -61,11 +68,23 @@
 					uploadComplete = true;
 					toast.success('Upload complete!');
 				} else {
-					toast.error(`Upload failed: ${xhr.statusText}`);
+					let body: { busy?: boolean; operation?: string; error?: string; message?: string } = {};
+					try {
+						body = JSON.parse(xhr.responseText || '{}');
+					} catch {
+						// Keep fallback toast below for non-JSON errors.
+					}
+
+					if (xhr.status === 409 || body.busy) {
+						showCommandBusyToast(new CommandBusyError(body.operation || 'command'));
+					} else {
+						toast.error(body.error || body.message || `Upload failed: ${xhr.statusText}`);
+					}
 				}
 			};
 			xhr.onerror = () => toast.error('Network error.');
 			xhr.ontimeout = () => toast.error('Upload timed out.');
+			xhr.onloadend = () => dismissOperationToast(operationToast);
 			xhr.timeout = 360000; // 3 minutes
 			xhr.send(file);
 		} catch (err) {

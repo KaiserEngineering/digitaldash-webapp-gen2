@@ -6,6 +6,12 @@
 	import PageCard from '@/components/PageCard.svelte';
 	import SpiffsUsage from '$lib/components/SpiffsUsage.svelte';
 	import { ImageHandler } from '$lib/image/handler';
+	import {
+		dismissOperationToast,
+		errorFromResponse,
+		showCommandBusyToast,
+		showOperationToast
+	} from '$lib/utils/apiError';
 
 	const imageHandler = new ImageHandler();
 
@@ -43,9 +49,18 @@
 		deletingFiles = deletingFiles; // Trigger reactivity
 
 		try {
-			const response = await fetch(`/api/spiffs?filename=${encodeURIComponent(filename)}`, {
-				method: 'DELETE'
-			});
+			const operationToast = showOperationToast('SPIFFS delete');
+			let response: Response | undefined;
+			try {
+				response = await fetch(`/api/spiffs?filename=${encodeURIComponent(filename)}`, {
+					method: 'DELETE'
+				});
+			} finally {
+				dismissOperationToast(operationToast);
+			}
+			if (!response) {
+				throw new Error('Failed to delete file');
+			}
 
 			if (response.ok) {
 				toast.success(`File "${filename}" deleted successfully`);
@@ -57,8 +72,10 @@
 					imageHandler.clearCache(baseName);
 				}
 			} else {
-				const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-				toast.error(`Failed to delete file: ${error.message}`);
+				const error = await errorFromResponse(response, 'Failed to delete file');
+				if (!showCommandBusyToast(error)) {
+					toast.error(error.message);
+				}
 			}
 		} catch (error) {
 			console.error('Delete error:', error);
