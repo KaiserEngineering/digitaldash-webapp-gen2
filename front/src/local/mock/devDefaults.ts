@@ -118,7 +118,9 @@ export const devConfig: DigitalDash = {
 		{
 			EE_Version: 68,
 			splash: 5,
-			can_bus_mode: 'Normal Mode'
+			can_bus_mode: 'Normal Mode',
+			obdii_message: 'Popup Message',
+			obdii_pause: '10 Seconds'
 		}
 	]
 };
