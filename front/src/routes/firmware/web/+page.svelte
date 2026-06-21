@@ -10,9 +10,9 @@
 		showCommandBusyToast,
 		showOperationToast
 	} from '$lib/utils/apiError';
+	import { VERSION_INFO } from '$lib/version';
 
-	let { data } = $props();
-	const ver = data?.ver || 'Unknown';
+	const ver = VERSION_INFO.display;
 
 	let file: File | null = $state(null);
 	let dragActive = $state(false);
@@ -50,7 +50,7 @@
 	}
 
 	async function startUpload() {
-		if (!file) return toast.error('No file sFelected.');
+		if (!file) return toast.error('No file selected.');
 		if (!file.name.endsWith('.bin')) return toast.error('Only .bin files allowed.');
 		if (file.size > 10 * 1024 * 1024) return toast.error('File too large (max 10MB).');
 
