@@ -104,20 +104,20 @@
 </script>
 
 {#if imageNames && imageNames.length > 0}
-	<div class="grid grid-cols-1 justify-items-center gap-6">
+	<div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
 		{#each imageNames as imageName (imageName)}
-			<div class="flex flex-col items-start">
+			<div class="w-full">
 				{#if loadingStates[imageName]}
-					<Skeleton class="h-40 w-full rounded-lg" />
+					<Skeleton class="aspect-[1024/200] w-full rounded-lg" />
 				{:else if failedImages[imageName] || !loadedImages[imageName]}
 					<div
-						class="relative"
+						class="w-full"
 						in:fade={{ duration: 300, easing: quintOut }}
 						out:scale={{ duration: 200, easing: quintOut }}
 					>
 						{#if uploadingStates[imageName]}
 							<div
-								class="border-border bg-muted/50 flex h-40 items-center justify-center rounded-lg border-2 border-dashed"
+								class="border-border bg-muted/50 flex aspect-[1024/200] w-full items-center justify-center rounded-lg border-2 border-dashed"
 							>
 								<div class="flex flex-col items-center gap-2">
 									<Loader class="text-primary h-6 w-6 animate-spin" />
@@ -134,25 +134,23 @@
 					</div>
 				{:else}
 					<div
-						class="bg-card border-border group relative overflow-hidden rounded-lg border transition-all hover:shadow-md"
+						class="bg-card border-border group relative w-full overflow-hidden rounded-lg border transition-all hover:shadow-md"
 						in:scale={{ duration: 300, easing: quintOut }}
 						out:fade={{ duration: 200, easing: quintOut }}
 					>
-						<div class="m-2">
-							<a
-								href={loadedImages[imageName]}
-								download={`${imageName}.png`}
-								title="Long press to save image"
-							>
-								<img
-									src={loadedImages[imageName] || '/placeholder.svg'}
-									alt="{imageName} background"
-									loading="lazy"
-									class="max-h-60 w-full rounded-lg object-cover transition-transform duration-300 group-hover:scale-105"
-									onerror={() => handleImageError(imageName)}
-								/>
-							</a>
-						</div>
+						<a
+							href={loadedImages[imageName]}
+							download={`${imageName}.png`}
+							title="Long press to save image"
+						>
+							<img
+								src={loadedImages[imageName] || '/placeholder.svg'}
+								alt="{imageName} background"
+								loading="lazy"
+								class="aspect-[1024/200] w-full object-cover transition-transform duration-300 group-hover:scale-105"
+								onerror={() => handleImageError(imageName)}
+							/>
+						</a>
 
 						{#if editable}
 							<div

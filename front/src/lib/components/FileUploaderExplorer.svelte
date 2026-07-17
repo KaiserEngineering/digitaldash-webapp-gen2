@@ -176,10 +176,10 @@
 </script>
 
 <!-- UI Layout -->
-<div class="card flex w-full flex-col gap-4 p-6">
+<div class="card flex w-full flex-col gap-4">
 	{#if !file}
 		<div
-			class="border-border bg-muted/30 hover:bg-muted/50 relative h-40 overflow-hidden rounded-md border border-dashed transition-colors duration-200"
+			class="border-border bg-muted/30 hover:bg-muted/50 relative aspect-[1024/200] min-h-[80px] w-full overflow-hidden rounded-lg border border-dashed transition-colors duration-200"
 			in:fade={{ duration: 300, easing: quintOut }}
 			out:scale={{ duration: 200, easing: quintOut, start: 0.95 }}
 		>

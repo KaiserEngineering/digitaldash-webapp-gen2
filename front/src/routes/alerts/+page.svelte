@@ -85,7 +85,7 @@
 						<div
 							class={`group relative rounded-2xl border-2 transition-all duration-300 ${
 								alert.enable === 'Enabled'
-									? 'border-emerald-200  shadow-sm hover:shadow-lg hover:shadow-emerald-100/50'
+									? 'border-success/40 shadow-sm hover:shadow-lg'
 									: 'border-border  opacity-75 hover:opacity-90'
 							}`}
 						>
@@ -99,7 +99,7 @@
 										<div
 											class={`flex h-12 w-12 items-center justify-center rounded-xl font-bold text-white shadow-lg transition-all duration-200 ${
 												alert.enable === 'Enabled'
-													? 'bg-gradient-to-br from-emerald-500 to-emerald-600 group-hover:shadow-emerald-200'
+													? 'from-success-500 to-success-600 bg-gradient-to-br'
 													: 'bg-gradient-to-br from-slate-400 to-slate-500'
 											}`}
 										>
@@ -112,7 +112,7 @@
 													Alert #{i + 1}
 												</h4>
 												{#if alert.enable === 'Enabled'}
-													<CircleCheck class="h-4 w-4 text-emerald-500" />
+													<CircleCheck class="text-success h-4 w-4" />
 												{:else}
 													<TriangleAlert class="text-muted-foreground h-4 w-4" />
 												{/if}
@@ -120,9 +120,7 @@
 											<div class="flex items-center gap-2 text-sm">
 												<span
 													class={`font-medium ${
-														alert.enable === 'Enabled'
-															? 'text-emerald-700'
-															: 'text-muted-foreground'
+														alert.enable === 'Enabled' ? 'text-foreground' : 'text-muted-foreground'
 													}`}
 												>
 													{alert.pid || 'No PID selected'}
@@ -226,7 +224,7 @@
 											<Input
 												type="number"
 												bind:value={$form[key].threshold}
-												class={`!h-12 rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 focus-visible:border-border ${
+												class={`focus-visible:border-border !h-12 rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 ${
 													alert.enable === 'Enabled'
 														? 'border-border bg-card hover:border-primary-300'
 														: 'border-border bg-muted'
@@ -242,7 +240,7 @@
 											<Input
 												type="text"
 												bind:value={$form[key].message}
-												class={`!h-12 rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 focus-visible:border-border ${
+												class={`focus-visible:border-border !h-12 rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 ${
 													alert.enable === 'Enabled'
 														? 'border-border bg-card hover:border-primary-300'
 														: 'border-border bg-muted'

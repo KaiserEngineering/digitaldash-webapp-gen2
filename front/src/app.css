@@ -1,6 +1,11 @@
 @import 'tailwindcss';
 @layer theme, base, components, utilities;
 
+/* Drive Tailwind `dark:` utilities from the `.dark` class (set by the in-app
+   theme toggle) instead of the default `prefers-color-scheme` media query, so
+   utilities stay in sync with the CSS-variable theming and the toggle. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @property --tw-gradient-from {
 	syntax: '<color>';
 	inherits: false;

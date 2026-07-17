@@ -30,7 +30,7 @@
 						{@render icon?.({ class: 'h-5 w-5' })}
 						{title}
 					</Card.Title>
-					<Card.Description>{description}</Card.Description>
+					<Card.Description class="text-foreground/70">{description}</Card.Description>
 				</Card.Header>
 
 				<Card.Content class="space-y-4">

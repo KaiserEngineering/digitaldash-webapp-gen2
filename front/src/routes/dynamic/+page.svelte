@@ -79,21 +79,21 @@
 			name: 'High',
 			color: 'from-red-500 to-red-600',
 			bgColor: 'from-red-50 via-white to-red-50/30',
-			borderColor: 'border-red-200',
+			borderColor: 'border-red-200 dark:border-red-500/40',
 			hoverColor: 'hover:bg-red-50/50'
 		},
 		{
 			name: 'Medium',
 			color: 'from-amber-500 to-amber-600',
 			bgColor: 'from-amber-50 via-white to-amber-50/30',
-			borderColor: 'border-amber-200',
+			borderColor: 'border-amber-200 dark:border-amber-500/40',
 			hoverColor: 'hover:bg-amber-50/50'
 		},
 		{
 			name: 'Default',
 			color: 'from-slate-500 to-slate-600',
 			bgColor: 'from-slate-50 via-white to-slate-50/30',
-			borderColor: 'border-slate-200',
+			borderColor: 'border-slate-200 dark:border-slate-500/40',
 			hoverColor: 'hover:bg-slate-50/50'
 		}
 	];
@@ -127,8 +127,19 @@
 									class="hover:bg-muted/50 flex items-center justify-between p-6 transition-all duration-200"
 								>
 									<div class="flex items-center gap-4">
+										<!-- Status Indicator -->
+										<div
+											class={`flex h-12 w-12 items-center justify-center rounded-xl text-lg font-bold text-white shadow-lg transition-all duration-200 ${
+												isDynamicRule($form[key]) && $form[key].enable === 'Enabled'
+													? 'from-success-500 to-success-600 bg-gradient-to-br'
+													: 'bg-gradient-to-br from-slate-400 to-slate-500'
+											}`}
+										>
+											{priorities[i].name[0]}
+										</div>
+
 										<div class="flex flex-col">
-											<div class="flex items-center gap-3">
+											<div class="flex items-center gap-2">
 												<h4 class="text-foreground text-lg font-semibold">
 													{priorities[i].name}
 												</h4>
@@ -162,7 +173,7 @@
 												<span
 													class={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
 														isDynamicRule($form[key]) && $form[key].enable === 'Enabled'
-															? 'bg-success/20 text-success border-success/30 border'
+															? 'bg-success/20 text-success'
 															: 'bg-muted text-muted-foreground'
 													}`}
 												>
@@ -225,7 +236,7 @@
 														type="single"
 													>
 														<Select.Trigger
-															class="border-border bg-card !h-12 w-full rounded-xl border-2 transition-all duration-200 hover:border-primary-300"
+															class="border-border bg-card hover:border-primary-300 !h-12 w-full rounded-xl border-2 transition-all duration-200"
 														>
 															<span
 																class={$form[key].view_index !== undefined
@@ -360,7 +371,7 @@
 													<Input
 														type="number"
 														bind:value={$form[key].threshold}
-														class={`!h-12 rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 focus-visible:border-border ${
+														class={`focus-visible:border-border !h-12 rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 ${
 															$form[key].enable === 'Enabled'
 																? 'border-border bg-card hover:border-primary-300'
 																: 'border-border bg-muted'
