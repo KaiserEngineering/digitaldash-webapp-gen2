@@ -70,6 +70,9 @@ extern const uint8_t themes_Digital_png_end[] asm("_binary_Digital_png_end");
 extern const uint8_t themes_Arc_png_start[] asm("_binary_Arc_png_start");
 extern const uint8_t themes_Arc_png_end[] asm("_binary_Arc_png_end");
 
+extern const uint8_t themes_Graph_png_start[] asm("_binary_Graph_png_start");
+extern const uint8_t themes_Graph_png_end[] asm("_binary_Graph_png_end");
+
 esp_err_t socket_enable_nodelay(httpd_req_t *req)
 {
     int sock = httpd_req_to_sockfd(req);
@@ -93,7 +96,8 @@ static const EmbeddedFile embedded_files[] = {
     {"/api/embedded/Stock ST.png", themes_Stock_ST_png_start, themes_Stock_ST_png_end, "image/png"},
     {"/api/embedded/Grumpy Cat.png", themes_Grump_Cat_png_start, themes_Grump_Cat_png_end, "image/png"},
     {"/api/embedded/Digital.png", themes_Digital_png_start, themes_Digital_png_end, "image/png"},
-    {"/api/embedded/Arc.png", themes_Arc_png_start, themes_Arc_png_end, "image/png"}
+    {"/api/embedded/Arc.png", themes_Arc_png_start, themes_Arc_png_end, "image/png"},
+    {"/api/embedded/Graph.png", themes_Graph_png_start, themes_Graph_png_end, "image/png"}
 };
 
 #define EMBEDDED_FILE_COUNT (sizeof(embedded_files) / sizeof(EmbeddedFile))
