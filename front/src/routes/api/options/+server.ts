@@ -23,7 +23,7 @@ export async function GET() {
 	const options = {
 		view_state: ['Disabled', 'Enabled'],
 		view_background: backgroundSlots,
-		gauge_theme: ['Linear', 'Stock RS', 'Stock ST', 'Digital', 'Grumpy Cat', 'Radial', 'Arc'],
+		gauge_theme: ['Linear', 'Stock RS', 'Stock ST', 'Digital', 'Grumpy Cat', 'Radial', 'Arc', 'Graph'],
 		alert_state: ['Disabled', 'Enabled'],
 		alert_comparison: [
 			'Less Than',
@@ -43,7 +43,9 @@ export async function GET() {
 			'Equal',
 			'Not Equal'
 		],
-		can_bus_mode: ['Normal Mode', 'Listen Only']
+		can_bus_mode: ['Normal Mode', 'Listen Only'],
+		obdii_message: ['Popup Message', 'No Message'],
+		obdii_pause: ['10 Seconds', '30 Seconds', 'Until Power Cycle']
 	};
 
 	return json(options);

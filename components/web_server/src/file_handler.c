@@ -32,6 +32,7 @@
 #include "esp_vfs.h"
 #include "esp_spiffs.h"
 #include "esp_heap_caps.h"
+#include "operation_lock.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
@@ -495,6 +496,11 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
         return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing filename in path");
     }
 
+    if (!web_operation_try_begin("SPIFFS upload"))
+    {
+        return web_operation_send_busy(req);
+    }
+
     ESP_LOGI(TAG, "Uploading file: %s (%d bytes)", filename, req->content_len);
 
     char filepath[FILE_PATH_MAX];
@@ -505,6 +511,7 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
     uint8_t *file_buf = heap_caps_malloc(req->content_len, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     if (!file_buf) {
         ESP_LOGE(TAG, "Failed to allocate %d bytes in PSRAM for upload buffer", req->content_len);
+        web_operation_end();
         return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Out of memory");
     }
 
@@ -523,10 +530,12 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
             }
             ESP_LOGE(TAG, "Socket error: %d", received);
             free(file_buf);
+            web_operation_end();
             return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File upload failed");
         } else if (received == 0) {
             ESP_LOGE(TAG, "Connection closed before file fully received");
             free(file_buf);
+            web_operation_end();
             return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File upload incomplete");
         }
 
@@ -540,6 +549,7 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
     if (!file) {
         ESP_LOGE(TAG, "Failed to open file for writing: %s", filepath);
         free(file_buf);
+        web_operation_end();
         return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to create file");
     }
 
@@ -550,6 +560,7 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
         ESP_LOGE(TAG, "SPIFFS write incomplete (%zu of %d bytes)", written, total_received);
         file_handler_close(file);
         file_handler_delete(filepath);
+        web_operation_end();
         return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File write failed");
     }
 
@@ -563,7 +574,9 @@ static esp_err_t spiffs_upload_handler(httpd_req_t *req)
     snprintf(response, sizeof(response),
              "{\"message\":\"File uploaded successfully\",\"filename\":\"%s\",\"size\":%d}",
              filename, total_received);
-    return httpd_resp_sendstr(req, response);
+    esp_err_t ret = httpd_resp_sendstr(req, response);
+    web_operation_end();
+    return ret;
 }
 
 static esp_err_t spiffs_delete_handler(httpd_req_t *req)
@@ -579,6 +592,11 @@ static esp_err_t spiffs_delete_handler(httpd_req_t *req)
         return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing filename parameter");
     }
 
+    if (!web_operation_try_begin("SPIFFS delete"))
+    {
+        return web_operation_send_busy(req);
+    }
+
     ESP_LOGI(TAG, "Requested DELETE for file: %s", filename);
 
     char filepath[FILE_PATH_MAX];
@@ -590,6 +608,7 @@ static esp_err_t spiffs_delete_handler(httpd_req_t *req)
     if (err != ESP_OK || !exists)
     {
         ESP_LOGW(TAG, "File not found: %s", filepath);
+        web_operation_end();
         return httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File not found");
     }
 
@@ -601,11 +620,14 @@ static esp_err_t spiffs_delete_handler(httpd_req_t *req)
         char response[256];
         snprintf(response, sizeof(response),
                  "{\"message\": \"File deleted successfully\", \"filename\": \"%s\"}", filename);
-        return httpd_resp_sendstr(req, response);
+        esp_err_t ret = httpd_resp_sendstr(req, response);
+        web_operation_end();
+        return ret;
     }
     else
     {
         ESP_LOGE(TAG, "Failed to delete file: %s", filepath);
+        web_operation_end();
         return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to delete file");
     }
 }

@@ -124,7 +124,9 @@ export const DynamicSchema = z.object({
 export const GeneralSchema = z.object({
 	EE_Version: z.number().int().optional(),
 	splash: z.number().int().optional(),
-	can_bus_mode: z.string().optional()
+	can_bus_mode: z.string().optional(),
+	obdii_message: z.string().optional(),
+	obdii_pause: z.string().optional()
 });
 
 /**

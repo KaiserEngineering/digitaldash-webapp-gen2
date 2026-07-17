@@ -6,6 +6,7 @@
 #include <sys/param.h>
 #include "stm_flash.h"
 #include "stm_gpio.h"
+#include "operation_lock.h"
 
 static const char *TAG = "ConfigHandler";
 
@@ -81,12 +82,18 @@ esp_err_t config_patch_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "PATCH /api/config requested");
 
+    if (!web_operation_try_begin("configuration update"))
+    {
+        return web_operation_send_busy(req);
+    }
+
     int total_len = req->content_len;
 
     int received = httpd_req_recv(req, json_data_output, MIN(total_len, JSON_BUF_SIZE));
     if (received <= 0)
     {
         ESP_LOGE(TAG, "Failed to receive config PATCH payload");
+        web_operation_end();
         return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid request");
     }
 
@@ -113,7 +120,9 @@ esp_err_t config_patch_handler(httpd_req_t *req)
     // Small delay to prevent immediate flood of requests from frontend
     vTaskDelay(100 / portTICK_PERIOD_MS);
 
-    return httpd_resp_send(req, success_response, HTTPD_RESP_USE_STRLEN);
+    esp_err_t ret = httpd_resp_send(req, success_response, HTTPD_RESP_USE_STRLEN);
+    web_operation_end();
+    return ret;
 }
 
 esp_err_t config_handler_init_buffer(void)

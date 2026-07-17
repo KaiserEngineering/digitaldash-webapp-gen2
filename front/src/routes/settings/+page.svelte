@@ -41,10 +41,17 @@
 								if ('can_bus_mode' in formData.data.general![0]) {
 									config.general[0].can_bus_mode = formData.data.general![0].can_bus_mode;
 								}
+								if ('obdii_message' in formData.data.general![0]) {
+									config.general[0].obdii_message = formData.data.general![0].obdii_message;
+								}
+								if ('obdii_pause' in formData.data.general![0]) {
+									config.general[0].obdii_pause = formData.data.general![0].obdii_pause;
+								}
 							}
 						});
 
 						if (!result.success) {
+							if (result.busy) return;
 							throw new Error('Failed to save settings to device');
 						}
 
@@ -190,6 +197,91 @@
 									class="hover:border-primary-200 rounded-lg py-3"
 								>
 									{mode}
+								</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
+				{:else}
+					<Select.Root type="single" disabled>
+						<Select.Trigger
+							class="border-border bg-muted h-12 cursor-not-allowed rounded-xl border-2 opacity-50 transition-all duration-200"
+						>
+							<span class="text-muted-foreground">Not available</span>
+						</Select.Trigger>
+					</Select.Root>
+				{/if}
+			</div>
+			<hr />
+
+			<div class="space-y-2 {!hasField(generalSettings, 'obdii_message') ? 'opacity-50' : ''}">
+				<Label for="obdii_message" class="text-foreground text-sm font-semibold"
+					>OBD-II Detected Message</Label
+				>
+				<p class="text-muted-foreground text-xs">
+					Choose whether to display a message when an OBD-II device is detected and dashboard
+					communication is paused.
+				</p>
+				{#if hasField(generalSettings, 'obdii_message') && $form.general && $form.general[0] && data.options.obdii_message}
+					<Select.Root bind:value={$form.general[0].obdii_message} type="single">
+						<Select.Trigger
+							class="border-border bg-card hover:border-primary-200 focus:border-primary-200 h-12 rounded-xl border-2 transition-all duration-200 focus:ring-2"
+						>
+							<span
+								class={$form.general[0].obdii_message ? 'text-foreground' : 'text-muted-foreground'}
+							>
+								{$form.general[0].obdii_message || 'Select OBD-II Detected Message'}
+							</span>
+						</Select.Trigger>
+						<Select.Content class="border-border rounded-xl border-2 shadow-xl">
+							{#each data.options.obdii_message as option}
+								<Select.Item
+									value={option}
+									label={option}
+									class="hover:border-primary-200 rounded-lg py-3"
+								>
+									{option}
+								</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
+				{:else}
+					<Select.Root type="single" disabled>
+						<Select.Trigger
+							class="border-border bg-muted h-12 cursor-not-allowed rounded-xl border-2 opacity-50 transition-all duration-200"
+						>
+							<span class="text-muted-foreground">Not available</span>
+						</Select.Trigger>
+					</Select.Root>
+				{/if}
+			</div>
+			<hr />
+
+			<div class="space-y-2 {!hasField(generalSettings, 'obdii_pause') ? 'opacity-50' : ''}">
+				<Label for="obdii_pause" class="text-foreground text-sm font-semibold"
+					>OBD-II Pause Duration</Label
+				>
+				<p class="text-muted-foreground text-xs">
+					Set how long dashboard communication pauses after an OBD-II device is detected.
+				</p>
+				{#if hasField(generalSettings, 'obdii_pause') && $form.general && $form.general[0] && data.options.obdii_pause}
+					<Select.Root bind:value={$form.general[0].obdii_pause} type="single">
+						<Select.Trigger
+							class="border-border bg-card hover:border-primary-200 focus:border-primary-200 h-12 rounded-xl border-2 transition-all duration-200 focus:ring-2"
+						>
+							<span
+								class={$form.general[0].obdii_pause ? 'text-foreground' : 'text-muted-foreground'}
+							>
+								{$form.general[0].obdii_pause || 'Select OBD-II Pause Duration'}
+							</span>
+						</Select.Trigger>
+						<Select.Content class="border-border rounded-xl border-2 shadow-xl">
+							{#each data.options.obdii_pause as option}
+								<Select.Item
+									value={option}
+									label={option}
+									class="hover:border-primary-200 rounded-lg py-3"
+								>
+									{option}
 								</Select.Item>
 							{/each}
 						</Select.Content>

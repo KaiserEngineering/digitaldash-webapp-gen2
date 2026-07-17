@@ -3,6 +3,12 @@
 	import { Alert } from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
 	import toast from 'svelte-5-french-toast';
+	import {
+		dismissOperationToast,
+		errorFromResponse,
+		showCommandBusyToast,
+		showOperationToast
+	} from '$lib/utils/apiError';
 
 	let { recovery } = $props();
 
@@ -14,12 +20,21 @@
 
 		resetting = true;
 		try {
-			const response = await fetch('/api/reset', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			});
+			const operationToast = showOperationToast('STM32 reset');
+			let response: Response | undefined;
+			try {
+				response = await fetch('/api/reset', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				});
+			} finally {
+				dismissOperationToast(operationToast);
+			}
+			if (!response) {
+				throw new Error('Failed to reset Digital Dash');
+			}
 
 			if (response.ok) {
 				toast.success('Digital Dash reset successfully! Please wait a moment for it to restart.');
@@ -28,8 +43,10 @@
 					window.location.reload();
 				}, 3000);
 			} else {
-				const error = await response.json();
-				toast.error(error.error || 'Failed to reset Digital Dash');
+				const error = await errorFromResponse(response, 'Failed to reset Digital Dash');
+				if (!showCommandBusyToast(error)) {
+					toast.error(error.message);
+				}
 			}
 		} catch (err) {
 			console.error('Reset error:', err);
