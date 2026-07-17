@@ -137,7 +137,15 @@ esp_err_t send_embedded_file(httpd_req_t *req, const EmbeddedFile *file, bool is
 {
     ESP_LOGI(TAG, "Serving embedded file: %s", file->path);
 
-    httpd_resp_set_hdr(req, "Cache-Control", "public, max-age=31536000, immutable");
+    // Theme images under /api/embedded/ must not be cached — they change when
+    // firmware is reflashed and browsers (especially Safari) will otherwise
+    // serve a stale copy indefinitely because of the immutable flag.
+    // All other embedded assets (HTML, favicon) keep the long-lived cache.
+    if (strncmp(file->path, "/api/embedded/", 14) == 0)
+        httpd_resp_set_hdr(req, "Cache-Control", "no-store");
+    else
+        httpd_resp_set_hdr(req, "Cache-Control", "public, max-age=31536000, immutable");
+
     httpd_resp_set_type(req, file->mime_type);
 
     // Add gzip encoding header for compressed files
