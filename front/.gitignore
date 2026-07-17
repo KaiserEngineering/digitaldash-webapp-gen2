@@ -33,3 +33,4 @@ data.sqlite
 /playwright-report/
 /playwright/.cache/
 /tests/screenshots/
+.env*
