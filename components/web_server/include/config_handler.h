@@ -16,6 +16,10 @@ KE_PACKET_MANAGER *get_stm32_comm(void);
 esp_err_t config_options_handler(httpd_req_t *req);
 esp_err_t config_get_handler(httpd_req_t *req);
 esp_err_t config_patch_handler(httpd_req_t *req);
+// POST alias for config_patch_handler - see its definition in config_handler.c
+// for why this exists (some HTTP clients, e.g. older embedded QML XHR
+// implementations, cannot dispatch PATCH at all).
+esp_err_t config_post_handler(httpd_req_t *req);
 esp_err_t register_config_routes(httpd_handle_t server);
 esp_err_t config_handler_init_buffer(void);
 

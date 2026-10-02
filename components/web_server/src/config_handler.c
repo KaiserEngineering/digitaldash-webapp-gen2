@@ -78,7 +78,9 @@ esp_err_t config_get_handler(httpd_req_t *req)
     return httpd_resp_send(req, json_data_input, HTTPD_RESP_USE_STRLEN);
 }
 
-esp_err_t config_patch_handler(httpd_req_t *req)
+// Shared body for both PATCH /api/config and its POST alias (see
+// config_post_handler doc comment below for why the alias exists).
+static esp_err_t config_update_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "PATCH /api/config requested");
 
@@ -88,21 +90,36 @@ esp_err_t config_patch_handler(httpd_req_t *req)
     }
 
     int total_len = req->content_len;
+    if (total_len >= JSON_BUF_SIZE)
+    {
+        ESP_LOGE(TAG, "Config update payload too large (%d bytes)", total_len);
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Payload too large");
+    }
 
-    int received = httpd_req_recv(req, json_data_output, MIN(total_len, JSON_BUF_SIZE));
-    if (received <= 0)
+    // httpd_req_recv() is a thin wrapper over recv() - it can return fewer
+    // bytes than asked for if the body arrives across multiple TCP segments,
+    // so a single call isn't guaranteed to capture the whole document. A
+    // browser's XHR/fetch stack tends to hand this off in one shot on a fast
+    // local connection, but Qt 5.6's embedded network stack (used by the
+    // Sync3 companion app's QML XHR) does not, which was silently truncating
+    // the JSON mid-document and forwarding garbage to the STM32 - explaining
+    // saves that reset the cluster but apply nothing (or only partially).
+    // Loop until the full content_len is read, per the standard ESP-IDF
+    // pattern for POST bodies.
+    int cur_len = 0;
+    while (cur_len < total_len)
     {
         ESP_LOGE(TAG, "Failed to receive config PATCH payload");
         web_operation_end();
         return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid request");
     }
 
-    json_data_output[received] = '\0';
+    json_data_output[cur_len] = '\0';
     ESP_LOGD(TAG, "Received config update: %s", json_data_output);
 
     // Now save to STM
     Generate_TX_Message(get_stm32_comm(), KE_CONFIG_SEND, 0);
-    KE_wait_for_response(get_stm32_comm(), 2500);
+    KE_wait_for_response(get_stm32_comm(), 5000);
 
     // The config has been changed, invalidate cached json input data
     memset(json_data_input, '\0', JSON_BUF_SIZE);
@@ -123,6 +140,25 @@ esp_err_t config_patch_handler(httpd_req_t *req)
     esp_err_t ret = httpd_resp_send(req, success_response, HTTPD_RESP_USE_STRLEN);
     web_operation_end();
     return ret;
+}
+
+esp_err_t config_patch_handler(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "PATCH /api/config requested");
+    return config_update_handler(req);
+}
+
+// POST alias for config_patch_handler, doing an identical whole-document
+// replace. Added for HTTP clients that can't dispatch a PATCH request at
+// all - e.g. Qt 5.6's QML XMLHttpRequest (used by the Sync3 companion app,
+// see DigitalDash_Sync3/Sync_DigitalDash), which predates PATCH support in
+// QML XHR (added in Qt 5.9) and silently drops the request instead of
+// sending it. Safe to remove if that constraint ever goes away - nothing
+// else in this webapp depends on it.
+esp_err_t config_post_handler(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "POST /api/config requested (PATCH alias)");
+    return config_update_handler(req);
 }
 
 esp_err_t config_handler_init_buffer(void)
@@ -166,6 +202,14 @@ esp_err_t register_config_routes(httpd_handle_t server)
         .handler = config_patch_handler,
         .user_ctx = NULL};
     httpd_register_uri_handler(server, &config_patch_uri);
+
+    // POST alias - see config_post_handler's doc comment above.
+    httpd_uri_t config_post_uri = {
+        .uri = "/api/config",
+        .method = HTTP_POST,
+        .handler = config_post_handler,
+        .user_ctx = NULL};
+    httpd_register_uri_handler(server, &config_post_uri);
 
     httpd_uri_t config_options_uri = {
         .uri = "/api/options",
