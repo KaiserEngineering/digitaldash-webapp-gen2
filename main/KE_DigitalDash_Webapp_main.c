@@ -119,10 +119,12 @@ int stm32_tx(const uint8_t *data, uint32_t len)
             return total_sent;  // Return bytes sent before error
         }
 
-        // Wait for the reciever to process data. THIS IS A MUST
-        vTaskDelay(25);
-
         total_sent += sent;
+
+        // Wait for the receiver only between chunks of a large transfer.
+        if (len > max_chunk_size && total_sent < len) {
+            vTaskDelay(pdMS_TO_TICKS(1));
+        }
     }
 
     //ESP_LOGI(TAG, "Sent %d bytes to STM32", total_sent);
@@ -350,7 +352,7 @@ void stm32_communication_init(void)
     stm32_comm.init.firmware_version_hotfix = 0;  /* Hot fix firmware version */
     stm32_comm.init.png_to_rgba = &png_to_rgba;
     stm32_comm.tx_buffer_size = (UI_HOR_RES*UI_VER_RES*4)+128;
-    stm32_comm.rx_buffer_size = 6000;
+    stm32_comm.rx_buffer_size = (8U * 1024U);
     stm32_comm.tx_buffer = (uint8_t *)heap_caps_malloc(stm32_comm.tx_buffer_size, MALLOC_CAP_SPIRAM);
     stm32_comm.rx_buffer = (uint8_t *)heap_caps_malloc(stm32_comm.rx_buffer_size, MALLOC_CAP_SPIRAM);
     uart_init(&stm32_comm);

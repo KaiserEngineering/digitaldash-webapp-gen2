@@ -7,17 +7,17 @@
 	import * as Collapsible from '$lib/components/ui/collapsible';
 	import ImageSelect from '$lib/components/ImageSelect.svelte';
 	import PIDSelect from '$lib/components/PIDSelect.svelte';
+	import { GAUGES_PER_VIEW } from '$schemas/digitaldash';
 	import { onMount } from 'svelte';
 
 	let { themes = [], pids = [], form, selectedBackground = $bindable() } = $props();
 
-	// Ensure we always have at least 3 gauge slots available
+	// Ensure every configurable gauge has a backing slot.
 	function ensureMinimumGauges() {
 		if (!$form.gauge) {
 			$form.gauge = [];
 		}
-		// Always ensure we have exactly 3 slots, regardless of current length
-		while ($form.gauge.length < 3) {
+		while ($form.gauge.length < GAUGES_PER_VIEW) {
 			$form.gauge.push({ pid: '', units: '', theme: '' });
 		}
 	}
@@ -45,7 +45,7 @@
 						<span>{$form.num_gauges} Gauges</span>
 					</Select.Trigger>
 					<Select.Content>
-						{#each [0, 1, 2, 3] as n (n)}
+						{#each Array.from({ length: GAUGES_PER_VIEW + 1 }, (_, n) => n) as n (n)}
 							<Select.Item value={n.toString()} label={`${n} Gauges`} class="py-3 text-base">
 								{n} Gauges
 							</Select.Item>

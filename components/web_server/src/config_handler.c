@@ -11,7 +11,7 @@
 static const char *TAG = "ConfigHandler";
 
 #define JSON_BUF_SIZE 60000
-#define OPTION_LIST_SIZE 1200
+#define OPTION_LIST_SIZE 2500
 #define PID_LIST_SIZE 10000
 
 static char *json_data_input;
@@ -108,9 +108,9 @@ esp_err_t config_patch_handler(httpd_req_t *req)
     memset(json_data_input, '\0', JSON_BUF_SIZE);
 
     // Brute force hot-reload. This can be done better
-    vTaskDelay(pdMS_TO_TICKS(250));
-    stm_gpio_splash_disable(true);
-    stm32_reset();
+    // vTaskDelay(pdMS_TO_TICKS(250));
+    // stm_gpio_splash_disable(true);
+    // stm32_reset();
 
     // Send HTTP response - always return success since we got this far
     httpd_resp_set_type(req, "application/json");
