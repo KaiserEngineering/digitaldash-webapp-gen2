@@ -93,6 +93,7 @@ static esp_err_t config_update_handler(httpd_req_t *req)
     if (total_len >= JSON_BUF_SIZE)
     {
         ESP_LOGE(TAG, "Config update payload too large (%d bytes)", total_len);
+        web_operation_end();
         return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Payload too large");
     }
 
@@ -109,9 +110,14 @@ static esp_err_t config_update_handler(httpd_req_t *req)
     int cur_len = 0;
     while (cur_len < total_len)
     {
-        ESP_LOGE(TAG, "Failed to receive config PATCH payload");
-        web_operation_end();
-        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid request");
+        int received = httpd_req_recv(req, json_data_output + cur_len, total_len - cur_len);
+        if (received <= 0)
+        {
+            ESP_LOGE(TAG, "Failed to receive config update payload (%d)", received);
+            web_operation_end();
+            return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid request");
+        }
+        cur_len += received;
     }
 
     json_data_output[cur_len] = '\0';
