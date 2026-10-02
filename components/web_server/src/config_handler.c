@@ -6,11 +6,12 @@
 #include <sys/param.h>
 #include "stm_flash.h"
 #include "stm_gpio.h"
+#include "operation_lock.h"
 
 static const char *TAG = "ConfigHandler";
 
 #define JSON_BUF_SIZE 60000
-#define OPTION_LIST_SIZE 1200
+#define OPTION_LIST_SIZE 2500
 #define PID_LIST_SIZE 10000
 
 static char *json_data_input;
@@ -81,6 +82,13 @@ esp_err_t config_get_handler(httpd_req_t *req)
 // config_post_handler doc comment below for why the alias exists).
 static esp_err_t config_update_handler(httpd_req_t *req)
 {
+    ESP_LOGI(TAG, "PATCH /api/config requested");
+
+    if (!web_operation_try_begin("configuration update"))
+    {
+        return web_operation_send_busy(req);
+    }
+
     int total_len = req->content_len;
     if (total_len >= JSON_BUF_SIZE)
     {
@@ -101,17 +109,9 @@ static esp_err_t config_update_handler(httpd_req_t *req)
     int cur_len = 0;
     while (cur_len < total_len)
     {
-        int received = httpd_req_recv(req, json_data_output + cur_len, total_len - cur_len);
-        if (received <= 0)
-        {
-            if (received == HTTPD_SOCK_ERR_TIMEOUT)
-            {
-                continue;
-            }
-            ESP_LOGE(TAG, "Failed to receive config update payload");
-            return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid request");
-        }
-        cur_len += received;
+        ESP_LOGE(TAG, "Failed to receive config PATCH payload");
+        web_operation_end();
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid request");
     }
 
     json_data_output[cur_len] = '\0';
@@ -125,14 +125,9 @@ static esp_err_t config_update_handler(httpd_req_t *req)
     memset(json_data_input, '\0', JSON_BUF_SIZE);
 
     // Brute force hot-reload. This can be done better
-    // Widened from 250ms: this is the STM32's only window to finish
-    // persisting the whole document to flash before we yank its power via
-    // stm32_reset() below. 250ms was too tight for larger config writes -
-    // observed as a save that resets the cluster but only partially applies
-    // (e.g. PID field updates, theme field doesn't, or vice versa).
-    vTaskDelay(pdMS_TO_TICKS(2000));
-    stm_gpio_splash_disable(true);
-    stm32_reset();
+    // vTaskDelay(pdMS_TO_TICKS(250));
+    // stm_gpio_splash_disable(true);
+    // stm32_reset();
 
     // Send HTTP response - always return success since we got this far
     httpd_resp_set_type(req, "application/json");
@@ -142,7 +137,9 @@ static esp_err_t config_update_handler(httpd_req_t *req)
     // Small delay to prevent immediate flood of requests from frontend
     vTaskDelay(100 / portTICK_PERIOD_MS);
 
-    return httpd_resp_send(req, success_response, HTTPD_RESP_USE_STRLEN);
+    esp_err_t ret = httpd_resp_send(req, success_response, HTTPD_RESP_USE_STRLEN);
+    web_operation_end();
+    return ret;
 }
 
 esp_err_t config_patch_handler(httpd_req_t *req)

@@ -50,7 +50,9 @@
 				if (result.success) {
 					toast.success('View settings saved successfully!');
 				} else {
-					toast.error('Failed to save view settings. Please try again.');
+					if (!result.busy) {
+						toast.error('Failed to save view settings. Please try again.');
+					}
 				}
 			} catch (error) {
 				console.error('Failed to save view settings:', error);

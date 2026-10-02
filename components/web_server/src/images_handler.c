@@ -27,6 +27,7 @@
 
 #include "images_handler.h"
 #include "file_handler.h"
+#include "operation_lock.h"
 #include "esp_err.h"
 #include "esp_http_server.h"
 #include "esp_log.h"
@@ -252,6 +253,11 @@ esp_err_t image_upload_handler(httpd_req_t *req)
         return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing filename");
     }
 
+    if (!web_operation_try_begin("image upload"))
+    {
+        return web_operation_send_busy(req);
+    }
+
     char filepath[MAX_PATH_SIZE];
     snprintf(filepath, sizeof(filepath), "%s/%s%s", IMAGE_DIR, filename, extension);
 
@@ -260,6 +266,7 @@ esp_err_t image_upload_handler(httpd_req_t *req)
     FILE *file = file_handler_open_write(filepath);
     if (!file) {
         ESP_LOGE(TAG, "Failed to open file for writing: %s, errno=%d", filepath, errno);
+        web_operation_end();
         return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to create file");
     }
 
@@ -280,11 +287,13 @@ esp_err_t image_upload_handler(httpd_req_t *req)
             ESP_LOGE(TAG, "Socket error: %d", received);
             file_handler_close(file);
             file_handler_delete(filepath);
+            web_operation_end();
             return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File upload failed");
         } else if (received == 0) {
             ESP_LOGE(TAG, "Connection closed before file fully received");
             file_handler_close(file);
             file_handler_delete(filepath);
+            web_operation_end();
             return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Upload incomplete");
         }
 
@@ -293,6 +302,7 @@ esp_err_t image_upload_handler(httpd_req_t *req)
             ESP_LOGE(TAG, "File write error (%d vs %d)", written, received);
             file_handler_close(file);
             file_handler_delete(filepath);
+            web_operation_end();
             return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "File write failed");
         }
 
@@ -310,7 +320,9 @@ esp_err_t image_upload_handler(httpd_req_t *req)
     snprintf(response, sizeof(response),
              "{\"message\":\"File uploaded successfully\",\"filename\":\"%s%s\",\"size\":%d}",
              filename, extension, total_received);
-    return httpd_resp_sendstr(req, response);
+    esp_err_t ret = httpd_resp_sendstr(req, response);
+    web_operation_end();
+    return ret;
 }
 
 
@@ -333,6 +345,11 @@ esp_err_t image_delete_handler(httpd_req_t *req)
         return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing filename parameter");
     }
 
+    if (!web_operation_try_begin("image delete"))
+    {
+        return web_operation_send_busy(req);
+    }
+
     url_decode(decoded_filename, filename_from_path, sizeof(decoded_filename));
     ESP_LOGI(TAG, "Requested DELETE for file: %s", decoded_filename);
 
@@ -342,6 +359,7 @@ esp_err_t image_delete_handler(httpd_req_t *req)
     {
         if (strlen(decoded_filename) > 123) // Leave room for ".png" + null terminator
         {
+            web_operation_end();
             return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Filename too long");
         }
         snprintf(filename_with_ext, sizeof(filename_with_ext), "%s.png", decoded_filename);
@@ -361,6 +379,7 @@ esp_err_t image_delete_handler(httpd_req_t *req)
     if (err != ESP_OK || !exists)
     {
         ESP_LOGW(TAG, "File not found: %s", filepath);
+        web_operation_end();
         return httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File not found");
     }
 
@@ -372,11 +391,14 @@ esp_err_t image_delete_handler(httpd_req_t *req)
         char response[256];
         snprintf(response, sizeof(response),
                  "{\"message\": \"File deleted successfully\", \"filename\": \"%s\"}", filename_with_ext);
-        return httpd_resp_sendstr(req, response);
+        esp_err_t ret = httpd_resp_sendstr(req, response);
+        web_operation_end();
+        return ret;
     }
     else
     {
         ESP_LOGE(TAG, "Failed to delete file: %s", filepath);
+        web_operation_end();
         return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to delete file");
     }
 }
@@ -385,10 +407,17 @@ esp_err_t mirror_spiffs_post_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "Mirror request received");
 
+    if (!web_operation_try_begin("background sync"))
+    {
+        return web_operation_send_busy(req);
+    }
+
     mirror_spiffs();
 
     httpd_resp_set_type(req, "application/json");
-    return httpd_resp_sendstr(req, "{\"message\":\"Mirror started\"}");
+    esp_err_t ret = httpd_resp_sendstr(req, "{\"message\":\"Mirror started\"}");
+    web_operation_end();
+    return ret;
 }
 
 esp_err_t register_images(httpd_handle_t server)

@@ -127,10 +127,7 @@
 
 				<div class="relative z-10 flex h-full items-center justify-center px-2 sm:px-4">
 					<div class="flex w-full items-center justify-center gap-2 px-1 sm:gap-8 sm:px-2">
-						{#each [0, 1, 2] as i (i)}
-							{@const gauge = view?.gauge?.[i] ?? {}}
-							{@const isEnabled = i < view.num_gauges}
-							{#if isEnabled}
+						{#each view.gauge?.slice(0, view.num_gauges) ?? [] as gauge}
 								<div class="flex flex-col items-center justify-center px-0.5 sm:px-1">
 									<GaugeComponent
 										{gauge}
@@ -141,7 +138,6 @@
 										onImageError={() => handleImageError(gauge.theme)}
 									/>
 								</div>
-							{/if}
 						{/each}
 					</div>
 				</div>

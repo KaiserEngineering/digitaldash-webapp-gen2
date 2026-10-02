@@ -15,6 +15,7 @@
 #include "pids_handler.h"
 #include "ota_handler.h"
 #include "stm_flash.h"
+#include "operation_lock.h"
 #include <lwip/sockets.h>
 
 // External function declaration
@@ -280,6 +281,11 @@ esp_err_t stm32_reset_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "STM32 reset requested via HTTP");
 
+    if (!web_operation_try_begin("STM32 reset"))
+    {
+        return web_operation_send_busy(req);
+    }
+
     // Set response type before calling reset (since reset will disconnect)
     httpd_resp_set_type(req, "application/json");
 
@@ -293,12 +299,18 @@ esp_err_t stm32_reset_handler(httpd_req_t *req)
     // Reset the STM32
     stm32_reset();
 
+    web_operation_end();
     return ret;
 }
 
 esp_err_t sync_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "Background sync requested via HTTP");
+
+    if (!web_operation_try_begin("background sync"))
+    {
+        return web_operation_send_busy(req);
+    }
 
     httpd_resp_set_type(req, "application/json");
     httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
@@ -309,6 +321,7 @@ esp_err_t sync_handler(httpd_req_t *req)
     const char* success_response = "{\"success\":true,\"message\":\"Backgrounds synced successfully\"}";
     esp_err_t ret = httpd_resp_send(req, success_response, strlen(success_response));
 
+    web_operation_end();
     return ret;
 }
 
@@ -325,7 +338,7 @@ esp_err_t start_webserver()
     config.recv_wait_timeout = 60;  // seconds
     config.send_wait_timeout = 60;  // seconds
     config.stack_size = HTTPD_TASK_STACK_SIZE;
-    config.max_uri_handlers = 24; // Increased to accommodate all routes
+    config.max_uri_handlers = 32; // Accommodate API routes plus SPA catch-all
     config.uri_match_fn = httpd_uri_match_wildcard;
 
     config.backlog_conn = 8;         // allow short connection bursts
@@ -399,6 +412,12 @@ esp_err_t start_webserver()
                                            .uri = "/_app/version.json",
                                            .method = HTTP_GET,
                                            .handler = sveltekit_version_handler,
+                                           .user_ctx = NULL});
+
+    httpd_register_uri_handler(server, &(httpd_uri_t){
+                                           .uri = "/api/operation/status",
+                                           .method = HTTP_GET,
+                                           .handler = web_operation_status_handler,
                                            .user_ctx = NULL});
 
     // Register specific API routes BEFORE the catch-all handler

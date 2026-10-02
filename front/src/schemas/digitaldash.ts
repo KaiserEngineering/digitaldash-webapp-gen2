@@ -59,7 +59,7 @@ export const ViewSchema = z.object({
 			return val === 'Enable' || val === 'Enabled' ? 'Enabled' : 'Disabled';
 		})
 		.default('Enabled'),
-	num_gauges: z.number().int(),
+	num_gauges: z.number().int().min(0).max(GAUGES_PER_VIEW),
 	background: z.string(),
 	gauge: z.array(GaugeSchema).max(GAUGES_PER_VIEW)
 });
@@ -124,7 +124,9 @@ export const DynamicSchema = z.object({
 export const GeneralSchema = z.object({
 	EE_Version: z.number().int().optional(),
 	splash: z.number().int().optional(),
-	can_bus_mode: z.string().optional()
+	can_bus_mode: z.string().optional(),
+	obdii_message: z.string().optional(),
+	obdii_pause: z.string().optional()
 });
 
 /**

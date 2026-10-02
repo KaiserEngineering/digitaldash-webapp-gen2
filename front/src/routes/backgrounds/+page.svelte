@@ -5,6 +5,7 @@
 	import { uploadBackground, deleteBackground, syncBackgrounds } from './backgrounds.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import toast from 'svelte-5-french-toast';
+	import { showCommandBusyToast } from '$lib/utils/apiError';
 
 	const { data } = $props();
 	const slotNames = data.slotNames || [];
@@ -17,12 +18,14 @@
 		isSyncing = true;
 		try {
 			await syncBackgrounds();
+			toast.success('Backgrounds synced successfully');
 		} catch (error) {
-			toast.error('Failed to sync backgrounds');
+			if (!showCommandBusyToast(error)) {
+				toast.error('Failed to sync backgrounds');
+			}
 			console.error('Sync failed:', error);
 		} finally {
 			isSyncing = false;
-			toast.success('Backgrounds synced successfully');
 		}
 	}
 </script>

@@ -56,7 +56,9 @@
 					Object.assign($form, alertsObject);
 					toast.success('Alerts saved successfully!');
 				} else {
-					toast.error('Failed to save alerts');
+					if (!result.busy) {
+						toast.error('Failed to save alerts');
+					}
 				}
 			} catch (error) {
 				console.error('Failed to save alerts:', error);

@@ -43,7 +43,9 @@ export async function GET() {
 			'Equal',
 			'Not Equal'
 		],
-		can_bus_mode: ['Normal Mode', 'Listen Only']
+		can_bus_mode: ['Normal Mode', 'Listen Only'],
+		obdii_message: ['Popup Message', 'No Message'],
+		obdii_pause: ['10 Seconds', '30 Seconds', 'Until Power Cycle']
 	};
 
 	return json(options);

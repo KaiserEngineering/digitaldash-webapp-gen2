@@ -9,6 +9,7 @@
 	import toast from 'svelte-5-french-toast';
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
+	import { showCommandBusyToast } from '$lib/utils/apiError';
 
 	let {
 		imageNames = [],
@@ -70,7 +71,9 @@
 
 			toast.success(`${imageName} deleted successfully`);
 		} catch (error) {
-			toast.error(`Failed to delete ${imageName}`);
+			if (!showCommandBusyToast(error)) {
+				toast.error(`Failed to delete ${imageName}`);
+			}
 			console.error('Delete failed:', error);
 		} finally {
 			deletingStates[imageName] = false;

@@ -5,6 +5,13 @@
 	import { apiUrl } from '$lib/config';
 	import toast from 'svelte-5-french-toast';
 	import PageCard from '@/components/PageCard.svelte';
+	import {
+		CommandBusyError,
+		dismissOperationToast,
+		errorFromResponse,
+		showCommandBusyToast,
+		showOperationToast
+	} from '$lib/utils/apiError';
 
 	type FlashStatus = 'idle' | 'uploading' | 'flashing' | 'success' | 'error';
 
@@ -35,6 +42,7 @@
 		message = 'Sending to Digital Dash...';
 		progress = 0;
 
+		const operationToast = showOperationToast('Digital Dash firmware update');
 		try {
 			await new Promise<void>((resolve, reject) => {
 				const xhr = new XMLHttpRequest();
@@ -57,6 +65,10 @@
 					} else {
 						try {
 							const body = JSON.parse(xhr.responseText);
+							if (xhr.status === 409 || body.busy) {
+								reject(new CommandBusyError(body.operation || 'command'));
+								return;
+							}
 							reject(new Error(body.error || xhr.statusText));
 						} catch {
 							reject(new Error(xhr.statusText || 'Upload failed'));
@@ -93,11 +105,13 @@
 						status = 'success';
 						progress = 100;
 						message = 'Digital Dash updated successfully!';
+						dismissOperationToast(operationToast);
 					} else if (data.error) {
 						clearInterval(pollingInterval!);
 						pollingInterval = null;
 						status = 'error';
 						message = data.error;
+						dismissOperationToast(operationToast);
 					}
 				} catch {
 					// transient poll error — keep trying
@@ -111,16 +125,19 @@
 					if (status === 'flashing') {
 						status = 'error';
 						message = 'Flash operation timed out';
+						dismissOperationToast(operationToast);
 					}
 				}
 			}, 300000);
 		} catch (err) {
+			dismissOperationToast(operationToast);
 			if (pollingInterval) {
 				clearInterval(pollingInterval);
 				pollingInterval = null;
 			}
 			status = 'error';
 			message = err instanceof Error ? err.message : 'An error occurred';
+			showCommandBusyToast(err);
 		}
 	}
 
@@ -128,12 +145,23 @@
 		if (resetStatus === 'resetting') return;
 		resetStatus = 'resetting';
 		try {
-			const res = await fetch('/api/reset', { method: 'POST' });
+			const operationToast = showOperationToast('STM32 reset');
+			let res: Response | undefined;
+			try {
+				res = await fetch('/api/reset', { method: 'POST' });
+			} finally {
+				dismissOperationToast(operationToast);
+			}
+			if (!res) {
+				throw new Error('Failed to reset Digital Dash');
+			}
 			if (res.ok) {
 				toast.success('Digital Dash reset successfully!');
 			} else {
-				const body = await res.json().catch(() => ({ error: 'Unknown error' }));
-				toast.error(body.error || 'Failed to reset Digital Dash');
+				const error = await errorFromResponse(res, 'Failed to reset Digital Dash');
+				if (!showCommandBusyToast(error)) {
+					toast.error(error.message);
+				}
 			}
 		} catch {
 			toast.error('Network error while resetting Digital Dash');
