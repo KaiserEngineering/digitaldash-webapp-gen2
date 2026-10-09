@@ -14,6 +14,7 @@
 	import { updateViewInConfig } from './view.svelte';
 	import ViewCard from '@/components/ViewCard.svelte';
 	import PageCard from '@/components/PageCard.svelte';
+	import LvglPreview from '@/components/LvglPreview.svelte';
 
 	let { data } = $props();
 	const viewId = data.viewId;
@@ -79,6 +80,9 @@
 >
 	<Tabs.Root bind:value={activeTab} class="w-full">
 		<ViewCard view={$form} index={viewId} pids={data.pids} />
+		{#if import.meta.env.DEV}
+			<LvglPreview config={$configStore} pids={data.pids} viewIndex={viewId} class="mt-2" />
+		{/if}
 
 		<Tabs.List class="grid h-10 w-full grid-cols-2">
 			<Tabs.Trigger value="view" class="tab-trigger">
